@@ -1,4 +1,4 @@
-"""Flask web app providing a REST API to notmuch. Initial version from netviel."""
+"""Flask web app providing a REST API to notmuch. Based on API from netviel (https://github.com/DavidMStraub/netviel)."""
 
 import email
 import email.policy
