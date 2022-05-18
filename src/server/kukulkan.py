@@ -79,10 +79,15 @@ def create_app():
 
     @app.after_request
     def security_headers(response):
-        response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
-        response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
+        #response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
+        #response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
+        #response.headers["X-Frame-Options"] = "SAMEORIGIN"
         response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["X-Frame-Options"] = "SAMEORIGIN"
+
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Cross-Origin-Opener-Policy"] = "cross-origin"
+        response.headers["Cross-Origin-Resource-Policy"] = "cross-origin"
+        response.headers["X-Frame-Options"] = "CORSSORIGIN"
         return response
 
     class Query(Resource):
