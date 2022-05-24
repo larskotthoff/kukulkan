@@ -212,6 +212,7 @@ def message_to_json(message):
         "content_type": content_type,
         "attachments": attachments,
         "message_id": message.get_message_id(),
+        "tags": [ tag for tag in message.get_tags() ],
     }
 
 
