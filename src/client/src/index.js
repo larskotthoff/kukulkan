@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom/client';
 import CssBaseline from '@mui/material/CssBaseline';
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
+import Divider from '@mui/material/Divider';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -84,7 +85,27 @@ function Search({setThreads, setError, setActiveThread}) {
   );
 }
 
-function Threads({threads, error, activeThread, setActiveThread}) {
+function Threads({threads, error, activeThread, setActiveThread, setThread, setThreadLoading, setError}) {
+  const getThread = (tid) => {
+    setThread(null);
+    setThreadLoading(true);
+    fetch('http://localhost:5000/api/thread/' + tid)
+      .then(res => res.json())
+      .then(
+        (result) => {
+            setThread(result.reverse());
+            setError(null);
+        },
+        (error) => {
+            setThread(null);
+            setError(error);
+        }
+      )
+      .finally(() => {
+        setThreadLoading(false);
+      });
+  };
+
   const df = new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
 
   useHotkeys('k', () => setActiveThread(Math.max(0, activeThread - 1)), [activeThread]);
@@ -93,12 +114,7 @@ function Threads({threads, error, activeThread, setActiveThread}) {
   useHotkeys('Shift+J', () => setActiveThread(Math.min(threads.length - 1, activeThread + 10)), [activeThread, threads]);
 
   return (
-    <Box id="threads" sx={{ mt: 1, width: "90%" }}>
-    { error && 
-      <Box id="error" sx={{ mt: 1 }}>
-        <Alert severity="error">Error querying backend: {error.message}</Alert>
-      </Box>
-    }
+    <Box id="threads" sx={{ mt: 1, width: "100%" }}>
     { threads && 
       <Paper elevation={3} sx={{ padding: 2 }}>
       <Typography align="right">{threads.length} results.</Typography>
@@ -117,7 +133,7 @@ function Threads({threads, error, activeThread, setActiveThread}) {
           </TableHead>
           <TableBody>
             { threads.map((thread, index) => (
-              <TableRow key={index} selected={activeThread === index ? true : false} hover={true} onClick={() => setActiveThread(index)}>
+              <TableRow key={index} selected={activeThread === index ? true : false} hover={true} onClick={() => { setActiveThread(index); getThread(thread.thread_id); }}>
                 <TableCell>{df.format(thread.newest_date * 1000)}</TableCell>
                 <TableCell>{thread.total_messages}</TableCell>
                 <TableCell>{ thread.tags.includes("attachment") && <AttachFile /> }</TableCell>
@@ -145,9 +161,46 @@ function Threads({threads, error, activeThread, setActiveThread}) {
   );
 }
 
+function Thread({thread, threadLoading}) {
+  console.log(thread);
+  return (
+    <Box id="thread" sx={{ mt: 1, width: "100%" }}>
+    { threadLoading && <CircularProgress /> }
+    { thread && 
+        <Box>
+        { thread.map((msg, index) => (
+          <Paper elevation={3} key={index} sx={{ padding: 1, margin: 2 }}>
+            { msg.from && <Typography variant="h6">From: {msg.from}</Typography> }
+            { msg.to && <Typography variant="h6">To: {msg.to}</Typography> }
+            { msg.cc && <Typography variant="h6">CC: {msg.cc}</Typography> }
+            { msg.bcc && <Typography variant="h6">BCC: {msg.bcc}</Typography> }
+            <Typography variant="h6">Date: {msg.date}</Typography>
+            <Typography variant="h6">Subject: {msg.subject}</Typography>
+            <Grid container spacing={1}>
+              { msg.tags.map((tag, index2) => (
+                <Grid item key={index2}>
+                  <Chip key={index2} label={tag} style={{ color: getColor(tag) }} onDelete={console.log}/>
+                </Grid>
+              )) }
+            </Grid>
+            <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
+            { msg.content_type === "text/html" ?
+              <Typography dangerouslySetInnerHTML={{ __html: msg.content }} /> :
+              <Typography dangerouslySetInnerHTML={{ __html: "<pre>" + msg.content + "</pre>" }} />
+            }
+          </Paper>
+        )) }
+      </Box>
+    }
+    </Box>
+  );
+}
+
 function Kukulkan() {
   const [error, setError] = useState(null);
   const [threads, setThreads] = useState(null);
+  const [thread, setThread] = useState(null);
+  const [threadLoading, setThreadLoading] = useState(false);
   const [activeThread, setActiveThread] = useState(0);
 
   const theme = createTheme();
@@ -169,7 +222,19 @@ function Kukulkan() {
           }}
         >
             <Search setThreads={setThreads} setError={setError} setActiveThread={setActiveThread} />
-            <Threads threads={threads} error={error} activeThread={activeThread} setActiveThread={setActiveThread} />
+            { error && 
+              <Box id="error" sx={{ mt: 1 }}>
+                <Alert severity="error">Error querying backend: {error.message}</Alert>
+              </Box>
+            }
+            <Grid container>
+              <Grid item xs={6}>
+                <Threads threads={threads} error={error} activeThread={activeThread} setActiveThread={setActiveThread} setThread={setThread} setThreadLoading={setThreadLoading} setError={setError} />
+              </Grid>
+              <Grid item xs={6}>
+                <Thread thread={thread} threadLoading={threadLoading} />
+              </Grid>
+            </Grid>
         </Box>
       </Container>
     </ThemeProvider>
