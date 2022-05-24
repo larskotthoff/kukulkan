@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import ReactDOM from 'react-dom/client';
 
 import CssBaseline from '@mui/material/CssBaseline';
+import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
@@ -9,6 +10,7 @@ import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
 import Chip from '@mui/material/Chip';
+import Paper from '@mui/material/Paper';
 import CircularProgress from '@mui/material/CircularProgress';
 import Table from '@mui/material/Table';
 import TableContainer from '@mui/material/TableContainer';
@@ -68,14 +70,10 @@ function Search({setThreads, setError, setActiveThread}) {
             alignItems: 'center',
           }}>
         <Grid item sx={{ width: "90%" }}>
-          <TextField
-            margin="normal"
-            fullWidth
-            id="search"
-            label="Search"
-            name="search"
-            autoComplete="search"
-            autoFocus
+          <Autocomplete
+            freeSolo
+            options={["tag:todo", "date:1d.."]}
+            renderInput={(params) => <TextField {...params} label="Search" id="search" name="search" fullWidth autoFocus margin="normal" />}
           />
           </Grid>
         <Grid item>
@@ -102,7 +100,7 @@ function Threads({threads, error, activeThread, setActiveThread}) {
       </Box>
     }
     { threads && 
-      <Box>
+      <Paper elevation={3} sx={{ padding: 2 }}>
       <Typography align="right">{threads.length} results.</Typography>
       <TableContainer id="threadsTable">
         <Table>
@@ -141,7 +139,7 @@ function Threads({threads, error, activeThread, setActiveThread}) {
           </TableBody>
         </Table>
       </TableContainer>
-      </Box>
+      </Paper>
     }
     </Box>
   );
@@ -165,7 +163,6 @@ function Kukulkan() {
         <CssBaseline />
         <Box
           sx={{
-            marginTop: 8,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
