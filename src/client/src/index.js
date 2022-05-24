@@ -16,6 +16,8 @@ import TableHead from '@mui/material/TableHead';
 import TableBody from '@mui/material/TableBody';
 import TableRow from '@mui/material/TableRow';
 import TableCell from '@mui/material/TableCell';
+import AttachFile from '@mui/icons-material/AttachFile';
+import Reply from '@mui/icons-material/Reply';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 import { useHotkeys } from 'react-hotkeys-hook'
@@ -28,7 +30,7 @@ function getColor(stringInput) {
   return `hsl(${stringUniqueHash % 360}, 95%, 35%)`;
 }
 
-function Search({setThreads, setError}) {
+function Search({setThreads, setError, setActiveThread}) {
   const [loading, setLoading] = useState(false);
 
   const queryServer = (event) => {
@@ -36,7 +38,6 @@ function Search({setThreads, setError}) {
     const data = new FormData(event.currentTarget);
 
     let query = data.get('search');
-    query = query.includes("tag:deleted") ? query : query + " and not tag:deleted";
     setThreads(null);
     setLoading(true);
     fetch('http://localhost:5000/api/query/' + query)
@@ -44,13 +45,17 @@ function Search({setThreads, setError}) {
       .then(
         (result) => {
             setThreads(result);
+            setError(null);
         },
         (error) => {
+            setThreads(null);
             setError(error);
         }
       )
       .finally(() => {
         setLoading(false);
+        setActiveThread(0);
+        document.activeElement.blur();
       });
   };
 
@@ -81,10 +86,9 @@ function Search({setThreads, setError}) {
   );
 }
 
-function Threads({threads, error}) {
+function Threads({threads, error, activeThread, setActiveThread}) {
   const df = new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
 
-  const [activeThread, setActiveThread] = useState(0);
   useHotkeys('k', () => setActiveThread(Math.max(0, activeThread - 1)), [activeThread]);
   useHotkeys('Shift+K', () => setActiveThread(Math.max(0, activeThread - 10)), [activeThread]);
   useHotkeys('j', () => setActiveThread(Math.min(threads.length - 1, activeThread + 1)), [activeThread, threads]);
@@ -106,6 +110,8 @@ function Threads({threads, error}) {
             <TableRow>
               <TableCell>Date</TableCell>
               <TableCell>Messages</TableCell>
+              <TableCell></TableCell>
+              <TableCell></TableCell>
               <TableCell>Tags</TableCell>
               <TableCell>Subject</TableCell>
               <TableCell>Authors</TableCell>
@@ -113,12 +119,15 @@ function Threads({threads, error}) {
           </TableHead>
           <TableBody>
             { threads.map((thread, index) => (
-              <TableRow key={index} selected={activeThread === index ? true : false} onClick={() => setActiveThread(index)}>
+              <TableRow key={index} selected={activeThread === index ? true : false} hover={true} onClick={() => setActiveThread(index)}>
                 <TableCell>{df.format(thread.newest_date * 1000)}</TableCell>
                 <TableCell>{thread.total_messages}</TableCell>
+                <TableCell>{ thread.tags.includes("attachment") && <AttachFile /> }</TableCell>
+                <TableCell>{ (thread.tags.includes("replied") || thread.tags.includes("sent")) && <Reply /> }</TableCell>
                 <TableCell>
                   <Grid container spacing={1}>
-                    { thread.tags.map((tag, index2) => (
+                    { thread.tags.filter((tag) => (tag !== "attachment" && tag !== "replied" && tag !== "sent"))
+                      .map((tag, index2) => (
                       <Grid item key={index2}>
                         <Chip key={index2} label={tag} style={{ color: getColor(tag) }} onDelete={console.log}/>
                       </Grid>
@@ -126,7 +135,7 @@ function Threads({threads, error}) {
                   </Grid>
                 </TableCell>
                 <TableCell>{thread.subject}</TableCell>
-                <TableCell>{thread.authors}</TableCell>
+                <TableCell>{thread.authors.replace("| ", ", ")}</TableCell>
               </TableRow>
             )) }
           </TableBody>
@@ -141,6 +150,7 @@ function Threads({threads, error}) {
 function Kukulkan() {
   const [error, setError] = useState(null);
   const [threads, setThreads] = useState(null);
+  const [activeThread, setActiveThread] = useState(0);
 
   const theme = createTheme();
 
@@ -161,8 +171,8 @@ function Kukulkan() {
             alignItems: 'center',
           }}
         >
-            <Search setThreads={setThreads} setError={setError} />
-            <Threads threads={threads} error={error} />
+            <Search setThreads={setThreads} setError={setError} setActiveThread={setActiveThread} />
+            <Threads threads={threads} error={error} activeThread={activeThread} setActiveThread={setActiveThread} />
         </Box>
       </Container>
     </ThemeProvider>
