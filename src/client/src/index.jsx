@@ -96,7 +96,7 @@ function Threads({threads, error, activeThread, setActiveThread}) {
                         setActiveThread(index);
                         window.open('/thread?id=' + thread.thread_id, '_blank')
               }}>
-                <TableCell>{ df.format(thread.oldest_date * 1000) } &mdash; { df.format(thread.newest_date * 1000) }</TableCell>
+                <TableCell align="center">{ thread.total_messages > 1 && df.format(thread.oldest_date * 1000) + " — " } { df.format(thread.newest_date * 1000) }</TableCell>
                 <TableCell>{ thread.total_messages }</TableCell>
                 <TableCell>{ thread.tags.includes("attachment") && <AttachFile /> }</TableCell>
                 <TableCell>{ (thread.tags.includes("replied") || thread.tags.includes("sent")) && <Reply /> }</TableCell>
