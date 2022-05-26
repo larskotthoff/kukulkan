@@ -30,6 +30,10 @@ import { Thread } from "./thread.jsx";
 import { getColor } from "./utils.js";
 
 function Search({loading, setSearchParams, query}) {
+  let opts = ["tag:todo", "date:1d.."];
+  let qs = localStorage.getItem("queries");
+  if(qs !== null) opts = [...new Set(opts.concat(JSON.parse(qs)))];
+
   return (
     <Box component="form" noValidate sx={{ mt: 1, width: "70%" }} onSubmit={(e) => {
       e.preventDefault();
@@ -47,7 +51,7 @@ function Search({loading, setSearchParams, query}) {
             freeSolo
             autoComplete={true}
             value={query ? query : ""}
-            options={["tag:todo", "date:1d.."]}
+            options={opts}
             renderInput={(params) => <TextField {...params} label="Search" id="search" name="search" fullWidth autoFocus margin="normal" />}
           />
           </Grid>
@@ -140,6 +144,14 @@ function Kukulkan() {
 
   useEffect(() => {
     if(query !== null) {
+      let qs = localStorage.getItem("queries");
+      if(qs === null) qs = [];
+      else qs = JSON.parse(qs);
+      qs.unshift(query);
+      qs = [...new Set(qs)];
+      // store up to 10 most recent queries
+      localStorage.setItem("queries", JSON.stringify(qs.slice(0, 10)));
+
       setThreads(null);
       setLoading(true);
       fetch('http://localhost:5000/api/query/' + query)
