@@ -156,13 +156,17 @@ def threads_to_json(threads, start = 0, number = None):
 
 def thread_to_json(thread):
     """Converts a `notmuch.threads.Thread` instance to a JSON object."""
+    # necessary to get accurate tags and metadata, work around the notmuch API
+    # only considering the matched messages
+    messages = thread.get_messages()
+    msglist = list(messages)
     return {
         "authors": thread.get_authors(),
         "matched_messages": thread.get_matched_messages(),
-        "newest_date": thread.get_newest_date(),
-        "oldest_date": thread.get_oldest_date(),
+        "newest_date": msglist[-1].get_date(),
+        "oldest_date": msglist[0].get_date(),
         "subject": thread.get_subject(),
-        "tags": list(thread.get_tags()),
+        "tags": list(set([ tag for msg in msglist for tag in msg.get_tags() ])),
         "thread_id": thread.get_thread_id(),
         "total_messages": thread.get_total_messages(),
     }
