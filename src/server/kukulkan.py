@@ -202,7 +202,7 @@ def message_to_json(message):
             strip = True,
         )
     elif content_type == "text/plain":
-        content = msg_body.get_content()
+        content = bleach.clean(msg_body.get_content())
     else:
         return {}
     return {
