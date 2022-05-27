@@ -18,29 +18,34 @@ import { getColor } from "./utils.js";
 export function Thread() {
   const [threadLoading, setThreadLoading] = useState(false);
   const [thread, setThread] = useState(null);
+  const [threadId, setThreadId] = useState(null);
   const [error, setError] = useState(null);
 
   const [searchParams] = useSearchParams();
-  const threadId = searchParams.get("id");
+  useEffect(() => {
+    setThreadId(searchParams.get("id"));
+  }, [searchParams]);
 
   useEffect(() => {
-    setThread(null);
-    setThreadLoading(true);
-    fetch('http://localhost:5000/api/thread/' + threadId)
-      .then(res => res.json())
-      .then(
-        (result) => {
-            setThread(result);
-            setError(null);
-        },
-        (error) => {
-            setThread(null);
-            setError(error);
-        }
-      )
-      .finally(() => {
-        setThreadLoading(false);
-      });
+    if(threadId !== null) {
+      setThread(null);
+      setThreadLoading(true);
+      fetch('http://localhost:5000/api/thread/' + threadId)
+        .then(res => res.json())
+        .then(
+          (result) => {
+              setThread(result);
+              setError(null);
+          },
+          (error) => {
+              setThread(null);
+              setError(error);
+          }
+        )
+        .finally(() => {
+          setThreadLoading(false);
+        });
+    }
   }, [threadId]);
 
 
