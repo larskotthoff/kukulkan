@@ -62,7 +62,7 @@ export function Thread() {
             alignItems: 'center',
           }}
         >
-          <Box id="thread" sx={{ mt: 1, width: "90%" }}>
+          <Box id="thread" sx={{ mt: 1, maxWidth: "80em" }}>
           { threadLoading && <CircularProgress /> }
           { error && 
             <Box id="error" sx={{ mt: 1 }}>

@@ -75,7 +75,7 @@ function Threads({threads, error, activeThread, setActiveThread}) {
     <Box id="threads" sx={{ mt: 1, width: "90%" }}>
     { threads && 
       <Paper elevation={3} sx={{ padding: 2 }}>
-      <Typography align="right">{threads.length} results.</Typography>
+      <Typography align="right">{threads.length} threads.</Typography>
       <TableContainer id="threadsTable">
         <Table>
           <TableHead>
