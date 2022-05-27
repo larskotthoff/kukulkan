@@ -174,7 +174,7 @@ def thread_to_json(thread):
 
 def messages_to_json(messages):
     """Converts a list of `notmuch.message.Message` instances to a JSON object."""
-    return [message_to_json(m) for m in messages]
+    return [ message_to_json(m) for m in messages ]
 
 
 def message_to_json(message):
@@ -192,7 +192,7 @@ def message_to_json(message):
                     "content_type": part.get_content_type(),
                 }
             )
-    msg_body = email_msg.get_body(preferencelist = ("html", "plain"))
+    msg_body = email_msg.get_body(preferencelist = ("plain", "html"))
     content_type = msg_body.get_content_type()
     if content_type == "text/html":
         content = bleach.clean(
