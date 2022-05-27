@@ -13,7 +13,55 @@ import Paper from '@mui/material/Paper';
 import CircularProgress from '@mui/material/CircularProgress';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
+import Collapse from '@mui/material/Collapse';
+
 import { getColor } from "./utils.js";
+
+class Message extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { expanded: this.props.open };
+    this.handleClick = this.handleClick.bind(this);
+  }
+
+  handleClick() {
+    this.setState(prevState => ({
+      expanded: !prevState.expanded
+    }));
+  }
+
+  render() {
+    const { msg } = this.props;
+    return (
+      <Paper elevation={3} sx={{ padding: 1, margin: 2, width: "80em" }} onClick={this.handleClick}>
+        <Collapse key={msg.message_id + "_collapsed" } in={!this.state.expanded} timeout={300} unmountOnExit>
+          <Grid container justifyContent="space-between">
+            <Typography align="left">{msg.from}</Typography>
+            <Typography align="right">{msg.date}</Typography>
+            <Typography style={{overflow: "hidden", height: "3em"}} dangerouslySetInnerHTML={{ __html: msg.content }} />
+          </Grid>
+        </Collapse>
+        <Collapse key={msg.message_id + "_expanded" } in={this.state.expanded} timeout={300} unmountOnExit>
+            { msg.from && <Typography variant="h6">From: {msg.from}</Typography> }
+            { msg.to && <Typography variant="h6">To: {msg.to}</Typography> }
+            { msg.cc && <Typography variant="h6">CC: {msg.cc}</Typography> }
+            { msg.bcc && <Typography variant="h6">BCC: {msg.bcc}</Typography> }
+            <Typography variant="h6">Date: {msg.date}</Typography>
+            <Typography variant="h6">Subject: {msg.subject}</Typography>
+            <Grid container spacing={1}>
+              { msg.tags.map((tag, index2) => (
+                <Grid item key={index2}>
+                  <Chip key={index2} label={tag} style={{ color: getColor(tag) }} onDelete={console.log}/>
+                </Grid>
+              )) }
+            </Grid>
+            <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
+            <Typography style={{whiteSpace: 'pre-line'}} dangerouslySetInnerHTML={{ __html: msg.content }} />
+        </Collapse>
+      </Paper>
+    )
+  }
+}
 
 export function Thread() {
   const [threadLoading, setThreadLoading] = useState(false);
@@ -48,7 +96,6 @@ export function Thread() {
     }
   }, [threadId]);
 
-
   const theme = createTheme();
 
   return (
@@ -62,7 +109,7 @@ export function Thread() {
             alignItems: 'center',
           }}
         >
-          <Box id="thread" sx={{ mt: 1, maxWidth: "80em" }}>
+          <Box id="thread" sx={{ mt: 1 }}>
           { threadLoading && <CircularProgress /> }
           { error && 
             <Box id="error" sx={{ mt: 1 }}>
@@ -72,23 +119,7 @@ export function Thread() {
           { thread && 
               <Box>
               { thread.map((msg, index) => (
-                <Paper elevation={3} key={index} sx={{ padding: 1, margin: 2 }}>
-                  { msg.from && <Typography variant="h6">From: {msg.from}</Typography> }
-                  { msg.to && <Typography variant="h6">To: {msg.to}</Typography> }
-                  { msg.cc && <Typography variant="h6">CC: {msg.cc}</Typography> }
-                  { msg.bcc && <Typography variant="h6">BCC: {msg.bcc}</Typography> }
-                  <Typography variant="h6">Date: {msg.date}</Typography>
-                  <Typography variant="h6">Subject: {msg.subject}</Typography>
-                  <Grid container spacing={1}>
-                    { msg.tags.map((tag, index2) => (
-                      <Grid item key={index2}>
-                        <Chip key={index2} label={tag} style={{ color: getColor(tag) }} onDelete={console.log}/>
-                      </Grid>
-                    )) }
-                  </Grid>
-                  <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
-                  <Typography style={{whiteSpace: 'pre-line'}} dangerouslySetInnerHTML={{ __html: msg.content }} />
-                </Paper>
+                <Message key={msg.message_id} msg={msg} open={index === thread.length - 1} />
               )) }
             </Box>
           }
