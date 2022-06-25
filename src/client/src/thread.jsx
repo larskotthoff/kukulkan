@@ -14,8 +14,12 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 import Collapse from '@mui/material/Collapse';
+import ExpandLess from '@mui/icons-material/ExpandLess';
+import ExpandMore from '@mui/icons-material/ExpandMore';
 
-import { getColor } from "./utils.js";
+import { getColor, strip } from "./utils.js";
+
+const timeout = 200;
 
 class MessageText extends React.Component {
   constructor(props) {
@@ -24,11 +28,16 @@ class MessageText extends React.Component {
     this.handleClick = this.handleClick.bind(this);
 
     let lines = this.props.text.split('\n');
-    let lastLine = 0;
+    let lastLine = lines.length - 1;
     for(let index = 0; index < lines.length; index++) {
-      let line = lines[index];
-      if(line.trim() === "--") break; // signature block
-      if(line.trim().length !== 0 && !line.startsWith(">") && !line.startsWith("&gt;")) lastLine = index;
+      let line = strip(lines[index].trim());
+      if((line === "--") || // signature block
+         (line === "—") || // signature block
+         line.startsWith(">") ||
+         line.startsWith("&gt;")) {
+        lastLine = index - 1;
+        break;
+      }
     }
 
     this.mainPart = lines.slice(0, lastLine).join('\n');
@@ -44,12 +53,18 @@ class MessageText extends React.Component {
   render() {
     return (
       <Box onClick={this.handleClick}>
-        <Typography style={{whiteSpace: 'pre-line'}} dangerouslySetInnerHTML={{ __html: this.mainPart }} />
-        <Collapse key={this.props.id + "_quoted_collapsed" } in={!this.state.expanded} timeout={300} unmountOnExit>
-            <Typography style={{overflow: "hidden", height: "3em"}} dangerouslySetInnerHTML={{ __html: this.quotedPart }} />
+        <Typography style={{ whiteSpace: "pre-line" }} dangerouslySetInnerHTML={{ __html: this.mainPart }} />
+        <Collapse key={ this.props.id + "_quoted_collapsed" } in={!this.state.expanded} timeout={timeout} unmountOnExit>
+          <Grid container justifyContent="space-between">
+            <Typography align="left" style={{ overflow: "hidden", height: "3em", width: "77em" }} dangerouslySetInnerHTML={{ __html: this.quotedPart }} />
+            <ExpandMore align="right" />
+          </Grid>
         </Collapse>
-        <Collapse key={this.props.id + "_quoted_expanded" } in={this.state.expanded} timeout={300} unmountOnExit>
-            <Typography style={{whiteSpace: 'pre-line'}} dangerouslySetInnerHTML={{ __html: this.quotedPart }} />
+        <Collapse key={ this.props.id + "_quoted_expanded" } in={this.state.expanded} timeout={timeout} unmountOnExit>
+          <Grid container justifyContent="space-between">
+            <Typography align="left" style={{ whiteSpace: "pre-line", width: "77em" }} dangerouslySetInnerHTML={{ __html: this.quotedPart }} />
+            <ExpandLess align="right" />
+          </Grid>
         </Collapse>
       </Box>
     )
@@ -73,21 +88,25 @@ class Message extends React.Component {
     const { msg } = this.props;
     return (
       <Paper elevation={3} sx={{ padding: 1, margin: 2, width: "80em" }}>
-        <Collapse key={msg.message_id + "_collapsed" } in={!this.state.expanded} timeout={300} unmountOnExit>
+        <Collapse key={msg.message_id + "_collapsed" } in={!this.state.expanded} timeout={timeout} unmountOnExit>
           <Grid container justifyContent="space-between" onClick={this.handleClick}>
-            <Typography align="left">{msg.from}</Typography>
-            <Typography align="right">{msg.date}</Typography>
-            <Typography style={{overflow: "hidden", height: "3em"}} dangerouslySetInnerHTML={{ __html: msg.content }} />
+            <Typography align="left" style={{ width: "50em" }}>{msg.from}</Typography>
+            <Typography align="right" style={{ width: "29em" }}>{msg.date}</Typography>
+            <Typography align="left" style={{ overflow: "hidden", height: "3em", width: "77em" }} dangerouslySetInnerHTML={{ __html: msg.content }} />
+            <ExpandMore align="right" />
           </Grid>
         </Collapse>
-        <Collapse key={msg.message_id + "_expanded" } in={this.state.expanded} timeout={300} unmountOnExit>
+        <Collapse key={msg.message_id + "_expanded" } in={this.state.expanded} timeout={timeout} unmountOnExit>
           <Box onClick={this.handleClick}>
             { msg.from && <Typography variant="h6">From: {msg.from}</Typography> }
             { msg.to && <Typography variant="h6">To: {msg.to}</Typography> }
             { msg.cc && <Typography variant="h6">CC: {msg.cc}</Typography> }
             { msg.bcc && <Typography variant="h6">BCC: {msg.bcc}</Typography> }
             <Typography variant="h6">Date: {msg.date}</Typography>
-            <Typography variant="h6">Subject: {msg.subject}</Typography>
+            <Grid container justifyContent="space-between">
+              <Typography align="left" variant="h6" style={{ width: "62em" }}>Subject: {msg.subject}</Typography>
+              <ExpandLess align="right" />
+            </Grid>
             <Grid container spacing={1}>
               { msg.tags.map((tag, index2) => (
                 <Grid item key={index2}>
