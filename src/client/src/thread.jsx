@@ -17,6 +17,8 @@ import Collapse from '@mui/material/Collapse';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 
+import AttachFile from '@mui/icons-material/AttachFile';
+
 import { getColor, strip } from "./utils.js";
 
 const timeout = 200;
@@ -25,7 +27,7 @@ class MessageText extends React.Component {
   constructor(props) {
     super(props);
     this.state = { expanded: this.props.open };
-    this.handleClick = this.handleClick.bind(this);
+    this.handleCollapse = this.handleCollapse.bind(this);
 
     let lines = this.props.text.split('\n');
     let lastLine = lines.length - 1;
@@ -44,7 +46,7 @@ class MessageText extends React.Component {
     this.quotedPart = lines.slice(lastLine).join('\n');
   }
 
-  handleClick() {
+  handleCollapse() {
     this.setState(prevState => ({
       expanded: !prevState.expanded
     }));
@@ -52,20 +54,24 @@ class MessageText extends React.Component {
 
   render() {
     return (
-      <Box onClick={this.handleClick}>
+      <Box onClick={this.handleCollapse}>
         <Typography style={{ whiteSpace: "pre-line" }} dangerouslySetInnerHTML={{ __html: this.mainPart }} />
-        <Collapse key={ this.props.id + "_quoted_collapsed" } in={!this.state.expanded} timeout={timeout} unmountOnExit>
-          <Grid container justifyContent="space-between">
-            <Typography align="left" style={{ overflow: "hidden", height: "3em", width: "77em" }} dangerouslySetInnerHTML={{ __html: this.quotedPart }} />
-            <ExpandMore align="right" />
-          </Grid>
-        </Collapse>
-        <Collapse key={ this.props.id + "_quoted_expanded" } in={this.state.expanded} timeout={timeout} unmountOnExit>
-          <Grid container justifyContent="space-between">
-            <Typography align="left" style={{ whiteSpace: "pre-line", width: "77em" }} dangerouslySetInnerHTML={{ __html: this.quotedPart }} />
-            <ExpandLess align="right" />
-          </Grid>
-        </Collapse>
+        { this.quotedPart.length > 0 &&
+          <Box>
+            <Collapse key={ this.props.id + "_quoted_collapsed" } in={!this.state.expanded} timeout={timeout} unmountOnExit>
+              <Grid container justifyContent="space-between">
+                <Typography align="left" style={{ overflow: "hidden", height: "3em", width: "77em" }} dangerouslySetInnerHTML={{ __html: this.quotedPart }} />
+                <ExpandMore align="right" />
+              </Grid>
+            </Collapse>
+            <Collapse key={ this.props.id + "_quoted_expanded" } in={this.state.expanded} timeout={timeout} unmountOnExit>
+              <Grid container justifyContent="space-between">
+                <Typography align="left" style={{ whiteSpace: "pre-line", width: "77em" }} dangerouslySetInnerHTML={{ __html: this.quotedPart }} />
+                <ExpandLess align="right" />
+              </Grid>
+            </Collapse>
+          </Box>
+        }
       </Box>
     )
   }
@@ -75,13 +81,32 @@ class Message extends React.Component {
   constructor(props) {
     super(props);
     this.state = { expanded: this.props.open };
-    this.handleClick = this.handleClick.bind(this);
+    this.handleCollapse = this.handleCollapse.bind(this);
+    this.getAttachment = this.getAttachment.bind(this);
   }
 
-  handleClick() {
+  handleCollapse() {
     this.setState(prevState => ({
       expanded: !prevState.expanded
     }));
+  }
+
+  getAttachment(attachment) {
+    console.log(attachment);
+    const { msg } = this.props;
+    fetch('http://localhost:5000/api/attachment/' + msg.message_id + "/" + attachment)
+      .then(res => res.blob())
+      .then(blob => {
+        const href = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.download = msg.attachments[attachment].filename;
+        a.href = href;
+        a.click();
+        a.remove();
+      },
+      error => {
+        console.log(error);
+      });
   }
 
   render() {
@@ -89,7 +114,7 @@ class Message extends React.Component {
     return (
       <Paper elevation={3} sx={{ padding: 1, margin: 2, width: "80em" }}>
         <Collapse key={msg.message_id + "_collapsed" } in={!this.state.expanded} timeout={timeout} unmountOnExit>
-          <Grid container justifyContent="space-between" onClick={this.handleClick}>
+          <Grid container justifyContent="space-between" onClick={this.handleCollapse}>
             <Typography align="left" style={{ width: "50em" }}>{msg.from}</Typography>
             <Typography align="right" style={{ width: "29em" }}>{msg.date}</Typography>
             <Typography align="left" style={{ overflow: "hidden", height: "3em", width: "77em" }} dangerouslySetInnerHTML={{ __html: msg.content }} />
@@ -97,7 +122,7 @@ class Message extends React.Component {
           </Grid>
         </Collapse>
         <Collapse key={msg.message_id + "_expanded" } in={this.state.expanded} timeout={timeout} unmountOnExit>
-          <Box onClick={this.handleClick}>
+          <Box onClick={this.handleCollapse}>
             { msg.from && <Typography variant="h6">From: {msg.from}</Typography> }
             { msg.to && <Typography variant="h6">To: {msg.to}</Typography> }
             { msg.cc && <Typography variant="h6">CC: {msg.cc}</Typography> }
@@ -107,14 +132,27 @@ class Message extends React.Component {
               <Typography align="left" variant="h6" style={{ width: "62em" }}>Subject: {msg.subject}</Typography>
               <ExpandLess align="right" />
             </Grid>
-            <Grid container spacing={1}>
-              { msg.tags.map((tag, index2) => (
-                <Grid item key={index2}>
-                  <Chip key={index2} label={tag} style={{ color: getColor(tag) }} onDelete={console.log}/>
-                </Grid>
-              )) }
-            </Grid>
           </Box>
+
+          <Grid container spacing={1}>
+            { msg.tags.map((tag, index2) => (
+              <Grid item key={index2} style={{ height: "3em" }}>
+                <Chip key={index2} label={tag} style={{ color: getColor(tag) }} onDelete={console.log}/>
+              </Grid>
+            )) }
+          </Grid>
+
+          <Grid container spacing={1}>
+            { msg.attachments.map((attachment, index2) => (
+                <Grid item align="center" key={index2} onClick={() => { this.getAttachment(index2); }}>
+                  {/* eslint-disable-next-line */}
+                  <a href="#" key={index2}>
+                    <AttachFile />
+                    <Typography>{attachment.filename} ({attachment.content_type})</Typography>
+                  </a>
+                </Grid>
+            )) }
+          </Grid>
           <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
           <MessageText key={msg.message_id + "_text"} id={msg.message_id} text={msg.content} open={false} />
         </Collapse>
