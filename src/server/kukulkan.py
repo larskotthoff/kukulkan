@@ -128,7 +128,7 @@ def create_app():
         if not d:
             return None
         if isinstance(d["content"], str):
-            f = io.StringIO(d["content"])
+            f = io.BytesIO(io.StringIO(d["content"]).getvalue().encode())
         else:
             f = io.BytesIO(d["content"])
         return send_file(f, mimetype = d["content_type"], as_attachment = True,
