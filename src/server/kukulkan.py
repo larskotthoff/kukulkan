@@ -200,9 +200,9 @@ def message_to_json(message):
             tags = ALLOWED_TAGS,
             attributes = ALLOWED_ATTRIBUTES,
             strip = True,
-        )
+        ).strip()
     elif content_type == "text/plain":
-        content = bleach.clean(msg_body.get_content())
+        content = bleach.clean(msg_body.get_content()).strip()
     else:
         return {}
     return {
