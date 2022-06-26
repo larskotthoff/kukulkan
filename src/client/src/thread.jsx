@@ -6,6 +6,7 @@ import Container from '@mui/material/Container';
 import Alert from '@mui/material/Alert';
 import Divider from '@mui/material/Divider';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
 import Chip from '@mui/material/Chip';
@@ -147,10 +148,9 @@ class Message extends React.Component {
             { msg.attachments.map((attachment, index2) => (
                 <Grid item align="center" key={index2} onClick={() => { this.getAttachment(index2); }}>
                   {/* eslint-disable-next-line */}
-                  <a href="#" key={index2}>
-                    <AttachFile />
-                    <Typography>{attachment.filename} ({attachment.content_type})</Typography>
-                  </a>
+                  <Button key={index2} startIcon={<AttachFile/>} variant="outlined">
+                    {attachment.filename} ({attachment.content_type})
+                  </Button>
                 </Grid>
             )) }
           </Grid>
