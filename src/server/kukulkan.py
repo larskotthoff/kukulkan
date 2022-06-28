@@ -7,11 +7,12 @@ import itertools
 import logging
 import os
 
-import bleach
 import notmuch
 from flask import Flask, current_app, g, send_file, send_from_directory
 from werkzeug.utils import safe_join
 from flask_restful import Api, Resource
+
+import bleach
 
 ALLOWED_TAGS = [
     "a",
@@ -39,6 +40,19 @@ ALLOWED_ATTRIBUTES = {
     "div": ["style"],
 }
 
+import lxml
+from lxml.html.clean import Cleaner
+
+cleaner = Cleaner()
+cleaner.javascript = True
+cleaner.scripts = True
+cleaner.meta = True
+cleaner.embedded = True
+cleaner.frames = True
+cleaner.forms = True
+cleaner.remove_unknown_tags = True
+cleaner.safe_attrs_only = True
+cleaner.add_nofollow = True
 
 def get_db():
     """Get a new `Database` instance. Called before every request. Cached on first call."""
@@ -192,6 +206,7 @@ def message_to_json(message):
                     "content_type": part.get_content_type(),
                 }
             )
+
     msg_body = email_msg.get_body(preferencelist = ("plain", "html"))
     content_type = msg_body.get_content_type()
     if content_type == "text/html":
@@ -202,9 +217,17 @@ def message_to_json(message):
             strip = True,
         ).strip()
     elif content_type == "text/plain":
-        content = bleach.clean(msg_body.get_content()).strip()
+        content = bleach.linkify(bleach.clean(msg_body.get_content()).strip())
     else:
         return {}
+
+    html_body = email_msg.get_body(preferencelist = ("html"))
+    if html_body:
+        html = lxml.html.fromstring(html_body.get_content())
+        for tag in html.xpath('//img'):
+            tag.attrib.pop('src')
+        html_body = lxml.html.tostring(cleaner.clean_html(html), encoding = str)
+
     return {
         "from": email_msg["From"],
         "to": email_msg["To"],
@@ -212,8 +235,10 @@ def message_to_json(message):
         "bcc": email_msg["BCC"],
         "date": email_msg["Date"],
         "subject": email_msg["Subject"],
-        "content": content,
-        "content_type": content_type,
+        "body": {
+            "text/plain": content,
+            "text/html": html_body
+        },
         "attachments": attachments,
         "message_id": message.get_message_id(),
         "tags": [ tag for tag in message.get_tags() ],
