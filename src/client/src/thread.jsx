@@ -204,6 +204,7 @@ export function Thread() {
         )
         .finally(() => {
           setThreadLoading(false);
+          setTimeout(() => { window.scrollTo(0, document.body.scrollHeight); }, 100);
         });
     }
   }, [threadId]);
