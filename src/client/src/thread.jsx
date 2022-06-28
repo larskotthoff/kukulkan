@@ -103,7 +103,6 @@ class Message extends React.Component {
   }
 
   getAttachment(attachment) {
-    console.log(attachment);
     const { msg } = this.props;
     fetch('http://localhost:5000/api/attachment/' + msg.message_id + "/" + attachment)
       .then(res => res.blob())
@@ -175,6 +174,30 @@ class Message extends React.Component {
   }
 }
 
+class DeletedMessage extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hidden: true };
+    this.handleReplace = this.handleReplace.bind(this);
+  }
+
+  handleReplace() {
+    this.setState({ hidden: false });
+  }
+
+  render() {
+    if(this.state.hidden) {
+      return (
+        <Paper elevation={1} sx={{ padding: 1, margin: 2, width: "80em" }}>
+          <Button onClick={this.handleReplace}>show deleted message</Button>
+        </Paper>
+      )
+    } else {
+      const { msg } = this.props;
+      return (<Message key={this.key} msg={msg} open={false} />)
+    }
+  }
+}
 export function Thread() {
   const [threadLoading, setThreadLoading] = useState(false);
   const [thread, setThread] = useState(null);
@@ -232,6 +255,8 @@ export function Thread() {
           { thread && 
               <Box>
               { thread.map((msg, index) => (
+                msg.tags.includes("deleted") ?
+                <DeletedMessage key={msg.message_id} msg={msg} /> :
                 <Message key={msg.message_id} msg={msg} open={index === thread.length - 1} />
               )) }
             </Box>
