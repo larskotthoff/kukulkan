@@ -66,10 +66,12 @@ function Search({loading, setSearchParams, query}) {
 function Threads({threads, error, activeThread, setActiveThread}) {
   const df = new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
 
+  /*
   useHotkeys('k', () => setActiveThread(Math.max(0, activeThread - 1)), [activeThread]);
   useHotkeys('Shift+K', () => setActiveThread(Math.max(0, activeThread - 10)), [activeThread]);
   useHotkeys('j', () => setActiveThread(Math.min(threads.length - 1, activeThread + 1)), [activeThread, threads]);
   useHotkeys('Shift+J', () => setActiveThread(Math.min(threads.length - 1, activeThread + 10)), [activeThread, threads]);
+  */
 
   return (
     <Box id="threads" sx={{ mt: 1, width: "90%" }}>

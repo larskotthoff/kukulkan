@@ -82,14 +82,23 @@ class MessageText extends React.Component {
 class Message extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { expanded: this.props.open };
+    this.state = { expanded: this.props.open, html: false };
     this.handleCollapse = this.handleCollapse.bind(this);
+    this.handleHtml = this.handleHtml.bind(this);
     this.getAttachment = this.getAttachment.bind(this);
   }
 
   handleCollapse() {
     this.setState(prevState => ({
-      expanded: !prevState.expanded
+      expanded: !prevState.expanded,
+      html: prevState.html
+    }));
+  }
+
+  handleHtml() {
+    this.setState(prevState => ({
+      expanded: prevState.expanded,
+      html: !prevState.html
     }));
   }
 
@@ -119,7 +128,7 @@ class Message extends React.Component {
           <Grid container justifyContent="space-between" onClick={this.handleCollapse}>
             <Typography align="left" style={{ width: "50em" }}>{msg.from}</Typography>
             <Typography align="right" style={{ width: "29em" }}>{msg.date}</Typography>
-            <Typography align="left" style={{ overflow: "hidden", height: "3em", width: "77em" }} dangerouslySetInnerHTML={{ __html: msg.content }} />
+            <Typography align="left" style={{ overflow: "hidden", height: "3em", width: "77em" }} dangerouslySetInnerHTML={{ __html: msg.body["text/plain"] }} />
             <ExpandMore align="right" />
           </Grid>
         </Collapse>
@@ -146,8 +155,7 @@ class Message extends React.Component {
 
           <Grid container spacing={1}>
             { msg.attachments.map((attachment, index2) => (
-                <Grid item align="center" key={index2} onClick={() => { this.getAttachment(index2); }}>
-                  {/* eslint-disable-next-line */}
+                <Grid item align="center" key={index2} style={{ height: "3em" }} onClick={() => { this.getAttachment(index2); }}>
                   <Button key={index2} startIcon={<AttachFile/>} variant="outlined">
                     {attachment.filename} ({attachment.content_type})
                   </Button>
@@ -155,7 +163,12 @@ class Message extends React.Component {
             )) }
           </Grid>
           <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
-          <MessageText key={msg.message_id + "_text"} id={msg.message_id} text={msg.content} open={false} />
+          <Grid container justifyContent="flex-end">
+            { msg.body["text/html"] && <Button variant="outlined" onClick={this.handleHtml}>{this.state.html ? "Text" : "HTML"}</Button> }
+          </Grid>
+          { this.state.html ?
+            <Typography dangerouslySetInnerHTML={{ __html: msg.body["text/html"] }} /> :
+            <MessageText key={msg.message_id + "_text"} id={msg.message_id} text={msg.body["text/plain"]} open={false} /> }
         </Collapse>
       </Paper>
     )
