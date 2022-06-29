@@ -7,6 +7,7 @@
     "@emotion/styled": "^11.8.1",
     "@mui/icons-material": "^5.8.0",
     "@mui/material": "^5.8.0",
+    "crypto-random-string": "^5.0.0",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
     "react-hotkeys-hook": "^3.4.6",

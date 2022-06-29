@@ -187,6 +187,20 @@ def thread_to_json(thread):
     }
 
 
+def get_attachments(email_msg, content = False):
+    """Returns all attachments for an email message."""
+    attachments = []
+    for part in email_msg.walk():
+        if part.get_content_maintype() == "multipart":
+            continue
+        if part.get_content_disposition() in ["attachment", "inline"] or part.get_content_type() == "text/calendar":
+            attachments.append({
+                "filename": part.get_filename() if part.get_filename() else "unnamed attachment",
+                "content_type": part.get_content_type(),
+                "content": part.get_content() if content else None
+            })
+    return attachments
+
 def messages_to_json(messages):
     """Converts a list of `notmuch.message.Message` instances to a JSON object."""
     return [ message_to_json(m) for m in messages ]
@@ -196,18 +210,8 @@ def message_to_json(message):
     """Converts a `notmuch.message.Message` instance to a JSON object."""
     with open(message.get_filename(), "rb") as f:
         email_msg = email.message_from_binary_file(f, policy = email.policy.default)
-    attachments = []
-    for part in email_msg.walk():
-        if part.get_content_maintype() == "multipart":
-            continue
-        if part.get_content_disposition() in ["attachment", "inline"]:
-            attachments.append(
-                {
-                    "filename": part.get_filename(),
-                    "content_type": part.get_content_type(),
-                }
-            )
 
+    attachments = get_attachments(email_msg)
     msg_body = email_msg.get_body(preferencelist = ("plain", "html"))
     content_type = msg_body.get_content_type()
     if content_type == "text/html":
@@ -223,11 +227,13 @@ def message_to_json(message):
         return {}
 
     html_body = email_msg.get_body(preferencelist = ("html"))
-    if html_body:
+    if html_body and html_body.get_content():
         html = lxml.html.fromstring(html_body.get_content())
         for tag in html.xpath('//img'):
             tag.attrib.pop('src')
         html_body = lxml.html.tostring(cleaner.clean_html(html), encoding = str)
+    else:
+        html_body = None
 
     # signature verification
     try:
@@ -263,17 +269,7 @@ def message_attachment(message, num):
     """Returns attachment no. `num` of a `notmuch.message.Message` instance."""
     with open(message.get_filename(), "rb") as f:
         email_msg = email.message_from_binary_file(f, policy = email.policy.default)
-    attachments = []
-    for part in email_msg.walk():
-        if part.get_content_maintype() == "multipart":
-            continue
-        if part.get_content_disposition() in ["attachment", "inline"]:
-            attachments.append(part)
+    attachments = get_attachments(email_msg, True)
     if not attachments:
         return {}
-    attachment = attachments[num]
-    return {
-        "filename": attachment.get_filename(),
-        "content_type": attachment.get_content_type(),
-        "content": attachment.get_content(),
-    }
+    return attachments[num]
