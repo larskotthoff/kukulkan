@@ -6,6 +6,7 @@ import io
 import itertools
 import logging
 import os
+import subprocess
 
 import notmuch
 from flask import Flask, current_app, g, send_file, send_from_directory
@@ -228,6 +229,18 @@ def message_to_json(message):
             tag.attrib.pop('src')
         html_body = lxml.html.tostring(cleaner.clean_html(html), encoding = str)
 
+    # signature verification
+    try:
+        attachments.index({ "filename": "smime.p7s", "content_type": "application/pkcs7-signature" })
+        with open(os.devnull, 'w') as devnull:
+            ret = subprocess.call(["openssl", "smime", "-noverify", "-verify", "-in", message.get_filename()], stdout = devnull, stderr = devnull)
+        if ret == 0:
+            signature = "valid"
+        else:
+            signature = "invalid"
+    except ValueError:
+        signature = None
+
     return {
         "from": email_msg["From"],
         "to": email_msg["To"],
@@ -242,6 +255,7 @@ def message_to_json(message):
         "attachments": attachments,
         "message_id": message.get_message_id(),
         "tags": [ tag for tag in message.get_tags() ],
+        "signature": signature
     }
 
 

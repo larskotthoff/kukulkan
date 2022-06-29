@@ -19,6 +19,9 @@ import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 
 import AttachFile from '@mui/icons-material/AttachFile';
+import Check from '@mui/icons-material/Check';
+import Close from '@mui/icons-material/Close';
+import QuestionMark from '@mui/icons-material/QuestionMark';
 
 import { getColor, strip } from "./utils.js";
 
@@ -152,7 +155,13 @@ class Message extends React.Component {
             )) }
           </Grid>
 
-          <Grid container spacing={1}>
+          <Grid container spacing={1} alignItems="center">
+            { msg.signature ?
+              <Grid item align="center" style={{ height: "3em" }}>
+                { msg.signature === "valid" ? <Check/> : <Close/> }
+              </Grid> :
+              <Grid item><QuestionMark/></Grid>
+            }
             { msg.attachments.map((attachment, index2) => (
                 <Grid item align="center" key={index2} style={{ height: "3em" }} onClick={() => { this.getAttachment(index2); }}>
                   <Button key={index2} startIcon={<AttachFile/>} variant="outlined">
