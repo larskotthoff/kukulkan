@@ -13,6 +13,9 @@ from flask import Flask, current_app, g, send_file, send_from_directory
 from werkzeug.utils import safe_join
 from flask_restful import Api, Resource
 
+import M2Crypto
+from M2Crypto import SMIME, BIO, X509
+
 import bleach
 
 ALLOWED_TAGS = [
@@ -236,16 +239,36 @@ def message_to_json(message):
         html_body = None
 
     # signature verification
+    # https://gist.github.com/russau/c0123ef934ef88808050462a8638a410
     try:
-        attachments.index({ "filename": "smime.p7s", "content_type": "application/pkcs7-signature" })
-        with open(os.devnull, 'w') as devnull:
-            ret = subprocess.call(["openssl", "smime", "-noverify", "-verify", "-in", message.get_filename()], stdout = devnull, stderr = devnull)
-        if ret == 0:
+        # detached signature
+        idx = attachments.index({ "filename": "smime.p7s", "content_type": "application/pkcs7-signature", "content": None })
+        p7, data_bio = SMIME.smime_load_pkcs7_bio(BIO.MemoryBuffer(bytes(email_msg)))
+
+        s = SMIME.SMIME()
+        s.set_x509_store(X509.X509_Store())
+
+        certStack = p7.get0_signers(X509.X509_Stack())
+        s.set_x509_stack(certStack)
+        try:
+            s.verify(p7, data_bio, flags = M2Crypto.SMIME.PKCS7_NOVERIFY | M2Crypto.SMIME.PKCS7_DETACHED)
             signature = "valid"
-        else:
+        except M2Crypto.SMIME.PKCS7_Error:
             signature = "invalid"
     except ValueError:
         signature = None
+
+    ## signature verification -- cheat version
+    #try:
+    #    attachments.index({ "filename": "smime.p7s", "content_type": "application/pkcs7-signature" })
+    #    with open(os.devnull, 'w') as devnull:
+    #        ret = subprocess.call(["openssl", "smime", "-noverify", "-verify", "-in", message.get_filename()], stdout = devnull, stderr = devnull)
+    #    if ret == 0:
+    #        signature = "valid"
+    #    else:
+    #        signature = "invalid"
+    #except ValueError:
+    #    signature = None
 
     return {
         "from": email_msg["From"],
