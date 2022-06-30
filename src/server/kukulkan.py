@@ -190,6 +190,41 @@ def thread_to_json(thread):
     }
 
 
+def get_nested_body(email_msg, html_only = False):
+    """Tries to find MIME-nested additional bodies."""
+    content_plain = ""
+    for part in email_msg.walk():
+        if part.get_content_type() == "text/plain":
+            content_plain += part.get_payload()
+
+    content_html = ""
+    for part in email_msg.walk():
+        if part.get_content_type() == "text/html":
+            content_html += part.get_payload()
+
+    if html_only:
+        if content_html:
+            html = lxml.html.fromstring(content_html)
+            for tag in html.xpath('//img'):
+                tag.attrib.pop('src')
+            content = lxml.html.tostring(cleaner.clean_html(html), encoding = str)
+        else:
+            content = None
+    else:
+        if content_plain:
+            content = bleach.linkify(bleach.clean(content_plain).strip())
+        elif content_html:
+            content = bleach.clean(
+                content_html,
+                tags = allowed_tags,
+                attributes = allowed_attributes,
+                strip = true,
+            ).strip()
+        else:
+            content = None
+
+    return content
+
 def get_attachments(email_msg, content = False):
     """Returns all attachments for an email message."""
     attachments = []
@@ -204,6 +239,7 @@ def get_attachments(email_msg, content = False):
             })
     return attachments
 
+
 def messages_to_json(messages):
     """Converts a list of `notmuch.message.Message` instances to a JSON object."""
     return [ message_to_json(m) for m in messages ]
@@ -215,28 +251,8 @@ def message_to_json(message):
         email_msg = email.message_from_binary_file(f, policy = email.policy.default)
 
     attachments = get_attachments(email_msg)
-    msg_body = email_msg.get_body(preferencelist = ("plain", "html"))
-    content_type = msg_body.get_content_type()
-    if content_type == "text/html":
-        content = bleach.clean(
-            msg_body.get_content(),
-            tags = ALLOWED_TAGS,
-            attributes = ALLOWED_ATTRIBUTES,
-            strip = True,
-        ).strip()
-    elif content_type == "text/plain":
-        content = bleach.linkify(bleach.clean(msg_body.get_content()).strip())
-    else:
-        return {}
-
-    html_body = email_msg.get_body(preferencelist = ("html"))
-    if html_body and html_body.get_content():
-        html = lxml.html.fromstring(html_body.get_content())
-        for tag in html.xpath('//img'):
-            tag.attrib.pop('src')
-        html_body = lxml.html.tostring(cleaner.clean_html(html), encoding = str)
-    else:
-        html_body = None
+    body = get_nested_body(email_msg)
+    html_body = get_nested_body(email_msg, True)
 
     # signature verification
     # https://gist.github.com/russau/c0123ef934ef88808050462a8638a410
@@ -278,7 +294,7 @@ def message_to_json(message):
         "date": email_msg["Date"],
         "subject": email_msg["Subject"],
         "body": {
-            "text/plain": content,
+            "text/plain": body,
             "text/html": html_body
         },
         "attachments": attachments,
