@@ -179,7 +179,7 @@ def thread_to_json(thread):
     messages = thread.get_messages()
     msglist = list(messages)
     return {
-        "authors": thread.get_authors(),
+        "authors": thread.get_authors() if thread.get_authors() else "(no author)",
         "matched_messages": thread.get_matched_messages(),
         "newest_date": msglist[-1].get_date(),
         "oldest_date": msglist[0].get_date(),
@@ -191,21 +191,23 @@ def thread_to_json(thread):
 
 
 def get_nested_body(email_msg, html_only = False):
-    """Tries to find MIME-nested additional bodies."""
+    """Gets all, potentially MIME-nested bodies."""
     content_plain = ""
     for part in email_msg.walk():
         if part.get_content_type() == "text/plain":
-            content_plain += part.get_payload()
+            content_plain += part.get_content()
 
     content_html = ""
     for part in email_msg.walk():
         if part.get_content_type() == "text/html":
-            content_html += part.get_payload()
+            content_html += part.get_content()
 
     if html_only:
         if content_html:
             html = lxml.html.fromstring(content_html)
             for tag in html.xpath('//img'):
+                tag.attrib.pop('src')
+            for tag in html.xpath('//link'):
                 tag.attrib.pop('src')
             content = lxml.html.tostring(cleaner.clean_html(html), encoding = str)
         else:
