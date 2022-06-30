@@ -33,22 +33,27 @@ class MessageText extends React.Component {
     this.state = { expanded: this.props.open };
     this.handleCollapse = this.handleCollapse.bind(this);
 
-    let lines = this.props.text.split('\n');
-    let lastLine = lines.length - 1;
-    for(let index = 0; index < lines.length; index++) {
-      let line = strip(lines[index].trim());
-      if((line === "--") || (line === "—")) { // signature block
-        lastLine = index - 1;
-        break;
-      } else if(line.length > 0 && !line.startsWith(">") && !line.startsWith("&gt;")) {
-        lastLine = index;
+    if(this.props.text !== null) {
+      let lines = this.props.text.split('\n');
+      let lastLine = lines.length - 1;
+      for(let index = 0; index < lines.length; index++) {
+        let line = strip(lines[index].trim());
+        if((line === "--") || (line === "—")) { // signature block
+          lastLine = index - 1;
+          break;
+        } else if(line.length > 0 && !line.startsWith(">") && !line.startsWith("&gt;")) {
+          lastLine = index;
+        }
       }
+
+      if(lastLine === lines.length - 1) lastLine = lines.length;
+
+      this.mainPart = lines.slice(0, lastLine).join('\n');
+      this.quotedPart = lines.slice(lastLine).join('\n');
+    } else {
+      this.mainPart = "";
+      this.quotedPart = "";
     }
-
-    if(lastLine === lines.length - 1) lastLine = lines.length;
-
-    this.mainPart = lines.slice(0, lastLine).join('\n');
-    this.quotedPart = lines.slice(lastLine).join('\n');
   }
 
   handleCollapse() {
