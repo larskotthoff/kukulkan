@@ -209,7 +209,7 @@ def get_nested_body(email_msg, html_only = False):
                 tag.attrib.pop('src')
             content = lxml.html.tostring(cleaner.clean_html(html), encoding = str)
         else:
-            content = None
+            content = ""
     else:
         if content_plain:
             content = bleach.linkify(bleach.clean(content_plain).strip())
@@ -221,7 +221,7 @@ def get_nested_body(email_msg, html_only = False):
                 strip = true,
             ).strip()
         else:
-            content = None
+            content = ""
 
     return content
 
