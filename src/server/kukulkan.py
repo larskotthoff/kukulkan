@@ -15,6 +15,7 @@ from flask_restful import Api, Resource
 
 import M2Crypto
 from M2Crypto import SMIME, BIO, X509
+import dkim
 
 import bleach
 
@@ -206,9 +207,11 @@ def get_nested_body(email_msg, html_only = False):
         if content_html:
             html = lxml.html.fromstring(content_html)
             for tag in html.xpath('//img'):
-                tag.attrib.pop('src')
+                if 'src' in tag.attrib:
+                    tag.attrib.pop('src')
             for tag in html.xpath('//link'):
-                tag.attrib.pop('src')
+                if 'src' in tag.attrib:
+                    tag.attrib.pop('src')
             content = lxml.html.tostring(cleaner.clean_html(html), encoding = str)
         else:
             content = ""
@@ -276,18 +279,6 @@ def message_to_json(message):
     except ValueError:
         signature = None
 
-    ## signature verification -- cheat version
-    #try:
-    #    attachments.index({ "filename": "smime.p7s", "content_type": "application/pkcs7-signature" })
-    #    with open(os.devnull, 'w') as devnull:
-    #        ret = subprocess.call(["openssl", "smime", "-noverify", "-verify", "-in", message.get_filename()], stdout = devnull, stderr = devnull)
-    #    if ret == 0:
-    #        signature = "valid"
-    #    else:
-    #        signature = "invalid"
-    #except ValueError:
-    #    signature = None
-
     return {
         "from": email_msg["From"],
         "to": email_msg["To"],
@@ -302,7 +293,8 @@ def message_to_json(message):
         "attachments": attachments,
         "message_id": message.get_message_id(),
         "tags": [ tag for tag in message.get_tags() ],
-        "signature": signature
+        "signature": signature,
+        "dkim": dkim.verify(bytes(email_msg))
     }
 
 

@@ -121,6 +121,26 @@ class Message extends React.Component {
 
   render() {
     const { msg } = this.props;
+
+    let validMsg = "Message DKIM verification failed, not signed.";
+    let validSev = "warning";
+    if(msg.dkim && msg.signature === "valid") {
+      validMsg = "Message DKIM and signature verified.";
+      validSev = "success";
+    } else if(msg.dkim && msg.signature === "invalid") {
+      validMsg = "Message DKIM verified, but signature verification failed.";
+      validSev = "error";
+    } else if(msg.dkim) {
+      validMsg = "Message DKIM verified, not signed.";
+      validSev = "success";
+    } else if(!msg.dkim && msg.signature === "valid") {
+      validMsg = "Message DKIM verification failed, signature verified.";
+      validSev = "success";
+    } else if(!msg.dkim && msg.signature === "invalid") {
+      validMsg = "Message DKIM and signature verification failed.";
+      validSev = "error";
+    }
+
     return (
       <Paper elevation={3} sx={{ padding: 1, margin: 2, width: "80em" }}>
         <Collapse key={msg.message_id + "_collapsed" } in={!this.state.expanded} timeout={timeout} unmountOnExit>
@@ -152,31 +172,26 @@ class Message extends React.Component {
             )) }
           </Grid>
 
-          <Grid container spacing={1} alignItems="center">
-            { msg.attachments.map((attachment, index2) => (
-                <Grid item align="center" key={index2} style={{ height: "3em" }} onClick={() => { this.getAttachment(index2); }}>
-                  <Button key={index2} startIcon={<AttachFile/>} variant="outlined">
-                    {attachment.filename} ({attachment.content_type})
-                  </Button>
-                </Grid>
-            )) }
-          </Grid>
+          { msg.attachments &&
+            <Grid container spacing={1} alignItems="center">
+              { msg.attachments.map((attachment, index2) => (
+                  <Grid item align="center" key={index2} style={{ height: "3em" }} onClick={() => { this.getAttachment(index2); }}>
+                    <Button key={index2} startIcon={<AttachFile/>} variant="outlined">
+                      {attachment.filename} ({attachment.content_type})
+                    </Button>
+                  </Grid>
+              )) }
+            </Grid>
+          }
 
-          <Grid container spacing={1} alignItems="center">
-            <Grid item style={{ height: "3em", width: "100%" }}>
-            { msg.signature ?
-              <Box>
-              { msg.signature === "valid" ?
-                <Alert severity="success">Message signature verification succeeded.</Alert> :
-                <Alert severity="error">Message signature verification failed.</Alert>
-              }
-              </Box> :
-              <Alert severity="warning">Message authenticity cannot be verified.</Alert>
-            }
+          <Grid container spacing={1} alignItems="center" style={{ marginTop: ".1em" }}>
+            <Grid item style={{ width: "100%" }}>
+              <Alert severity={ validSev }>{ validMsg }</Alert>
             </Grid>
           </Grid>
 
           <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
+
           <Grid container justifyContent="flex-end">
             { msg.body["text/html"] && <Button variant="outlined" onClick={this.handleHtml}>{this.state.html ? "Text" : "HTML"}</Button> }
           </Grid>
