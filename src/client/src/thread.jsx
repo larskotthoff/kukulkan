@@ -86,6 +86,8 @@ class Message extends React.Component {
     this.handleCollapse = this.handleCollapse.bind(this);
     this.handleHtml = this.handleHtml.bind(this);
     this.getAttachment = this.getAttachment.bind(this);
+
+    this.elementTop = React.createRef();
   }
 
   handleCollapse() {
@@ -119,6 +121,18 @@ class Message extends React.Component {
       });
   }
 
+  componentDidUpdate() {
+    if(this.state.expanded) {
+      this.elementTop.current.scrollIntoView();
+    }
+  }
+
+  componentDidMount() {
+    if(this.state.expanded) {
+      this.elementTop.current.scrollIntoView();
+    }
+  }
+
   render() {
     const { msg } = this.props;
 
@@ -142,7 +156,7 @@ class Message extends React.Component {
     }
 
     return (
-      <Paper elevation={3} sx={{ padding: 1, margin: 2, width: "80em" }}>
+      <Paper elevation={3} sx={{ padding: 1, margin: 2, width: "80em" }} ref={this.elementTop}>
         <Collapse key={msg.message_id + "_collapsed" } in={!this.state.expanded} timeout={timeout} unmountOnExit>
           <Grid container justifyContent="space-between" onClick={this.handleCollapse}>
             <Typography align="left" style={{ width: "50em" }}>{msg.from}</Typography>
@@ -257,7 +271,6 @@ export function Thread() {
         )
         .finally(() => {
           setThreadLoading(false);
-          setTimeout(() => { window.scrollTo(0, document.body.scrollHeight); }, 100);
         });
     }
   }, [threadId]);

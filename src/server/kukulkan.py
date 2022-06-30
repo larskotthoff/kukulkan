@@ -221,9 +221,9 @@ def get_nested_body(email_msg, html_only = False):
         elif content_html:
             content = bleach.clean(
                 content_html,
-                tags = allowed_tags,
-                attributes = allowed_attributes,
-                strip = true,
+                tags = ALLOWED_TAGS,
+                attributes = ALLOWED_ATTRIBUTES,
+                strip = True,
             ).strip()
         else:
             content = ""
