@@ -19,9 +19,6 @@ import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 
 import AttachFile from '@mui/icons-material/AttachFile';
-import Check from '@mui/icons-material/Check';
-import Close from '@mui/icons-material/Close';
-import QuestionMark from '@mui/icons-material/QuestionMark';
 
 import { getColor, strip } from "./utils.js";
 
@@ -156,12 +153,6 @@ class Message extends React.Component {
           </Grid>
 
           <Grid container spacing={1} alignItems="center">
-            { msg.signature ?
-              <Grid item align="center" style={{ height: "3em" }}>
-                { msg.signature === "valid" ? <Check/> : <Close/> }
-              </Grid> :
-              <Grid item><QuestionMark/></Grid>
-            }
             { msg.attachments.map((attachment, index2) => (
                 <Grid item align="center" key={index2} style={{ height: "3em" }} onClick={() => { this.getAttachment(index2); }}>
                   <Button key={index2} startIcon={<AttachFile/>} variant="outlined">
@@ -170,6 +161,21 @@ class Message extends React.Component {
                 </Grid>
             )) }
           </Grid>
+
+          <Grid container spacing={1} alignItems="center">
+            <Grid item style={{ height: "3em", width: "100%" }}>
+            { msg.signature ?
+              <Box>
+              { msg.signature === "valid" ?
+                <Alert severity="success">Message signature verification succeeded.</Alert> :
+                <Alert severity="error">Message signature verification failed.</Alert>
+              }
+              </Box> :
+              <Alert severity="warning">Message authenticity cannot be verified.</Alert>
+            }
+            </Grid>
+          </Grid>
+
           <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
           <Grid container justifyContent="flex-end">
             { msg.body["text/html"] && <Button variant="outlined" onClick={this.handleHtml}>{this.state.html ? "Text" : "HTML"}</Button> }
