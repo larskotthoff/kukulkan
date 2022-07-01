@@ -64,7 +64,7 @@ export function Thread() {
             </Box>
           }
           { thread && 
-              <Box>
+            <Box>
               { thread.map((msg, index) => (
                 msg.tags.includes("deleted") ?
                 <DeletedMessage key={msg.message_id} msg={msg} /> :

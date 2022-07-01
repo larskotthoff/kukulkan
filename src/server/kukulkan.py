@@ -18,6 +18,7 @@ from M2Crypto import SMIME, BIO, X509
 import dkim
 
 import bleach
+from bleach.css_sanitizer import CSSSanitizer
 
 ALLOWED_TAGS = [
     "a",
@@ -225,11 +226,16 @@ def get_nested_body(email_msg, html_only = False):
         if content_plain:
             content = bleach.linkify(bleach.clean(content_plain).strip())
         elif content_html:
+            html = lxml.html.fromstring(content_html)
+            for tag in html.xpath('//style'):
+                tag.getparent().remove(tag)
+            content = lxml.html.tostring(cleaner.clean_html(html), encoding = str)
             content = bleach.clean(
-                content_html,
+                content,
                 tags = ALLOWED_TAGS,
                 attributes = ALLOWED_ATTRIBUTES,
                 strip = True,
+                css_sanitizer = CSSSanitizer()
             ).strip()
         else:
             content = ""

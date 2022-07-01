@@ -60,18 +60,18 @@ class MessageText extends React.Component {
   render() {
     return (
       <Box onClick={this.handleCollapse}>
-        <Typography style={{ whiteSpace: "pre-line" }} dangerouslySetInnerHTML={{ __html: this.mainPart }} />
+        <Box style={{ whiteSpace: "pre-line" }} dangerouslySetInnerHTML={{ __html: this.mainPart }} />
         { this.quotedPart.length > 0 &&
           <Box>
             <Collapse key={ this.props.id + "_quoted_collapsed" } in={!this.state.expanded} timeout={timeout} unmountOnExit>
               <Grid container justifyContent="space-between">
-                <Typography align="left" style={{ overflow: "hidden", height: "3em", maxWidth: "77em" }} dangerouslySetInnerHTML={{ __html: this.quotedPart }} />
+                <Box align="left" style={{ overflow: "hidden", height: "3em", maxWidth: "77em" }} dangerouslySetInnerHTML={{ __html: this.quotedPart }} />
                 <ExpandMore align="right" />
               </Grid>
             </Collapse>
             <Collapse key={ this.props.id + "_quoted_expanded" } in={this.state.expanded} timeout={timeout} unmountOnExit>
               <Grid container justifyContent="space-between">
-                <Typography align="left" style={{ whiteSpace: "pre-line", maxWidth: "77em" }} dangerouslySetInnerHTML={{ __html: this.quotedPart }} />
+                <Box align="left" style={{ whiteSpace: "pre-line", maxWidth: "77em" }} dangerouslySetInnerHTML={{ __html: this.quotedPart }} />
                 <ExpandLess align="right" />
               </Grid>
             </Collapse>
@@ -226,7 +226,7 @@ export class Message extends React.Component {
             { msg.body["text/html"] && <Button variant="outlined" onClick={this.handleHtml}>{this.state.html ? "Text" : "HTML"}</Button> }
           </Grid>
           { this.state.html ?
-            <Typography dangerouslySetInnerHTML={{ __html: msg.body["text/html"] }} /> :
+            <Box dangerouslySetInnerHTML={{ __html: msg.body["text/html"] }} /> :
             <MessageText key={msg.message_id + "_text"} id={msg.message_id} text={msg.body["text/plain"]} open={false} /> }
         </Collapse>
       </Paper>
@@ -313,11 +313,8 @@ export function SingleMessage() {
             </Box>
           }
           { message && 
-              <Box>
-              { message.tags.includes("deleted") ?
-                <DeletedMessage key={message.message_id} msg={message} /> :
-                <Message key={message.message_id} msg={message} open={true} />
-              }
+            <Box>
+              <Message key={message.message_id} msg={message} open={true} />
             </Box>
           }
           </Box>
