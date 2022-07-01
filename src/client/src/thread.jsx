@@ -64,13 +64,13 @@ class MessageText extends React.Component {
           <Box>
             <Collapse key={ this.props.id + "_quoted_collapsed" } in={!this.state.expanded} timeout={timeout} unmountOnExit>
               <Grid container justifyContent="space-between">
-                <Typography align="left" style={{ overflow: "hidden", height: "3em", width: "77em" }} dangerouslySetInnerHTML={{ __html: this.quotedPart }} />
+                <Typography align="left" style={{ overflow: "hidden", height: "3em", maxWidth: "77em" }} dangerouslySetInnerHTML={{ __html: this.quotedPart }} />
                 <ExpandMore align="right" />
               </Grid>
             </Collapse>
             <Collapse key={ this.props.id + "_quoted_expanded" } in={this.state.expanded} timeout={timeout} unmountOnExit>
               <Grid container justifyContent="space-between">
-                <Typography align="left" style={{ whiteSpace: "pre-line", width: "77em" }} dangerouslySetInnerHTML={{ __html: this.quotedPart }} />
+                <Typography align="left" style={{ whiteSpace: "pre-line", maxWidth: "77em" }} dangerouslySetInnerHTML={{ __html: this.quotedPart }} />
                 <ExpandLess align="right" />
               </Grid>
             </Collapse>
@@ -108,7 +108,7 @@ class Message extends React.Component {
 
   getAttachment(attachment) {
     const { msg } = this.props;
-    fetch('http://localhost:5000/api/attachment/' + msg.message_id + "/" + attachment)
+    fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/attachment/' + msg.message_id + "/" + attachment)
       .then(res => res.blob())
       .then(blob => {
         const href = window.URL.createObjectURL(blob);
@@ -138,6 +138,8 @@ class Message extends React.Component {
   render() {
     const { msg } = this.props;
 
+    document.title = "T: " + msg.subject;
+
     let validMsg = "Message DKIM verification failed, not signed.";
     let validSev = "warning";
     if(msg.dkim && msg.signature === "valid") {
@@ -158,12 +160,12 @@ class Message extends React.Component {
     }
 
     return (
-      <Paper elevation={3} sx={{ padding: 1, margin: 2, width: "80em" }} ref={this.elementTop}>
+      <Paper elevation={3} sx={{ padding: 1, margin: 2, maxWidth: "80em" }} ref={this.elementTop}>
         <Collapse key={msg.message_id + "_collapsed" } in={!this.state.expanded} timeout={timeout} unmountOnExit>
           <Grid container justifyContent="space-between" onClick={this.handleCollapse}>
-            <Typography align="left" style={{ width: "50em" }}>{msg.from}</Typography>
-            <Typography align="right" style={{ width: "29em" }}>{msg.date}</Typography>
-            <Typography align="left" style={{ overflow: "hidden", height: "3em", width: "77em" }} dangerouslySetInnerHTML={{ __html: msg.body["text/plain"] }} />
+            <Typography align="left" style={{ maxWidth: "50em" }}>{msg.from}</Typography>
+            <Typography align="right" style={{ maxWidth: "29em" }}>{msg.date}</Typography>
+            <Typography align="left" style={{ overflow: "hidden", height: "3em", maxWidth: "77em" }} dangerouslySetInnerHTML={{ __html: msg.body["text/plain"] }} />
             <ExpandMore align="right" />
           </Grid>
         </Collapse>
@@ -175,7 +177,7 @@ class Message extends React.Component {
             { msg.bcc && <Typography variant="h6">BCC: {msg.bcc}</Typography> }
             <Typography variant="h6">Date: {msg.date}</Typography>
             <Grid container justifyContent="space-between">
-              <Typography align="left" variant="h6" style={{ width: "62em" }}>Subject: {msg.subject}</Typography>
+              <Typography align="left" variant="h6" style={{ maxWidth: "62em" }}>Subject: {msg.subject}</Typography>
               <ExpandLess align="right" />
             </Grid>
           </Box>
@@ -234,7 +236,7 @@ class DeletedMessage extends React.Component {
   render() {
     if(this.state.hidden) {
       return (
-        <Paper elevation={1} sx={{ padding: 1, margin: 2, width: "80em" }}>
+        <Paper elevation={1} sx={{ padding: 1, margin: 2, maxWidth: "80em" }}>
           <Button onClick={this.handleReplace}>show deleted message</Button>
         </Paper>
       )
@@ -259,7 +261,7 @@ export function Thread() {
     if(threadId !== null) {
       setThread(null);
       setThreadLoading(true);
-      fetch('http://localhost:5000/api/thread/' + threadId)
+      fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/thread/' + threadId)
         .then(res => res.json())
         .then(
           (result) => {

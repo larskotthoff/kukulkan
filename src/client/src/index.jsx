@@ -156,7 +156,7 @@ function Kukulkan() {
 
       setThreads(null);
       setLoading(true);
-      fetch('http://localhost:5000/api/query/' + query)
+      fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/query/' + query)
         .then(res => res.json())
         .then(
           (result) => {
@@ -172,6 +172,7 @@ function Kukulkan() {
           setLoading(false);
           setActiveThread(0);
           document.activeElement.blur();
+          document.title = query;
         });
     }
   }, [query]);
