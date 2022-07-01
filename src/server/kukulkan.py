@@ -157,6 +157,12 @@ def create_app():
     def download_message(message_id):
         msgs = notmuch.Query(get_db(), "mid:{}".format(message_id)).search_messages()
         msg = next(msgs)  # there can be only 1
+        return message_to_json(msg)
+
+    @app.route("/api/raw_message/<string:message_id>")
+    def download_raw_message(message_id):
+        msgs = notmuch.Query(get_db(), "mid:{}".format(message_id)).search_messages()
+        msg = next(msgs)  # there can be only 1
         return send_file(msg.get_filename(), mimetype = "message/rfc822",
             as_attachment = True, attachment_filename = message_id+".eml")
 

@@ -26,6 +26,7 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { useHotkeys } from 'react-hotkeys-hook';
 
 import { Thread } from "./thread.jsx";
+import { SingleMessage } from "./message.jsx";
 
 import { getColor } from "./utils.js";
 
@@ -209,6 +210,7 @@ root.render(
         <Route path="/" element={<Outlet />}>
           <Route index element={<Kukulkan />} />
           <Route path="thread" element={<Thread />} />
+          <Route path="message" element={<SingleMessage />} />
         </Route>
       </Routes>
     </BrowserRouter>
