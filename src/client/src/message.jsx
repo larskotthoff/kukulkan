@@ -215,7 +215,7 @@ export class Message extends React.Component {
             </Grid>
           }
 
-          <Alert style={{ width: "100%" }} severity={ validSev }>{ validMsg }</Alert>
+          <Alert width="100%" severity={ validSev }>{ validMsg }</Alert>
 
           <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
 

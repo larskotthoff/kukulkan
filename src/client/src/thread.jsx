@@ -99,7 +99,7 @@ export function Thread() {
       <Container component="main" maxWidth="90%">
         <CssBaseline />
         <Grid container id="thread" direction="column" justifyContent="center" alignItems="center">
-          { threadLoading && <CircularProgress /> }
+          { threadLoading && <CircularProgress style={{ marginTop: "1em" }}/> }
           { error &&
             <Alert id="error" severity="error">Error querying backend: {error.message}</Alert>
           }
