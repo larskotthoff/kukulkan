@@ -226,7 +226,7 @@ def get_nested_body(email_msg, html_only = False):
         if content_plain:
             content = bleach.linkify(bleach.clean(content_plain).strip())
         elif content_html:
-            html = lxml.html.fromstring(content_html)
+            html = lxml.html.fromstring(content_html, remove_blank_text = True)
             for tag in html.xpath('//style'):
                 tag.getparent().remove(tag)
             content = lxml.html.tostring(cleaner.clean_html(html), encoding = str)

@@ -28,27 +28,8 @@ const timeout = 200;
 class MessageText extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { expanded: this.props.open };
+    this.state = { expanded: false };
     this.handleCollapse = this.handleCollapse.bind(this);
-
-    let lines = this.props.text.split('\n');
-    let lastLine = lines.length - 1;
-    for(let index = 0; index < lines.length; index++) {
-      let line = strip(lines[index].trim());
-      if((line === "--") || (line === "—")) { // signature block
-        if(lastLine === lines.length - 1) {
-          lastLine = index - 1;
-        }
-        break;
-      } else if(line.length > 0 && !line.startsWith(">") && !line.startsWith("&gt;")) {
-        lastLine = index;
-      }
-    }
-
-    if(lastLine === lines.length - 1) lastLine = lines.length;
-
-    this.mainPart = lines.slice(0, lastLine).join('\n');
-    this.quotedPart = lines.slice(lastLine).join('\n');
   }
 
   handleCollapse() {
@@ -60,18 +41,18 @@ class MessageText extends React.Component {
   render() {
     return (
       <Box onClick={this.handleCollapse}>
-        <Box style={{ whiteSpace: "pre-line" }} dangerouslySetInnerHTML={{ __html: this.mainPart }} />
-        { this.quotedPart.length > 0 &&
+        <Box style={{ whiteSpace: "pre-line" }} dangerouslySetInnerHTML={{ __html: this.props.mainPart }} />
+        { this.props.quotedPart.length > 0 &&
           <Box>
             <Collapse key={ this.props.id + "_quoted_collapsed" } in={!this.state.expanded} timeout={timeout} unmountOnExit>
               <Grid container justifyContent="space-between">
-                <Box align="left" style={{ overflow: "hidden", height: "3em", maxWidth: "77em" }} dangerouslySetInnerHTML={{ __html: this.quotedPart }} />
+                <Box align="left" style={{ overflow: "hidden", height: "3em", maxWidth: "77em" }} dangerouslySetInnerHTML={{ __html: this.props.quotedPart }} />
                 <ExpandMore align="right" />
               </Grid>
             </Collapse>
             <Collapse key={ this.props.id + "_quoted_expanded" } in={this.state.expanded} timeout={timeout} unmountOnExit>
               <Grid container justifyContent="space-between">
-                <Box align="left" style={{ whiteSpace: "pre-line", maxWidth: "77em" }} dangerouslySetInnerHTML={{ __html: this.quotedPart }} />
+                <Box align="left" style={{ whiteSpace: "pre-line", maxWidth: "77em" }} dangerouslySetInnerHTML={{ __html: this.props.quotedPart }} />
                 <ExpandLess align="right" />
               </Grid>
             </Collapse>
@@ -91,6 +72,26 @@ export class Message extends React.Component {
     this.getAttachment = this.getAttachment.bind(this);
 
     this.elementTop = React.createRef();
+
+    // separate into non-quoted and quoted text
+    let lines = props.msg.body["text/plain"].split('\n');
+    let lastLine = lines.length - 1;
+    for(let index = 0; index < lines.length; index++) {
+      let line = strip(lines[index].trim());
+      if((line === "--") || (line === "—")) { // signature block
+        if(lastLine === lines.length - 1) {
+          lastLine = index - 1;
+        }
+        break;
+      } else if(line.length > 0 && !line.startsWith(">") && !line.startsWith("&gt;")) {
+        lastLine = index;
+      }
+    }
+
+    if(lastLine === lines.length - 1) lastLine = lines.length;
+
+    this.mainPart = lines.slice(0, lastLine).join('\n');
+    this.quotedPart = lines.slice(lastLine).join('\n');
   }
 
   handleCollapse() {
@@ -163,11 +164,15 @@ export class Message extends React.Component {
     return (
       <Paper elevation={3} sx={{ padding: 1, margin: 2, maxWidth: "80em" }} ref={this.elementTop}>
         <Collapse key={msg.notmuch_id + "_collapsed" } in={!this.state.expanded} timeout={timeout} unmountOnExit>
-          <Grid container justifyContent="space-between" onClick={this.handleCollapse}>
-            <Typography align="left" style={{ maxWidth: "50em" }}>{msg.from}</Typography>
-            <Typography align="right" style={{ maxWidth: "29em" }}>{msg.date}</Typography>
-            <Typography align="left" style={{ overflow: "hidden", height: "3em", maxWidth: "77em" }} dangerouslySetInnerHTML={{ __html: msg.body["text/plain"] }} />
-            <ExpandMore align="right" />
+          <Grid container direction="column" onClick={this.handleCollapse}>
+            <Grid container direction="row" justifyContent="space-between">
+              <Grid item><Typography>{msg.from}</Typography></Grid>
+              <Grid item><Typography>{msg.date}</Typography></Grid>
+            </Grid>
+            <Grid container direction="row" justifyContent="space-between">
+              <Grid item><Typography style={{ overflow: "hidden", maxHeight: "3em", maxWidth: "77em" }} dangerouslySetInnerHTML={{ __html: this.mainPart }} /></Grid>
+              <Grid item><ExpandMore/></Grid>
+            </Grid>
           </Grid>
         </Collapse>
         <Collapse key={msg.notmuch_id + "_expanded" } in={this.state.expanded} timeout={timeout} unmountOnExit>
@@ -178,8 +183,8 @@ export class Message extends React.Component {
             { msg.bcc && <Typography variant="h6">BCC: {msg.bcc}</Typography> }
             <Typography variant="h6">Date: {msg.date}</Typography>
             <Grid container justifyContent="space-between">
-              <Typography align="left" variant="h6" style={{ maxWidth: "62em" }}>Subject: {msg.subject}</Typography>
-              <ExpandLess align="right" />
+              <Typography variant="h6" style={{ maxWidth: "62em" }}>Subject: {msg.subject}</Typography>
+              <ExpandLess/>
             </Grid>
           </Box>
 
@@ -219,7 +224,7 @@ export class Message extends React.Component {
           </Grid>
           { this.state.html ?
             <Box dangerouslySetInnerHTML={{ __html: msg.body["text/html"] }} /> :
-            <MessageText key={msg.notmuch_id + "_text"} id={msg.notmuch_id} text={msg.body["text/plain"]} open={false} /> }
+            <MessageText key={msg.notmuch_id + "_text"} id={msg.notmuch_id} mainPart={this.mainPart} quotedPart={this.quotedPart} /> }
         </Collapse>
       </Paper>
     )
