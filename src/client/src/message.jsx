@@ -46,14 +46,14 @@ class MessageText extends React.Component {
           <Box>
             <Collapse key={ this.props.id + "_quoted_collapsed" } in={!this.state.expanded} timeout={timeout} unmountOnExit>
               <Grid container justifyContent="space-between">
-                <Box align="left" style={{ overflow: "hidden", height: "3em", maxWidth: "77em" }} dangerouslySetInnerHTML={{ __html: this.props.quotedPart }} />
-                <ExpandMore align="right" />
+                <Grid item xs><Box style={{ overflow: "hidden", height: "3em" }} dangerouslySetInnerHTML={{ __html: this.props.quotedPart }} /></Grid>
+                <Grid item><ExpandMore/></Grid>
               </Grid>
             </Collapse>
             <Collapse key={ this.props.id + "_quoted_expanded" } in={this.state.expanded} timeout={timeout} unmountOnExit>
               <Grid container justifyContent="space-between">
-                <Box align="left" style={{ whiteSpace: "pre-line", maxWidth: "77em" }} dangerouslySetInnerHTML={{ __html: this.props.quotedPart }} />
-                <ExpandLess align="right" />
+                <Grid item xs><Box style={{ whiteSpace: "pre-line" }} dangerouslySetInnerHTML={{ __html: this.props.quotedPart }} /></Grid>
+                <Grid item><ExpandLess/></Grid>
               </Grid>
             </Collapse>
           </Box>
@@ -162,7 +162,7 @@ export class Message extends React.Component {
     }
 
     return (
-      <Paper elevation={3} sx={{ padding: 1, margin: 2, maxWidth: "80em" }} ref={this.elementTop}>
+      <Paper elevation={3} sx={{ padding: 1, margin: 1, maxWidth: "80em" }} ref={this.elementTop}>
         <Collapse key={msg.notmuch_id + "_collapsed" } in={!this.state.expanded} timeout={timeout} unmountOnExit>
           <Grid container direction="column" onClick={this.handleCollapse}>
             <Grid container direction="row" justifyContent="space-between">
@@ -170,7 +170,7 @@ export class Message extends React.Component {
               <Grid item><Typography>{msg.date}</Typography></Grid>
             </Grid>
             <Grid container direction="row" justifyContent="space-between">
-              <Grid item><Typography style={{ overflow: "hidden", maxHeight: "3em", maxWidth: "77em" }} dangerouslySetInnerHTML={{ __html: this.mainPart }} /></Grid>
+              <Grid item xs><Typography style={{ overflow: "hidden", maxHeight: "3em" }} dangerouslySetInnerHTML={{ __html: this.mainPart }} /></Grid>
               <Grid item><ExpandMore/></Grid>
             </Grid>
           </Grid>
@@ -183,8 +183,8 @@ export class Message extends React.Component {
             { msg.bcc && <Typography variant="h6">BCC: {msg.bcc}</Typography> }
             <Typography variant="h6">Date: {msg.date}</Typography>
             <Grid container justifyContent="space-between">
-              <Typography variant="h6" style={{ maxWidth: "62em" }}>Subject: {msg.subject}</Typography>
-              <ExpandLess/>
+              <Grid item xs><Typography variant="h6">Subject: {msg.subject}</Typography></Grid>
+              <Grid item><ExpandLess/></Grid>
             </Grid>
           </Box>
 
