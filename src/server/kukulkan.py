@@ -298,12 +298,14 @@ def message_to_json(message):
         "bcc": email_msg["BCC"],
         "date": email_msg["Date"],
         "subject": email_msg["Subject"],
+        "message_id": email_msg["Message-ID"].strip(),
+        "in_reply_to": email_msg["In-Reply-To"].strip() if email_msg["In-Reply-To"] else None,
         "body": {
             "text/plain": body,
             "text/html": html_body
         },
         "attachments": attachments,
-        "message_id": message.get_message_id(),
+        "notmuch_id": message.get_message_id(),
         "tags": [ tag for tag in message.get_tags() ],
         "signature": signature,
         "dkim": dkim.verify(bytes(email_msg))

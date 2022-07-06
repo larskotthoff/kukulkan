@@ -109,7 +109,7 @@ export class Message extends React.Component {
 
   getAttachment(attachment) {
     const { msg } = this.props;
-    fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/attachment/' + msg.message_id + "/" + attachment)
+    fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/attachment/' + msg.notmuch_id + "/" + attachment)
       .then(res => res.blob())
       .then(blob => {
         const href = window.URL.createObjectURL(blob);
@@ -162,7 +162,7 @@ export class Message extends React.Component {
 
     return (
       <Paper elevation={3} sx={{ padding: 1, margin: 2, maxWidth: "80em" }} ref={this.elementTop}>
-        <Collapse key={msg.message_id + "_collapsed" } in={!this.state.expanded} timeout={timeout} unmountOnExit>
+        <Collapse key={msg.notmuch_id + "_collapsed" } in={!this.state.expanded} timeout={timeout} unmountOnExit>
           <Grid container justifyContent="space-between" onClick={this.handleCollapse}>
             <Typography align="left" style={{ maxWidth: "50em" }}>{msg.from}</Typography>
             <Typography align="right" style={{ maxWidth: "29em" }}>{msg.date}</Typography>
@@ -170,7 +170,7 @@ export class Message extends React.Component {
             <ExpandMore align="right" />
           </Grid>
         </Collapse>
-        <Collapse key={msg.message_id + "_expanded" } in={this.state.expanded} timeout={timeout} unmountOnExit>
+        <Collapse key={msg.notmuch_id + "_expanded" } in={this.state.expanded} timeout={timeout} unmountOnExit>
           <Box onClick={this.handleCollapse}>
             { msg.from && <Typography variant="h6">From: {msg.from}</Typography> }
             { msg.to && <Typography variant="h6">To: {msg.to}</Typography> }
@@ -183,22 +183,18 @@ export class Message extends React.Component {
             </Grid>
           </Box>
 
-          <Grid container spacing={1} justifyContent="space-between" direction="row">
-            <Grid item>
-              <Grid container spacing={1}>
-                { msg.tags.map((tag, index2) => (
-                  <Grid item key={index2} style={{ height: "3em" }}>
-                    <Chip key={index2} label={tag} style={{ color: getColor(tag) }} onDelete={console.log}/>
-                  </Grid>
-                )) }
-              </Grid>
+          <Grid container spacing={1} justifyContent="space-between" direction="row" style={{ height: "3.5em" }}>
+            <Grid item container spacing={1} xs={11}>
+              { msg.tags.map((tag, index2) => (
+                <Grid item key={index2}>
+                  <Chip key={index2} label={tag} style={{ color: getColor(tag) }} onDelete={console.log}/>
+                </Grid>
+              )) }
             </Grid>
-            <Grid item>
-              <Grid item key="print" style={{ height: "3em" }}>
-                <a href={"/message?id=" + msg.message_id} target="_blank" rel="noreferrer">
-                  <Print/>
-                </a>
-              </Grid>
+            <Grid item key="print">
+              <a href={"/message?id=" + msg.notmuch_id} target="_blank" rel="noreferrer">
+                <Print/>
+              </a>
             </Grid>
           </Grid>
 
@@ -214,11 +210,7 @@ export class Message extends React.Component {
             </Grid>
           }
 
-          <Grid container spacing={1} alignItems="center" style={{ marginTop: ".1em" }}>
-            <Grid item style={{ width: "100%" }}>
-              <Alert severity={ validSev }>{ validMsg }</Alert>
-            </Grid>
-          </Grid>
+          <Alert style={{ width: "100%" }} severity={ validSev }>{ validMsg }</Alert>
 
           <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
 
@@ -227,7 +219,7 @@ export class Message extends React.Component {
           </Grid>
           { this.state.html ?
             <Box dangerouslySetInnerHTML={{ __html: msg.body["text/html"] }} /> :
-            <MessageText key={msg.message_id + "_text"} id={msg.message_id} text={msg.body["text/plain"]} open={false} /> }
+            <MessageText key={msg.notmuch_id + "_text"} id={msg.notmuch_id} text={msg.body["text/plain"]} open={false} /> }
         </Collapse>
       </Paper>
     )
@@ -314,7 +306,7 @@ export function SingleMessage() {
           }
           { message && 
             <Box>
-              <Message key={message.message_id} msg={message} open={true} />
+              <Message key={message.notmuch_id} msg={message} open={true} />
             </Box>
           }
           </Box>
