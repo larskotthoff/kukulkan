@@ -293,7 +293,7 @@ export function SingleMessage() {
 
   return (
     <ThemeProvider theme={theme}>
-      <Container component="main" maxWidth="90%">
+      <Container component="main" maxWidth="100%">
         <CssBaseline />
         <Box
           sx={{

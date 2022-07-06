@@ -96,7 +96,7 @@ export function Thread() {
 
   return (
     <ThemeProvider theme={theme}>
-      <Container component="main" maxWidth="90%">
+      <Container component="main" maxWidth="100%">
         <CssBaseline />
         <Grid container id="thread" direction="column" justifyContent="center" alignItems="center">
           { threadLoading && <CircularProgress style={{ marginTop: "1em" }}/> }
