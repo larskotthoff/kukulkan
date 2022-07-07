@@ -40,10 +40,10 @@ class MessageText extends React.Component {
 
   render() {
     return (
-      <Box onClick={this.handleCollapse}>
+      <Box>
         <Box style={{ whiteSpace: "pre-line" }} dangerouslySetInnerHTML={{ __html: this.props.mainPart }} />
         { this.props.quotedPart.length > 0 &&
-          <Box>
+          <Box onClick={this.handleCollapse}>
             <Collapse key={ this.props.id + "_quoted_collapsed" } in={!this.state.expanded} timeout={timeout} unmountOnExit>
               <Grid container justifyContent="space-between">
                 <Grid item xs><Box style={{ overflow: "hidden", height: "3em" }} dangerouslySetInnerHTML={{ __html: this.props.quotedPart }} /></Grid>
@@ -175,6 +175,7 @@ export class Message extends React.Component {
             </Grid>
           </Grid>
         </Collapse>
+
         <Collapse key={msg.notmuch_id + "_expanded" } in={this.state.expanded} timeout={timeout} unmountOnExit>
           <Box onClick={this.handleCollapse}>
             { msg.from && <Typography variant="h6">From: {msg.from}</Typography> }
@@ -295,27 +296,9 @@ export function SingleMessage() {
     <ThemeProvider theme={theme}>
       <Container component="main" maxWidth="100%">
         <CssBaseline />
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-          }}
-        >
-          <Box id="thread" sx={{ mt: 1 }}>
           { messageLoading && <CircularProgress /> }
-          { error && 
-            <Box id="error" sx={{ mt: 1 }}>
-              <Alert severity="error">Error querying backend: {error.message}</Alert>
-            </Box>
-          }
-          { message && 
-            <Box>
-              <Message key={message.notmuch_id} msg={message} open={true} />
-            </Box>
-          }
-          </Box>
-        </Box>
+          { error && <Alert severity="error">Error querying backend: {error.message}</Alert> }
+          { message && <Message key={message.notmuch_id} msg={message} open={true}/> }
       </Container>
     </ThemeProvider>
   );
