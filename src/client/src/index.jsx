@@ -185,7 +185,7 @@ function Kukulkan() {
   useHotkeys('Shift+K', () => setActiveThread(Math.max(0, activeThread - 10)), [activeThread]);
   useHotkeys('j', () => setActiveThread(Math.min(threads.length - 1, activeThread + 1)), [activeThread, threads]);
   useHotkeys('Shift+J', () => setActiveThread(Math.min(threads.length - 1, activeThread + 10)), [activeThread, threads]);
-  useHotkeys('Enter', () => window.open('/thread?id=' + threads[activeThread].thread_id, '_blank'));
+  useHotkeys('Enter', () => window.open('/thread?id=' + threads[activeThread].thread_id, '_blank'), [activeThread]);
 
   return (
     <ThemeProvider theme={theme}>
