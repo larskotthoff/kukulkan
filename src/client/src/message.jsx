@@ -127,13 +127,13 @@ export class Message extends React.Component {
 
   componentDidUpdate() {
     if(this.state.expanded) {
-      this.elementTop.current.scrollIntoView();
+      this.elementTop.current.scrollIntoView({block: "nearest"});
     }
   }
 
   componentDidMount() {
     if(this.state.expanded) {
-      this.elementTop.current.scrollIntoView();
+      this.elementTop.current.scrollIntoView({block: "nearest"});
     }
   }
 

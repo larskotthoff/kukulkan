@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route, Outlet, useSearchParams } from "react-router-dom";
 
@@ -75,6 +75,10 @@ export class Threads extends React.Component {
     this.df = new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
   }
 
+  componentDidUpdate() {
+    this.props.updateActiveThread(0);
+  }
+
   render() {
     return (
       <Box id="threads" sx={{ mt: 1, width: "90%" }}>
@@ -96,9 +100,9 @@ export class Threads extends React.Component {
             </TableHead>
             <TableBody>
               { this.props.threads.map((thread, index) => (
-                <TableRow key={index} selected={this.props.activeThread === index ? true : false} hover={true} onClick={(e) => {
+                <TableRow key={index} hover={true} onClick={(e) => {
                           e.preventDefault();
-                          this.props.setActiveThread(index);
+                          this.props.updateActiveThread(index);
                           window.open('/thread?id=' + thread.thread_id, '_blank')
                 }}>
                   <TableCell align="center">{ thread.total_messages > 1 && this.df.format(thread.oldest_date * 1000) + " — " } { this.df.format(thread.newest_date * 1000) }</TableCell>
@@ -132,9 +136,10 @@ export class Threads extends React.Component {
 function Kukulkan() {
   const [query, setQuery] = useState(null);
   const [threads, setThreads] = useState(null);
-  const [activeThread, setActiveThread] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const activeThread = useRef(0);
 
   const theme = createTheme();
 
@@ -174,18 +179,29 @@ function Kukulkan() {
         )
         .finally(() => {
           setLoading(false);
-          setActiveThread(0);
           document.activeElement.blur();
           document.title = query;
         });
     }
   }, [query]);
 
-  useHotkeys('k', () => setActiveThread(Math.max(0, activeThread - 1)), [activeThread]);
-  useHotkeys('Shift+K', () => setActiveThread(Math.max(0, activeThread - 10)), [activeThread]);
-  useHotkeys('j', () => setActiveThread(Math.min(threads.length - 1, activeThread + 1)), [activeThread, threads]);
-  useHotkeys('Shift+J', () => setActiveThread(Math.min(threads.length - 1, activeThread + 10)), [activeThread, threads]);
-  useHotkeys('Enter', () => window.open('/thread?id=' + threads[activeThread].thread_id, '_blank'), [activeThread]);
+  function updateActiveThread(at) {
+    activeThread.current = at;
+    Array.from(document.getElementsByClassName("MuiTableRow-hover")).forEach((el, index) => {
+      if(el.className.indexOf("Mui-selected") >= 0 && activeThread.current !== index) {
+        el.className = el.className.replace("Mui-selected", "");
+      } else if(activeThread.current === index) {
+        el.className += " Mui-selected";
+        el.scrollIntoView({block: "nearest"});
+      }
+    });
+  }
+
+  useHotkeys('k', () => updateActiveThread(Math.max(0, activeThread.current - 1)), [activeThread]);
+  useHotkeys('Shift+K', () => updateActiveThread(Math.max(0, activeThread.current - 10)), [activeThread]);
+  useHotkeys('j', () => updateActiveThread(Math.min(threads.length - 1, activeThread.current + 1)), [threads, activeThread]);
+  useHotkeys('Shift+J', () => updateActiveThread(Math.min(threads.length - 1, activeThread.current + 10)), [threads, activeThread]);
+  useHotkeys('Enter', () => window.open('/thread?id=' + threads[activeThread.current].thread_id, '_blank'), [threads, activeThread]);
 
   return (
     <ThemeProvider theme={theme}>
@@ -204,7 +220,7 @@ function Kukulkan() {
                 <Alert severity="error">Error querying backend: {error.message}</Alert>
               </Box>
             }
-            <Threads threads={threads} activeThread={activeThread} setActiveThread={setActiveThread} />
+            <Threads threads={threads} updateActiveThread={updateActiveThread}/>
         </Box>
       </Container>
     </ThemeProvider>
