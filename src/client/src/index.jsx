@@ -30,100 +30,103 @@ import { SingleMessage } from "./message.jsx";
 
 import { getColor } from "./utils.js";
 
-function Search({loading, setSearchParams, query}) {
-  let opts = ["tag:todo", "date:1d.."];
-  let qs = localStorage.getItem("queries");
-  if(qs !== null) opts = [...new Set(opts.concat(JSON.parse(qs)))];
+export class Search extends React.Component {
+  constructor(props) {
+    super(props);
+    this.opts = ["tag:todo", "date:1d.."];
+    let qs = localStorage.getItem("queries");
+    if(qs !== null) this.opts = [...new Set(this.opts.concat(JSON.parse(qs)))];
+  }
 
-  return (
-    <Box component="form" noValidate sx={{ mt: 1, width: "70%" }} onSubmit={(e) => {
-      e.preventDefault();
-      const data = new FormData(e.currentTarget);
-      setSearchParams({query: data.get("search")});
-    }}>
-      <Grid container spacing={2}
-          sx={{
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-          }}>
-        <Grid item sx={{ width: "90%" }}>
-          <Autocomplete
-            freeSolo
-            autoComplete={true}
-            value={query ? query : ""}
-            options={opts}
-            renderInput={(params) => <TextField {...params} label="Search" id="search" name="search" fullWidth autoFocus margin="normal" />}
-          />
+  render() {
+    return (
+      <Box component="form" noValidate sx={{ mt: 1, width: "70%" }} onSubmit={(e) => {
+        e.preventDefault();
+        const data = new FormData(e.currentTarget);
+        this.props.setSearchParams({query: data.get("search")});
+      }}>
+        <Grid container spacing={2}
+            sx={{
+              display: 'flex',
+              flexDirection: 'row',
+              alignItems: 'center',
+            }}>
+          <Grid item sx={{ width: "90%" }}>
+            <Autocomplete
+              freeSolo
+              autoComplete={true}
+              value={this.props.query ? this.props.query : ""}
+              options={this.opts}
+              renderInput={(params) => <TextField {...params} label="Search" id="search" name="search" fullWidth autoFocus margin="normal" />}
+            />
+            </Grid>
+          <Grid item>
+            { this.props.loading && <CircularProgress /> }
           </Grid>
-        <Grid item>
-          { loading && <CircularProgress /> }
         </Grid>
-      </Grid>
-    </Box>
-  );
+      </Box>
+    );
+  }
 }
 
-function Threads({threads, error, activeThread, setActiveThread}) {
-  const df = new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+export class Threads extends React.Component {
+  constructor(props) {
+    super(props);
+    this.df = new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+  }
 
-  /*
-  useHotkeys('k', () => setActiveThread(Math.max(0, activeThread - 1)), [activeThread]);
-  useHotkeys('Shift+K', () => setActiveThread(Math.max(0, activeThread - 10)), [activeThread]);
-  useHotkeys('j', () => setActiveThread(Math.min(threads.length - 1, activeThread + 1)), [activeThread, threads]);
-  useHotkeys('Shift+J', () => setActiveThread(Math.min(threads.length - 1, activeThread + 10)), [activeThread, threads]);
-  */
-
-  return (
-    <Box id="threads" sx={{ mt: 1, width: "90%" }}>
-    { threads && 
-      <Paper elevation={3} sx={{ padding: 2 }}>
-      <Typography align="right">{threads.length} threads.</Typography>
-      <TableContainer id="threadsTable">
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Date</TableCell>
-              <TableCell>Messages</TableCell>
-              <TableCell></TableCell>
-              <TableCell></TableCell>
-              <TableCell>Tags</TableCell>
-              <TableCell>Subject</TableCell>
-              <TableCell>Authors</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            { threads.map((thread, index) => (
-              <TableRow key={index} selected={activeThread === index ? true : false} hover={true} onClick={(e) => {
-                        e.preventDefault();
-                        setActiveThread(index);
-                        window.open('/thread?id=' + thread.thread_id, '_blank')
-              }}>
-                <TableCell align="center">{ thread.total_messages > 1 && df.format(thread.oldest_date * 1000) + " — " } { df.format(thread.newest_date * 1000) }</TableCell>
-                <TableCell>{ thread.total_messages }</TableCell>
-                <TableCell>{ thread.tags.includes("attachment") && <AttachFile /> }</TableCell>
-                <TableCell>{ (thread.tags.includes("replied") || thread.tags.includes("sent")) && <Reply /> }</TableCell>
-                <TableCell>
-                  <Grid container spacing={1}>
-                    { thread.tags.filter((tag) => (tag !== "attachment" && tag !== "replied" && tag !== "sent"))
-                      .map((tag, index2) => (
-                      <Grid item key={index2}>
-                        <Chip key={index2} label={tag} style={{ color: getColor(tag) }} onDelete={console.log}/>
-                      </Grid>
-                    )) }
-                  </Grid>
-                </TableCell>
-                <TableCell>{thread.subject}</TableCell>
-                <TableCell>{thread.authors.replace("| ", ", ")}</TableCell>
+  render() {
+    return (
+      <Box id="threads" sx={{ mt: 1, width: "90%" }}>
+      { this.props.threads &&
+        <Paper elevation={3} sx={{ padding: 2 }}>
+        <Typography align="right">{this.props.threads.length} threads.</Typography>
+        <TableContainer id="threadsTable">
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Date</TableCell>
+                <TableCell>Messages</TableCell>
+                <TableCell></TableCell>
+                <TableCell></TableCell>
+                <TableCell>Tags</TableCell>
+                <TableCell>Subject</TableCell>
+                <TableCell>Authors</TableCell>
               </TableRow>
-            )) }
-          </TableBody>
-        </Table>
-      </TableContainer>
-      </Paper>
-    }
-    </Box>
-  );
+            </TableHead>
+            <TableBody>
+              { this.props.threads.map((thread, index) => (
+                <TableRow key={index} selected={this.props.activeThread === index ? true : false} hover={true} onClick={(e) => {
+                          e.preventDefault();
+                          this.props.setActiveThread(index);
+                          window.open('/thread?id=' + thread.thread_id, '_blank')
+                }}>
+                  <TableCell align="center">{ thread.total_messages > 1 && this.df.format(thread.oldest_date * 1000) + " — " } { this.df.format(thread.newest_date * 1000) }</TableCell>
+                  <TableCell>{ thread.total_messages }</TableCell>
+                  <TableCell>{ thread.tags.includes("attachment") && <AttachFile /> }</TableCell>
+                  <TableCell>{ (thread.tags.includes("replied") || thread.tags.includes("sent")) && <Reply /> }</TableCell>
+                  <TableCell>
+                    <Grid container spacing={1}>
+                      { thread.tags.filter((tag) => (tag !== "attachment" && tag !== "replied" && tag !== "sent"))
+                        .map((tag, index2) => (
+                        <Grid item key={index2}>
+                          <Chip key={index2} label={tag} style={{ color: getColor(tag) }} onDelete={console.log}/>
+                        </Grid>
+                      )) }
+                    </Grid>
+                  </TableCell>
+                  <TableCell>{thread.subject}</TableCell>
+                  <TableCell>{thread.authors.replace("| ", ", ")}</TableCell>
+                </TableRow>
+              )) }
+            </TableBody>
+          </Table>
+        </TableContainer>
+        </Paper>
+      }
+      </Box>
+    );
+  }
 }
 
 function Kukulkan() {
@@ -178,6 +181,12 @@ function Kukulkan() {
     }
   }, [query]);
 
+  useHotkeys('k', () => setActiveThread(Math.max(0, activeThread - 1)), [activeThread]);
+  useHotkeys('Shift+K', () => setActiveThread(Math.max(0, activeThread - 10)), [activeThread]);
+  useHotkeys('j', () => setActiveThread(Math.min(threads.length - 1, activeThread + 1)), [activeThread, threads]);
+  useHotkeys('Shift+J', () => setActiveThread(Math.min(threads.length - 1, activeThread + 10)), [activeThread, threads]);
+  useHotkeys('Enter', () => window.open('/thread?id=' + threads[activeThread].thread_id, '_blank'));
+
   return (
     <ThemeProvider theme={theme}>
       <Container component="main" maxWidth="90%">
@@ -195,7 +204,7 @@ function Kukulkan() {
                 <Alert severity="error">Error querying backend: {error.message}</Alert>
               </Box>
             }
-            <Threads threads={threads} error={error} activeThread={activeThread} setActiveThread={setActiveThread} />
+            <Threads threads={threads} activeThread={activeThread} setActiveThread={setActiveThread} />
         </Box>
       </Container>
     </ThemeProvider>
