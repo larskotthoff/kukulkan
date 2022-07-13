@@ -100,7 +100,7 @@ export class Threads extends React.Component {
             </TableHead>
             <TableBody>
               { this.props.threads.map((thread, index) => (
-                <TableRow key={index} hover={true} onClick={(e) => {
+                <TableRow key={index} hover={true} className="kukulkan-keyboard-nav" onClick={(e) => {
                           e.preventDefault();
                           this.props.updateActiveThread(index);
                           window.open('/thread?id=' + thread.thread_id, '_blank')
@@ -187,7 +187,7 @@ function Kukulkan() {
 
   function updateActiveThread(at) {
     activeThread.current = at;
-    Array.from(document.getElementsByClassName("MuiTableRow-hover")).forEach((el, index) => {
+    Array.from(document.getElementsByClassName("kukulkan-keyboard-nav")).forEach((el, index) => {
       if(el.className.indexOf("Mui-selected") >= 0 && activeThread.current !== index) {
         el.className = el.className.replace("Mui-selected", "");
       } else if(activeThread.current === index) {
