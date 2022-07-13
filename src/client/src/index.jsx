@@ -30,7 +30,7 @@ import { SingleMessage } from "./message.jsx";
 
 import { getColor } from "./utils.js";
 
-export class Search extends React.Component {
+class Search extends React.Component {
   constructor(props) {
     super(props);
     this.opts = ["tag:todo", "date:1d.."];
@@ -69,7 +69,7 @@ export class Search extends React.Component {
   }
 }
 
-export class Threads extends React.Component {
+class Threads extends React.Component {
   constructor(props) {
     super(props);
     this.df = new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
@@ -187,11 +187,12 @@ function Kukulkan() {
 
   function updateActiveThread(at) {
     activeThread.current = at;
+    const clName = "Mui-selected";
     Array.from(document.getElementsByClassName("kukulkan-keyboard-nav")).forEach((el, index) => {
-      if(el.className.indexOf("Mui-selected") >= 0 && activeThread.current !== index) {
-        el.className = el.className.replace("Mui-selected", "");
-      } else if(activeThread.current === index) {
-        el.className += " Mui-selected";
+      if(el.className.indexOf(clName) >= 0 && activeThread.current !== index) {
+        el.className = el.className.replace(clName, "");
+      } else if(activeThread.current === index && el.className.indexOf(clName) < 0) {
+        el.className += " " + clName;
         el.scrollIntoView({block: "nearest"});
       }
     });

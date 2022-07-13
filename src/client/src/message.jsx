@@ -109,13 +109,12 @@ export class Message extends React.Component {
   }
 
   getAttachment(attachment) {
-    const { msg } = this.props;
-    fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/attachment/' + msg.notmuch_id + "/" + attachment)
+    fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/attachment/' + this.props.msg.notmuch_id + "/" + attachment)
       .then(res => res.blob())
       .then(blob => {
         const href = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
-        a.download = msg.attachments[attachment].filename;
+        a.download = this.props.msg.attachments[attachment].filename;
         a.href = href;
         a.click();
         a.remove();
@@ -127,18 +126,13 @@ export class Message extends React.Component {
 
   componentDidUpdate() {
     if(this.state.expanded) {
-      this.elementTop.current.scrollIntoView({block: "nearest"});
-    }
-  }
-
-  componentDidMount() {
-    if(this.state.expanded) {
+      this.props.updateActiveMsg(this.props.index);
       this.elementTop.current.scrollIntoView({block: "nearest"});
     }
   }
 
   render() {
-    const { msg } = this.props;
+    const msg = this.props.msg;
 
     document.title = msg.subject;
 
@@ -162,9 +156,9 @@ export class Message extends React.Component {
     }
 
     return (
-      <Paper elevation={3} sx={{ padding: 1, margin: 1, maxWidth: "80em" }} ref={this.elementTop}>
+      <Paper elevation={3} sx={{ padding: 1, margin: 1, width: "80em" }} className="kukulkan-keyboard-nav" ref={this.elementTop}>
         <Collapse key={msg.notmuch_id + "_collapsed" } in={!this.state.expanded} timeout={timeout} unmountOnExit>
-          <Grid container direction="column" onClick={this.handleCollapse}>
+          <Grid container direction="column" onClick={this.handleCollapse} className="kukulkan-clickable">
             <Grid container direction="row" justifyContent="space-between">
               <Grid item><Typography>{msg.from}</Typography></Grid>
               <Grid item><Typography>{msg.date}</Typography></Grid>
@@ -177,7 +171,7 @@ export class Message extends React.Component {
         </Collapse>
 
         <Collapse key={msg.notmuch_id + "_expanded" } in={this.state.expanded} timeout={timeout} unmountOnExit>
-          <Box onClick={this.handleCollapse}>
+          <Box onClick={this.handleCollapse} className="kukulkan-clickable">
             { msg.from && <Typography variant="h6">From: {msg.from}</Typography> }
             { msg.to && <Typography variant="h6">To: {msg.to}</Typography> }
             { msg.cc && <Typography variant="h6">CC: {msg.cc}</Typography> }
@@ -246,13 +240,12 @@ export class DeletedMessage extends React.Component {
   render() {
     if(this.state.hidden) {
       return (
-        <Paper elevation={1} sx={{ padding: 1, margin: 2, maxWidth: "80em" }}>
-          <Button onClick={this.handleReplace}>show deleted message</Button>
+        <Paper elevation={1} sx={{ padding: 1, margin: 2, maxWidth: "80em" }} className="kukulkan-keyboard-nav">
+          <Button onClick={this.handleReplace} className="kukulkan-clickable">show deleted message</Button>
         </Paper>
       )
     } else {
-      const { msg } = this.props;
-      return (<Message key={this.key} msg={msg} open={true} />)
+      return (<Message key={this.key} index={this.props.index} msg={this.props.msg} open={true} updateActiveMsg={this.props.updateActiveMsg} />)
     }
   }
 }
@@ -298,7 +291,7 @@ export function SingleMessage() {
         <CssBaseline />
           { messageLoading && <CircularProgress /> }
           { error && <Alert severity="error">Error querying backend: {error.message}</Alert> }
-          { message && <Message key={message.notmuch_id} msg={message} open={true}/> }
+          { message && <Message key={message.notmuch_id} index={0} msg={message} open={true}/> }
       </Container>
     </ThemeProvider>
   );

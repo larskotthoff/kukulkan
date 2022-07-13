@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from "react-router-dom";
 
 import CssBaseline from '@mui/material/CssBaseline';
@@ -10,8 +10,30 @@ import Grid from '@mui/material/Grid';
 import CircularProgress from '@mui/material/CircularProgress';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
+import { useHotkeys } from 'react-hotkeys-hook';
+
 import { getColor, extractEmailsSort, filterTagsColor, filterSubjectColor } from "./utils.js";
 import { Message, DeletedMessage } from "./message.jsx";
+
+class MessageList extends React.Component {
+  componentDidUpdate() {
+    if(this.props.filteredThread) this.props.updateActiveMsg(this.props.filteredThread.length - 1);
+  }
+
+  render() {
+    return (
+      <React.Fragment>
+        { this.props.filteredThread && this.props.filteredThread.map((msg, index) => (
+            msg.tags.includes("deleted") ?
+            <DeletedMessage key={msg.notmuch_id} msg={msg} updateActiveMsg={this.props.updateActiveMsg} /> :
+            <Message key={msg.notmuch_id} index={index} msg={msg} open={index === this.props.filteredThread.length - 1} updateActiveMsg={this.props.updateActiveMsg} />
+          ))
+        }
+      </React.Fragment>
+    )
+  }
+}
+
 
 function filterThread(msg, thread) {
   let prv = [];
@@ -42,6 +64,8 @@ export function Thread() {
   const [filteredThread, setFilteredThread] = useState(null);
   const [threadId, setThreadId] = useState(null);
   const [error, setError] = useState(null);
+
+  const activeMsg = useRef(0);
 
   const [searchParams] = useSearchParams();
   useEffect(() => {
@@ -87,12 +111,34 @@ export function Thread() {
         depth++;
       }
 
-      console.log(thread);
       setFilteredThread(filterThread(thread[thread.length - 1], thread));
     }
   }, [thread]);
 
   const theme = createTheme();
+
+  function updateActiveMsg(at) {
+    activeMsg.current = at;
+    Array.from(document.getElementsByClassName("kukulkan-keyboard-nav")).forEach((el, index) => {
+      if(el.style.getPropertyValue("box-shadow") !== "" && activeMsg.current !== index) {
+        el.style.setProperty("box-shadow", "");
+      } else if(activeMsg.current === index && el.style.getPropertyValue("box-shadow") === "") {
+        // elevation 20
+        el.style.setProperty("box-shadow", "0px 10px 13px -6px rgb(0 0 0 / 20%), 0px 20px 31px 3px rgb(0 0 0 / 14%), 0px 8px 38px 7px rgb(0 0 0 / 12%)");
+        el.scrollIntoView({block: "nearest"});
+      }
+    });
+  }
+
+  useHotkeys('k', () => updateActiveMsg(Math.max(0, activeMsg.current - 1)), [activeMsg]);
+  useHotkeys('j', () => updateActiveMsg(Math.min(filteredThread.length - 1, activeMsg.current + 1)), [filteredThread, activeMsg]);
+  useHotkeys('e,Enter', () => {
+    let elm = null;
+    Array.from(document.getElementsByClassName("kukulkan-keyboard-nav")).forEach((el, index) => {
+      if(index === activeMsg.current) elm = el;
+    });
+    if(elm) elm.getElementsByClassName("kukulkan-clickable")[0].click();
+  }, [activeMsg]);
 
   return (
     <ThemeProvider theme={theme}>
@@ -125,12 +171,7 @@ export function Thread() {
               </Grid>
             </Drawer>
           }
-          { filteredThread && filteredThread.map((msg, index) => (
-              msg.tags.includes("deleted") ?
-              <DeletedMessage key={msg.notmuch_id} msg={msg} /> :
-              <Message key={msg.notmuch_id} msg={msg} open={index === filteredThread.length - 1} />
-            ))
-          }
+          <MessageList filteredThread={filteredThread} updateActiveMsg={updateActiveMsg}/>
         </Grid>
       </Container>
     </ThemeProvider>
