@@ -199,9 +199,9 @@ export class Message extends React.Component {
           </Grid>
 
           { msg.attachments &&
-            <Grid container spacing={1} alignItems="center">
+            <Grid container spacing={1}>
               { msg.attachments.map((attachment, index2) => (
-                  <Grid item align="center" key={index2} style={{ height: "3em" }} onClick={() => { this.getAttachment(index2); }}>
+                  <Grid item align="center" key={index2} style={{ minHeight: "3em" }} onClick={() => { this.getAttachment(index2); }}>
                     <Button key={index2} startIcon={<AttachFile/>} variant="outlined">
                       {attachment.filename} ({attachment.content_type})
                     </Button>
