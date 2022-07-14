@@ -262,7 +262,7 @@ def messages_to_json(messages):
     return [ message_to_json(m) for m in messages ]
 
 
-def sanitize_addresses(lines):
+def fix_headers(lines):
     pts = lines[0].split(':')
     key = pts[0].strip()
     tmp = email.header.decode_header(':'.join(pts[1:]).strip() + ''.join(lines[1:]).strip())
@@ -272,7 +272,7 @@ def sanitize_addresses(lines):
 
 def message_to_json(message):
     """Converts a `notmuch.message.Message` instance to a JSON object."""
-    policy = email.policy.strict.clone(header_source_parse = sanitize_addresses)
+    policy = email.policy.strict.clone(header_source_parse = fix_headers)
     with open(message.get_filename(), "rb") as f:
         email_msg = email.message_from_binary_file(f, policy = policy)
 
