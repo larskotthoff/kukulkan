@@ -17,7 +17,15 @@ import { Message, DeletedMessage } from "./message.jsx";
 
 class MessageList extends React.Component {
   componentDidUpdate() {
-    if(this.props.filteredThread) this.props.updateActiveMsg(this.props.filteredThread.length - 1);
+    if(this.props.filteredThread) {
+      let firstUnread = this.props.filteredThread.findIndex((msg) => {
+        return msg.tags.includes("unread");
+      });
+      if(firstUnread > -1) {
+      } else {
+        this.props.updateActiveMsg(this.props.filteredThread.length - 1);
+      }
+    }
   }
 
   render() {
