@@ -40,7 +40,7 @@ class MessageText extends React.Component {
 
   render() {
     return (
-      <Box>
+      <React.Fragment>
         <Box style={{ whiteSpace: "pre-line" }} dangerouslySetInnerHTML={{ __html: this.props.mainPart }} />
         { this.props.quotedPart.length > 0 &&
           <Box onClick={this.handleCollapse}>
@@ -58,7 +58,7 @@ class MessageText extends React.Component {
             </Collapse>
           </Box>
         }
-      </Box>
+      </React.Fragment>
     )
   }
 }
