@@ -35,7 +35,7 @@ class MessageList extends React.Component {
 }
 
 
-function filterThread(msg, thread) {
+function filterThread(msg, thread, activeDepth) {
   let prv = [];
   let tmp = msg;
   while(tmp.in_reply_to) {
@@ -55,6 +55,7 @@ function filterThread(msg, thread) {
     tmp = thread.find(i => { return tmp.message_id === i.in_reply_to; });
   }
 
+  activeDepth.current = msg.depth;
   return prv.reverse().concat(nxt);
 }
 
@@ -66,6 +67,8 @@ export function Thread() {
   const [error, setError] = useState(null);
 
   const activeMsg = useRef(0);
+  const activeDepth = useRef(1);
+  const maxDepth = useRef(1);
 
   const [searchParams] = useSearchParams();
   useEffect(() => {
@@ -100,6 +103,7 @@ export function Thread() {
 
       let depth = 1;
       while(tmp.length > 0) {
+        maxDepth.current = depth;
         let cur = tmp.pop();
         while(cur) {
           cur.depth = depth;
@@ -111,33 +115,49 @@ export function Thread() {
         depth++;
       }
 
-      setFilteredThread(filterThread(thread[thread.length - 1], thread));
+      setFilteredThread(filterThread(thread[thread.length - 1], thread, activeDepth));
     }
   }, [thread]);
 
   const theme = createTheme();
 
   function updateActiveMsg(at) {
+    document.activeElement.blur();
+    let els = Array.from(document.getElementsByClassName("kukulkan-keyboard-nav"));
+    if(els[activeMsg.current]) {
+      els[activeMsg.current].style.setProperty("box-shadow", "");
+    }
     activeMsg.current = at;
-    Array.from(document.getElementsByClassName("kukulkan-keyboard-nav")).forEach((el, index) => {
-      if(el.style.getPropertyValue("box-shadow") !== "" && activeMsg.current !== index) {
-        el.style.setProperty("box-shadow", "");
-      } else if(activeMsg.current === index && el.style.getPropertyValue("box-shadow") === "") {
-        // elevation 20
-        el.style.setProperty("box-shadow", "0px 10px 13px -6px rgb(0 0 0 / 20%), 0px 20px 31px 3px rgb(0 0 0 / 14%), 0px 8px 38px 7px rgb(0 0 0 / 12%)");
-        el.scrollIntoView({block: "nearest"});
-      }
+    if(els[activeMsg.current]) {
+      els[activeMsg.current].style.setProperty("box-shadow", "0px 10px 13px -6px rgb(0 0 0 / 20%), 0px 20px 31px 3px rgb(0 0 0 / 14%), 0px 8px 38px 7px rgb(0 0 0 / 12%)")
+      els[activeMsg.current].scrollIntoView({block: "nearest"});
+    }
+  }
+
+  const updateActiveDepth = (d) => {
+    activeDepth.current = d;
+    let msg = thread[thread.length - 1];
+    thread.forEach(function(m) {
+      if(m.depth === d) msg = m;
     });
+    setFilteredThread(filterThread(msg, thread, activeDepth));
   }
 
   useHotkeys('k', () => updateActiveMsg(Math.max(0, activeMsg.current - 1)), [activeMsg]);
   useHotkeys('j', () => updateActiveMsg(Math.min(filteredThread.length - 1, activeMsg.current + 1)), [filteredThread, activeMsg]);
+
+  useHotkeys('h', () => updateActiveDepth(Math.max(1, activeDepth.current - 1)), [activeDepth, thread]);
+  useHotkeys('l', () => updateActiveDepth(Math.min(activeDepth.current + 1, maxDepth.current)), [activeDepth, maxDepth, thread]);
+
   useHotkeys('e,Enter', () => {
-    let elm = null;
-    Array.from(document.getElementsByClassName("kukulkan-keyboard-nav")).forEach((el, index) => {
-      if(index === activeMsg.current) elm = el;
-    });
-    if(elm) elm.getElementsByClassName("kukulkan-clickable")[0].click();
+    // don't activate if we've tabbed to print/reply/attachment/etc
+    if(["button", "a"].indexOf(document.activeElement.tagName.toLowerCase()) === -1) {
+      let elm = null;
+      Array.from(document.getElementsByClassName("kukulkan-keyboard-nav")).forEach((el, index) => {
+        if(index === activeMsg.current) elm = el;
+      });
+      if(elm) elm.getElementsByClassName("kukulkan-clickable")[0].click();
+    }
   }, [activeMsg]);
 
   return (
@@ -155,7 +175,7 @@ export function Thread() {
                     { (new Array(msg.depth).fill(0)).map((_, index2) => (
                       <Grid item key={index2}>
                         <Box
-                          onClick={() => setFilteredThread(filterThread(msg, thread))}
+                          onClick={() => setFilteredThread(filterThread(msg, thread, activeDepth))}
                           style={{ width: "1em", height: "1em", margin: ".03em",
                             opacity: (filteredThread && filteredThread.find((i) => { return i.message_id === msg.message_id; })) ?
                               1 :

@@ -183,11 +183,11 @@ export class Message extends React.Component {
             </Grid>
           </Box>
 
-          <Grid container spacing={1} justifyContent="space-between" direction="row" style={{ height: "3.5em" }}>
+          <Grid container spacing={1} justifyContent="space-between" direction="row" style={{ minHeight: "3.5em" }}>
             <Grid item container spacing={1} xs={11}>
               { msg.tags.map((tag, index2) => (
                 <Grid item key={index2}>
-                  <Chip key={index2} label={tag} style={{ color: getColor(tag) }} onDelete={console.log}/>
+                  <Chip key={index2} label={tag} tabIndex={-1} style={{ color: getColor(tag) }} onDelete={console.log}/>
                 </Grid>
               )) }
             </Grid>

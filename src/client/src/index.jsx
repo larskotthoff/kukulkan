@@ -186,16 +186,16 @@ function Kukulkan() {
   }, [query]);
 
   function updateActiveThread(at) {
-    activeThread.current = at;
     const clName = "Mui-selected";
-    Array.from(document.getElementsByClassName("kukulkan-keyboard-nav")).forEach((el, index) => {
-      if(el.className.indexOf(clName) >= 0 && activeThread.current !== index) {
-        el.className = el.className.replace(clName, "");
-      } else if(activeThread.current === index && el.className.indexOf(clName) < 0) {
-        el.className += " " + clName;
-        el.scrollIntoView({block: "nearest"});
-      }
-    });
+    let els = Array.from(document.getElementsByClassName("kukulkan-keyboard-nav"));
+    if(els[activeThread.current]) {
+      els[activeThread.current].className = els[activeThread.current].className.replace(clName, "");
+    }
+    activeThread.current = at;
+    if(els[activeThread.current]) {
+      els[activeThread.current].className += " " + clName;
+      els[activeThread.current].scrollIntoView({block: "nearest"});
+    }
   }
 
   useHotkeys('k', () => updateActiveThread(Math.max(0, activeThread.current - 1)), [activeThread]);
