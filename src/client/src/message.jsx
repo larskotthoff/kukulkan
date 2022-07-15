@@ -126,7 +126,10 @@ export class Message extends React.Component {
 
   componentDidUpdate() {
     if(this.state.expanded) {
-      this.props.updateActiveMsg(this.props.index);
+      if(this.props.updateActiveMsg) {
+        // not available in print view
+        this.props.updateActiveMsg(this.props.index);
+      }
       this.elementTop.current.scrollIntoView({block: "nearest"});
     }
   }
