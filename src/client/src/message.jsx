@@ -215,7 +215,7 @@ export class Message extends React.Component {
           <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
 
           <Grid container justifyContent="flex-end">
-            { msg.body["text/html"] && <Button variant="outlined" onClick={this.handleHtml}>{this.state.html ? "Text" : "HTML"}</Button> }
+            { msg.body["text/html"] && <Button variant="outlined" className="kukulkan-content" onClick={this.handleHtml}>{this.state.html ? "Text" : "HTML"}</Button> }
           </Grid>
           { this.state.html ?
             <Box dangerouslySetInnerHTML={{ __html: msg.body["text/html"] }} /> :

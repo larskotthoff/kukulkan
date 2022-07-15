@@ -32,7 +32,7 @@ class MessageList extends React.Component {
     return (
       <React.Fragment>
         { this.props.filteredThread && this.props.filteredThread.map((msg, index) => (
-            msg.tags.includes("deleted") ?
+            msg.tags.includes("deleted") && this.props.filteredThread.length > 1 ?
             <DeletedMessage key={msg.notmuch_id} msg={msg} updateActiveMsg={this.props.updateActiveMsg} /> :
             <Message key={msg.notmuch_id} index={index} msg={msg} open={index === this.props.filteredThread.length - 1} updateActiveMsg={this.props.updateActiveMsg} />
           ))
@@ -129,7 +129,7 @@ export function Thread() {
 
   const theme = createTheme();
 
-  function updateActiveMsg(at) {
+  function updateActiveMsg(at, open = false) {
     document.activeElement.blur();
     let els = Array.from(document.getElementsByClassName("kukulkan-keyboard-nav"));
     if(els[activeMsg.current]) {
@@ -139,6 +139,24 @@ export function Thread() {
     if(els[activeMsg.current]) {
       els[activeMsg.current].style.setProperty("box-shadow", "0px 10px 13px -6px rgb(0 0 0 / 20%), 0px 20px 31px 3px rgb(0 0 0 / 14%), 0px 8px 38px 7px rgb(0 0 0 / 12%)")
       els[activeMsg.current].scrollIntoView({block: "nearest"});
+    }
+
+    if(open) {
+      let elm = els[activeMsg.current];
+      // check if not already open
+      if(elm && elm.getElementsByClassName('MuiChip-root').length === 0) {
+        elm.getElementsByClassName("kukulkan-clickable")[0].click();
+      }
+    }
+  }
+
+  function toggleContent() {
+    let els = Array.from(document.getElementsByClassName("kukulkan-keyboard-nav"));
+    if(els[activeMsg.current]) {
+      let toggle = els[activeMsg.current].getElementsByClassName('kukulkan-content');
+      if(toggle.length > 0) {
+        toggle[0].click();
+      }
     }
   }
 
@@ -152,18 +170,20 @@ export function Thread() {
   }
 
   useHotkeys('k', () => updateActiveMsg(Math.max(0, activeMsg.current - 1)), [activeMsg]);
+  useHotkeys('Shift+K', () => updateActiveMsg(Math.max(0, activeMsg.current - 1), true), [activeMsg]);
   useHotkeys('j', () => updateActiveMsg(Math.min(filteredThread.length - 1, activeMsg.current + 1)), [filteredThread, activeMsg]);
+  useHotkeys('Shift+J', () => updateActiveMsg(Math.min(filteredThread.length - 1, activeMsg.current + 1), true), [filteredThread, activeMsg]);
 
   useHotkeys('h', () => updateActiveDepth(Math.max(1, activeDepth.current - 1)), [activeDepth, thread]);
   useHotkeys('l', () => updateActiveDepth(Math.min(activeDepth.current + 1, maxDepth.current)), [activeDepth, maxDepth, thread]);
 
+  useHotkeys('c', () => toggleContent(), [activeMsg]);
+
   useHotkeys('e,Enter', () => {
     // don't activate if we've tabbed to print/reply/attachment/etc
     if(["button", "a"].indexOf(document.activeElement.tagName.toLowerCase()) === -1) {
-      let elm = null;
-      Array.from(document.getElementsByClassName("kukulkan-keyboard-nav")).forEach((el, index) => {
-        if(index === activeMsg.current) elm = el;
-      });
+      let els = Array.from(document.getElementsByClassName("kukulkan-keyboard-nav"));
+      let elm = els[activeMsg.current];
       if(elm) elm.getElementsByClassName("kukulkan-clickable")[0].click();
     }
   }, [activeMsg]);
