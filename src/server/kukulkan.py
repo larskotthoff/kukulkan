@@ -224,13 +224,10 @@ def get_nested_body(email_msg, html_only = False):
         else:
             content = ""
     else:
-        if content_plain:
-            content = bleach.linkify(bleach.clean(content_plain).strip())
-        elif content_html:
-            soup = BeautifulSoup(content_html, features = 'lxml')
-            content = ''.join(soup.get_text("\n\n", strip = True))
-        else:
-            content = ""
+        # always clean up "plain" text -- sometimes it's HTML...
+        soup = BeautifulSoup(content_plain if content_plain else content_html, features = 'html.parser')
+        content = ''.join(soup.get_text("\n\n", strip = True))
+        content = bleach.linkify(content)
 
     return content
 
