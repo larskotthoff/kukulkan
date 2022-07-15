@@ -19,8 +19,7 @@ import dkim
 
 import bleach
 from bleach.css_sanitizer import CSSSanitizer
-from html2text import html2text
-from markdown import markdown
+from bs4 import BeautifulSoup
 
 ALLOWED_TAGS = [
     "a",
@@ -228,18 +227,8 @@ def get_nested_body(email_msg, html_only = False):
         if content_plain:
             content = bleach.linkify(bleach.clean(content_plain).strip())
         elif content_html:
-            html = lxml.html.fromstring(content_html)
-            for tag in html.xpath('//style'):
-                tag.getparent().remove(tag)
-            content = lxml.html.tostring(cleaner.clean_html(html), encoding = str)
-            content = bleach.clean(
-                content,
-                tags = ALLOWED_TAGS,
-                attributes = ALLOWED_ATTRIBUTES,
-                strip = True,
-                css_sanitizer = CSSSanitizer()
-            ).strip()
-            content = markdown(html2text(content))
+            soup = BeautifulSoup(content_html, features = 'lxml')
+            content = ''.join(soup.get_text("\n\n", strip = True))
         else:
             content = ""
 
