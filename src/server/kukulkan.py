@@ -19,6 +19,8 @@ import dkim
 
 import bleach
 from bleach.css_sanitizer import CSSSanitizer
+from html2text import html2text
+from markdown import markdown
 
 ALLOWED_TAGS = [
     "a",
@@ -237,6 +239,7 @@ def get_nested_body(email_msg, html_only = False):
                 strip = True,
                 css_sanitizer = CSSSanitizer()
             ).strip()
+            content = markdown(html2text(content))
         else:
             content = ""
 
