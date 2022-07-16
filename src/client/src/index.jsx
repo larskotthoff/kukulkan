@@ -24,10 +24,9 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 import { useHotkeys } from 'react-hotkeys-hook';
 
+import { TagBar } from "./tags.jsx";
 import { Thread } from "./thread.jsx";
 import { SingleMessage } from "./message.jsx";
-
-import { getColor } from "./utils.js";
 
 class Search extends React.Component {
   constructor(props) {
@@ -89,10 +88,6 @@ class Threads extends React.Component {
 
   componentDidUpdate() {
     this.props.updateActiveThread(0);
-    // set colors for tags
-    Array.from(document.getElementsByClassName("MuiChip-label")).forEach(chip => {
-      chip.style.color = getColor(chip.textContent);
-    });
   }
 
   render() {
@@ -129,41 +124,7 @@ class Threads extends React.Component {
                   <TableCell>{ thread.tags.includes("attachment") && <AttachFile /> }</TableCell>
                   <TableCell>{ (thread.tags.includes("replied") || thread.tags.includes("sent")) && <Reply /> }</TableCell>
                   <TableCell>
-                    <Autocomplete
-                      freeSolo
-                      autoComplete={true}
-                      autoHighlight={true}
-                      disableClearable={true}
-                      multiple
-                      id={"tags-" + index}
-                      options={this.props.tags}
-                      filterOptions={(opts, state) => opts.filter((tag) => thread.tags.indexOf(tag) === -1 && tag.startsWith(state.inputValue))}
-                      defaultValue={thread.tags.filter(tag => this.hiddenTags.indexOf(tag) === -1)}
-                      renderInput={(params) => <TextField {...params} variant="standard"/>}
-                      onChange={(ev, value, reason) => {
-                        if(reason === "selectOption" || reason === "createOption") {
-                          let addedTag = value.filter(tag => !thread.tags.includes(tag))[0];
-                          fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/tag/add/thread:' + thread.thread_id + '/' + addedTag)
-                            .then(
-                              (result) => {
-                                thread.tags.push(addedTag);
-                              },
-                              (error) => {
-                                console.log(error);
-                              });
-                        } else if(reason === "removeOption") {
-                          let deletedTag = thread.tags.filter(tag => !value.includes(tag))[0];
-                          fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/tag/remove/thread:' + thread.thread_id + '/' + deletedTag)
-                            .then(
-                              (result) => {
-                                thread.tags = thread.tags.filter(tag => tag !== deletedTag);
-                              },
-                              (error) => {
-                                console.log(error);
-                              });
-                        }
-                      }}
-                    />
+                    <TagBar tags={thread.tags} options={this.props.tags} id={thread.thread_id} hiddenTags={this.hiddenTags} type="thread"/>
                   </TableCell>
                   <TableCell>{thread.subject}</TableCell>
                   <TableCell>{thread.authors.replace("| ", ", ")}</TableCell>

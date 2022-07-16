@@ -10,7 +10,6 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
-import Chip from '@mui/material/Chip';
 import Paper from '@mui/material/Paper';
 import CircularProgress from '@mui/material/CircularProgress';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
@@ -22,7 +21,9 @@ import ExpandMore from '@mui/icons-material/ExpandMore';
 import AttachFile from '@mui/icons-material/AttachFile';
 import Print from '@mui/icons-material/Print';
 
-import { getColor, strip } from "./utils.js";
+import { TagBar } from "./tags.jsx";
+
+import { strip } from "./utils.js";
 
 const timeout = 200;
 
@@ -166,6 +167,14 @@ export class Message extends React.Component {
 
     document.title = msg.subject;
 
+    document.onkeydown = function(evt) {
+      evt = evt || window.event;
+      let isEscape = false;
+      if("key" in evt) isEscape = (evt.key === "Escape" || evt.key === "Esc");
+      else isEscape = (evt.keyCode === 27);
+      if(isEscape) document.activeElement.blur();
+    };
+
     let validMsg = "";
     let validSev = "warning";
 
@@ -219,12 +228,8 @@ export class Message extends React.Component {
           </Box>
 
           <Grid container spacing={1} justifyContent="space-between" direction="row" style={{ minHeight: "3.5em" }}>
-            <Grid item container spacing={1} xs={11}>
-              { msg.tags.map((tag, index2) => (
-                <Grid item key={index2}>
-                  <Chip key={index2} label={tag} tabIndex={-1} style={{ color: getColor(tag) }} onDelete={console.log}/>
-                </Grid>
-              )) }
+            <Grid item xs={11}>
+              <TagBar tags={msg.tags} options={this.props.tags} id={msg.notmuch_id} type="mid"/>
             </Grid>
             <Grid item key="print">
               <a href={"/message?id=" + msg.notmuch_id} target="_blank" rel="noreferrer">

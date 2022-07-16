@@ -34,7 +34,7 @@ class MessageList extends React.Component {
         { this.props.filteredThread && this.props.filteredThread.map((msg, index) => (
             msg.tags.includes("deleted") && this.props.filteredThread.length > 1 ?
             <DeletedMessage key={msg.notmuch_id} msg={msg} updateActiveMsg={this.props.updateActiveMsg} /> :
-            <Message key={msg.notmuch_id} index={index} msg={msg} open={index === this.props.filteredThread.length - 1} updateActiveMsg={this.props.updateActiveMsg} />
+            <Message key={msg.notmuch_id} index={index} msg={msg} tags={this.props.tags} open={index === this.props.filteredThread.length - 1} updateActiveMsg={this.props.updateActiveMsg} />
           ))
         }
       </React.Fragment>
@@ -70,6 +70,7 @@ function filterThread(msg, thread, activeDepth) {
 export function Thread() {
   const [threadLoading, setThreadLoading] = useState(false);
   const [thread, setThread] = useState(null);
+  const [tags, setTags] = useState(null);
   const [filteredThread, setFilteredThread] = useState(null);
   const [threadId, setThreadId] = useState(null);
   const [error, setError] = useState(null);
@@ -126,6 +127,14 @@ export function Thread() {
       setFilteredThread(filterThread(thread[thread.length - 1], thread, activeDepth));
     }
   }, [thread]);
+
+  useEffect(() => {
+    fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/tags/')
+      .then(res => res.json())
+      .then((result) => {
+        setTags(result);
+      });
+  }, []);
 
   const theme = createTheme();
 
@@ -219,7 +228,7 @@ export function Thread() {
               </Grid>
             </Drawer>
           }
-          <MessageList filteredThread={filteredThread} updateActiveMsg={updateActiveMsg}/>
+          <MessageList tags={tags} filteredThread={filteredThread} updateActiveMsg={updateActiveMsg}/>
         </Grid>
       </Container>
     </ThemeProvider>
