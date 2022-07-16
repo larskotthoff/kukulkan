@@ -136,6 +136,7 @@ def create_app():
             tags = [ tag for tag in get_db().get_all_tags() if tag != "(null)" ]
             return tags
 
+    # all requests that return lists must be defined this way
     api.add_resource(Query, "/api/query/<path:query_string>")
     api.add_resource(Address, "/api/address/<path:query_string>")
     api.add_resource(Thread, "/api/thread/<string:thread_id>")
@@ -167,6 +168,28 @@ def create_app():
         msg = next(msgs)  # there can be only 1
         return send_file(msg.get_filename(), mimetype = "message/rfc822",
             as_attachment = True, attachment_filename = message_id+".eml")
+
+    @app.route("/api/tag/add/<string:query_string>/<tag>")
+    def tag_add(query_string, tag):
+        db_write = notmuch.Database(current_app.config["NOTMUCH_PATH"], create = False, mode = notmuch.Database.MODE.READ_WRITE)
+        msgs = notmuch.Query(db_write, query_string).search_messages()
+        try:
+            for msg in msgs:
+                msg.add_tag(tag)
+        finally:
+            db_write.close()
+        return tag
+
+    @app.route("/api/tag/remove/<string:query_string>/<tag>")
+    def tag_remove(query_string, tag):
+        db_write = notmuch.Database(current_app.config["NOTMUCH_PATH"], create = False, mode = notmuch.Database.MODE.READ_WRITE)
+        msgs = notmuch.Query(db_write, query_string).search_messages()
+        try:
+            for msg in msgs:
+                msg.remove_tag(tag)
+        finally:
+            db_write.close()
+        return tag
 
     return app
 

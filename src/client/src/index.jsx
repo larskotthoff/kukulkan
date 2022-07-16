@@ -10,7 +10,6 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
-import Chip from '@mui/material/Chip';
 import Paper from '@mui/material/Paper';
 import CircularProgress from '@mui/material/CircularProgress';
 import Table from '@mui/material/Table';
@@ -85,10 +84,15 @@ class Threads extends React.Component {
   constructor(props) {
     super(props);
     this.df = new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+    this.hiddenTags = ["attachment", "replied", "sent"];
   }
 
   componentDidUpdate() {
     this.props.updateActiveThread(0);
+    // set colors for tags
+    Array.from(document.getElementsByClassName("MuiChip-label")).forEach(chip => {
+      chip.style.color = getColor(chip.textContent);
+    });
   }
 
   render() {
@@ -113,23 +117,53 @@ class Threads extends React.Component {
             <TableBody>
               { this.props.threads.map((thread, index) => (
                 <TableRow key={index} hover={true} className="kukulkan-keyboard-nav" onClick={(e) => {
-                          e.preventDefault();
-                          this.props.updateActiveThread(index);
-                          window.open('/thread?id=' + thread.thread_id, '_blank')
+                  // check if we're clicking in a tag edit box
+                  if("input" !== document.activeElement.tagName.toLowerCase()) {
+                    e.preventDefault();
+                    this.props.updateActiveThread(index);
+                    window.open('/thread?id=' + thread.thread_id, '_blank');
+                  }
                 }}>
                   <TableCell align="center">{ thread.total_messages > 1 && this.df.format(thread.oldest_date * 1000) + " — " } { this.df.format(thread.newest_date * 1000) }</TableCell>
                   <TableCell>{ thread.total_messages }</TableCell>
                   <TableCell>{ thread.tags.includes("attachment") && <AttachFile /> }</TableCell>
                   <TableCell>{ (thread.tags.includes("replied") || thread.tags.includes("sent")) && <Reply /> }</TableCell>
                   <TableCell>
-                    <Grid container spacing={1}>
-                      { thread.tags.filter((tag) => (tag !== "attachment" && tag !== "replied" && tag !== "sent"))
-                        .map((tag, index2) => (
-                        <Grid item key={index2}>
-                          <Chip key={index2} label={tag} style={{ color: getColor(tag) }} onDelete={console.log}/>
-                        </Grid>
-                      )) }
-                    </Grid>
+                    <Autocomplete
+                      freeSolo
+                      autoComplete={true}
+                      autoHighlight={true}
+                      disableClearable={true}
+                      multiple
+                      id={"tags-" + index}
+                      options={this.props.tags}
+                      filterOptions={(opts, state) => opts.filter((tag) => thread.tags.indexOf(tag) === -1 && tag.startsWith(state.inputValue))}
+                      defaultValue={thread.tags.filter(tag => this.hiddenTags.indexOf(tag) === -1)}
+                      renderInput={(params) => <TextField {...params} variant="standard"/>}
+                      onChange={(ev, value, reason) => {
+                        if(reason === "selectOption" || reason === "createOption") {
+                          let addedTag = value.filter(tag => !thread.tags.includes(tag))[0];
+                          fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/tag/add/thread:' + thread.thread_id + '/' + addedTag)
+                            .then(
+                              (result) => {
+                                thread.tags.push(addedTag);
+                              },
+                              (error) => {
+                                console.log(error);
+                              });
+                        } else if(reason === "removeOption") {
+                          let deletedTag = thread.tags.filter(tag => !value.includes(tag))[0];
+                          fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/tag/remove/thread:' + thread.thread_id + '/' + deletedTag)
+                            .then(
+                              (result) => {
+                                thread.tags = thread.tags.filter(tag => tag !== deletedTag);
+                              },
+                              (error) => {
+                                console.log(error);
+                              });
+                        }
+                      }}
+                    />
                   </TableCell>
                   <TableCell>{thread.subject}</TableCell>
                   <TableCell>{thread.authors.replace("| ", ", ")}</TableCell>
@@ -194,7 +228,7 @@ function Kukulkan() {
           setLoading(false);
           document.activeElement.blur();
           document.title = query;
-        });
+      });
     }
   }, [query]);
 
@@ -202,8 +236,8 @@ function Kukulkan() {
     fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/tags/')
       .then(res => res.json())
       .then((result) => {
-          setTags(result);
-        });
+        setTags(result);
+      });
   }, []);
 
   function updateActiveThread(at) {
@@ -224,6 +258,17 @@ function Kukulkan() {
   useHotkeys('j', () => updateActiveThread(Math.min(threads.length - 1, activeThread.current + 1)), [threads, activeThread]);
   useHotkeys('Shift+J', () => updateActiveThread(Math.min(threads.length - 1, activeThread.current + 10)), [threads, activeThread]);
   useHotkeys('Enter', () => window.open('/thread?id=' + threads[activeThread.current].thread_id, '_blank'), [threads, activeThread]);
+  useHotkeys('t', (e) => {
+    e.preventDefault();
+    document.getElementsByClassName("kukulkan-keyboard-nav")[activeThread.current].getElementsByTagName("input")[0].focus();
+  }, [threads, activeThread]);
+  document.onkeydown = function(evt) {
+    evt = evt || window.event;
+    let isEscape = false;
+    if("key" in evt) isEscape = (evt.key === "Escape" || evt.key === "Esc");
+    else isEscape = (evt.keyCode === 27);
+    if(isEscape) document.activeElement.blur();
+  };
 
   return (
     <ThemeProvider theme={theme}>
@@ -242,7 +287,7 @@ function Kukulkan() {
                 <Alert severity="error">Error querying backend: {error.message}</Alert>
               </Box>
             }
-            <Threads threads={threads} updateActiveThread={updateActiveThread}/>
+            <Threads threads={threads} updateActiveThread={updateActiveThread} tags={tags} />
         </Box>
       </Container>
     </ThemeProvider>
