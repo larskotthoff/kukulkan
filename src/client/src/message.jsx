@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from "react-dom";
 import { useSearchParams } from "react-router-dom";
 
 import CssBaseline from '@mui/material/CssBaseline';
@@ -24,6 +25,29 @@ import Print from '@mui/icons-material/Print';
 import { getColor, strip } from "./utils.js";
 
 const timeout = 200;
+
+class ShadowRoot extends React.Component {
+  state = {};
+
+  attachShadow = e => {
+    if(e) {
+      const shadowRoot = e.attachShadow({ mode: "open" });
+      shadowRoot.appendChild(document.createElement("span"));
+      this.setState({ shadowRoot });
+    }
+  };
+
+  render() {
+    const { attachShadow, props, state } = this;
+    return (
+      <div {...props} ref={attachShadow}>
+      {state.shadowRoot ? (
+        createPortal(props.children, state.shadowRoot.firstChild)
+      ) : null}
+      </div>
+    );
+  }
+}
 
 class MessageText extends React.Component {
   constructor(props) {
@@ -221,7 +245,7 @@ export class Message extends React.Component {
             { msg.body["text/html"] && <Button variant="outlined" className="kukulkan-content" onClick={this.handleHtml}>{this.state.html ? "Text" : "HTML"}</Button> }
           </Grid>
           { this.state.html ?
-            <Box dangerouslySetInnerHTML={{ __html: msg.body["text/html"] }} /> :
+            <ShadowRoot><Box dangerouslySetInnerHTML={{ __html: msg.body["text/html"] }} /></ShadowRoot> :
             <MessageText key={msg.notmuch_id + "_text"} id={msg.notmuch_id} mainPart={this.mainPart} quotedPart={this.quotedPart} /> }
         </Collapse>
       </Paper>
