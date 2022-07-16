@@ -133,7 +133,7 @@ def create_app():
     
     class Tags(Resource):
         def get(self):
-            tags = [ tag for tag in get_db().get_all_tags() ]
+            tags = [ tag for tag in get_db().get_all_tags() if tag != "(null)" ]
             return tags
 
     api.add_resource(Query, "/api/query/<path:query_string>")

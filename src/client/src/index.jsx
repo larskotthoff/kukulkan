@@ -33,9 +33,10 @@ import { getColor } from "./utils.js";
 class Search extends React.Component {
   constructor(props) {
     super(props);
-    this.opts = ["tag:todo", "date:1d.."];
+    let opts = ["tag:todo", "date:1d.."];
     let qs = localStorage.getItem("queries");
-    if(qs !== null) this.opts = [...new Set(this.opts.concat(JSON.parse(qs)))];
+    if(qs !== null) opts = [...new Set(opts.concat(JSON.parse(qs)))];
+    this.state = { opts: opts };
   }
 
   render() {
@@ -56,8 +57,19 @@ class Search extends React.Component {
               freeSolo
               autoComplete={true}
               value={this.props.query ? this.props.query : ""}
-              options={this.opts}
-              renderInput={(params) => <TextField {...params} label="Search" id="search" name="search" fullWidth autoFocus margin="normal" />}
+              options={this.state.opts}
+              onInputChange={(ev, value, reason) => {
+                if (reason === "input") {
+                  let pts = value.split(':'),
+                      last = pts.pop();
+                  if(pts.length > 0 && pts[pts.length - 1].endsWith("tag") && last.length > 0) {
+                    // autocomplete possible tag
+                    let tagCandidates = this.props.tags.filter((t) => { return t.startsWith(last); });
+                    this.setState({ opts: tagCandidates.map((t) => { return pts.join(':') + ":" + t; }) });
+                  }
+                }
+              }}
+              renderInput={(params) => <TextField {...params} label="Search" id="search" name="search" variant="standard" fullWidth autoFocus margin="normal" />}
             />
             </Grid>
           <Grid item>
@@ -136,6 +148,7 @@ class Threads extends React.Component {
 function Kukulkan() {
   const [query, setQuery] = useState(null);
   const [threads, setThreads] = useState(null);
+  const [tags, setTags] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -185,6 +198,14 @@ function Kukulkan() {
     }
   }, [query]);
 
+  useEffect(() => {
+    fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/tags/')
+      .then(res => res.json())
+      .then((result) => {
+          setTags(result);
+        });
+  }, []);
+
   function updateActiveThread(at) {
     const clName = "Mui-selected";
     let els = Array.from(document.getElementsByClassName("kukulkan-keyboard-nav"));
@@ -215,7 +236,7 @@ function Kukulkan() {
             alignItems: 'center',
           }}
         >
-            <Search loading={loading} setSearchParams={setSearchParams} query={query} />
+            <Search loading={loading} setSearchParams={setSearchParams} query={query} tags={tags} />
             { error && 
               <Box id="error" sx={{ mt: 1 }}>
                 <Alert severity="error">Error querying backend: {error.message}</Alert>
