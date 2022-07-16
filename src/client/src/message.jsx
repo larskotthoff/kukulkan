@@ -27,7 +27,10 @@ import { getColor, strip } from "./utils.js";
 const timeout = 200;
 
 class ShadowRoot extends React.Component {
-  state = {};
+  constructor(props) {
+    super(props);
+    this.state = {};
+  }
 
   attachShadow = e => {
     if(e) {
