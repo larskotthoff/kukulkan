@@ -163,24 +163,29 @@ export class Message extends React.Component {
 
     document.title = msg.subject;
 
-    let validMsg = "Message DKIM verification failed, not signed.";
+    let validMsg = "";
     let validSev = "warning";
-    if(msg.dkim && msg.signature === "valid") {
-      validMsg = "Message DKIM and signature verified.";
+
+    if(msg.dkim) {
+      validMsg = "DKIM verified";
       validSev = "success";
-    } else if(msg.dkim && msg.signature === "invalid") {
-      validMsg = "Message DKIM verified, but signature verification failed.";
-      validSev = "error";
-    } else if(msg.dkim) {
-      validMsg = "Message DKIM verified, not signed.";
-      validSev = "success";
-    } else if(!msg.dkim && msg.signature === "valid") {
-      validMsg = "Message DKIM verification failed, signature verified.";
-      validSev = "success";
-    } else if(!msg.dkim && msg.signature === "invalid") {
-      validMsg = "Message DKIM and signature verification failed.";
-      validSev = "error";
+    } else {
+      validMsg = "DKIM verification failed";
     }
+    if(msg.signature) {
+      validMsg += ", ";
+      if(msg.signature.valid) {
+        validMsg += "signature verified";
+        validSev = "success";
+      } else {
+        validMsg += "signature verification failed";
+        validSev = "error";
+      }
+      if(msg.signature.message) {
+        validMsg += " (" + msg.signature.message + ")";
+      }
+    }
+    validMsg += ".";
 
     return (
       <Paper elevation={3} sx={{ padding: 1, margin: 1, width: "80em" }} className="kukulkan-keyboard-nav" ref={this.elementTop}>

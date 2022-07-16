@@ -273,8 +273,11 @@ def message_to_json(message):
     # https://gist.github.com/russau/c0123ef934ef88808050462a8638a410
     try:
         # detached signature
-        idx = attachments.index({ "filename": "smime.p7s", "content_type": "application/pkcs7-signature", "content": None })
-        p7, data_bio = SMIME.smime_load_pkcs7_bio(BIO.MemoryBuffer(bytes(email_msg)))
+        attachments.index({ "filename": "smime.p7s", "content_type": "application/pkcs7-signature", "content": None })
+        # needs default policy to pass verification...
+        with open(message.get_filename(), "rb") as f:
+            tmp_msg = email.message_from_binary_file(f, policy = email.policy.default)
+        p7, data_bio = SMIME.smime_load_pkcs7_bio(BIO.MemoryBuffer(bytes(tmp_msg)))
 
         s = SMIME.SMIME()
         s.set_x509_store(X509.X509_Store())
@@ -282,10 +285,17 @@ def message_to_json(message):
         certStack = p7.get0_signers(X509.X509_Stack())
         s.set_x509_stack(certStack)
         try:
-            s.verify(p7, data_bio, flags = M2Crypto.SMIME.PKCS7_NOVERIFY | M2Crypto.SMIME.PKCS7_DETACHED)
-            signature = "valid"
-        except M2Crypto.SMIME.PKCS7_Error:
-            signature = "invalid"
+            s.verify(p7, data_bio, flags = M2Crypto.SMIME.PKCS7_DETACHED)
+            signature = { "valid": True }
+        except M2Crypto.SMIME.PKCS7_Error as e:
+            if str(e) == "certificate verify error (Verify error:self signed certificate)":
+                try:
+                    s.verify(p7, data_bio, flags = M2Crypto.SMIME.PKCS7_NOVERIFY | M2Crypto.SMIME.PKCS7_DETACHED)
+                    signature = { "valid": True, "message": "self-signed certificate" }
+                except M2Crypto.SMIME.PKCS7_Error as e:
+                    signature = { "valid": False, "message": str(e) }
+            else:
+                signature = { "valid": False, "message": str(e) }
     except ValueError:
         signature = None
 
