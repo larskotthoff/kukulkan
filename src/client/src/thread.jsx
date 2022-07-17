@@ -159,16 +159,6 @@ export function Thread() {
     }
   }
 
-  function toggleContent() {
-    let els = Array.from(document.getElementsByClassName("kukulkan-keyboard-nav"));
-    if(els[activeMsg.current]) {
-      let toggle = els[activeMsg.current].getElementsByClassName('kukulkan-content');
-      if(toggle.length > 0) {
-        toggle[0].click();
-      }
-    }
-  }
-
   const updateActiveDepth = (d) => {
     activeDepth.current = d;
     let msg = thread[thread.length - 1];
@@ -186,7 +176,20 @@ export function Thread() {
   useHotkeys('h', () => updateActiveDepth(Math.max(1, activeDepth.current - 1)), [activeDepth, thread]);
   useHotkeys('l', () => updateActiveDepth(Math.min(activeDepth.current + 1, maxDepth.current)), [activeDepth, maxDepth, thread]);
 
-  useHotkeys('c', () => toggleContent(), [activeMsg]);
+  useHotkeys('c', () => {
+    let els = Array.from(document.getElementsByClassName("kukulkan-keyboard-nav"));
+    if(els[activeMsg.current]) {
+      let toggle = els[activeMsg.current].getElementsByClassName('kukulkan-content');
+      if(toggle.length > 0) {
+        toggle[0].click();
+      }
+    }
+  }, [activeMsg]);
+
+  useHotkeys('t', (e) => {
+    e.preventDefault();
+    document.getElementsByClassName("kukulkan-keyboard-nav")[activeMsg.current].getElementsByTagName("input")[0].focus();
+  }, [activeMsg]);
 
   useHotkeys('e,Enter', () => {
     // don't activate if we've tabbed to print/reply/attachment/etc

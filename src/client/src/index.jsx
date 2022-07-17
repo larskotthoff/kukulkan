@@ -218,18 +218,13 @@ function Kukulkan() {
   useHotkeys('Shift+K', () => updateActiveThread(Math.max(0, activeThread.current - 10)), [activeThread]);
   useHotkeys('j', () => updateActiveThread(Math.min(threads.length - 1, activeThread.current + 1)), [threads, activeThread]);
   useHotkeys('Shift+J', () => updateActiveThread(Math.min(threads.length - 1, activeThread.current + 10)), [threads, activeThread]);
+
   useHotkeys('Enter', () => window.open('/thread?id=' + threads[activeThread.current].thread_id, '_blank'), [threads, activeThread]);
+
   useHotkeys('t', (e) => {
     e.preventDefault();
     document.getElementsByClassName("kukulkan-keyboard-nav")[activeThread.current].getElementsByTagName("input")[0].focus();
   }, [threads, activeThread]);
-  document.onkeydown = function(evt) {
-    evt = evt || window.event;
-    let isEscape = false;
-    if("key" in evt) isEscape = (evt.key === "Escape" || evt.key === "Esc");
-    else isEscape = (evt.keyCode === 27);
-    if(isEscape) document.activeElement.blur();
-  };
 
   return (
     <ThemeProvider theme={theme}>
