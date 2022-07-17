@@ -288,6 +288,10 @@ def message_to_json(message):
     with open(message.get_filename(), "rb") as f:
         email_msg = email.message_from_binary_file(f, policy = policy)
 
+    # needs default policy to pass verification...
+    with open(message.get_filename(), "rb") as f:
+        msg_for_verification = email.message_from_binary_file(f, policy = email.policy.default)
+
     attachments = get_attachments(email_msg)
     body = get_nested_body(email_msg)
     html_body = get_nested_body(email_msg, True)
@@ -297,10 +301,7 @@ def message_to_json(message):
     try:
         # detached signature
         attachments.index({ "filename": "smime.p7s", "content_type": "application/pkcs7-signature", "content": None })
-        # needs default policy to pass verification...
-        with open(message.get_filename(), "rb") as f:
-            tmp_msg = email.message_from_binary_file(f, policy = email.policy.default)
-        p7, data_bio = SMIME.smime_load_pkcs7_bio(BIO.MemoryBuffer(bytes(tmp_msg)))
+        p7, data_bio = SMIME.smime_load_pkcs7_bio(BIO.MemoryBuffer(bytes(msg_for_verification)))
 
         s = SMIME.SMIME()
         s.set_x509_store(X509.X509_Store())
@@ -339,7 +340,7 @@ def message_to_json(message):
         "notmuch_id": message.get_message_id(),
         "tags": [ tag for tag in message.get_tags() ],
         "signature": signature,
-        "dkim": dkim.verify(bytes(email_msg))
+        "dkim": dkim.verify(bytes(msg_for_verification))
     }
 
 
