@@ -186,6 +186,16 @@ export function Thread() {
     }
   }, [activeMsg]);
 
+  useHotkeys('p', () => {
+    let els = Array.from(document.getElementsByClassName("kukulkan-keyboard-nav"));
+    if(els[activeMsg.current]) {
+      let print = els[activeMsg.current].getElementsByClassName('kukulkan-print');
+      if(print.length > 0) {
+        print[0].click();
+      }
+    }
+  }, [activeMsg]);
+
   useHotkeys('t', (e) => {
     e.preventDefault();
     document.getElementsByClassName("kukulkan-keyboard-nav")[activeMsg.current].getElementsByTagName("input")[0].focus();

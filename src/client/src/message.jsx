@@ -232,7 +232,7 @@ export class Message extends React.Component {
               <TagBar tags={msg.tags} options={this.props.tags} id={msg.notmuch_id} type="mid"/>
             </Grid>
             <Grid item key="print">
-              <a href={"/message?id=" + msg.notmuch_id} target="_blank" rel="noreferrer">
+              <a href={"/message?id=" + msg.notmuch_id} target="_blank" rel="noreferrer" className="kukulkan-print">
                 <Print/>
               </a>
             </Grid>
