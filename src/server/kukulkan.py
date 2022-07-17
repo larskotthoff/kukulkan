@@ -18,34 +18,7 @@ from M2Crypto import SMIME, BIO, X509
 import dkim
 
 import bleach
-from bleach.css_sanitizer import CSSSanitizer
 from bs4 import BeautifulSoup
-
-ALLOWED_TAGS = [
-    "a",
-    "abbr",
-    "acronym",
-    "b",
-    "blockquote",
-    "code",
-    "em",
-    "i",
-    "li",
-    "ol",
-    "strong",
-    "ul",
-    "span",
-    "p",
-    "br",
-    "div",
-]
-ALLOWED_ATTRIBUTES = {
-    "a": ["href", "title", "style"],
-    "abbr": ["title", "style"],
-    "acronym": ["title", "style"],
-    "p": ["style"],
-    "div": ["style"],
-}
 
 import lxml
 from lxml.html.clean import Cleaner
