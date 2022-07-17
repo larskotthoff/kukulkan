@@ -229,7 +229,7 @@ export class Message extends React.Component {
 
           <Grid container spacing={1} justifyContent="space-between" direction="row" style={{ minHeight: "3.5em" }}>
             <Grid item xs={11}>
-              <TagBar tags={msg.tags} options={this.props.tags} id={msg.notmuch_id} type="mid"/>
+              <TagBar tagsObject={msg} options={this.props.tags} id={msg.notmuch_id} type="message"/>
             </Grid>
             <Grid item key="print">
               <a href={"/message?id=" + msg.notmuch_id} target="_blank" rel="noreferrer" className="kukulkan-print">

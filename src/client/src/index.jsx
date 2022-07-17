@@ -124,7 +124,7 @@ class Threads extends React.Component {
                   <TableCell>{ thread.tags.includes("attachment") && <AttachFile /> }</TableCell>
                   <TableCell>{ (thread.tags.includes("replied") || thread.tags.includes("sent")) && <Reply /> }</TableCell>
                   <TableCell>
-                    <TagBar tags={thread.tags} options={this.props.tags} id={thread.thread_id} hiddenTags={this.hiddenTags} type="thread"/>
+                    <TagBar tagsObject={thread} options={this.props.tags} id={thread.thread_id} hiddenTags={this.hiddenTags} type="thread"/>
                   </TableCell>
                   <TableCell>{thread.subject}</TableCell>
                   <TableCell>{thread.authors.replace("| ", ", ")}</TableCell>

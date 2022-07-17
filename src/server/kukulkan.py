@@ -142,10 +142,10 @@ def create_app():
         return send_file(msg.get_filename(), mimetype = "message/rfc822",
             as_attachment = True, attachment_filename = message_id+".eml")
 
-    @app.route("/api/tag/add/<string:query_string>/<tag>")
-    def tag_add(query_string, tag):
+    @app.route("/api/tag/add/<string:typ>/<string:nid>/<tag>")
+    def tag_add(typ, nid, tag):
         db_write = notmuch.Database(current_app.config["NOTMUCH_PATH"], create = False, mode = notmuch.Database.MODE.READ_WRITE)
-        msgs = notmuch.Query(db_write, query_string).search_messages()
+        msgs = notmuch.Query(db_write, ("mid" if typ == "message" else typ) + ":" + nid).search_messages()
         try:
             for msg in msgs:
                 msg.add_tag(tag)
@@ -153,10 +153,10 @@ def create_app():
             db_write.close()
         return tag
 
-    @app.route("/api/tag/remove/<string:query_string>/<tag>")
-    def tag_remove(query_string, tag):
+    @app.route("/api/tag/remove/<string:typ>/<string:nid>/<tag>")
+    def tag_remove(typ, nid, tag):
         db_write = notmuch.Database(current_app.config["NOTMUCH_PATH"], create = False, mode = notmuch.Database.MODE.READ_WRITE)
-        msgs = notmuch.Query(db_write, query_string).search_messages()
+        msgs = notmuch.Query(db_write, ("mid" if typ == "message" else typ) + ":" + nid).search_messages()
         try:
             for msg in msgs:
                 msg.remove_tag(tag)
