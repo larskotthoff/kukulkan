@@ -41,6 +41,14 @@ def get_db():
     return g.db
 
 
+def get_query(query_string, db = None):
+    """Get a Query with config set."""
+    db = get_db() if db == None else db
+    query = notmuch.Query(db, query_string)
+    for tag in db.get_config("search.exclude_tags").split(';'):
+        query.exclude_tag(tag)
+    return query
+
 def close_db(e = None):
     """Close the Database. Called after every request."""
     g.db.close()
@@ -86,20 +94,18 @@ def create_app():
 
     class Query(Resource):
         def get(self, query_string):
-            threads = notmuch.Query(get_db(), query_string).search_threads()
+            threads = get_query(query_string).search_threads()
             return threads_to_json(threads, number = None)
 
     class Address(Resource):
         def get(self, query_string):
-            messages = notmuch.Query(get_db(), query_string).search_messages()
+            messages = get_query(query_string).search_messages()
             addresses = [ msg.get_header("to") for msg in messages ]
             return list(set([ addr for addr in addresses if addr ]))
 
     class Thread(Resource):
         def get(self, thread_id):
-            threads = notmuch.Query(
-                get_db(), "thread:{}".format(thread_id)
-            ).search_threads()
+            threads = get_query("thread:{}".format(thread_id)).search_threads()
             thread = next(threads)  # there can be only 1
             messages = thread.get_messages()
             return messages_to_json(messages)
@@ -117,7 +123,7 @@ def create_app():
 
     @app.route("/api/attachment/<string:message_id>/<int:num>")
     def download_attachment(message_id, num):
-        msgs = notmuch.Query(get_db(), "mid:{}".format(message_id)).search_messages()
+        msgs = get_query("mid:{}".format(message_id)).search_messages()
         msg = next(msgs)  # there can be only 1
         d = message_attachment(msg, num)
         if not d:
@@ -131,13 +137,13 @@ def create_app():
 
     @app.route("/api/message/<string:message_id>")
     def download_message(message_id):
-        msgs = notmuch.Query(get_db(), "mid:{}".format(message_id)).search_messages()
+        msgs = get_query("mid:{}".format(message_id)).search_messages()
         msg = next(msgs)  # there can be only 1
         return message_to_json(msg)
 
     @app.route("/api/raw_message/<string:message_id>")
     def download_raw_message(message_id):
-        msgs = notmuch.Query(get_db(), "mid:{}".format(message_id)).search_messages()
+        msgs = get_query("mid:{}".format(message_id)).search_messages()
         msg = next(msgs)  # there can be only 1
         return send_file(msg.get_filename(), mimetype = "message/rfc822",
             as_attachment = True, attachment_filename = message_id+".eml")
@@ -145,7 +151,7 @@ def create_app():
     @app.route("/api/tag/add/<string:typ>/<string:nid>/<tag>")
     def tag_add(typ, nid, tag):
         db_write = notmuch.Database(current_app.config["NOTMUCH_PATH"], create = False, mode = notmuch.Database.MODE.READ_WRITE)
-        msgs = notmuch.Query(db_write, ("mid" if typ == "message" else typ) + ":" + nid).search_messages()
+        msgs = get_query(("mid" if typ == "message" else typ) + ":" + nid, db_write).search_messages()
         try:
             for msg in msgs:
                 msg.add_tag(tag)
@@ -156,7 +162,7 @@ def create_app():
     @app.route("/api/tag/remove/<string:typ>/<string:nid>/<tag>")
     def tag_remove(typ, nid, tag):
         db_write = notmuch.Database(current_app.config["NOTMUCH_PATH"], create = False, mode = notmuch.Database.MODE.READ_WRITE)
-        msgs = notmuch.Query(db_write, ("mid" if typ == "message" else typ) + ":" + nid).search_messages()
+        msgs = get_query(("mid" if typ == "message" else typ) + ":" + nid, db_write).search_messages()
         try:
             for msg in msgs:
                 msg.remove_tag(tag)
