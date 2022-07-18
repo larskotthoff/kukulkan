@@ -48,7 +48,7 @@ function filterThread(msg, thread, activeDepth) {
   let tmp = msg;
   while(tmp.in_reply_to) {
     // eslint-disable-next-line
-    tmp = thread.find(i => { return i.message_id === tmp.in_reply_to; });
+    tmp = thread.find(i => { return '<' + i.message_id + '>' === tmp.in_reply_to; });
     if(!tmp) { // we don't have the message replied to here (looking at you, spam filter)
       break;
     }
@@ -60,7 +60,7 @@ function filterThread(msg, thread, activeDepth) {
   while(tmp) {
     nxt.push(tmp);
     // eslint-disable-next-line
-    tmp = thread.find(i => { return tmp.message_id === i.in_reply_to; });
+    tmp = thread.find(i => { return '<' + tmp.message_id + '>' === i.in_reply_to; });
   }
 
   activeDepth.current = msg.depth;
@@ -117,7 +117,7 @@ export function Thread() {
         while(cur) {
           cur.depth = depth;
           // eslint-disable-next-line
-          cur = tmp.find(i => { return i.message_id === cur.in_reply_to; });
+          cur = tmp.find(i => { return '<' + i.message_id + '>' === cur.in_reply_to; });
           // eslint-disable-next-line
           tmp = tmp.filter(i => { return i !== cur; });
         }

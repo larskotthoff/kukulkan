@@ -253,23 +253,10 @@ def messages_to_json(messages):
     return [ message_to_json(m) for m in messages ]
 
 
-def fix_headers(lines):
-    pts = lines[0].split(':')
-    key = pts[0].strip()
-    tmp = email.header.decode_header(':'.join(pts[1:]).strip() + ''.join(lines[1:]).strip())
-    val = ''.join([ t[0].decode(t[1] or 'utf-8') if type(t[0]) is bytes else t[0] for t in tmp ])
-    return (key, val)
-
-
 def message_to_json(message):
     """Converts a `notmuch.message.Message` instance to a JSON object."""
-    policy = email.policy.strict.clone(header_source_parse = fix_headers)
     with open(message.get_filename(), "rb") as f:
-        email_msg = email.message_from_binary_file(f, policy = policy)
-
-    # needs default policy to pass verification...
-    with open(message.get_filename(), "rb") as f:
-        msg_for_verification = email.message_from_binary_file(f, policy = email.policy.default)
+        email_msg = email.message_from_binary_file(f, policy = email.policy.default)
 
     attachments = get_attachments(email_msg)
     body = get_nested_body(email_msg)
@@ -280,7 +267,7 @@ def message_to_json(message):
     try:
         # detached signature
         attachments.index({ "filename": "smime.p7s", "content_type": "application/pkcs7-signature", "content": None })
-        p7, data_bio = SMIME.smime_load_pkcs7_bio(BIO.MemoryBuffer(bytes(msg_for_verification)))
+        p7, data_bio = SMIME.smime_load_pkcs7_bio(BIO.MemoryBuffer(bytes(email_msg)))
 
         s = SMIME.SMIME()
         s.set_x509_store(X509.X509_Store())
@@ -303,14 +290,14 @@ def message_to_json(message):
         signature = None
 
     return {
-        "from": email_msg["From"],
-        "to": email_msg["To"],
-        "cc": email_msg["CC"],
-        "bcc": email_msg["BCC"],
-        "date": email_msg["Date"],
-        "subject": email_msg["Subject"],
-        "message_id": email_msg["Message-ID"].strip(),
-        "in_reply_to": email_msg["In-Reply-To"].strip() if email_msg["In-Reply-To"] else None,
+        "from": message.get_header("from").strip(),
+        "to": message.get_header("to").strip(),
+        "cc": message.get_header("cc").strip(),
+        "bcc": message.get_header("bcc").strip(),
+        "date": message.get_header("date").strip(),
+        "subject": message.get_header("subject").strip(),
+        "message_id": message.get_header("Message-ID").strip(),
+        "in_reply_to": message.get_header("In-Reply-To").strip() if message.get_header("In-Reply-To") else None,
         "body": {
             "text/plain": body,
             "text/html": html_body
@@ -319,7 +306,7 @@ def message_to_json(message):
         "notmuch_id": message.get_message_id(),
         "tags": [ tag for tag in message.get_tags() ],
         "signature": signature,
-        "dkim": dkim.verify(bytes(msg_for_verification))
+        "dkim": dkim.verify(bytes(email_msg))
     }
 
 
