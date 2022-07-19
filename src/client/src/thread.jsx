@@ -22,6 +22,7 @@ class MessageList extends React.Component {
         return msg.tags.includes("unread");
       });
       if(firstUnread > -1) {
+        this.props.updateActiveMsg(firstUnread);
       } else {
         this.props.updateActiveMsg(this.props.filteredThread.length - 1);
       }
@@ -150,12 +151,26 @@ export function Thread() {
       els[activeMsg.current].scrollIntoView({block: "nearest"});
     }
 
+    let elm = els[activeMsg.current];
     if(open) {
-      let elm = els[activeMsg.current];
       // check if not already open
       if(elm && elm.getElementsByClassName('MuiChip-root').length === 0) {
         elm.getElementsByClassName("kukulkan-clickable")[0].click();
       }
+    }
+
+    // mark read if unread
+    if(elm) {
+      let clickEvent = new MouseEvent("click", {
+        "view": window,
+        "bubbles": true,
+        "cancelable": false
+      });
+      Array.from(elm.getElementsByClassName('MuiChip-label')).forEach(chip => {
+        if(chip.textContent === "unread") {
+          setTimeout(() => chip.nextElementSibling.dispatchEvent(clickEvent), 2000);
+        }
+      })
     }
   }
 
