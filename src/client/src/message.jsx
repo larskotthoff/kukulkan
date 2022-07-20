@@ -223,34 +223,40 @@ export class Message extends React.Component {
             <Typography variant="h6">Date: {msg.date}</Typography>
             <Grid container justifyContent="space-between">
               <Grid item xs><Typography variant="h6">Subject: {msg.subject}</Typography></Grid>
-              <Grid item><ExpandLess/></Grid>
+              { this.props.print || <Grid item><ExpandLess/></Grid> }
             </Grid>
           </Box>
 
-          <Grid container spacing={1} justifyContent="space-between" direction="row" style={{ minHeight: "3.5em" }}>
-            <Grid item xs={11}>
-              <TagBar tagsObject={msg} options={this.props.tags} id={msg.notmuch_id} type="message"/>
-            </Grid>
-            <Grid item key="print">
-              <a href={"/message?id=" + msg.notmuch_id} target="_blank" rel="noreferrer" className="kukulkan-print">
-                <Print/>
-              </a>
-            </Grid>
-          </Grid>
+          { this.props.print ||
+            <React.Fragment>
+              <Grid container spacing={1} justifyContent="space-between" direction="row" style={{ minHeight: "3.5em" }}>
+                <Grid item xs={11}>
+                  <TagBar tagsObject={msg} options={this.props.tags} id={msg.notmuch_id} type="message"/>
+                </Grid>
+                <Grid item key="print">
+                  <a href={"/message?id=" + msg.notmuch_id} target="_blank" rel="noreferrer" className="kukulkan-print">
+                    <Print/>
+                  </a>
+                </Grid>
+              </Grid>
 
-          { msg.attachments &&
-            <Grid container spacing={1}>
-              { msg.attachments.map((attachment, index2) => (
-                  <Grid item align="center" key={index2} style={{ minHeight: "3em" }} onClick={() => { this.getAttachment(index2); }}>
-                    <Button key={index2} startIcon={<AttachFile/>} variant="outlined">
-                      {attachment.filename} ({attachment.content_type})
-                    </Button>
+              <React.Fragment>
+                { msg.attachments &&
+                  <Grid container spacing={1}>
+                    { msg.attachments.map((attachment, index2) => (
+                        <Grid item align="center" key={index2} style={{ minHeight: "3em" }} onClick={() => { this.getAttachment(index2); }}>
+                          <Button key={index2} startIcon={<AttachFile/>} variant="outlined">
+                            {attachment.filename} ({attachment.content_type})
+                          </Button>
+                        </Grid>
+                    )) }
                   </Grid>
-              )) }
-            </Grid>
-          }
+                }
+              </React.Fragment>
 
-          <Alert width="100%" severity={ validSev }>{ validMsg }</Alert>
+              <Alert width="100%" severity={ validSev }>{ validMsg }</Alert>
+            </React.Fragment>
+          }
 
           <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
 
@@ -331,7 +337,7 @@ export function SingleMessage() {
         <CssBaseline />
           { messageLoading && <CircularProgress /> }
           { error && <Alert severity="error">Error querying backend: {error.message}</Alert> }
-          { message && <Message key={message.notmuch_id} index={0} msg={message} open={true}/> }
+          { message && <Message key={message.notmuch_id} index={0} msg={message} open={true} print={true}/> }
       </Container>
     </ThemeProvider>
   );
