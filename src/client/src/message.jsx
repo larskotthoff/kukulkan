@@ -216,13 +216,13 @@ export class Message extends React.Component {
 
         <Collapse key={msg.notmuch_id + "_expanded" } in={this.state.expanded} timeout={timeout} unmountOnExit>
           <Box onClick={this.handleCollapse} className="kukulkan-clickable">
-            { msg.from && <Typography variant="h6">From: {msg.from}</Typography> }
-            { msg.to && <Typography variant="h6">To: {msg.to}</Typography> }
-            { msg.cc && <Typography variant="h6">CC: {msg.cc}</Typography> }
-            { msg.bcc && <Typography variant="h6">BCC: {msg.bcc}</Typography> }
-            <Typography variant="h6">Date: {msg.date}</Typography>
+            { msg.from && <Typography>From: {msg.from}</Typography> }
+            { msg.to && <Typography>To: {msg.to}</Typography> }
+            { msg.cc && <Typography>CC: {msg.cc}</Typography> }
+            { msg.bcc && <Typography>BCC: {msg.bcc}</Typography> }
+            <Typography>Date: {msg.date}</Typography>
             <Grid container justifyContent="space-between">
-              <Grid item xs><Typography variant="h6">Subject: {msg.subject}</Typography></Grid>
+              <Grid item xs><Typography>Subject: {msg.subject}</Typography></Grid>
               { this.props.print || <Grid item><ExpandLess/></Grid> }
             </Grid>
           </Box>
