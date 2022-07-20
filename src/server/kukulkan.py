@@ -153,8 +153,10 @@ def create_app():
         db_write = notmuch.Database(current_app.config["NOTMUCH_PATH"], create = False, mode = notmuch.Database.MODE.READ_WRITE)
         msgs = get_query(("mid" if typ == "message" else typ) + ":" + nid, db_write).search_messages()
         try:
+            db_write.begin_atomic()
             for msg in msgs:
                 msg.add_tag(tag)
+            db_write.end_atomic()
         finally:
             db_write.close()
         return tag
@@ -164,8 +166,10 @@ def create_app():
         db_write = notmuch.Database(current_app.config["NOTMUCH_PATH"], create = False, mode = notmuch.Database.MODE.READ_WRITE)
         msgs = get_query(("mid" if typ == "message" else typ) + ":" + nid, db_write).search_messages()
         try:
+            db_write.begin_atomic()
             for msg in msgs:
                 msg.remove_tag(tag)
+            db_write.end_atomic()
         finally:
             db_write.close()
         return tag
