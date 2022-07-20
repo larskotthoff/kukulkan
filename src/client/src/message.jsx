@@ -122,6 +122,16 @@ export class Message extends React.Component {
     this.quotedPart = lines.slice(lastLine).join('\n');
   }
 
+  componentDidUpdate() {
+    if(this.state.expanded) {
+      if(this.props.updateActiveMsg) {
+        // not available in print view
+        this.props.updateActiveMsg(this.props.index);
+      }
+      this.elementTop.current.scrollIntoView({block: "nearest"});
+    }
+  }
+
   handleCollapse() {
     this.setState(prevState => ({
       expanded: !prevState.expanded,
@@ -150,16 +160,6 @@ export class Message extends React.Component {
       error => {
         console.log(error);
       });
-  }
-
-  componentDidUpdate() {
-    if(this.state.expanded) {
-      if(this.props.updateActiveMsg) {
-        // not available in print view
-        this.props.updateActiveMsg(this.props.index);
-      }
-      this.elementTop.current.scrollIntoView({block: "nearest"});
-    }
   }
 
   render() {
@@ -291,7 +291,7 @@ export class DeletedMessage extends React.Component {
         </Paper>
       )
     } else {
-      return (<Message key={this.key} index={this.props.index} msg={this.props.msg} open={true} updateActiveMsg={this.props.updateActiveMsg} />)
+      return (<Message key={this.key} index={this.props.index} msg={this.props.msg} open={true} updateActiveMsg={this.props.updateActiveMsg}/>)
     }
   }
 }

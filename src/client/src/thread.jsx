@@ -16,26 +16,14 @@ import { getColor, extractEmailsSort, filterTagsColor, filterSubjectColor } from
 import { Message, DeletedMessage } from "./message.jsx";
 
 class MessageList extends React.Component {
-  componentDidUpdate() {
-    if(this.props.filteredThread) {
-      let firstUnread = this.props.filteredThread.findIndex((msg) => {
-        return msg.tags.includes("unread");
-      });
-      if(firstUnread > -1) {
-        this.props.updateActiveMsg(firstUnread);
-      } else {
-        this.props.updateActiveMsg(this.props.filteredThread.length - 1);
-      }
-    }
-  }
-
   render() {
     return (
       <React.Fragment>
         { this.props.filteredThread && this.props.filteredThread.map((msg, index) => (
             msg.tags.includes("deleted") && this.props.filteredThread.length > 1 ?
-            <DeletedMessage key={msg.notmuch_id} msg={msg} updateActiveMsg={this.props.updateActiveMsg} /> :
-            <Message key={msg.notmuch_id} index={index} msg={msg} tags={this.props.tags} open={index === this.props.filteredThread.length - 1} updateActiveMsg={this.props.updateActiveMsg} />
+            <DeletedMessage key={msg.notmuch_id} msg={msg} updateActiveMsg={this.props.updateActiveMsg}/> :
+            <Message key={msg.notmuch_id} index={index} msg={msg} tags={this.props.tags}
+              open={index === this.props.open} updateActiveMsg={this.props.updateActiveMsg}/>
           ))
         }
       </React.Fragment>
@@ -44,7 +32,7 @@ class MessageList extends React.Component {
 }
 
 
-function filterThread(msg, thread, activeDepth) {
+function filterThread(msg, thread, activeDepth, activeMsg) {
   let prv = [];
   let tmp = msg;
   while(tmp.in_reply_to) {
@@ -65,7 +53,18 @@ function filterThread(msg, thread, activeDepth) {
   }
 
   activeDepth.current = msg.depth;
-  return prv.reverse().concat(nxt);
+  let res = prv.reverse().concat(nxt);
+
+  let firstUnread = res.findIndex((msg) => {
+    return msg.tags.includes("unread");
+  });
+  if(firstUnread > -1) {
+    activeMsg.current = firstUnread;
+  } else {
+    activeMsg.current = res.length - 1;
+  }
+
+  return res;
 }
 
 export function Thread() {
@@ -131,7 +130,7 @@ export function Thread() {
         depth++;
       }
 
-      setFilteredThread(filterThread(thread[thread.length - 1], thread, activeDepth));
+      setFilteredThread(filterThread(thread[thread.length - 1], thread, activeDepth, activeMsg));
     }
   }, [thread]);
 
@@ -143,6 +142,11 @@ export function Thread() {
       });
   }, []);
 
+  useEffect(() => {
+    updateActiveMsg(activeMsg.current);
+  // eslint-disable-next-line
+  }, [filteredThread]);
+
   const theme = createTheme();
 
   function updateActiveMsg(at, open = false) {
@@ -152,12 +156,12 @@ export function Thread() {
       els[activeMsg.current].style.setProperty("box-shadow", "");
     }
     activeMsg.current = at;
-    if(els[activeMsg.current]) {
-      els[activeMsg.current].style.setProperty("box-shadow", "0px 10px 13px -6px rgb(0 0 0 / 20%), 0px 20px 31px 3px rgb(0 0 0 / 14%), 0px 8px 38px 7px rgb(0 0 0 / 12%)")
-      els[activeMsg.current].scrollIntoView({block: "nearest"});
+    let elm = els[activeMsg.current];
+    if(elm) {
+      elm.style.setProperty("box-shadow", "0px 10px 13px -6px rgb(0 0 0 / 20%), 0px 20px 31px 3px rgb(0 0 0 / 14%), 0px 8px 38px 7px rgb(0 0 0 / 12%)")
+      elm.scrollIntoView({block: "nearest"});
     }
 
-    let elm = els[activeMsg.current];
     if(open) {
       // check if not already open
       if(elm && elm.getElementsByClassName('MuiChip-root').length === 0) {
@@ -181,7 +185,7 @@ export function Thread() {
     thread.forEach(function(m) {
       if(m.depth === d) msg = m;
     });
-    setFilteredThread(filterThread(msg, thread, activeDepth));
+    setFilteredThread(filterThread(msg, thread, activeDepth, activeMsg));
   }
 
   useHotkeys('k', () => updateActiveMsg(Math.max(0, activeMsg.current - 1)), [activeMsg]);
@@ -241,7 +245,13 @@ export function Thread() {
                     { (new Array(msg.depth).fill(0)).map((_, index2) => (
                       <Grid item key={index2}>
                         <Box
-                          onClick={() => setFilteredThread(filterThread(msg, thread, activeDepth))}
+                          onClick={() => {
+                            if(filteredThread.find((i) => { return i.message_id === msg.message_id; })) {
+                              updateActiveMsg(filteredThread.indexOf(msg), true);
+                            } else {
+                              setFilteredThread(filterThread(msg, thread, activeDepth, activeMsg));
+                            }
+                          }}
                           style={{ width: "1em", height: "1em", margin: ".03em",
                             opacity: (filteredThread && filteredThread.find((i) => { return i.message_id === msg.message_id; })) ?
                               1 :
@@ -257,7 +267,7 @@ export function Thread() {
               </Grid>
             </Drawer>
           }
-          <MessageList tags={tags} filteredThread={filteredThread} updateActiveMsg={updateActiveMsg}/>
+          <MessageList tags={tags} filteredThread={filteredThread} open={activeMsg.current} updateActiveMsg={updateActiveMsg}/>
         </Grid>
       </Container>
     </ThemeProvider>
