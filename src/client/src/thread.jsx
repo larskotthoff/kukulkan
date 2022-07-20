@@ -85,6 +85,12 @@ export function Thread() {
     setThreadId(searchParams.get("id"));
   }, [searchParams]);
 
+  const clickEvent = new MouseEvent("click", {
+    "view": window,
+    "bubbles": true,
+    "cancelable": false
+  });
+
   useEffect(() => {
     if(threadId !== null) {
       setThread(null);
@@ -161,11 +167,6 @@ export function Thread() {
 
     // mark read if unread
     if(elm) {
-      let clickEvent = new MouseEvent("click", {
-        "view": window,
-        "bubbles": true,
-        "cancelable": false
-      });
       Array.from(elm.getElementsByClassName('MuiChip-label')).forEach(chip => {
         if(chip.textContent === "unread") {
           setTimeout(() => chip.nextElementSibling.dispatchEvent(clickEvent), 2000);
