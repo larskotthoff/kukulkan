@@ -31,7 +31,7 @@ import { SingleMessage } from "./message.jsx";
 class Search extends React.Component {
   constructor(props) {
     super(props);
-    let opts = ["tag:todo", "date:1d.."];
+    let opts = ["tag:unread", "tag:todo", "date:1d.."];
     let qs = localStorage.getItem("queries");
     if(qs !== null) opts = [...new Set(opts.concat(JSON.parse(qs)))];
     this.opts = opts;
