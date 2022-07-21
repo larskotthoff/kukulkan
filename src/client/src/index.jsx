@@ -226,6 +226,12 @@ function Kukulkan() {
     document.getElementsByClassName("kukulkan-keyboard-nav")[activeThread.current].getElementsByTagName("input")[0].focus();
   }, [threads, activeThread]);
 
+  useHotkeys('Del', () => {
+    let els = Array.from(document.getElementsByClassName("kukulkan-keyboard-nav"));
+    let elm = els[activeThread.current];
+    elm.getElementsByClassName("MuiAutocomplete-root")[0].dispatchEvent(new CustomEvent('delete'));
+  }, [activeThread]);
+
   return (
     <ThemeProvider theme={theme}>
       <Container component="main" maxWidth="90%">

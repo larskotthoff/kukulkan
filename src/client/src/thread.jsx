@@ -21,8 +21,8 @@ class MessageList extends React.Component {
       <React.Fragment>
         { this.props.filteredThread && this.props.filteredThread.map((msg, index) => (
             msg.tags.includes("deleted") && this.props.filteredThread.length > 1 ?
-            <DeletedMessage key={msg.notmuch_id} msg={msg} updateActiveMsg={this.props.updateActiveMsg}/> :
-            <Message key={msg.notmuch_id} index={index} msg={msg} tags={this.props.tags}
+            <DeletedMessage key={msg.notmuch_id} msg={msg} allTags={this.props.allTags} updateActiveMsg={this.props.updateActiveMsg}/> :
+            <Message key={msg.notmuch_id} index={index} msg={msg} allTags={this.props.allTags}
               open={index === this.props.open} updateActiveMsg={this.props.updateActiveMsg}/>
           ))
         }
@@ -70,7 +70,7 @@ function filterThread(msg, thread, activeDepth, activeMsg) {
 export function Thread() {
   const [threadLoading, setThreadLoading] = useState(false);
   const [thread, setThread] = useState(null);
-  const [tags, setTags] = useState(null);
+  const [allTags, setAllTags] = useState(null);
   const [filteredThread, setFilteredThread] = useState(null);
   const [threadId, setThreadId] = useState(null);
   const [error, setError] = useState(null);
@@ -138,7 +138,7 @@ export function Thread() {
     fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/tags/')
       .then(res => res.json())
       .then((result) => {
-        setTags(result);
+        setAllTags(result);
       });
   }, []);
 
@@ -230,6 +230,14 @@ export function Thread() {
     }
   }, [activeMsg]);
 
+  useHotkeys('Del', () => {
+    let els = Array.from(document.getElementsByClassName("kukulkan-keyboard-nav"));
+    let elm = els[activeMsg.current];
+    if(elm && elm.getElementsByClassName('MuiChip-root').length > 0) {
+      elm.getElementsByClassName("MuiAutocomplete-root")[0].dispatchEvent(new CustomEvent('delete'));
+    }
+  }, [activeMsg]);
+
   return (
     <ThemeProvider theme={theme}>
       <Container component="main" maxWidth="100%">
@@ -267,7 +275,7 @@ export function Thread() {
               </Grid>
             </Drawer>
           }
-          <MessageList tags={tags} filteredThread={filteredThread} open={activeMsg.current} updateActiveMsg={updateActiveMsg}/>
+          <MessageList allTags={allTags} filteredThread={filteredThread} open={activeMsg.current} updateActiveMsg={updateActiveMsg}/>
         </Grid>
       </Container>
     </ThemeProvider>

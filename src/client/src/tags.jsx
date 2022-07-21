@@ -12,6 +12,9 @@ export class TagBar extends React.Component {
     this.state = { updating: false };
     this.setColors = this.setColors.bind(this);
     this.handleChange = this.handleChange.bind(this);
+    this.addDelete = this.addDelete.bind(this);
+    this.addTag = this.addTag.bind(this);
+    this.delTag = this.delTag.bind(this);
   }
 
   setColors() {
@@ -22,8 +25,37 @@ export class TagBar extends React.Component {
     }
   }
 
+  addDelete() {
+    this.addTag("deleted");
+  }
+
+  addTag(tag) {
+    this.setState({ updating: true });
+    fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/tag/add/' + this.props.type + '/' + this.props.id + '/' + tag)
+      .then(
+        (result) => {
+          if(this.props.tagsObject.tags.indexOf(tag) === -1) {
+            this.props.tagsObject.tags.push(tag);
+          }
+        },
+        (error) => {console.log(error);}
+      ).finally(() => this.setState({ updating: false }));
+  }
+
+  delTag(tag) {
+    this.setState({ updating: true });
+    fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/tag/remove/' + this.props.type + '/' + this.props.id + '/' + tag)
+      .then(
+        (result) => {
+          this.props.tagsObject.tags = this.props.tagsObject.tags.filter(t => t !== tag);
+        },
+        (error) => {console.log(error);}
+      ).finally(() => this.setState({ updating: false }));
+  }
+
   componentDidMount() {
     this.setColors();
+    this.element.current.addEventListener("delete", this.addDelete);
   }
 
   componentDidUpdate() {
@@ -32,25 +64,11 @@ export class TagBar extends React.Component {
 
   handleChange(ev, value, reason) {
     if(reason === "selectOption" || reason === "createOption") {
-      this.setState({ updating: true });
       let addedTag = value.filter(tag => !this.props.tagsObject.tags.includes(tag))[0];
-      fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/tag/add/' + this.props.type + '/' + this.props.id + '/' + addedTag)
-        .then(
-          (result) => {
-            this.props.tagsObject.tags.push(addedTag);
-          },
-          (error) => {console.log(error);}
-        ).finally(() => this.setState({ updating: false }));
+      this.addTag(addedTag);
     } else if(reason === "removeOption") {
-      this.setState({ updating: true });
       let deletedTag = this.props.tagsObject.tags.filter(tag => !value.includes(tag))[0];
-      fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/tag/remove/' + this.props.type + '/' + this.props.id + '/' + deletedTag)
-        .then(
-          (result) => {
-            this.props.tagsObject.tags = this.props.tagsObject.tags.filter(tag => tag !== deletedTag);
-          },
-          (error) => {console.log(error);}
-        ).finally(() => this.setState({ updating: false }));
+      this.delTag(deletedTag);
     }
   }
 

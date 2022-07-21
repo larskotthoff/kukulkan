@@ -231,7 +231,7 @@ export class Message extends React.Component {
             <React.Fragment>
               <Grid container spacing={1} justifyContent="space-between" direction="row" style={{ minHeight: "3.5em" }}>
                 <Grid item xs={11}>
-                  <TagBar tagsObject={msg} options={this.props.tags} id={msg.notmuch_id} type="message"/>
+                  <TagBar tagsObject={msg} options={this.props.allTags} id={msg.notmuch_id} type="message"/>
                 </Grid>
                 <Grid item key="print">
                   <a href={"/message?id=" + msg.notmuch_id} target="_blank" rel="noreferrer" className="kukulkan-print">
@@ -291,7 +291,7 @@ export class DeletedMessage extends React.Component {
         </Paper>
       )
     } else {
-      return (<Message key={this.key} index={this.props.index} msg={this.props.msg} open={true} updateActiveMsg={this.props.updateActiveMsg}/>)
+      return (<Message key={this.key} index={this.props.index} msg={this.props.msg} open={true} allTags={this.props.allTags} updateActiveMsg={this.props.updateActiveMsg}/>)
     }
   }
 }

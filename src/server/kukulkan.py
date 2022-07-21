@@ -41,12 +41,13 @@ def get_db():
     return g.db
 
 
-def get_query(query_string, db = None):
+def get_query(query_string, db = None, exclude = True):
     """Get a Query with config set."""
     db = get_db() if db == None else db
     query = notmuch.Query(db, query_string)
-    for tag in db.get_config("search.exclude_tags").split(';'):
-        query.exclude_tag(tag)
+    if exclude:
+        for tag in db.get_config("search.exclude_tags").split(';'):
+            query.exclude_tag(tag)
     return query
 
 def close_db(e = None):
@@ -151,7 +152,7 @@ def create_app():
     @app.route("/api/tag/add/<string:typ>/<string:nid>/<tag>")
     def tag_add(typ, nid, tag):
         db_write = notmuch.Database(current_app.config["NOTMUCH_PATH"], create = False, mode = notmuch.Database.MODE.READ_WRITE)
-        msgs = get_query(("mid" if typ == "message" else typ) + ":" + nid, db_write).search_messages()
+        msgs = get_query(("mid" if typ == "message" else typ) + ":" + nid, db_write, False).search_messages()
         try:
             db_write.begin_atomic()
             for msg in msgs:
@@ -164,7 +165,7 @@ def create_app():
     @app.route("/api/tag/remove/<string:typ>/<string:nid>/<tag>")
     def tag_remove(typ, nid, tag):
         db_write = notmuch.Database(current_app.config["NOTMUCH_PATH"], create = False, mode = notmuch.Database.MODE.READ_WRITE)
-        msgs = get_query(("mid" if typ == "message" else typ) + ":" + nid, db_write).search_messages()
+        msgs = get_query(("mid" if typ == "message" else typ) + ":" + nid, db_write, False).search_messages()
         try:
             db_write.begin_atomic()
             for msg in msgs:
