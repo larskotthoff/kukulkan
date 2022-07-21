@@ -141,28 +141,20 @@ class Threads extends React.Component {
 }
 
 function Kukulkan() {
-  const [query, setQuery] = useState(null);
   const [threads, setThreads] = useState(null);
-  const [tags, setTags] = useState(null);
+  const [tags, setTags] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const activeThread = useRef(0);
+  const query = useRef("");
 
   const theme = createTheme();
 
-  useHotkeys('/', (e) => {
-    e.preventDefault();
-    document.getElementById('search').focus();
-  });
-
   const [searchParams, setSearchParams] = useSearchParams();
   useEffect(() => {
-    setQuery(searchParams.get("query"));
-  }, [searchParams]);
-
-  useEffect(() => {
-    if(query !== null) {
+    query.current = searchParams.get("query");
+    if(query.current !== null) {
       let qs = localStorage.getItem("queries");
       if(qs === null) qs = [];
       else qs = JSON.parse(qs);
@@ -173,7 +165,7 @@ function Kukulkan() {
 
       setThreads(null);
       setLoading(true);
-      fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/query/' + query)
+      fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/query/' + query.current)
         .then(res => res.json())
         .then(
           (result) => {
@@ -188,10 +180,10 @@ function Kukulkan() {
         .finally(() => {
           setLoading(false);
           document.activeElement.blur();
-          document.title = query;
+          document.title = query.current;
       });
     }
-  }, [query]);
+  }, [searchParams]);
 
   useEffect(() => {
     fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/tags/')
@@ -234,6 +226,11 @@ function Kukulkan() {
     elm.getElementsByClassName("MuiAutocomplete-root")[0].dispatchEvent(new CustomEvent('delete'));
   }, [activeThread]);
 
+  useHotkeys('/', (e) => {
+    e.preventDefault();
+    document.getElementById('search').focus();
+  });
+
   return (
     <ThemeProvider theme={theme}>
       <Container component="main" maxWidth="90%">
@@ -245,7 +242,7 @@ function Kukulkan() {
             alignItems: 'center',
           }}
         >
-            <Search loading={loading} setSearchParams={setSearchParams} query={query} tags={tags} />
+            <Search loading={loading} setSearchParams={setSearchParams} query={query.current} tags={tags} />
             { error && 
               <Box id="error" sx={{ mt: 1 }}>
                 <Alert severity="error">Error querying backend: {error.message}</Alert>
@@ -260,17 +257,15 @@ function Kukulkan() {
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Outlet />}>
-          <Route index element={<Kukulkan />} />
-          <Route path="thread" element={<Thread />} />
-          <Route path="message" element={<SingleMessage />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
-  </React.StrictMode>
+  <BrowserRouter>
+    <Routes>
+      <Route path="/" element={<Outlet />}>
+        <Route index element={<Kukulkan />} />
+        <Route path="thread" element={<Thread />} />
+        <Route path="message" element={<SingleMessage />} />
+      </Route>
+    </Routes>
+  </BrowserRouter>
 );
 
 // vim: tabstop=2 shiftwidth=2 expandtab
