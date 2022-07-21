@@ -275,7 +275,7 @@ export function Thread() {
           { thread.current === null && <CircularProgress/> }
           { error.current && <Alert id="error" severity="error">Error querying backend: {error.current.message}</Alert> }
           <MessageList allTags={allTags} filteredThread={filteredThread} open={activeMsg.current} updateActiveMsg={updateActiveMsg}/>
-          <ThreadNav thread={thread} filteredThread={filteredThread} updateActiveMsg={updateActiveMsg} activeMsg={activeMsg} activeDepth={activeDepth} />
+          <ThreadNav thread={thread} filteredThread={filteredThread} setFilteredThread={setFilteredThread} updateActiveMsg={updateActiveMsg} activeMsg={activeMsg} activeDepth={activeDepth} />
         </Grid>
       </Container>
     </ThemeProvider>

@@ -233,7 +233,8 @@ def get_nested_body(email_msg, html_only = False):
             try:
                 repl = current_app.config.custom["filter"]["content"]["text/html"]
                 tmp = re.sub(repl[0], repl[1], tmp)
-            except:
+            except Exception as e:
+                print(e)
                 None
             content_html += tmp
 

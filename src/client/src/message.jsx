@@ -107,11 +107,19 @@ export class Message extends React.Component {
     for(let index = 0; index < lines.length; index++) {
       let line = strip(lines[index].trim());
       if((line === "--") || (line === "—")) { // signature block
-        if(lastLine === lines.length - 1) {
-          lastLine = index - 1;
-        }
+        lastLine = index - 1;
         break;
-      } else if(line.length > 0 && !line.startsWith(">") && !line.startsWith("&gt;")) {
+      } else if(line === "From:") { // outlook
+        lastLine = index;
+        break;
+      } else if(line === "-----Original Message-----") { // also outlook
+        lastLine = index;
+        break;
+      } else if(line === "________________________________") { // outlook mailing lists I think
+        lastLine = index;
+        break;
+      } else if(line.length > 1 && !line.startsWith(">") && !line.startsWith("&gt;")) {
+        // don't break if we see a > because there may be inline replies
         lastLine = index;
       }
     }
