@@ -39,41 +39,29 @@ class Search extends React.Component {
 
   render() {
     return (
-      <Box component="form" noValidate sx={{ mt: 1, width: "70%" }} onSubmit={(e) => {
+      <Box component="form" noValidate onSubmit={(e) => {
         e.preventDefault();
         const data = new FormData(e.currentTarget);
         this.props.setSearchParams({query: data.get("search")});
       }}>
-        <Grid container spacing={2}
-            sx={{
-              display: 'flex',
-              flexDirection: 'row',
-              alignItems: 'center',
-            }}>
-          <Grid item sx={{ width: "90%" }}>
-            <Autocomplete
-              freeSolo
-              autoComplete={true}
-              value={this.props.query ? this.props.query : ""}
-              options={this.opts}
-              onInputChange={(ev, value, reason) => {
-                if (reason === "input") {
-                  let pts = value.split(':'),
-                      last = pts.pop();
-                  if(pts.length > 0 && pts[pts.length - 1].endsWith("tag") && last.length > 0) {
-                    // autocomplete possible tag
-                    let tagCandidates = this.props.tags.filter((t) => { return t.startsWith(last); });
-                    this.setState({ opts: tagCandidates.map((t) => { return pts.join(':') + ":" + t; }) });
-                  }
-                }
-              }}
-              renderInput={(params) => <TextField {...params} label="Search" className="kukulkan-queryBox" name="search" variant="standard" fullWidth autoFocus margin="normal" />}
-            />
-            </Grid>
-          <Grid item>
-            { this.props.loading && <CircularProgress /> }
-          </Grid>
-        </Grid>
+        <Autocomplete
+          freeSolo
+          autoComplete={true}
+          value={this.props.query ? this.props.query : ""}
+          options={this.opts}
+          onInputChange={(ev, value, reason) => {
+            if (reason === "input") {
+              let pts = value.split(':'),
+                  last = pts.pop();
+              if(pts.length > 0 && pts[pts.length - 1].endsWith("tag") && last.length > 0) {
+                // autocomplete possible tag
+                let tagCandidates = this.props.tags.filter((t) => { return t.startsWith(last); });
+                this.setState({ opts: tagCandidates.map((t) => { return pts.join(':') + ":" + t; }) });
+              }
+            }
+          }}
+          renderInput={(params) => <TextField {...params} label="Search" className="kukulkan-queryBox" name="search" variant="standard" fullWidth autoFocus margin="normal" />}
+        />
       </Box>
     );
   }
@@ -143,11 +131,10 @@ class Threads extends React.Component {
 function Kukulkan() {
   const [threads, setThreads] = useState(null);
   const [tags, setTags] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
   const activeThread = useRef(0);
   const query = useRef("");
+  const error = useRef(null);
 
   const theme = createTheme();
 
@@ -163,22 +150,19 @@ function Kukulkan() {
       // store up to 10 most recent queries
       localStorage.setItem("queries", JSON.stringify(qs.slice(0, 10)));
 
-      setThreads(null);
-      setLoading(true);
       fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/query/' + query.current)
         .then(res => res.json())
         .then(
           (result) => {
             setThreads(result);
-            setError(null);
+            error.current = null;
           },
-          (error) => {
-            setThreads(null);
-            setError(error);
+          (e) => {
+            setThreads([]);
+            error.current = e;
           }
         )
         .finally(() => {
-          setLoading(false);
           document.activeElement.blur();
           document.title = query.current;
       });
@@ -218,7 +202,7 @@ function Kukulkan() {
   useHotkeys('t', (e) => {
     e.preventDefault();
     document.getElementsByClassName("kukulkan-keyboard-nav")[activeThread.current].getElementsByTagName("input")[0].focus();
-  }, [threads, activeThread]);
+  }, [activeThread]);
 
   useHotkeys('Del', () => {
     let els = Array.from(document.getElementsByClassName("kukulkan-keyboard-nav"));
@@ -242,13 +226,23 @@ function Kukulkan() {
             alignItems: 'center',
           }}
         >
-            <Search loading={loading} setSearchParams={setSearchParams} query={query.current} tags={tags} />
-            { error && 
-              <Box id="error" sx={{ mt: 1 }}>
-                <Alert severity="error">Error querying backend: {error.message}</Alert>
-              </Box>
-            }
-            <Threads threads={threads} updateActiveThread={updateActiveThread} tags={tags} />
+          <Grid container spacing={2}
+              sx={{
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                mt: 1,
+                width: "70%"
+              }}>
+            <Grid item sx={{ width: "90%" }}>
+              <Search setSearchParams={setSearchParams} query={query.current} tags={tags} />
+            </Grid>
+            <Grid item>
+              { threads === null  && <CircularProgress /> }
+            </Grid>
+          </Grid>
+          { error.current && <Alert severity="error">Error querying backend: {error.current.message}</Alert> }
+          <Threads threads={threads} updateActiveThread={updateActiveThread} tags={tags} />
         </Box>
       </Container>
     </ThemeProvider>
