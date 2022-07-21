@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from "react-dom";
 import { useSearchParams } from "react-router-dom";
 
@@ -297,37 +297,30 @@ export class DeletedMessage extends React.Component {
 }
 
 export function SingleMessage() {
-  const [messageLoading, setMessageLoading] = useState(false);
   const [message, setMessage] = useState(null);
-  const [messageId, setMessageId] = useState(null);
-  const [error, setError] = useState(null);
+
+  const error = useRef(null);
+  const messageId = useRef(null);
 
   const [searchParams] = useSearchParams();
   useEffect(() => {
-    setMessageId(searchParams.get("id"));
-  }, [searchParams]);
-
-  useEffect(() => {
-    if(messageId !== null) {
+    messageId.current = searchParams.get("id");
+    if(messageId.current !== null) {
       setMessage(null);
-      setMessageLoading(true);
-      fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/message/' + messageId)
+      fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/message/' + messageId.current)
         .then(res => res.json())
         .then(
           (result) => {
               setMessage(result);
-              setError(null);
+              error.current = null;
           },
-          (error) => {
+          (e) => {
               setMessage(null);
-              setError(error);
+              error.current = e;
           }
-        )
-        .finally(() => {
-          setMessageLoading(false);
-        });
+        );
     }
-  }, [messageId]);
+  }, [searchParams]);
 
   const theme = createTheme();
 
@@ -335,8 +328,8 @@ export function SingleMessage() {
     <ThemeProvider theme={theme}>
       <Container component="main" maxWidth="100%">
         <CssBaseline />
-          { messageLoading && <CircularProgress /> }
-          { error && <Alert severity="error">Error querying backend: {error.message}</Alert> }
+          { message === null && <CircularProgress /> }
+          { error.current && <Alert severity="error">Error querying backend: {error.current.message}</Alert> }
           { message && <Message key={message.notmuch_id} index={0} msg={message} open={true} print={true}/> }
       </Container>
     </ThemeProvider>
