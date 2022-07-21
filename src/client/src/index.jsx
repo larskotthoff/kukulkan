@@ -34,7 +34,7 @@ class Search extends React.Component {
     let opts = ["tag:todo", "date:1d.."];
     let qs = localStorage.getItem("queries");
     if(qs !== null) opts = [...new Set(opts.concat(JSON.parse(qs)))];
-    this.state = { opts: opts };
+    this.opts = opts;
   }
 
   render() {
@@ -55,7 +55,7 @@ class Search extends React.Component {
               freeSolo
               autoComplete={true}
               value={this.props.query ? this.props.query : ""}
-              options={this.state.opts}
+              options={this.opts}
               onInputChange={(ev, value, reason) => {
                 if (reason === "input") {
                   let pts = value.split(':'),
@@ -67,7 +67,7 @@ class Search extends React.Component {
                   }
                 }
               }}
-              renderInput={(params) => <TextField {...params} label="Search" id="search" name="search" variant="standard" fullWidth autoFocus margin="normal" />}
+              renderInput={(params) => <TextField {...params} label="Search" className="kukulkan-queryBox" name="search" variant="standard" fullWidth autoFocus margin="normal" />}
             />
             </Grid>
           <Grid item>
@@ -158,7 +158,7 @@ function Kukulkan() {
       let qs = localStorage.getItem("queries");
       if(qs === null) qs = [];
       else qs = JSON.parse(qs);
-      qs.unshift(query);
+      qs.unshift(query.current);
       qs = [...new Set(qs)];
       // store up to 10 most recent queries
       localStorage.setItem("queries", JSON.stringify(qs.slice(0, 10)));
@@ -228,7 +228,7 @@ function Kukulkan() {
 
   useHotkeys('/', (e) => {
     e.preventDefault();
-    document.getElementById('search').focus();
+    document.getElementsByClassName("kukulkan-queryBox")[0].getElementsByTagName("input")[0].focus();
   });
 
   return (
