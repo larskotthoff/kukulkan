@@ -188,10 +188,12 @@ export function Thread() {
     setFilteredThread(filterThread(msg, thread, activeDepth, activeMsg));
   }
 
+  useHotkeys('Home', () => updateActiveMsg(0));
   useHotkeys('k', () => updateActiveMsg(Math.max(0, activeMsg.current - 1)), [activeMsg]);
   useHotkeys('Shift+K', () => updateActiveMsg(Math.max(0, activeMsg.current - 1), true), [activeMsg]);
   useHotkeys('j', () => updateActiveMsg(Math.min(filteredThread.length - 1, activeMsg.current + 1)), [filteredThread, activeMsg]);
   useHotkeys('Shift+J', () => updateActiveMsg(Math.min(filteredThread.length - 1, activeMsg.current + 1), true), [filteredThread, activeMsg]);
+  useHotkeys('End', () => updateActiveMsg(filteredThread.length - 1), [filteredThread]);
 
   useHotkeys('h', () => updateActiveDepth(Math.max(1, activeDepth.current - 1)), [activeDepth, thread]);
   useHotkeys('l', () => updateActiveDepth(Math.min(activeDepth.current + 1, maxDepth.current)), [activeDepth, maxDepth, thread]);

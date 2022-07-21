@@ -214,10 +214,12 @@ function Kukulkan() {
     }
   }
 
+  useHotkeys('Home', () => updateActiveThread(0));
   useHotkeys('k', () => updateActiveThread(Math.max(0, activeThread.current - 1)), [activeThread]);
   useHotkeys('Shift+K', () => updateActiveThread(Math.max(0, activeThread.current - 10)), [activeThread]);
   useHotkeys('j', () => updateActiveThread(Math.min(threads.length - 1, activeThread.current + 1)), [threads, activeThread]);
   useHotkeys('Shift+J', () => updateActiveThread(Math.min(threads.length - 1, activeThread.current + 10)), [threads, activeThread]);
+  useHotkeys('End', () => updateActiveThread(threads.length - 1), [threads]);
 
   useHotkeys('Enter', () => window.open('/thread?id=' + threads[activeThread.current].thread_id, '_blank'), [threads, activeThread]);
 
