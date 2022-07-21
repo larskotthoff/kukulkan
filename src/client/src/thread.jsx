@@ -68,20 +68,53 @@ function filterThread(msg, thread, activeDepth, activeMsg) {
 }
 
 export function Thread() {
-  const [threadLoading, setThreadLoading] = useState(false);
-  const [thread, setThread] = useState(null);
   const [allTags, setAllTags] = useState(null);
   const [filteredThread, setFilteredThread] = useState(null);
-  const [threadId, setThreadId] = useState(null);
-  const [error, setError] = useState(null);
 
   const activeMsg = useRef(0);
   const activeDepth = useRef(1);
   const maxDepth = useRef(1);
+  const thread = useRef(null);
+  const threadId = useRef(null);
+  const error = useRef(null);
 
   const [searchParams] = useSearchParams();
   useEffect(() => {
-    setThreadId(searchParams.get("id"));
+    threadId.current = searchParams.get("id");
+    if(threadId.current !== null) {
+      fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/thread/' + threadId.current)
+        .then(res => res.json())
+        .then(
+          (result) => {
+              thread.current = result;
+              error.current = null;
+              if(thread.current) {
+                let tmp = thread.current.slice();
+
+                let depth = 1;
+                while(tmp.length > 0) {
+                  maxDepth.current = depth;
+                  let cur = tmp.pop();
+                  while(cur) {
+                    cur.depth = depth;
+                    // eslint-disable-next-line
+                    cur = tmp.find(i => { return '<' + i.message_id + '>' === cur.in_reply_to; });
+                    // eslint-disable-next-line
+                    tmp = tmp.filter(i => { return i !== cur; });
+                  }
+                  depth++;
+                }
+
+                setFilteredThread(filterThread(thread.current[thread.current.length - 1], thread.current, activeDepth, activeMsg));
+              }
+          },
+          (e) => {
+            thread.current = [];
+            setFilteredThread([]);
+            error.current = e;
+          }
+        );
+    }
   }, [searchParams]);
 
   const clickEvent = new MouseEvent("click", {
@@ -89,50 +122,6 @@ export function Thread() {
     "bubbles": true,
     "cancelable": false
   });
-
-  useEffect(() => {
-    if(threadId !== null) {
-      setThread(null);
-      setThreadLoading(true);
-      fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/thread/' + threadId)
-        .then(res => res.json())
-        .then(
-          (result) => {
-              setThread(result);
-              setError(null);
-          },
-          (error) => {
-              setThread(null);
-              setError(error);
-          }
-        )
-        .finally(() => {
-          setThreadLoading(false);
-        });
-    }
-  }, [threadId]);
-
-  useEffect(() => {
-    if(thread) {
-      let tmp = thread.slice();
-
-      let depth = 1;
-      while(tmp.length > 0) {
-        maxDepth.current = depth;
-        let cur = tmp.pop();
-        while(cur) {
-          cur.depth = depth;
-          // eslint-disable-next-line
-          cur = tmp.find(i => { return '<' + i.message_id + '>' === cur.in_reply_to; });
-          // eslint-disable-next-line
-          tmp = tmp.filter(i => { return i !== cur; });
-        }
-        depth++;
-      }
-
-      setFilteredThread(filterThread(thread[thread.length - 1], thread, activeDepth, activeMsg));
-    }
-  }, [thread]);
 
   useEffect(() => {
     fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/tags/')
@@ -181,11 +170,11 @@ export function Thread() {
 
   const updateActiveDepth = (d) => {
     activeDepth.current = d;
-    let msg = thread[thread.length - 1];
-    thread.forEach(function(m) {
+    let msg = thread.current[thread.current.length - 1];
+    thread.current.forEach(function(m) {
       if(m.depth === d) msg = m;
     });
-    setFilteredThread(filterThread(msg, thread, activeDepth, activeMsg));
+    setFilteredThread(filterThread(msg, thread.current, activeDepth, activeMsg));
   }
 
   useHotkeys('Home', () => updateActiveMsg(0));
@@ -195,8 +184,8 @@ export function Thread() {
   useHotkeys('Shift+J', () => updateActiveMsg(Math.min(filteredThread.length - 1, activeMsg.current + 1), true), [filteredThread, activeMsg]);
   useHotkeys('End', () => updateActiveMsg(filteredThread.length - 1), [filteredThread]);
 
-  useHotkeys('h', () => updateActiveDepth(Math.max(1, activeDepth.current - 1)), [activeDepth, thread]);
-  useHotkeys('l', () => updateActiveDepth(Math.min(activeDepth.current + 1, maxDepth.current)), [activeDepth, maxDepth, thread]);
+  useHotkeys('h', () => updateActiveDepth(Math.max(1, activeDepth.current - 1)), [activeDepth, thread.current]);
+  useHotkeys('l', () => updateActiveDepth(Math.min(activeDepth.current + 1, maxDepth.current)), [activeDepth, maxDepth, thread.current]);
 
   useHotkeys('c', () => {
     let els = Array.from(document.getElementsByClassName("kukulkan-keyboard-nav"));
@@ -245,12 +234,12 @@ export function Thread() {
       <Container component="main" maxWidth="100%">
         <CssBaseline />
         <Grid container id="thread" direction="column" justifyContent="center" alignItems="center" style={{ marginTop: "1em" }}>
-          { threadLoading && <CircularProgress/> }
-          { error && <Alert id="error" severity="error">Error querying backend: {error.message}</Alert> }
-          { thread &&
+          { thread.current === null && <CircularProgress/> }
+          { error.current && <Alert id="error" severity="error">Error querying backend: {error.current.message}</Alert> }
+          { thread.current &&
             <Drawer variant="permanent" anchor="left">
               <Grid container direction="column" margin="1em">
-                { thread.map((msg, index) => (
+                { thread.current.map((msg, index) => (
                   <Grid item container key={index} direction="row">
                     { (new Array(msg.depth).fill(0)).map((_, index2) => (
                       <Grid item key={index2}>
@@ -259,7 +248,7 @@ export function Thread() {
                             if(filteredThread.find((i) => { return i.message_id === msg.message_id; })) {
                               updateActiveMsg(filteredThread.indexOf(msg), true);
                             } else {
-                              setFilteredThread(filterThread(msg, thread, activeDepth, activeMsg));
+                              setFilteredThread(filterThread(msg, thread.current, activeDepth, activeMsg));
                             }
                           }}
                           style={{ width: "1em", height: "1em", margin: ".03em",
