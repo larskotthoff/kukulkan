@@ -47,6 +47,7 @@ class Search extends React.Component {
         <Autocomplete
           freeSolo
           autoComplete={true}
+          autoHighlight={true}
           value={this.props.query ? this.props.query : ""}
           options={this.state.opts}
           onInputChange={(ev, value, reason) => {
@@ -131,6 +132,7 @@ class Threads extends React.Component {
 function Kukulkan() {
   const [threads, setThreads] = useState(null);
   const [allTags, setAllTags] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const activeThread = useRef(0);
   const query = useRef("");
@@ -150,6 +152,7 @@ function Kukulkan() {
       // store up to 10 most recent queries
       localStorage.setItem("queries", JSON.stringify(qs.slice(0, 10)));
 
+      setLoading(true);
       fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/query/' + query.current)
         .then(res => res.json())
         .then(
@@ -165,6 +168,7 @@ function Kukulkan() {
         .finally(() => {
           document.activeElement.blur();
           document.title = query.current;
+          setLoading(false);
       });
     }
   }, [searchParams]);
@@ -238,7 +242,7 @@ function Kukulkan() {
               <Search setSearchParams={setSearchParams} query={query.current} allTags={allTags} />
             </Grid>
             <Grid item>
-              { threads === null && query.current.length > 0 && <CircularProgress /> }
+              { loading && <CircularProgress /> }
             </Grid>
           </Grid>
           { error.current && <Alert severity="error">Error querying backend: {error.current.message}</Alert> }
