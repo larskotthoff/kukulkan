@@ -8,6 +8,9 @@ import logging
 import os
 import subprocess
 
+import json
+import re
+
 import notmuch
 from flask import Flask, current_app, g, send_file, send_from_directory
 from werkzeug.utils import safe_join
@@ -37,7 +40,7 @@ cleaner.add_nofollow = True
 def get_db():
     """Get a new `Database` instance. Called before every request. Cached on first call."""
     if "db" not in g:
-        g.db = notmuch.Database(current_app.config["NOTMUCH_PATH"], create = False)
+        g.db = notmuch.Database(None, create = False)
     return g.db
 
 
@@ -59,7 +62,11 @@ def create_app():
     """Flask application factory."""
     app = Flask(__name__, static_folder = "client")
     app.config["PROPAGATE_EXCEPTIONS"] = True
-    app.config["NOTMUCH_PATH"] = os.getenv("NOTMUCH_PATH")
+
+    configPath = os.getenv("XDG_CONFIG_HOME") if os.getenv("XDG_CONFIG_HOME") else os.getenv("HOME") + os.path.sep + ".config"
+    with open(configPath + os.path.sep + "kukulkan" + os.path.sep + "config", "r") as f:
+        app.config.custom = json.load(f)
+
     app.logger.setLevel(logging.INFO)
 
     api = Api(app)
@@ -151,7 +158,7 @@ def create_app():
 
     @app.route("/api/tag/add/<string:typ>/<string:nid>/<tag>")
     def tag_add(typ, nid, tag):
-        db_write = notmuch.Database(current_app.config["NOTMUCH_PATH"], create = False, mode = notmuch.Database.MODE.READ_WRITE)
+        db_write = notmuch.Database(None, create = False, mode = notmuch.Database.MODE.READ_WRITE)
         msgs = get_query(("mid" if typ == "message" else typ) + ":" + nid, db_write, False).search_messages()
         try:
             db_write.begin_atomic()
@@ -164,7 +171,7 @@ def create_app():
 
     @app.route("/api/tag/remove/<string:typ>/<string:nid>/<tag>")
     def tag_remove(typ, nid, tag):
-        db_write = notmuch.Database(current_app.config["NOTMUCH_PATH"], create = False, mode = notmuch.Database.MODE.READ_WRITE)
+        db_write = notmuch.Database(None, create = False, mode = notmuch.Database.MODE.READ_WRITE)
         msgs = get_query(("mid" if typ == "message" else typ) + ":" + nid, db_write, False).search_messages()
         try:
             db_write.begin_atomic()
@@ -211,12 +218,24 @@ def get_nested_body(email_msg, html_only = False):
     content_plain = ""
     for part in email_msg.walk():
         if part.get_content_type() == "text/plain":
-            content_plain += part.get_content()
+            tmp = part.get_content()
+            try:
+                repl = current_app.config.custom["filter"]["content"]["text/plain"]
+                tmp = re.sub(repl[0], repl[1], tmp)
+            except Exception as e:
+                print(e)
+            content_plain += tmp
 
     content_html = ""
     for part in email_msg.walk():
         if part.get_content_type() == "text/html":
-            content_html += part.get_content()
+            tmp = part.get_content()
+            try:
+                repl = current_app.config.custom["filter"]["content"]["text/html"]
+                tmp = re.sub(repl[0], repl[1], tmp)
+            except:
+                None
+            content_html += tmp
 
     if html_only:
         if content_html:
