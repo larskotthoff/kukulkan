@@ -12,14 +12,8 @@ export class TagBar extends React.Component {
     this.element = React.createRef();
     this.state = { updating: false };
     this.handleChange = this.handleChange.bind(this);
-    this.addDelete = this.addDelete.bind(this);
     this.addTag = this.addTag.bind(this);
     this.delTag = this.delTag.bind(this);
-  }
-
-  addDelete() {
-    if(this.props.tagsObject.tags.indexOf("unread") > -1) this.delTag("unread");
-    this.addTag("deleted");
   }
 
   addTag(tag) {
@@ -47,7 +41,10 @@ export class TagBar extends React.Component {
   }
 
   componentDidMount() {
-    this.element.current.addEventListener("delete", this.addDelete);
+    this.element.current.addEventListener("delete", () => {
+      if(this.props.tagsObject.tags.indexOf("unread") > -1) this.delTag("unread");
+      this.addTag("deleted");
+    });
   }
 
   handleChange(ev, value, reason) {
