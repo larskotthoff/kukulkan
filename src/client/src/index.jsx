@@ -34,7 +34,7 @@ class Search extends React.Component {
     let opts = ["tag:unread", "tag:todo", "date:1d.."];
     let qs = localStorage.getItem("queries");
     if(qs !== null) opts = [...new Set(opts.concat(JSON.parse(qs)))];
-    this.opts = opts;
+    this.state = { opts: opts };
   }
 
   render() {
@@ -48,14 +48,14 @@ class Search extends React.Component {
           freeSolo
           autoComplete={true}
           value={this.props.query ? this.props.query : ""}
-          options={this.opts}
+          options={this.state.opts}
           onInputChange={(ev, value, reason) => {
-            if (reason === "input") {
+            if(reason === "input") {
               let pts = value.split(':'),
                   last = pts.pop();
               if(pts.length > 0 && pts[pts.length - 1].endsWith("tag") && last.length > 0) {
                 // autocomplete possible tag
-                let tagCandidates = this.props.tags.filter((t) => { return t.startsWith(last); });
+                let tagCandidates = this.props.allTags.filter((t) => { return t.startsWith(last); });
                 this.setState({ opts: tagCandidates.map((t) => { return pts.join(':') + ":" + t; }) });
               }
             }
@@ -112,7 +112,7 @@ class Threads extends React.Component {
                   <TableCell>{ thread.tags.includes("attachment") && <AttachFile /> }</TableCell>
                   <TableCell>{ (thread.tags.includes("replied") || thread.tags.includes("sent")) && <Reply /> }</TableCell>
                   <TableCell>
-                    <TagBar tagsObject={thread} options={this.props.tags} id={thread.thread_id} hiddenTags={this.hiddenTags} type="thread"/>
+                    <TagBar tagsObject={thread} options={this.props.allTags} id={thread.thread_id} hiddenTags={this.hiddenTags} type="thread"/>
                   </TableCell>
                   <TableCell>{thread.subject}</TableCell>
                   <TableCell>{thread.authors.replace("| ", ", ")}</TableCell>
@@ -130,7 +130,7 @@ class Threads extends React.Component {
 
 function Kukulkan() {
   const [threads, setThreads] = useState(null);
-  const [tags, setTags] = useState([]);
+  const [allTags, setAllTags] = useState([]);
 
   const activeThread = useRef(0);
   const query = useRef("");
@@ -173,7 +173,7 @@ function Kukulkan() {
     fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/tags/')
       .then(res => res.json())
       .then((result) => {
-        setTags(result);
+        setAllTags(result);
       });
   }, []);
 
@@ -235,14 +235,14 @@ function Kukulkan() {
                 width: "70%"
               }}>
             <Grid item sx={{ width: "90%" }}>
-              <Search setSearchParams={setSearchParams} query={query.current} tags={tags} />
+              <Search setSearchParams={setSearchParams} query={query.current} allTags={allTags} />
             </Grid>
             <Grid item>
               { threads === null && query.length > 0 && <CircularProgress /> }
             </Grid>
           </Grid>
           { error.current && <Alert severity="error">Error querying backend: {error.current.message}</Alert> }
-          <Threads threads={threads} updateActiveThread={updateActiveThread} tags={tags} />
+          <Threads threads={threads} updateActiveThread={updateActiveThread} allTags={allTags} />
         </Box>
       </Container>
     </ThemeProvider>
