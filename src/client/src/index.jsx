@@ -238,7 +238,7 @@ function Kukulkan() {
               <Search setSearchParams={setSearchParams} query={query.current} tags={tags} />
             </Grid>
             <Grid item>
-              { threads === null  && <CircularProgress /> }
+              { threads === null && query.length > 0 && <CircularProgress /> }
             </Grid>
           </Grid>
           { error.current && <Alert severity="error">Error querying backend: {error.current.message}</Alert> }
