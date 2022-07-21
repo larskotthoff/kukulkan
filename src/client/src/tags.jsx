@@ -1,6 +1,7 @@
 import React from 'react';
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
+import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
 
 import { getColor } from "./utils.js";
@@ -10,19 +11,10 @@ export class TagBar extends React.Component {
     super(props);
     this.element = React.createRef();
     this.state = { updating: false };
-    this.setColors = this.setColors.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.addDelete = this.addDelete.bind(this);
     this.addTag = this.addTag.bind(this);
     this.delTag = this.delTag.bind(this);
-  }
-
-  setColors() {
-    if(this.element.current) {
-      Array.from(this.element.current.getElementsByClassName("MuiChip-label")).forEach(chip => {
-        chip.style.color = getColor(chip.textContent);
-      });
-    }
   }
 
   addDelete() {
@@ -55,12 +47,7 @@ export class TagBar extends React.Component {
   }
 
   componentDidMount() {
-    this.setColors();
     this.element.current.addEventListener("delete", this.addDelete);
-  }
-
-  componentDidUpdate() {
-    this.setColors();
   }
 
   handleChange(ev, value, reason) {
@@ -87,6 +74,14 @@ export class TagBar extends React.Component {
         filterOptions={(opts, state) => opts.filter((tag) => this.props.tagsObject.tags.indexOf(tag) === -1 && tag.startsWith(state.inputValue))}
         defaultValue={this.props.tagsObject.tags.filter(tag => this.props.hiddenTags ? this.props.hiddenTags.indexOf(tag) === -1 : true)}
         value={this.props.tagsObject.tags.filter(tag => this.props.hiddenTags ? this.props.hiddenTags.indexOf(tag) === -1 : true)}
+        renderTags={(value, getTagProps) => {
+          return value.map((option, index) => (
+            <Chip label={option}
+              {...getTagProps({ index })}
+              style={{ color: getColor(option) }}
+            />
+          ))
+        }}
         renderInput={(params) => <TextField {...params} variant="standard" InputProps={{...params.InputProps, endAdornment: (
           <React.Fragment>
             {this.state.updating ? <CircularProgress color="inherit" size={20} /> : null}
