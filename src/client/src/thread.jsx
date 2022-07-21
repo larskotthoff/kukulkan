@@ -31,6 +31,44 @@ class MessageList extends React.Component {
   }
 }
 
+class ThreadNav extends React.Component {
+  render() {
+    return (
+      <React.Fragment>
+        { this.props.thread.current &&
+          <Drawer variant="permanent" anchor="left">
+            <Grid container direction="column" margin="1em">
+              { this.props.thread.current.map((msg, index) => (
+                <Grid item container key={index} direction="row">
+                  { (new Array(msg.depth).fill(0)).map((_, index2) => (
+                    <Grid item key={index2}>
+                      <Box
+                        onClick={() => {
+                          if(this.props.filteredThread.find((i) => { return i.message_id === msg.message_id; })) {
+                            this.props.updateActiveMsg(this.props.filteredThread.indexOf(msg), true);
+                          } else {
+                            this.props.setFilteredThread(filterThread(msg, this.props.thread.current, this.props.activeDepth, this.props.activeMsg));
+                          }
+                        }}
+                        style={{ width: "1em", height: "1em", margin: ".03em",
+                          opacity: (this.props.filteredThread && this.props.filteredThread.find((i) => { return i.message_id === msg.message_id; })) ?
+                            1 :
+                            .3,
+                          backgroundColor: (index2 === msg.depth - 1 ?
+                            getColor(filterSubjectColor(msg.subject) +
+                              filterTagsColor(msg.tags) + extractEmailsSort(msg.from + msg.to + msg.cc)) :
+                            "" )}}/>
+                    </Grid>
+                  )) }
+                </Grid>
+              )) }
+            </Grid>
+          </Drawer>
+        }
+      </React.Fragment>
+    )
+  }
+}
 
 function filterThread(msg, thread, activeDepth, activeMsg) {
   let prv = [];
@@ -236,37 +274,8 @@ export function Thread() {
         <Grid container id="thread" direction="column" justifyContent="center" alignItems="center" style={{ marginTop: "1em" }}>
           { thread.current === null && <CircularProgress/> }
           { error.current && <Alert id="error" severity="error">Error querying backend: {error.current.message}</Alert> }
-          { thread.current &&
-            <Drawer variant="permanent" anchor="left">
-              <Grid container direction="column" margin="1em">
-                { thread.current.map((msg, index) => (
-                  <Grid item container key={index} direction="row">
-                    { (new Array(msg.depth).fill(0)).map((_, index2) => (
-                      <Grid item key={index2}>
-                        <Box
-                          onClick={() => {
-                            if(filteredThread.find((i) => { return i.message_id === msg.message_id; })) {
-                              updateActiveMsg(filteredThread.indexOf(msg), true);
-                            } else {
-                              setFilteredThread(filterThread(msg, thread.current, activeDepth, activeMsg));
-                            }
-                          }}
-                          style={{ width: "1em", height: "1em", margin: ".03em",
-                            opacity: (filteredThread && filteredThread.find((i) => { return i.message_id === msg.message_id; })) ?
-                              1 :
-                              .3,
-                            backgroundColor: (index2 === msg.depth - 1 ?
-                              getColor(filterSubjectColor(msg.subject) +
-                                filterTagsColor(msg.tags) + extractEmailsSort(msg.from + msg.to + msg.cc)) :
-                              "" )}}/>
-                      </Grid>
-                    )) }
-                  </Grid>
-                )) }
-              </Grid>
-            </Drawer>
-          }
           <MessageList allTags={allTags} filteredThread={filteredThread} open={activeMsg.current} updateActiveMsg={updateActiveMsg}/>
+          <ThreadNav thread={thread} filteredThread={filteredThread} updateActiveMsg={updateActiveMsg} activeMsg={activeMsg} activeDepth={activeDepth} />
         </Grid>
       </Container>
     </ThemeProvider>
