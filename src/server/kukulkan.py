@@ -164,6 +164,7 @@ def create_app():
             db_write.begin_atomic()
             for msg in msgs:
                 msg.add_tag(tag)
+                msg.tags_to_maildir_flags()
             db_write.end_atomic()
         finally:
             db_write.close()
@@ -177,6 +178,7 @@ def create_app():
             db_write.begin_atomic()
             for msg in msgs:
                 msg.remove_tag(tag)
+                msg.tags_to_maildir_flags()
             db_write.end_atomic()
         finally:
             db_write.close()
