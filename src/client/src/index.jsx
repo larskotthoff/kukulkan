@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route, Outlet, useSearchParams } from "react-router-dom";
+import { Table, Column, AutoSizer } from "react-virtualized";
+import 'react-virtualized/styles.css';
 
 import CssBaseline from '@mui/material/CssBaseline';
 import Autocomplete from '@mui/material/Autocomplete';
@@ -12,12 +14,7 @@ import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
 import CircularProgress from '@mui/material/CircularProgress';
-import Table from '@mui/material/Table';
 import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableBody from '@mui/material/TableBody';
-import TableRow from '@mui/material/TableRow';
-import TableCell from '@mui/material/TableCell';
 import AttachFile from '@mui/icons-material/AttachFile';
 import Reply from '@mui/icons-material/Reply';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
@@ -73,10 +70,20 @@ class Threads extends React.Component {
     super(props);
     this.df = new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
     this.hiddenTags = ["attachment", "replied", "sent"];
+    this.renderDate = this.renderDate.bind(this);
+    this.renderTagBar = this.renderTagBar.bind(this);
   }
 
-  componentDidUpdate() {
-    this.props.updateActiveThread(0);
+  renderDate({rowData}) {
+    let res = this.df.format(rowData.newest_date * 1000);
+    if(rowData.total_messages > 1) {
+      res = this.df.format(rowData.oldest_date * 1000) + " — " + res;
+    }
+    return res;
+  }
+
+  renderTagBar({rowData}) {
+    return <TagBar tagsObject={rowData} options={this.props.allTags} id={rowData.thread_id} hiddenTags={this.hiddenTags} type="thread"/>
   }
 
   render() {
@@ -85,42 +92,51 @@ class Threads extends React.Component {
       { this.props.threads &&
         <Paper elevation={3} sx={{ padding: 2 }}>
         <Typography align="right">{this.props.threads.length} threads.</Typography>
-        <TableContainer id="threadsTable">
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Date</TableCell>
-                <TableCell>Messages</TableCell>
-                <TableCell></TableCell>
-                <TableCell></TableCell>
-                <TableCell>Tags</TableCell>
-                <TableCell>Subject</TableCell>
-                <TableCell>Authors</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              { this.props.threads.map((thread, index) => (
-                <TableRow key={index} hover={true} className="kukulkan-keyboard-nav" onClick={(e) => {
-                  // check if we're clicking in a tag edit box
-                  if("input" !== document.activeElement.tagName.toLowerCase()) {
-                    e.preventDefault();
-                    this.props.updateActiveThread(index);
-                    window.open('/thread?id=' + thread.thread_id, '_blank');
-                  }
-                }}>
-                  <TableCell align="center">{ thread.total_messages > 1 && this.df.format(thread.oldest_date * 1000) + " — " } { this.df.format(thread.newest_date * 1000) }</TableCell>
-                  <TableCell>{ thread.total_messages }</TableCell>
-                  <TableCell>{ thread.tags.includes("attachment") && <AttachFile /> }</TableCell>
-                  <TableCell>{ (thread.tags.includes("replied") || thread.tags.includes("sent")) && <Reply /> }</TableCell>
-                  <TableCell>
-                    <TagBar tagsObject={thread} options={this.props.allTags} id={thread.thread_id} hiddenTags={this.hiddenTags} type="thread"/>
-                  </TableCell>
-                  <TableCell>{thread.subject}</TableCell>
-                  <TableCell>{thread.authors.replace("| ", ", ")}</TableCell>
-                </TableRow>
-              )) }
-            </TableBody>
-          </Table>
+        <TableContainer id="threadsTable" style={{ height: "calc(100vh - 13em)", overflowX: "hidden" }}>
+          <AutoSizer>
+            {({ width, height }) => {
+              return <Table
+                  width={width}
+                  height={height}
+                  headerHeight={40}
+                  rowHeight={40}
+                  rowGetter={({index}) => this.props.threads[index]}
+                  rowCount={this.props.threads.length}
+                  rowStyle={({index}) => {
+                    return this.props.activeThread === index ? { backgroundColor: '#eee' } : {};
+                  }}
+                  scrollToIndex={this.props.activeThread}
+                  onRowClick={(e, index, rowData) => {
+                    // check if we're clicking in a tag edit box
+                    if("input" !== document.activeElement.tagName.toLowerCase()) {
+                      e.preventDefault();
+                      this.props.setActiveThread(index);
+                      window.open('/thread?id=' + rowData.thread_id, '_blank');
+                    }
+                  }}
+                  overscanRowCount={10}>
+                    <Column label="Date" dataKey="newest_date" width={300} cellRenderer={this.renderDate}/>
+                    <Column label="#" dataKey="total_messages" width={30}/>
+                    <Column dataKey="tags" width={30}
+                      cellRenderer={function({rowData}) {
+                        if(rowData.tags.includes("attachment"))
+                          return <AttachFile />;
+                      }}
+                    />
+                    <Column dataKey="tags" width={30}
+                      cellRenderer={function({rowData}) {
+                        if(rowData.tags.includes("replied") || rowData.tags.includes("sent"))
+                          return <Reply />;
+                      }}
+                    />
+                    <Column label="Tags" dataKey="tags" width={300} flexGrow={1} flexShrink={1} cellRenderer={this.renderTagBar}/>
+                    <Column label="Subject" dataKey="subject" flexGrow={4} flexShrink={1} width={400}/>
+                    <Column label="Authors" dataKey="authors" flexGrow={4} flexShrink={1} width={400}
+                      cellRenderer={function({cellData}) { return cellData.replace("| ", ", "); }}
+                    />
+                </Table>
+            }}
+          </AutoSizer>
         </TableContainer>
         </Paper>
       }
@@ -133,8 +149,8 @@ function Kukulkan() {
   const [threads, setThreads] = useState(null);
   const [allTags, setAllTags] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [activeThread, setActiveThread] = useState(0);
 
-  const activeThread = useRef(0);
   const query = useRef("");
   const error = useRef(null);
 
@@ -181,36 +197,23 @@ function Kukulkan() {
       });
   }, []);
 
-  function updateActiveThread(at) {
-    const clName = "Mui-selected";
-    let els = Array.from(document.getElementsByClassName("kukulkan-keyboard-nav"));
-    if(els[activeThread.current]) {
-      els[activeThread.current].className = els[activeThread.current].className.replace(clName, "");
-    }
-    activeThread.current = at;
-    if(els[activeThread.current]) {
-      els[activeThread.current].className += " " + clName;
-      els[activeThread.current].scrollIntoView({block: "nearest"});
-    }
-  }
+  useHotkeys('Home', () => setActiveThread(0));
+  useHotkeys('k', () => setActiveThread(Math.max(0, activeThread - 1)), [activeThread]);
+  useHotkeys('Shift+K', () => setActiveThread(Math.max(0, activeThread - 10)), [activeThread]);
+  useHotkeys('j', () => setActiveThread(Math.min(threads.length - 1, activeThread + 1)), [threads, activeThread]);
+  useHotkeys('Shift+J', () => setActiveThread(Math.min(threads.length - 1, activeThread + 10)), [threads, activeThread]);
+  useHotkeys('End', () => setActiveThread(threads.length - 1), [threads]);
 
-  useHotkeys('Home', () => updateActiveThread(0));
-  useHotkeys('k', () => updateActiveThread(Math.max(0, activeThread.current - 1)), [activeThread]);
-  useHotkeys('Shift+K', () => updateActiveThread(Math.max(0, activeThread.current - 10)), [activeThread]);
-  useHotkeys('j', () => updateActiveThread(Math.min(threads.length - 1, activeThread.current + 1)), [threads, activeThread]);
-  useHotkeys('Shift+J', () => updateActiveThread(Math.min(threads.length - 1, activeThread.current + 10)), [threads, activeThread]);
-  useHotkeys('End', () => updateActiveThread(threads.length - 1), [threads]);
-
-  useHotkeys('Enter', () => window.open('/thread?id=' + threads[activeThread.current].thread_id, '_blank'), [threads, activeThread]);
+  useHotkeys('Enter', () => window.open('/thread?id=' + threads[activeThread].thread_id, '_blank'), [threads, activeThread]);
 
   useHotkeys('t', (e) => {
     e.preventDefault();
-    document.getElementsByClassName("kukulkan-keyboard-nav")[activeThread.current].getElementsByTagName("input")[0].focus();
+    document.getElementsByClassName("kukulkan-keyboard-nav")[activeThread].getElementsByTagName("input")[0].focus();
   }, [activeThread]);
 
   useHotkeys('Del', () => {
     let els = Array.from(document.getElementsByClassName("kukulkan-keyboard-nav"));
-    let elm = els[activeThread.current];
+    let elm = els[activeThread];
     elm.getElementsByClassName("MuiAutocomplete-root")[0].dispatchEvent(new CustomEvent('delete'));
   }, [activeThread]);
 
@@ -246,7 +249,7 @@ function Kukulkan() {
             </Grid>
           </Grid>
           { error.current && <Alert severity="error">Error querying backend: {error.current.message}</Alert> }
-          <Threads threads={threads} updateActiveThread={updateActiveThread} allTags={allTags} />
+          <Threads threads={threads} activeThread={activeThread} setActiveThread={setActiveThread} allTags={allTags} />
         </Box>
       </Container>
     </ThemeProvider>
