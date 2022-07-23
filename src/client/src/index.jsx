@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route, Outlet, useSearchParams } from "react-router-dom";
-import { Table, Column, AutoSizer } from "react-virtualized";
+import { Table, Column, AutoSizer, WindowScroller } from "react-virtualized";
 import 'react-virtualized/styles.css';
 
 import CssBaseline from '@mui/material/CssBaseline';
@@ -13,7 +13,6 @@ import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
 import CircularProgress from '@mui/material/CircularProgress';
-import TableContainer from '@mui/material/TableContainer';
 import AttachFile from '@mui/icons-material/AttachFile';
 import Reply from '@mui/icons-material/Reply';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
@@ -94,12 +93,15 @@ class Threads extends React.Component {
       { this.props.threads &&
         <React.Fragment>
         <Typography align="right">{this.props.threads.length} threads.</Typography>
-        <TableContainer id="threadsTable" style={{ height: "calc(100vh - 13em)", overflowX: "hidden" }}>
-          <AutoSizer>
-            {({ width, height }) => {
-              return <Table
+        <WindowScroller>
+          {({ height, scrollTop }) => (
+            <AutoSizer disableHeight>
+              {({ width }) => (
+                <Table
+                  autoHeight
                   width={width}
                   height={height}
+                  scrollTop={scrollTop}
                   headerHeight={40}
                   rowHeight={40}
                   rowGetter={({index}) => this.props.threads[index]}
@@ -137,9 +139,10 @@ class Threads extends React.Component {
                       cellRenderer={function({cellData}) { return cellData.replace("| ", ", "); }}
                     />
                 </Table>
-            }}
-          </AutoSizer>
-        </TableContainer>
+              )}
+            </AutoSizer>
+          )}
+        </WindowScroller>
         </React.Fragment>
       }
       </Box>
