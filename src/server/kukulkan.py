@@ -29,12 +29,13 @@ from lxml.html.clean import Cleaner
 cleaner = Cleaner()
 cleaner.javascript = True
 cleaner.scripts = True
+cleaner.page_structure = True
 cleaner.meta = True
 cleaner.embedded = True
 cleaner.frames = True
 cleaner.forms = True
 cleaner.remove_unknown_tags = True
-cleaner.safe_attrs_only = True
+cleaner.safe_attrs_only = False
 cleaner.add_nofollow = True
 
 def get_db():
@@ -113,7 +114,7 @@ def create_app():
 
     class Thread(Resource):
         def get(self, thread_id):
-            threads = get_query("thread:{}".format(thread_id)).search_threads()
+            threads = get_query("thread:{}".format(thread_id), exclude = False).search_threads()
             thread = next(threads)  # there can be only 1
             messages = thread.get_messages()
             return messages_to_json(messages)
@@ -131,7 +132,7 @@ def create_app():
 
     @app.route("/api/attachment/<string:message_id>/<int:num>")
     def download_attachment(message_id, num):
-        msgs = get_query("mid:{}".format(message_id)).search_messages()
+        msgs = get_query("mid:{}".format(message_id), exclude = False).search_messages()
         msg = next(msgs)  # there can be only 1
         d = message_attachment(msg, num)
         if not d:
@@ -145,13 +146,13 @@ def create_app():
 
     @app.route("/api/message/<string:message_id>")
     def download_message(message_id):
-        msgs = get_query("mid:{}".format(message_id)).search_messages()
+        msgs = get_query("mid:{}".format(message_id), exclude = False).search_messages()
         msg = next(msgs)  # there can be only 1
         return message_to_json(msg)
 
     @app.route("/api/raw_message/<string:message_id>")
     def download_raw_message(message_id):
-        msgs = get_query("mid:{}".format(message_id)).search_messages()
+        msgs = get_query("mid:{}".format(message_id), exclude = False).search_messages()
         msg = next(msgs)  # there can be only 1
         return send_file(msg.get_filename(), mimetype = "message/rfc822",
             as_attachment = True, attachment_filename = message_id+".eml")
