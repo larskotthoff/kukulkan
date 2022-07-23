@@ -24,6 +24,8 @@ import { TagBar } from "./tags.jsx";
 import { Thread } from "./thread.jsx";
 import { SingleMessage } from "./message.jsx";
 
+import { formatDate, formatDuration } from "./utils.js";
+
 class Search extends React.Component {
   constructor(props) {
     super(props);
@@ -67,16 +69,15 @@ class Search extends React.Component {
 class Threads extends React.Component {
   constructor(props) {
     super(props);
-    this.df = new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
     this.hiddenTags = ["attachment", "replied", "sent"];
     this.renderDate = this.renderDate.bind(this);
     this.renderTagBar = this.renderTagBar.bind(this);
   }
 
   renderDate({rowData}) {
-    let res = this.df.format(rowData.newest_date * 1000);
+    let res = formatDate(new Date(rowData.newest_date * 1000));
     if(rowData.total_messages > 1) {
-      res = this.df.format(rowData.oldest_date * 1000) + " — " + res;
+      res += " (" + formatDuration(new Date(rowData.oldest_date * 1000), new Date(rowData.newest_date * 1000)) + ")";
     }
     return res;
   }
@@ -116,7 +117,7 @@ class Threads extends React.Component {
                     }
                   }}
                   overscanRowCount={10}>
-                    <Column label="Date" dataKey="newest_date" width={300} cellRenderer={this.renderDate}/>
+                    <Column label="Date (Duration)" dataKey="newest_date" width={200} cellRenderer={this.renderDate}/>
                     <Column label="#" dataKey="total_messages" width={30}/>
                     <Column dataKey="tags" width={30}
                       cellRenderer={function({rowData}) {

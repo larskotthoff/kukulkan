@@ -34,4 +34,35 @@ export function filterSubjectColor(subject) {
   return subject.replace(new RegExp('^( *(RE|FWD|FW|AW) *: *)+', "igm"), "");
 }
 
+export function formatDate(date) {
+  let now = new Date(),
+      time = date.toLocaleTimeString([], { hour: 'numeric', minute: 'numeric' });
+  if(date.setHours(0, 0, 0, 0) === now.setHours(0, 0, 0, 0)) { // today
+    return time;
+  } else if((now - date) / (7 * 24 * 60 * 60 * 1000) < 1) { // less than one week ago
+    return date.toLocaleDateString([], { weekday: 'short' }) + " " + time;
+  } else if(date.getFullYear() === now.getFullYear()) { // this year
+    return date.toLocaleDateString([], { day: 'numeric', month: 'numeric' }) + " " + time;
+  } else {
+    return date.toLocaleDateString() + " " + time;
+  }
+}
+
+export function formatDuration(from, to) {
+  let diff = to - from;
+  if(diff < (91 * 60 * 1000)) {
+    return (Math.round(diff / (60 * 1000))) + " minutes";
+  } if(diff < (48 * 60 * 60 * 1000)) {
+    return (Math.round(diff / (60 * 60 * 1000))) + " hours";
+  } if(diff < (14 * 24 * 60 * 60 * 1000)) {
+    return (Math.round(diff / (24 * 60 * 60 * 1000))) + " days";
+  } if(diff < (12 * 7 * 24 * 60 * 60 * 1000)) {
+    return (Math.round(diff / (7 * 24 * 60 * 60 * 1000))) + " weeks";
+  } if(diff < (500 * 24 * 60 * 60 * 1000)) {
+    return (Math.round(diff / (30 * 24 * 60 * 60 * 1000))) + " months";
+  } else {
+    return (Math.round(diff / (365.25 * 24 * 60 * 60 * 1000))) + " years";
+  }
+}
+
 // vim: tabstop=2 shiftwidth=2 expandtab
