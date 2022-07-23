@@ -110,10 +110,9 @@ class Threads extends React.Component {
                     return this.props.activeThread === index ? { backgroundColor: '#eee' } : {};
                   }}
                   scrollToIndex={this.props.activeThread}
-                  onRowClick={(e, index, rowData) => {
+                  onRowClick={({e, index, rowData}) => {
                     // check if we're clicking in a tag edit box
                     if("input" !== document.activeElement.tagName.toLowerCase()) {
-                      e.preventDefault();
                       this.props.setActiveThread(index);
                       window.open('/thread?id=' + rowData.thread_id, '_blank');
                     }
