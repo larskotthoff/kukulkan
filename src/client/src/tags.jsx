@@ -67,6 +67,7 @@ export class TagBar extends React.Component {
         disableClearable={true}
         multiple
         fullWidth
+        className={this.props.className}
         options={this.props.options}
         filterOptions={(opts, state) => opts.filter((tag) => this.props.tagsObject.tags.indexOf(tag) === -1 && tag.startsWith(state.inputValue))}
         defaultValue={this.props.tagsObject.tags.filter(tag => this.props.hiddenTags ? this.props.hiddenTags.indexOf(tag) === -1 : true)}

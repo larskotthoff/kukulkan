@@ -12,7 +12,6 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
-import Paper from '@mui/material/Paper';
 import CircularProgress from '@mui/material/CircularProgress';
 import TableContainer from '@mui/material/TableContainer';
 import AttachFile from '@mui/icons-material/AttachFile';
@@ -82,15 +81,17 @@ class Threads extends React.Component {
     return res;
   }
 
-  renderTagBar({rowData}) {
-    return <TagBar tagsObject={rowData} options={this.props.allTags} id={rowData.thread_id} hiddenTags={this.hiddenTags} type="thread"/>
+  renderTagBar({rowData, rowIndex}) {
+    return <TagBar className={rowIndex === this.props.activeThread ? "kukulkan-tagbar-active" : "" }
+      tagsObject={rowData} options={this.props.allTags}
+      id={rowData.thread_id} hiddenTags={this.hiddenTags} type="thread"/>
   }
 
   render() {
     return (
       <Box id="threads" sx={{ mt: 1, width: "90%" }}>
       { this.props.threads &&
-        <Paper elevation={3} sx={{ padding: 2 }}>
+        <React.Fragment>
         <Typography align="right">{this.props.threads.length} threads.</Typography>
         <TableContainer id="threadsTable" style={{ height: "calc(100vh - 13em)", overflowX: "hidden" }}>
           <AutoSizer>
@@ -129,16 +130,16 @@ class Threads extends React.Component {
                           return <Reply />;
                       }}
                     />
-                    <Column label="Tags" dataKey="tags" width={300} flexGrow={1} flexShrink={1} cellRenderer={this.renderTagBar}/>
+                    <Column label="Tags" dataKey="tags" width={200} flexGrow={2} flexShrink={1} cellRenderer={this.renderTagBar}/>
                     <Column label="Subject" dataKey="subject" flexGrow={4} flexShrink={1} width={400}/>
-                    <Column label="Authors" dataKey="authors" flexGrow={4} flexShrink={1} width={400}
+                    <Column label="Authors" dataKey="authors" flexGrow={2} flexShrink={1} width={400}
                       cellRenderer={function({cellData}) { return cellData.replace("| ", ", "); }}
                     />
                 </Table>
             }}
           </AutoSizer>
         </TableContainer>
-        </Paper>
+        </React.Fragment>
       }
       </Box>
     );
@@ -208,14 +209,12 @@ function Kukulkan() {
 
   useHotkeys('t', (e) => {
     e.preventDefault();
-    document.getElementsByClassName("kukulkan-keyboard-nav")[activeThread].getElementsByTagName("input")[0].focus();
-  }, [activeThread]);
+    document.getElementsByClassName("kukulkan-tagbar-active")[0].getElementsByTagName("input")[0].focus();
+  });
 
   useHotkeys('Del', () => {
-    let els = Array.from(document.getElementsByClassName("kukulkan-keyboard-nav"));
-    let elm = els[activeThread];
-    elm.getElementsByClassName("MuiAutocomplete-root")[0].dispatchEvent(new CustomEvent('delete'));
-  }, [activeThread]);
+    document.getElementsByClassName("kukulkan-tagbar-active")[0].dispatchEvent(new CustomEvent('delete'));
+  });
 
   useHotkeys('/', (e) => {
     e.preventDefault();
