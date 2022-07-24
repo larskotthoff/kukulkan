@@ -18,7 +18,7 @@ export class TagBar extends React.Component {
 
   addTag(tag) {
     this.setState({ updating: true });
-    fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/tag/add/' + this.props.type + '/' + this.props.id + '/' + tag)
+    fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/tag/add/' + this.props.type + '/' + encodeURIComponent(this.props.id) + '/' + tag)
       .then(
         (result) => {
           if(this.props.tagsObject.tags.indexOf(tag) === -1) {
@@ -31,7 +31,7 @@ export class TagBar extends React.Component {
 
   delTag(tag) {
     this.setState({ updating: true });
-    fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/tag/remove/' + this.props.type + '/' + this.props.id + '/' + tag)
+    fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/tag/remove/' + this.props.type + '/' + encodeURIComponent(this.props.id) + '/' + tag)
       .then(
         (result) => {
           this.props.tagsObject.tags = this.props.tagsObject.tags.filter(t => t !== tag);

@@ -155,7 +155,7 @@ export class Message extends React.Component {
   }
 
   getAttachment(attachment) {
-    fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/attachment/' + this.props.msg.notmuch_id + "/" + attachment)
+    fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/attachment/' + encodeURIComponent(this.props.msg.notmuch_id) + "/" + attachment)
       .then(res => res.blob())
       .then(blob => {
         const href = window.URL.createObjectURL(blob);
@@ -315,7 +315,7 @@ export function SingleMessage() {
     messageId.current = searchParams.get("id");
     if(messageId.current !== null) {
       setMessage(null);
-      fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/message/' + messageId.current)
+      fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/message/' + encodeURIComponent(messageId.current))
         .then(res => res.json())
         .then(
           (result) => {

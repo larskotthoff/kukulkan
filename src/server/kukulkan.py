@@ -127,10 +127,10 @@ def create_app():
     # all requests that return lists must be defined this way
     api.add_resource(Query, "/api/query/<path:query_string>")
     api.add_resource(Address, "/api/address/<path:query_string>")
-    api.add_resource(Thread, "/api/thread/<string:thread_id>")
+    api.add_resource(Thread, "/api/thread/<path:thread_id>")
     api.add_resource(Tags, "/api/tags/")
 
-    @app.route("/api/attachment/<string:message_id>/<int:num>")
+    @app.route("/api/attachment/<path:message_id>/<int:num>")
     def download_attachment(message_id, num):
         msgs = get_query("mid:{}".format(message_id), exclude = False).search_messages()
         msg = next(msgs)  # there can be only 1
@@ -144,20 +144,20 @@ def create_app():
         return send_file(f, mimetype = d["content_type"], as_attachment = True,
             attachment_filename = d["filename"])
 
-    @app.route("/api/message/<string:message_id>")
+    @app.route("/api/message/<path:message_id>")
     def download_message(message_id):
         msgs = get_query("mid:{}".format(message_id), exclude = False).search_messages()
         msg = next(msgs)  # there can be only 1
         return message_to_json(msg)
 
-    @app.route("/api/raw_message/<string:message_id>")
+    @app.route("/api/raw_message/<path:message_id>")
     def download_raw_message(message_id):
         msgs = get_query("mid:{}".format(message_id), exclude = False).search_messages()
         msg = next(msgs)  # there can be only 1
         return send_file(msg.get_filename(), mimetype = "message/rfc822",
             as_attachment = True, attachment_filename = message_id+".eml")
 
-    @app.route("/api/tag/add/<string:typ>/<string:nid>/<tag>")
+    @app.route("/api/tag/add/<string:typ>/<path:nid>/<tag>")
     def tag_add(typ, nid, tag):
         db_write = notmuch.Database(None, create = False, mode = notmuch.Database.MODE.READ_WRITE)
         msgs = get_query(("mid" if typ == "message" else typ) + ":" + nid, db_write, False).search_messages()
@@ -171,7 +171,7 @@ def create_app():
             db_write.close()
         return tag
 
-    @app.route("/api/tag/remove/<string:typ>/<string:nid>/<tag>")
+    @app.route("/api/tag/remove/<string:typ>/<path:nid>/<tag>")
     def tag_remove(typ, nid, tag):
         db_write = notmuch.Database(None, create = False, mode = notmuch.Database.MODE.READ_WRITE)
         msgs = get_query(("mid" if typ == "message" else typ) + ":" + nid, db_write, False).search_messages()

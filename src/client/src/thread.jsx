@@ -120,7 +120,7 @@ export function Thread() {
   useEffect(() => {
     threadId.current = searchParams.get("id");
     if(threadId.current !== null) {
-      fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/thread/' + threadId.current)
+      fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/thread/' + encodeURIComponent(threadId.current))
         .then(res => res.json())
         .then(
           (result) => {
