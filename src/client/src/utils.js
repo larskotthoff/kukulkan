@@ -1,9 +1,21 @@
+// https://stackoverflow.com/questions/36721830/convert-hsl-to-rgb-and-hex
+function hslToHex(h, s, l) {
+  l /= 100;
+  const a = s * Math.min(l, 1 - l) / 100;
+  const f = n => {
+    const k = (n + h / 30) % 12;
+    const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+    return Math.round(255 * color).toString(16).padStart(2, '0');   // convert to Hex and prefix "0" if needed
+  };
+  return `#${f(0)}${f(8)}${f(4)}`;
+}
+
 // https://stackoverflow.com/questions/3426404/create-a-hexadecimal-colour-based-on-a-string-with-javascript
 export function getColor(stringInput) {
   let stringUniqueHash = [...stringInput].reduce((acc, char) => {
     return char.charCodeAt(0) + ((acc << 5) - acc);
   }, 0);
-  return `hsl(${stringUniqueHash % 360}, 95%, 35%)`;
+  return hslToHex(stringUniqueHash % 360, 95, 35);
 }
 
 // https://stackoverflow.com/questions/822452/strip-html-from-text-javascript

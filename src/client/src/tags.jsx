@@ -4,6 +4,7 @@ import TextField from '@mui/material/TextField';
 import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
 
+import invert from 'invert-color';
 import { getColor } from "./utils.js";
 
 export class TagBar extends React.Component {
@@ -76,7 +77,7 @@ export class TagBar extends React.Component {
           return value.map((option, index) => (
             <Chip label={option}
               {...getTagProps({ index })}
-              style={{ color: getColor(option) }}
+              style={{ backgroundColor: getColor(option), color: invert(getColor(option), true) }}
             />
           ))
         }}
