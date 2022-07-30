@@ -14,7 +14,6 @@ import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
 import CircularProgress from '@mui/material/CircularProgress';
 import AttachFile from '@mui/icons-material/AttachFile';
-import Reply from '@mui/icons-material/Reply';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 import { useHotkeys } from 'react-hotkeys-hook';
@@ -69,14 +68,15 @@ class Threads extends React.Component {
   constructor(props) {
     super(props);
     this.hiddenTags = ["attachment", "replied", "sent"];
-    this.renderDate = this.renderDate.bind(this);
+    this.renderDateNum = this.renderDateNum.bind(this);
     this.renderTagBar = this.renderTagBar.bind(this);
   }
 
-  renderDate({rowData}) {
+  renderDateNum({rowData}) {
     let res = formatDate(new Date(rowData.newest_date * 1000));
     if(rowData.total_messages > 1) {
-      res += " (" + formatDuration(new Date(rowData.oldest_date * 1000), new Date(rowData.newest_date * 1000)) + ")";
+      res += " (" + rowData.total_messages + "/" +
+        formatDuration(new Date(rowData.oldest_date * 1000), new Date(rowData.newest_date * 1000)) + ")";
     }
     return res;
   }
@@ -118,23 +118,16 @@ class Threads extends React.Component {
                     }
                   }}
                   overscanRowCount={10}>
-                    <Column label="Date (Duration)" dataKey="newest_date" width={200} cellRenderer={this.renderDate}/>
-                    <Column label="#" dataKey="total_messages" width={30}/>
                     <Column dataKey="tags" width={30}
                       cellRenderer={function({rowData}) {
                         if(rowData.tags.includes("attachment"))
                           return <AttachFile />;
                       }}
                     />
-                    <Column dataKey="tags" width={30}
-                      cellRenderer={function({rowData}) {
-                        if(rowData.tags.includes("replied") || rowData.tags.includes("sent"))
-                          return <Reply />;
-                      }}
-                    />
-                    <Column label="Tags" dataKey="tags" width={200} flexGrow={2} flexShrink={1} cellRenderer={this.renderTagBar}/>
-                    <Column label="Subject" dataKey="subject" flexGrow={4} flexShrink={1} width={400}/>
-                    <Column label="Authors" dataKey="authors" flexGrow={2} flexShrink={1} width={400}
+                    <Column dataKey="newest_date" width={200} cellRenderer={this.renderDateNum}/>
+                    <Column dataKey="tags" width={100} flexGrow={1.1} cellRenderer={this.renderTagBar}/>
+                    <Column dataKey="subject" flexGrow={2} width={400}/>
+                    <Column dataKey="authors" flexGrow={1.2} width={400}
                       cellRenderer={function({cellData}) { return cellData.replace("| ", ", "); }}
                     />
                 </Table>
