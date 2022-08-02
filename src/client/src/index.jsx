@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route, Outlet, useSearchParams } from "react-router-dom";
-import { Table, Column, AutoSizer, WindowScroller } from "react-virtualized";
-import 'react-virtualized/styles.css';
+
+import RenderIfVisible from 'react-render-if-visible';
 
 import CssBaseline from '@mui/material/CssBaseline';
 import Autocomplete from '@mui/material/Autocomplete';
@@ -14,6 +14,10 @@ import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
 import CircularProgress from '@mui/material/CircularProgress';
 import AttachFile from '@mui/icons-material/AttachFile';
+import Table from '@mui/material/Table';
+import TableContainer from '@mui/material/TableContainer';
+import TableRow from '@mui/material/TableRow';
+import TableCell from '@mui/material/TableCell';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 import { useHotkeys } from 'react-hotkeys-hook';
@@ -69,22 +73,20 @@ class Threads extends React.Component {
     super(props);
     this.hiddenTags = ["attachment", "replied", "sent"];
     this.renderDateNum = this.renderDateNum.bind(this);
-    this.renderTagBar = this.renderTagBar.bind(this);
   }
 
-  renderDateNum({rowData}) {
-    let res = formatDate(new Date(rowData.newest_date * 1000));
-    if(rowData.total_messages > 1) {
-      res += " (" + rowData.total_messages + "/" +
-        formatDuration(new Date(rowData.oldest_date * 1000), new Date(rowData.newest_date * 1000)) + ")";
+  renderDateNum(thread) {
+    let res = formatDate(new Date(thread.newest_date * 1000));
+    if(thread.total_messages > 1) {
+      res += " (" + thread.total_messages + "/" +
+        formatDuration(new Date(thread.oldest_date * 1000), new Date(thread.newest_date * 1000)) + ")";
     }
     return res;
   }
 
-  renderTagBar({rowData, rowIndex}) {
-    return <TagBar className={rowIndex === this.props.activeThread ? "kukulkan-tagbar-active" : "" }
-      tagsObject={rowData} options={this.props.allTags}
-      id={rowData.thread_id} hiddenTags={this.hiddenTags} type="thread"/>
+  componentDidUpdate() {
+    const activeEl = document.getElementsByClassName("Mui-selected")[0];
+    if(activeEl) activeEl.scrollIntoView({block: "nearest"});
   }
 
   render() {
@@ -93,48 +95,38 @@ class Threads extends React.Component {
       { this.props.threads &&
         <React.Fragment>
         <Typography align="right">{this.props.threads.length} threads.</Typography>
-        <WindowScroller>
-          {({ height, scrollTop }) => (
-            <AutoSizer disableHeight>
-              {({ width }) => (
-                <Table
-                  autoHeight
-                  width={width}
-                  height={height}
-                  scrollTop={scrollTop}
-                  headerHeight={40}
-                  rowHeight={40}
-                  rowGetter={({index}) => this.props.threads[index]}
-                  rowCount={this.props.threads.length}
-                  rowStyle={({index}) => {
-                    return this.props.activeThread === index ? { backgroundColor: '#eee' } : {};
-                  }}
-                  scrollToIndex={this.props.activeThread}
-                  onRowClick={({e, index, rowData}) => {
+          <TableContainer id="threadsTable">
+            <Table>
+              { this.props.threads.map((thread, index) => (
+                <RenderIfVisible key={index} defaultHeight={40} rootElement={"tbody"} placeholderElement={"tr"}>
+                  <TableRow key={index} hover={true} className={ index === this.props.activeThread ? "Mui-selected" : "" } onClick={(e) => {
                     // check if we're clicking in a tag edit box
                     if("input" !== document.activeElement.tagName.toLowerCase()) {
+                      e.preventDefault();
                       this.props.setActiveThread(index);
-                      window.open('/thread?id=' + rowData.thread_id, '_blank');
+                      window.open('/thread?id=' + thread.thread_id, '_blank');
                     }
-                  }}
-                  overscanRowCount={10}>
-                    <Column dataKey="tags" width={30}
-                      cellRenderer={function({rowData}) {
-                        if(rowData.tags.includes("attachment"))
-                          return <AttachFile />;
-                      }}
-                    />
-                    <Column dataKey="newest_date" width={200} cellRenderer={this.renderDateNum}/>
-                    <Column dataKey="tags" width={100} flexGrow={1.1} cellRenderer={this.renderTagBar}/>
-                    <Column dataKey="subject" flexGrow={2} width={400}/>
-                    <Column dataKey="authors" flexGrow={1.2} width={400}
-                      cellRenderer={function({cellData}) { return cellData.replace("| ", ", "); }}
-                    />
-                </Table>
-              )}
-            </AutoSizer>
-          )}
-        </WindowScroller>
+                  }}>
+                    <TableCell>{ thread.tags.includes("attachment") && <AttachFile /> }</TableCell>
+                    <TableCell>{ this.renderDateNum(thread) }</TableCell>
+                    <TableCell>
+                      <Grid container spacing={1} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                        <Grid item>
+                          <TagBar className={index === this.props.activeThread ? "kukulkan-tagbar-active" : "" }
+                            tagsObject={thread} options={this.props.allTags}
+                            id={thread.thread_id} hiddenTags={this.hiddenTags} type="thread"/>
+                        </Grid>
+                        <Grid item>
+                          {thread.subject}
+                        </Grid>
+                      </Grid>
+                    </TableCell>
+                    <TableCell>{thread.authors.replace("| ", ", ")}</TableCell>
+                  </TableRow>
+                </RenderIfVisible>
+              )) }
+            </Table>
+          </TableContainer>
         </React.Fragment>
       }
       </Box>
