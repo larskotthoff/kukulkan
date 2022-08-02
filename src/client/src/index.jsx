@@ -80,6 +80,8 @@ class ThreadRow extends React.PureComponent {
     this.element = null;
     this.focusTagBar = false;
     this.del = false;
+
+    this.height = 31;
   }
 
   renderDateNum(thread) {
@@ -125,8 +127,8 @@ class ThreadRow extends React.PureComponent {
 
   render() {
     return (
-      <RenderIfVisible key={this.props.index} defaultHeight={33} visibleOffset={3000} rootElement={"tbody"} placeholderElement={"tr"}>
-        <TableRow ref={this.onRefChange} key={this.props.index} hover={true} className={ this.props.active ? "Mui-selected" : "" } onClick={(e) => {
+      <RenderIfVisible key={this.props.index} defaultHeight={this.height} visibleOffset={2500} rootElement={"tbody"} placeholderElement={"tr"}>
+        <TableRow ref={this.onRefChange} key={this.props.index} hover={true} style={{ height: this.height }} className={ this.props.active ? "Mui-selected" : "" } onClick={(e) => {
           // check if we're clicking in a tag edit box
           if("input" !== document.activeElement.tagName.toLowerCase()) {
             this.props.setActiveThread(this.props.index);
@@ -176,7 +178,7 @@ class Threads extends React.PureComponent {
         <React.Fragment>
         <Typography align="right">{this.props.threads.length} threads.</Typography>
           <TableContainer id="threadsTable">
-            <Table size="small">
+            <Table size="small" padding="none">
               { this.props.threads.map((thread, index) => (
                 <ThreadRow key={index} index={index} thread={thread} active={index === this.props.activeThread} setActiveThread={this.props.setActiveThread} allTags={this.props.allTags}/>
               )) }
