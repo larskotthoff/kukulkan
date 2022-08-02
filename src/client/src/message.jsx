@@ -173,6 +173,7 @@ export class Message extends React.Component {
   }
 
   formatAddrs(addrs) {
+    // split on , preceded by > or by email address
     return addrs.split(/(?<=>),\s*|(?<=@.+),\s*/).map((addr, index) => (
       <span key={index} style={{ backgroundColor: getColor(addr), color: invert(getColor(addr), true), padding: 2, margin: 2, borderRadius: 3 }}>{addr}</span>
     ))
