@@ -125,7 +125,7 @@ class ThreadRow extends React.PureComponent {
 
   render() {
     return (
-      <RenderIfVisible key={this.props.index} defaultHeight={33} rootElement={"tbody"} placeholderElement={"tr"}>
+      <RenderIfVisible key={this.props.index} defaultHeight={33} visibleOffset={3000} rootElement={"tbody"} placeholderElement={"tr"}>
         <TableRow ref={this.onRefChange} key={this.props.index} hover={true} className={ this.props.active ? "Mui-selected" : "" } onClick={(e) => {
           // check if we're clicking in a tag edit box
           if("input" !== document.activeElement.tagName.toLowerCase()) {
@@ -157,7 +157,11 @@ class ThreadRow extends React.PureComponent {
               </Grid>
             </Grid>
           </TableCell>
-          <TableCell>{this.props.thread.authors.replace("| ", ", ")}</TableCell>
+          <TableCell>
+            {this.props.thread.authors.split(/\s*[,|]\s*/).map((author, index) => (
+              <span key={index} style={{ backgroundColor: getColor(author), color: invert(getColor(author), true), padding: 2, margin: 2, borderRadius: 3 }}>{author}</span>
+            )) }
+          </TableCell>
         </TableRow>
       </RenderIfVisible>
     );
