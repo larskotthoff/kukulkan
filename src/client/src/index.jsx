@@ -22,13 +22,14 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 import { useHotkeys } from 'react-hotkeys-hook';
 
-import { TagBar } from "./tags.jsx";
 import { Thread } from "./thread.jsx";
 import { SingleMessage } from "./message.jsx";
+import { TagBar } from "./tags.jsx";
 
-import { formatDate, formatDuration } from "./utils.js";
+import invert from 'invert-color';
+import { formatDate, formatDuration, getColor } from "./utils.js";
 
-class Search extends React.Component {
+class Search extends React.PureComponent {
   constructor(props) {
     super(props);
     let opts = ["tag:unread", "tag:todo", "date:1d.."];
@@ -68,11 +69,17 @@ class Search extends React.Component {
   }
 }
 
-class Threads extends React.Component {
+class ThreadRow extends React.PureComponent {
   constructor(props) {
     super(props);
     this.hiddenTags = ["attachment", "replied", "sent"];
     this.renderDateNum = this.renderDateNum.bind(this);
+    this.onRefChange = this.onRefChange.bind(this);
+    this.state = { editTags: false };
+
+    this.element = null;
+    this.focusTagBar = false;
+    this.del = false;
   }
 
   renderDateNum(thread) {
@@ -85,10 +92,79 @@ class Threads extends React.Component {
   }
 
   componentDidUpdate() {
-    const activeEl = document.getElementsByClassName("Mui-selected")[0];
-    if(activeEl) activeEl.scrollIntoView({block: "nearest"});
+    if(this.element && this.props.active) {
+      this.element.scrollIntoView({block: "nearest"});
+    }
+
+    if(this.focusTagBar && this.element) {
+      this.element.getElementsByTagName("input")[0].focus();
+      this.focusTagBar = false;
+    }
+
+    if(this.del && this.element) {
+      this.element.getElementsByClassName("kukulkan-tagBar")[0].dispatchEvent(new CustomEvent('delete'));
+      this.del = false;
+    }
+
   }
 
+  onRefChange(node) {
+    if(node) {
+      this.element = node;
+      node.addEventListener("editTags", () => {
+        this.setState({ editTags: true });
+        this.focusTagBar = true;
+      });
+
+      node.addEventListener("delete", () => {
+        this.setState({ editTags: true });
+        this.del = true;
+      });
+    }
+  }
+
+  render() {
+    return (
+      <RenderIfVisible key={this.props.index} defaultHeight={33} rootElement={"tbody"} placeholderElement={"tr"}>
+        <TableRow ref={this.onRefChange} key={this.props.index} hover={true} className={ this.props.active ? "Mui-selected" : "" } onClick={(e) => {
+          // check if we're clicking in a tag edit box
+          if("input" !== document.activeElement.tagName.toLowerCase()) {
+            this.props.setActiveThread(this.props.index);
+            window.open('/thread?id=' + this.props.thread.thread_id, '_blank');
+          }
+        }}>
+          <TableCell>{ this.props.thread.tags.includes("attachment") && <AttachFile /> }</TableCell>
+          <TableCell>{ this.renderDateNum(this.props.thread) }</TableCell>
+          <TableCell>
+            <Grid container spacing={1} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+              <Grid item>
+                { this.state.editTags ?
+                  <TagBar className="kukulkan-tagBar"
+                    tagsObject={this.props.thread} options={this.props.allTags}
+                    id={this.props.thread.thread_id} hiddenTags={this.hiddenTags} type="thread"/> :
+                  <span onClick={(e) => {
+                    e.stopPropagation();
+                    this.setState({ editTags: true });
+                  }}>
+                  { this.props.thread.tags.filter(tag => this.hiddenTags ? this.hiddenTags.indexOf(tag) === -1 : true).map((tag, index2) => (
+                    <span key={index2} style={{ backgroundColor: getColor(tag), color: invert(getColor(tag), true), padding: 2, margin: 2, borderRadius: 3 }}>{tag}</span>
+                  )) }
+                  </span>
+                }
+              </Grid>
+              <Grid item>
+                {this.props.thread.subject}
+              </Grid>
+            </Grid>
+          </TableCell>
+          <TableCell>{this.props.thread.authors.replace("| ", ", ")}</TableCell>
+        </TableRow>
+      </RenderIfVisible>
+    );
+  }
+}
+
+class Threads extends React.PureComponent {
   render() {
     return (
       <Box id="threads" sx={{ mt: 1, width: "90%" }}>
@@ -96,34 +172,9 @@ class Threads extends React.Component {
         <React.Fragment>
         <Typography align="right">{this.props.threads.length} threads.</Typography>
           <TableContainer id="threadsTable">
-            <Table>
+            <Table size="small">
               { this.props.threads.map((thread, index) => (
-                <RenderIfVisible key={index} defaultHeight={40} rootElement={"tbody"} placeholderElement={"tr"}>
-                  <TableRow key={index} hover={true} className={ index === this.props.activeThread ? "Mui-selected" : "" } onClick={(e) => {
-                    // check if we're clicking in a tag edit box
-                    if("input" !== document.activeElement.tagName.toLowerCase()) {
-                      e.preventDefault();
-                      this.props.setActiveThread(index);
-                      window.open('/thread?id=' + thread.thread_id, '_blank');
-                    }
-                  }}>
-                    <TableCell>{ thread.tags.includes("attachment") && <AttachFile /> }</TableCell>
-                    <TableCell>{ this.renderDateNum(thread) }</TableCell>
-                    <TableCell>
-                      <Grid container spacing={1} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-                        <Grid item>
-                          <TagBar className={index === this.props.activeThread ? "kukulkan-tagbar-active" : "" }
-                            tagsObject={thread} options={this.props.allTags}
-                            id={thread.thread_id} hiddenTags={this.hiddenTags} type="thread"/>
-                        </Grid>
-                        <Grid item>
-                          {thread.subject}
-                        </Grid>
-                      </Grid>
-                    </TableCell>
-                    <TableCell>{thread.authors.replace("| ", ", ")}</TableCell>
-                  </TableRow>
-                </RenderIfVisible>
+                <ThreadRow key={index} index={index} thread={thread} active={index === this.props.activeThread} setActiveThread={this.props.setActiveThread} allTags={this.props.allTags}/>
               )) }
             </Table>
           </TableContainer>
@@ -197,11 +248,11 @@ function Kukulkan() {
 
   useHotkeys('t', (e) => {
     e.preventDefault();
-    document.getElementsByClassName("kukulkan-tagbar-active")[0].getElementsByTagName("input")[0].focus();
+    document.getElementsByClassName("Mui-selected")[0].dispatchEvent(new CustomEvent('editTags'));
   });
 
   useHotkeys('Del', () => {
-    document.getElementsByClassName("kukulkan-tagbar-active")[0].dispatchEvent(new CustomEvent('delete'));
+    document.getElementsByClassName("Mui-selected")[0].dispatchEvent(new CustomEvent('delete'));
   });
 
   useHotkeys('/', (e) => {
