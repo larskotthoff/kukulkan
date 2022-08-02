@@ -23,7 +23,8 @@ import Print from '@mui/icons-material/Print';
 
 import { TagBar } from "./tags.jsx";
 
-import { strip } from "./utils.js";
+import invert from 'invert-color';
+import { strip, getColor } from "./utils.js";
 
 const timeout = 200;
 
@@ -98,6 +99,7 @@ export class Message extends React.Component {
     this.handleCollapse = this.handleCollapse.bind(this);
     this.handleHtml = this.handleHtml.bind(this);
     this.getAttachment = this.getAttachment.bind(this);
+    this.formatAddrs = this.formatAddrs.bind(this);
 
     this.elementTop = React.createRef();
 
@@ -170,6 +172,12 @@ export class Message extends React.Component {
       });
   }
 
+  formatAddrs(addrs) {
+    return addrs.split(/(?<=>),\s*/).map((addr, index) => (
+      <span key={index} style={{ backgroundColor: getColor(addr), color: invert(getColor(addr), true), padding: 2, margin: 2, borderRadius: 3 }}>{addr}</span>
+    ))
+  }
+
   render() {
     const msg = this.props.msg;
 
@@ -212,7 +220,7 @@ export class Message extends React.Component {
         <Collapse key={msg.notmuch_id + "_collapsed" } in={!this.state.expanded} timeout={timeout} unmountOnExit>
           <Grid container direction="column" onClick={this.handleCollapse} className="kukulkan-clickable">
             <Grid container direction="row" justifyContent="space-between">
-              <Grid item><Typography>{msg.from}</Typography></Grid>
+              <Grid item><Typography>{this.formatAddrs(msg.from)}</Typography></Grid>
               <Grid item><Typography>{msg.date}</Typography></Grid>
             </Grid>
             <Grid container direction="row" justifyContent="space-between">
@@ -224,10 +232,10 @@ export class Message extends React.Component {
 
         <Collapse key={msg.notmuch_id + "_expanded" } in={this.state.expanded} timeout={timeout} unmountOnExit>
           <Box onClick={this.handleCollapse} className="kukulkan-clickable">
-            { msg.from && <Typography>From: {msg.from}</Typography> }
-            { msg.to && <Typography>To: {msg.to}</Typography> }
-            { msg.cc && <Typography>CC: {msg.cc}</Typography> }
-            { msg.bcc && <Typography>BCC: {msg.bcc}</Typography> }
+            { msg.from && <Typography>From: {this.formatAddrs(msg.from)}</Typography> }
+            { msg.to && <Typography>To: {this.formatAddrs(msg.to)}</Typography> }
+            { msg.cc && <Typography>CC: {this.formatAddrs(msg.cc)}</Typography> }
+            { msg.bcc && <Typography>BCC: {this.formatAddrs(msg.bcc)}</Typography> }
             <Typography>Date: {msg.date}</Typography>
             <Grid container justifyContent="space-between">
               <Grid item xs><Typography>Subject: {msg.subject}</Typography></Grid>
