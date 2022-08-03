@@ -127,7 +127,7 @@ class ThreadRow extends React.PureComponent {
 
   render() {
     return (
-      <RenderIfVisible key={this.props.index} defaultHeight={this.height} visibleOffset={2500} rootElement={"tbody"} placeholderElement={"tr"}>
+      <RenderIfVisible initialVisible={this.props.index < 100} key={this.props.index} defaultHeight={this.height} visibleOffset={2500} rootElement={"tbody"} placeholderElement={"tr"}>
         <TableRow ref={this.onRefChange} key={this.props.index} hover={true} style={{ height: this.height }} className={ this.props.active ? "Mui-selected" : "" } onClick={(e) => {
           // check if we're clicking in a tag edit box
           if("input" !== document.activeElement.tagName.toLowerCase()) {
