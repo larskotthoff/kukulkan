@@ -5,7 +5,6 @@ import CssBaseline from '@mui/material/CssBaseline';
 import Container from '@mui/material/Container';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
-import Drawer from '@mui/material/Drawer';
 import Grid from '@mui/material/Grid';
 import CircularProgress from '@mui/material/CircularProgress';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
@@ -18,7 +17,7 @@ import { Message, DeletedMessage } from "./message.jsx";
 class MessageList extends React.Component {
   render() {
     return (
-      <React.Fragment>
+      <Grid container direction="column" justifyContent="center" alignItems="center">
         { this.props.filteredThread && this.props.filteredThread.map((msg, index) => (
             msg.tags.includes("deleted") && this.props.filteredThread.length > 1 ?
             <DeletedMessage key={msg.notmuch_id} msg={msg} allTags={this.props.allTags} updateActiveMsg={this.props.updateActiveMsg}/> :
@@ -26,7 +25,7 @@ class MessageList extends React.Component {
               open={index === this.props.open} updateActiveMsg={this.props.updateActiveMsg}/>
           ))
         }
-      </React.Fragment>
+      </Grid>
     )
   }
 }
@@ -36,34 +35,32 @@ class ThreadNav extends React.Component {
     return (
       <React.Fragment>
         { this.props.thread.current &&
-          <Drawer variant="permanent" anchor="left">
-            <Grid container direction="column" margin="1em">
-              { this.props.thread.current.map((msg, index) => (
-                <Grid item container key={index} direction="row">
-                  { (new Array(msg.depth).fill(0)).map((_, index2) => (
-                    <Grid item key={index2}>
-                      <Box
-                        onClick={() => {
-                          if(this.props.filteredThread.find((i) => { return i.message_id === msg.message_id; })) {
-                            this.props.updateActiveMsg(this.props.filteredThread.indexOf(msg), true);
-                          } else {
-                            this.props.setFilteredThread(filterThread(msg, this.props.thread.current, this.props.activeDepth, this.props.activeMsg));
-                          }
-                        }}
-                        style={{ width: "1em", height: "1em", margin: ".03em",
-                          opacity: (this.props.filteredThread && this.props.filteredThread.find((i) => { return i.message_id === msg.message_id; })) ?
-                            1 :
-                            .3,
-                          backgroundColor: (index2 === msg.depth - 1 ?
-                            getColor(filterSubjectColor(msg.subject) +
-                              filterTagsColor(msg.tags) + extractEmailsSort(msg.from + msg.to + msg.cc)) :
-                            "" )}}/>
-                    </Grid>
-                  )) }
-                </Grid>
-              )) }
-            </Grid>
-          </Drawer>
+          <Grid container direction="column" marginTop="1em">
+            { this.props.thread.current.map((msg, index) => (
+              <Grid item container key={index} direction="row">
+                { (new Array(msg.depth).fill(0)).map((_, index2) => (
+                  <Grid item key={index2}>
+                    <Box
+                      onClick={() => {
+                        if(this.props.filteredThread.find((i) => { return i.message_id === msg.message_id; })) {
+                          this.props.updateActiveMsg(this.props.filteredThread.indexOf(msg), true);
+                        } else {
+                          this.props.setFilteredThread(filterThread(msg, this.props.thread.current, this.props.activeDepth, this.props.activeMsg));
+                        }
+                      }}
+                      style={{ width: "1em", height: "1em", margin: ".03em",
+                        opacity: (this.props.filteredThread && this.props.filteredThread.find((i) => { return i.message_id === msg.message_id; })) ?
+                          1 :
+                          .3,
+                        backgroundColor: (index2 === msg.depth - 1 ?
+                          getColor(filterSubjectColor(msg.subject) +
+                            filterTagsColor(msg.tags) + extractEmailsSort(msg.from + msg.to + msg.cc)) :
+                          "" )}}/>
+                  </Grid>
+                )) }
+              </Grid>
+            )) }
+          </Grid>
         }
       </React.Fragment>
     )
@@ -271,11 +268,17 @@ export function Thread() {
     <ThemeProvider theme={theme}>
       <Container component="main" maxWidth="100%">
         <CssBaseline />
-        <Grid container id="thread" direction="column" justifyContent="center" alignItems="center" style={{ marginTop: "1em" }}>
+        <center>
           { thread.current === null && <CircularProgress/> }
           { error.current && <Alert id="error" severity="error">Error querying backend: {error.current.message}</Alert> }
-          <MessageList allTags={allTags} filteredThread={filteredThread} open={activeMsg.current} updateActiveMsg={updateActiveMsg}/>
-          <ThreadNav thread={thread} filteredThread={filteredThread} setFilteredThread={setFilteredThread} updateActiveMsg={updateActiveMsg} activeMsg={activeMsg} activeDepth={activeDepth} />
+        </center>
+        <Grid container direction="row" alignItems="flex-start">
+          <Grid item xs="auto" style={{height: '100vh', overflowY: 'auto'}}>
+            <ThreadNav thread={thread} filteredThread={filteredThread} setFilteredThread={setFilteredThread} updateActiveMsg={updateActiveMsg} activeMsg={activeMsg} activeDepth={activeDepth} />
+          </Grid>
+          <Grid item xs style={{height: '100vh', overflowY: 'auto'}}>
+            <MessageList allTags={allTags} filteredThread={filteredThread} open={activeMsg.current} updateActiveMsg={updateActiveMsg}/>
+          </Grid>
         </Grid>
       </Container>
     </ThemeProvider>
