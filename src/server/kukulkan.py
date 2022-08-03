@@ -243,7 +243,8 @@ def get_nested_body(email_msg, html_only = False):
 
     if html_only:
         if content_html:
-            html = lxml.html.fromstring(content_html)
+            # remove any conflicting document encodings
+            html = lxml.html.fromstring(re.sub("\<\?xml[^>]+>", "", content_html))
             for tag in html.xpath('//img'):
                 if 'src' in tag.attrib:
                     tag.attrib.pop('src')
