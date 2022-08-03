@@ -124,11 +124,16 @@ def create_app():
             tags = [ tag for tag in get_db().get_all_tags() if tag != "(null)" ]
             return tags
 
+    class Accounts(Resource):
+        def get(self):
+            return current_app.config.custom["accounts"]
+
     # all requests that return lists must be defined this way
     api.add_resource(Query, "/api/query/<path:query_string>")
     api.add_resource(Address, "/api/address/<path:query_string>")
     api.add_resource(Thread, "/api/thread/<path:thread_id>")
     api.add_resource(Tags, "/api/tags/")
+    api.add_resource(Accounts, "/api/accounts/")
 
     @app.route("/api/attachment/<path:message_id>/<int:num>")
     def download_attachment(message_id, num):
