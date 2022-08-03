@@ -108,9 +108,9 @@ def create_app():
 
     class Address(Resource):
         def get(self, query_string):
-            messages = get_query(query_string).search_messages()
-            addresses = [ msg.get_header("to") for msg in messages ]
-            return list(set([ addr for addr in addresses if addr ]))
+            # not supported by API...
+            addrs = os.popen("notmuch address " + query_string).read()
+            return [ addr for addr in addrs.split('\n') if addr ]
 
     class Thread(Resource):
         def get(self, thread_id):

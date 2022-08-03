@@ -7,6 +7,8 @@ import CircularProgress from '@mui/material/CircularProgress';
 import invert from 'invert-color';
 import { getColor } from "./utils.js";
 
+export const hiddenTags = ["attachment", "replied", "sent"];
+
 export class TagBar extends React.Component {
   constructor(props) {
     super(props);
@@ -22,7 +24,7 @@ export class TagBar extends React.Component {
     fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/tag/add/' + this.props.type + '/' + encodeURIComponent(this.props.id) + '/' + tag)
       .then(
         (result) => {
-          if(this.props.tagsObject.tags.indexOf(tag) === -1) {
+          if(!this.props.tagsObject.tags.includes(tag)) {
             this.props.tagsObject.tags.push(tag);
           }
         },
@@ -43,7 +45,7 @@ export class TagBar extends React.Component {
 
   componentDidMount() {
     this.element.current.addEventListener("delete", () => {
-      if(this.props.tagsObject.tags.indexOf("unread") > -1) this.delTag("unread");
+      if(this.props.tagsObject.tags.includes("unread") > -1) this.delTag("unread");
       this.addTag("deleted");
     });
 
@@ -74,9 +76,9 @@ export class TagBar extends React.Component {
         fullWidth
         className={this.props.className}
         options={this.props.options}
-        filterOptions={(opts, state) => opts.filter((tag) => this.props.tagsObject.tags.indexOf(tag) === -1 && tag.startsWith(state.inputValue))}
-        defaultValue={this.props.tagsObject.tags.filter(tag => this.props.hiddenTags ? this.props.hiddenTags.indexOf(tag) === -1 : true)}
-        value={this.props.tagsObject.tags.filter(tag => this.props.hiddenTags ? this.props.hiddenTags.indexOf(tag) === -1 : true)}
+        filterSelectedOptions
+        defaultValue={this.props.tagsObject.tags.filter(tag => this.props.hiddenTags ? !this.props.hiddenTags.includes(tag) : true)}
+        value={this.props.tagsObject.tags.filter(tag => this.props.hiddenTags ? !this.props.hiddenTags.includes(tag) : true)}
         renderTags={(value, getTagProps) => {
           return value.map((option, index) => (
             <Chip label={option}

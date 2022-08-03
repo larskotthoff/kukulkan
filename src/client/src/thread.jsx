@@ -181,6 +181,8 @@ export function Thread() {
   useHotkeys('c', () => document.getElementsByClassName("kukulkan-active-thread")[0].dispatchEvent(new CustomEvent('toggleContent')));
   useHotkeys('e,Enter', () => document.getElementsByClassName("kukulkan-active-thread")[0].dispatchEvent(new CustomEvent('toggleCollapse')));
   useHotkeys('p', () => document.getElementsByClassName("kukulkan-active-thread")[0].dispatchEvent(new CustomEvent('print')));
+  useHotkeys('f', () => document.getElementsByClassName("kukulkan-active-thread")[0].dispatchEvent(new CustomEvent('forward')));
+  useHotkeys('r', () => document.getElementsByClassName("kukulkan-active-thread")[0].dispatchEvent(new CustomEvent('reply')));
 
   useHotkeys('t', (e) => {
     e.preventDefault();

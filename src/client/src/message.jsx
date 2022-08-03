@@ -20,6 +20,8 @@ import ExpandMore from '@mui/icons-material/ExpandMore';
 
 import AttachFile from '@mui/icons-material/AttachFile';
 import Print from '@mui/icons-material/Print';
+import Reply from '@mui/icons-material/Reply';
+import Forward from '@mui/icons-material/Forward';
 
 import { TagBar } from "./tags.jsx";
 
@@ -143,6 +145,12 @@ export class Message extends React.Component {
     this.elementTop.current.addEventListener("toggleCollapse", this.handleCollapse);
     this.elementTop.current.addEventListener("print", () => {
       window.open('/message?id=' + this.props.msg.notmuch_id, '_blank');
+    });
+    this.elementTop.current.addEventListener("reply", () => {
+      window.open('/write?action=reply&id=' + this.props.msg.notmuch_id, '_blank');
+    });
+    this.elementTop.current.addEventListener("forward", () => {
+      window.open('/write?action=forward&id=' + this.props.msg.notmuch_id, '_blank');
     });
 
     if(this.props.msg.tags.includes("unread")) {
@@ -279,6 +287,16 @@ export class Message extends React.Component {
               <Grid container spacing={1} justifyContent="space-between" direction="row" style={{ minHeight: "3.5em" }}>
                 <Grid item xs={11}>
                   <TagBar tagsObject={msg} options={this.props.allTags} id={msg.notmuch_id} type="message"/>
+                </Grid>
+                <Grid item key="reply">
+                  <a href={"/write?action=reply&id=" + msg.notmuch_id} target="_blank" rel="noreferrer" className="kukulkan-print">
+                    <Reply/>
+                  </a>
+                </Grid>
+                <Grid item key="forward">
+                  <a href={"/write?action=forward&id=" + msg.notmuch_id} target="_blank" rel="noreferrer" className="kukulkan-print">
+                    <Forward/>
+                  </a>
                 </Grid>
                 <Grid item key="print">
                   <a href={"/message?id=" + msg.notmuch_id} target="_blank" rel="noreferrer" className="kukulkan-print">

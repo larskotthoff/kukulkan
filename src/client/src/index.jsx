@@ -24,7 +24,8 @@ import { useHotkeys } from 'react-hotkeys-hook';
 
 import { Thread } from "./thread.jsx";
 import { SingleMessage } from "./message.jsx";
-import { TagBar } from "./tags.jsx";
+import { TagBar, hiddenTags } from "./tags.jsx";
+import { Write } from "./write.jsx";
 
 import invert from 'invert-color';
 import { formatDate, formatDuration, getColor } from "./utils.js";
@@ -72,7 +73,6 @@ class Search extends React.PureComponent {
 class ThreadRow extends React.PureComponent {
   constructor(props) {
     super(props);
-    this.hiddenTags = ["attachment", "replied", "sent"];
     this.renderDateNum = this.renderDateNum.bind(this);
     this.onRefChange = this.onRefChange.bind(this);
     this.state = { editTags: false };
@@ -143,12 +143,12 @@ class ThreadRow extends React.PureComponent {
                 { this.state.editTags ?
                   <TagBar className="kukulkan-tagBar"
                     tagsObject={this.props.thread} options={this.props.allTags}
-                    id={this.props.thread.thread_id} hiddenTags={this.hiddenTags} type="thread"/> :
+                    id={this.props.thread.thread_id} hiddenTags={hiddenTags} type="thread"/> :
                   <span onClick={(e) => {
                     e.stopPropagation();
                     this.setState({ editTags: true });
                   }}>
-                  { this.props.thread.tags.filter(tag => this.hiddenTags ? this.hiddenTags.indexOf(tag) === -1 : true).map((tag, index2) => (
+                  { this.props.thread.tags.filter(tag => !hiddenTags.includes(tag)).map((tag, index2) => (
                     <span key={index2} style={{ backgroundColor: getColor(tag), color: invert(getColor(tag), true), padding: 2, margin: 2, borderRadius: 3 }}>{tag}</span>
                   )) }
                   </span>
@@ -304,10 +304,11 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <BrowserRouter>
     <Routes>
-      <Route path="/" element={<Outlet />}>
-        <Route index element={<Kukulkan />} />
-        <Route path="thread" element={<Thread />} />
-        <Route path="message" element={<SingleMessage />} />
+      <Route path="/" element={<Outlet/>}>
+        <Route index element={<Kukulkan/>} />
+        <Route path="thread" element={<Thread/>} />
+        <Route path="message" element={<SingleMessage/>} />
+        <Route path="write" element={<Write/>} />
       </Route>
     </Routes>
   </BrowserRouter>
