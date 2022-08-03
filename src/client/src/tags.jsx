@@ -46,6 +46,10 @@ export class TagBar extends React.Component {
       if(this.props.tagsObject.tags.indexOf("unread") > -1) this.delTag("unread");
       this.addTag("deleted");
     });
+
+    this.element.current.addEventListener("read", () => {
+      this.delTag("unread");
+    });
   }
 
   handleChange(ev, value, reason) {

@@ -101,6 +101,8 @@ export class Message extends React.Component {
     this.getAttachment = this.getAttachment.bind(this);
     this.formatAddrs = this.formatAddrs.bind(this);
 
+    this.prevActive = false;
+
     this.elementTop = React.createRef();
 
     // separate into non-quoted and quoted text
@@ -132,21 +134,49 @@ export class Message extends React.Component {
     this.quotedPart = lines.slice(lastLine).join('\n');
   }
 
+  componentDidMount() {
+    if(this.props.active) {
+      this.elementTop.current.scrollIntoView({block: "nearest"});
+    }
+
+    this.elementTop.current.addEventListener("toggleContent", this.handleHtml);
+    this.elementTop.current.addEventListener("toggleCollapse", this.handleCollapse);
+    this.elementTop.current.addEventListener("print", () => {
+      window.open('/message?id=' + this.props.msg.notmuch_id, '_blank');
+    });
+
+    if(this.props.msg.tags.includes("unread")) {
+      setTimeout(() =>
+        this.elementTop.current.getElementsByClassName("MuiAutocomplete-root")[0].dispatchEvent(new CustomEvent('read')),
+      2000);
+    }
+  }
+
   componentDidUpdate() {
-    if(this.state.expanded) {
-      if(this.props.updateActiveMsg) {
-        // not available in print view
-        this.props.updateActiveMsg(this.props.index);
+    if(!this.prevActive && this.props.active) {
+      if(!this.state.expanded) {
+        this.setState(prevState => ({
+          expanded: true,
+          html: prevState.html
+        }));
       }
       this.elementTop.current.scrollIntoView({block: "nearest"});
     }
+    this.prevActive = this.props.active;
   }
 
   handleCollapse() {
     this.setState(prevState => ({
       expanded: !prevState.expanded,
       html: prevState.html
-    }));
+    }), () => {
+      if(this.state.expanded) {
+        if(this.props.setActiveMsg) {
+          // not available in print view
+          this.props.setActiveMsg(this.props.index);
+        }
+      }
+    });
   }
 
   handleHtml() {
@@ -217,9 +247,9 @@ export class Message extends React.Component {
     validMsg += ".";
 
     return (
-      <Paper elevation={3} sx={{ padding: 1, margin: 1, width: "80em" }} className="kukulkan-keyboard-nav" ref={this.elementTop}>
+      <Paper elevation={this.props.active ? 20 : 3} sx={{ padding: 1, margin: 1, width: "80em" }} className={ this.props.active ? "kukulkan-active-thread" : ""} ref={this.elementTop}>
         <Collapse key={msg.notmuch_id + "_collapsed" } in={!this.state.expanded} timeout={timeout} unmountOnExit>
-          <Grid container direction="column" onClick={this.handleCollapse} className="kukulkan-clickable">
+          <Grid container direction="column" onClick={this.handleCollapse}>
             <Grid container direction="row" justifyContent="space-between">
               <Grid item><Typography>{this.formatAddrs(msg.from)}</Typography></Grid>
               <Grid item><Typography>{msg.date}</Typography></Grid>
@@ -232,7 +262,7 @@ export class Message extends React.Component {
         </Collapse>
 
         <Collapse key={msg.notmuch_id + "_expanded" } in={this.state.expanded} timeout={timeout} unmountOnExit>
-          <Box onClick={this.handleCollapse} className="kukulkan-clickable">
+          <Box onClick={this.handleCollapse}>
             { msg.from && <Typography>From: {this.formatAddrs(msg.from)}</Typography> }
             { msg.to && <Typography>To: {this.formatAddrs(msg.to)}</Typography> }
             { msg.cc && <Typography>CC: {this.formatAddrs(msg.cc)}</Typography> }
@@ -303,12 +333,12 @@ export class DeletedMessage extends React.Component {
   render() {
     if(this.state.hidden) {
       return (
-        <Paper elevation={1} sx={{ padding: 1, margin: 2, maxWidth: "80em" }} className="kukulkan-keyboard-nav">
-          <Button onClick={this.handleReplace} className="kukulkan-clickable">show deleted message</Button>
+        <Paper elevation={1} sx={{ padding: 1, margin: 2, maxWidth: "80em" }}>
+          <Button onClick={this.handleReplace}>show deleted message</Button>
         </Paper>
       )
     } else {
-      return (<Message key={this.key} index={this.props.index} msg={this.props.msg} open={true} allTags={this.props.allTags} updateActiveMsg={this.props.updateActiveMsg}/>)
+      return (<Message key={this.key} index={this.props.index} msg={this.props.msg} active={true} open={true} allTags={this.props.allTags} setActiveMsg={this.props.setActiveMsg}/>)
     }
   }
 }
@@ -347,7 +377,7 @@ export function SingleMessage() {
         <CssBaseline />
           { message === null && <CircularProgress /> }
           { error.current && <Alert severity="error">Error querying backend: {error.current.message}</Alert> }
-          { message && <Message key={message.notmuch_id} index={0} msg={message} open={true} print={true}/> }
+          { message && <Message key={message.notmuch_id} index={0} msg={message} active={true} open={true} print={true}/> }
       </Container>
     </ThemeProvider>
   );

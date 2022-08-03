@@ -20,9 +20,9 @@ class MessageList extends React.Component {
       <Grid container direction="column" justifyContent="center" alignItems="center">
         { this.props.filteredThread && this.props.filteredThread.map((msg, index) => (
             msg.tags.includes("deleted") && this.props.filteredThread.length > 1 ?
-            <DeletedMessage key={msg.notmuch_id} msg={msg} allTags={this.props.allTags} updateActiveMsg={this.props.updateActiveMsg}/> :
+            <DeletedMessage key={msg.notmuch_id} msg={msg} allTags={this.props.allTags} setActiveMsg={this.props.setActiveMsg}/> :
             <Message key={msg.notmuch_id} index={index} msg={msg} allTags={this.props.allTags}
-              open={index === this.props.open} updateActiveMsg={this.props.updateActiveMsg}/>
+              open={index === this.props.activeMsg} active={index === this.props.activeMsg} setActiveMsg={this.props.setActiveMsg}/>
           ))
         }
       </Grid>
@@ -43,9 +43,9 @@ class ThreadNav extends React.Component {
                     <Box
                       onClick={() => {
                         if(this.props.filteredThread.find((i) => { return i.message_id === msg.message_id; })) {
-                          this.props.updateActiveMsg(this.props.filteredThread.indexOf(msg), true);
+                          this.props.setActiveMsg(this.props.filteredThread.indexOf(msg), true);
                         } else {
-                          this.props.setFilteredThread(filterThread(msg, this.props.thread.current, this.props.activeDepth, this.props.activeMsg));
+                          this.props.setFilteredThread(filterThread(msg, this.props.thread.current, this.props.setActiveMsg));
                         }
                       }}
                       style={{ width: "1em", height: "1em", margin: ".03em",
@@ -67,7 +67,7 @@ class ThreadNav extends React.Component {
   }
 }
 
-function filterThread(msg, thread, activeDepth, activeMsg) {
+function filterThread(msg, thread, setActiveMsg) {
   let prv = [];
   let tmp = msg;
   while(tmp.in_reply_to) {
@@ -87,16 +87,19 @@ function filterThread(msg, thread, activeDepth, activeMsg) {
     tmp = thread.find(i => { return '<' + tmp.message_id + '>' === i.in_reply_to; });
   }
 
-  activeDepth.current = msg.depth;
   let res = prv.reverse().concat(nxt);
 
-  let firstUnread = res.findIndex((msg) => {
-    return msg.tags.includes("unread");
-  });
-  if(firstUnread > -1) {
-    activeMsg.current = firstUnread;
+  if(msg === res[res.length - 1]) {
+    let firstUnread = res.findIndex((msg) => {
+      return msg.tags.includes("unread");
+    });
+    if(firstUnread > -1) {
+      setActiveMsg(firstUnread);
+    } else {
+      setActiveMsg(res.length - 1);
+    }
   } else {
-    activeMsg.current = res.length - 1;
+    setActiveMsg(res.findIndex(m => m === msg));
   }
 
   return res;
@@ -105,9 +108,8 @@ function filterThread(msg, thread, activeDepth, activeMsg) {
 export function Thread() {
   const [allTags, setAllTags] = useState(null);
   const [filteredThread, setFilteredThread] = useState(null);
+  const [activeMsg, setActiveMsg] = useState(0);
 
-  const activeMsg = useRef(0);
-  const activeDepth = useRef(1);
   const maxDepth = useRef(1);
   const thread = useRef(null);
   const threadId = useRef(null);
@@ -140,7 +142,7 @@ export function Thread() {
                   depth++;
                 }
 
-                setFilteredThread(filterThread(thread.current[thread.current.length - 1], thread.current, activeDepth, activeMsg));
+                setFilteredThread(filterThread(thread.current[thread.current.length - 1], thread.current, setActiveMsg));
               }
           },
           (e) => {
@@ -152,12 +154,6 @@ export function Thread() {
     }
   }, [searchParams]);
 
-  const clickEvent = new MouseEvent("click", {
-    "view": window,
-    "bubbles": true,
-    "cancelable": false
-  });
-
   useEffect(() => {
     fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/tags/')
       .then(res => res.json())
@@ -166,103 +162,39 @@ export function Thread() {
       });
   }, []);
 
-  useEffect(() => {
-    updateActiveMsg(activeMsg.current);
-  // eslint-disable-next-line
-  }, [filteredThread]);
-
-  const theme = createTheme();
-
-  function updateActiveMsg(at, open = false) {
-    document.activeElement.blur();
-    let els = Array.from(document.getElementsByClassName("kukulkan-keyboard-nav"));
-    if(els[activeMsg.current]) {
-      els[activeMsg.current].style.setProperty("box-shadow", "");
-    }
-    activeMsg.current = at;
-    let elm = els[activeMsg.current];
-    if(elm) {
-      elm.style.setProperty("box-shadow", "0px 10px 13px -6px rgb(0 0 0 / 20%), 0px 20px 31px 3px rgb(0 0 0 / 14%), 0px 8px 38px 7px rgb(0 0 0 / 12%)")
-      elm.scrollIntoView({block: "nearest"});
-    }
-
-    if(open) {
-      // check if not already open
-      if(elm && elm.getElementsByClassName('MuiChip-root').length === 0) {
-        elm.getElementsByClassName("kukulkan-clickable")[0].click();
-      }
-    }
-
-    // mark read if unread
-    if(elm) {
-      Array.from(elm.getElementsByClassName('MuiChip-label')).forEach(chip => {
-        if(chip.textContent === "unread") {
-          setTimeout(() => chip.nextElementSibling.dispatchEvent(clickEvent), 2000);
-        }
-      })
-    }
-  }
-
   const updateActiveDepth = (d) => {
-    activeDepth.current = d;
     let msg = thread.current[thread.current.length - 1];
     thread.current.forEach(function(m) {
       if(m.depth === d) msg = m;
     });
-    setFilteredThread(filterThread(msg, thread.current, activeDepth, activeMsg));
+    setFilteredThread(filterThread(msg, thread.current, setActiveMsg));
   }
 
-  useHotkeys('Home', () => updateActiveMsg(0));
-  useHotkeys('k', () => updateActiveMsg(Math.max(0, activeMsg.current - 1)), [activeMsg]);
-  useHotkeys('Shift+K', () => updateActiveMsg(Math.max(0, activeMsg.current - 1), true), [activeMsg]);
-  useHotkeys('j', () => updateActiveMsg(Math.min(filteredThread.length - 1, activeMsg.current + 1)), [filteredThread, activeMsg]);
-  useHotkeys('Shift+J', () => updateActiveMsg(Math.min(filteredThread.length - 1, activeMsg.current + 1), true), [filteredThread, activeMsg]);
-  useHotkeys('End', () => updateActiveMsg(filteredThread.length - 1), [filteredThread]);
+  useHotkeys('Home', () => setActiveMsg(0));
+  useHotkeys('k', () => setActiveMsg(Math.max(0, activeMsg - 1)), [activeMsg]);
+  useHotkeys('j', () => setActiveMsg(Math.min(filteredThread.length - 1, activeMsg + 1)), [filteredThread, activeMsg]);
+  useHotkeys('End', () => setActiveMsg(filteredThread.length - 1), [filteredThread]);
 
-  useHotkeys('h', () => updateActiveDepth(Math.max(1, activeDepth.current - 1)), [activeDepth, thread.current]);
-  useHotkeys('l', () => updateActiveDepth(Math.min(activeDepth.current + 1, maxDepth.current)), [activeDepth, maxDepth, thread.current]);
+  useHotkeys('h', () => updateActiveDepth(Math.max(1, filteredThread[activeMsg].depth - 1)), [filteredThread, activeMsg]);
+  useHotkeys('l', () => updateActiveDepth(Math.min(filteredThread[activeMsg].depth + 1, maxDepth.current)), [filteredThread, activeMsg, maxDepth]);
 
-  useHotkeys('c', () => {
-    let els = Array.from(document.getElementsByClassName("kukulkan-keyboard-nav"));
-    if(els[activeMsg.current]) {
-      let toggle = els[activeMsg.current].getElementsByClassName('kukulkan-content');
-      if(toggle.length > 0) {
-        toggle[0].click();
-      }
-    }
-  }, [activeMsg]);
-
-  useHotkeys('p', () => {
-    let els = Array.from(document.getElementsByClassName("kukulkan-keyboard-nav"));
-    if(els[activeMsg.current]) {
-      let print = els[activeMsg.current].getElementsByClassName('kukulkan-print');
-      if(print.length > 0) {
-        print[0].click();
-      }
-    }
-  }, [activeMsg]);
+  useHotkeys('c', () => document.getElementsByClassName("kukulkan-active-thread")[0].dispatchEvent(new CustomEvent('toggleContent')));
+  useHotkeys('e,Enter', () => document.getElementsByClassName("kukulkan-active-thread")[0].dispatchEvent(new CustomEvent('toggleCollapse')));
+  useHotkeys('p', () => document.getElementsByClassName("kukulkan-active-thread")[0].dispatchEvent(new CustomEvent('print')));
 
   useHotkeys('t', (e) => {
     e.preventDefault();
-    document.getElementsByClassName("kukulkan-keyboard-nav")[activeMsg.current].getElementsByTagName("input")[0].focus();
-  }, [activeMsg]);
-
-  useHotkeys('e,Enter', () => {
-    // don't activate if we've tabbed to print/reply/attachment/etc
-    if(["button", "a"].indexOf(document.activeElement.tagName.toLowerCase()) === -1) {
-      let els = Array.from(document.getElementsByClassName("kukulkan-keyboard-nav"));
-      let elm = els[activeMsg.current];
-      if(elm) elm.getElementsByClassName("kukulkan-clickable")[0].click();
-    }
-  }, [activeMsg]);
+    document.getElementsByClassName("kukulkan-active-thread")[0].getElementsByTagName("input")[0].focus();
+  });
 
   useHotkeys('Del', () => {
-    let els = Array.from(document.getElementsByClassName("kukulkan-keyboard-nav"));
-    let elm = els[activeMsg.current];
-    if(elm && elm.getElementsByClassName('MuiChip-root').length > 0) {
-      elm.getElementsByClassName("MuiAutocomplete-root")[0].dispatchEvent(new CustomEvent('delete'));
+    let el = document.getElementsByClassName("kukulkan-active-thread")[0];
+    if(el && el.getElementsByClassName('MuiChip-root').length > 0) {
+      el.getElementsByClassName("MuiAutocomplete-root")[0].dispatchEvent(new CustomEvent('delete'));
     }
-  }, [activeMsg]);
+  });
+
+  const theme = createTheme();
 
   return (
     <ThemeProvider theme={theme}>
@@ -274,10 +206,10 @@ export function Thread() {
         </center>
         <Grid container direction="row" alignItems="flex-start">
           <Grid item xs="auto" style={{height: '100vh', overflowY: 'auto'}}>
-            <ThreadNav thread={thread} filteredThread={filteredThread} setFilteredThread={setFilteredThread} updateActiveMsg={updateActiveMsg} activeMsg={activeMsg} activeDepth={activeDepth} />
+            <ThreadNav thread={thread} filteredThread={filteredThread} setFilteredThread={setFilteredThread} setActiveMsg={setActiveMsg} />
           </Grid>
           <Grid item xs style={{height: '100vh', overflowY: 'auto'}}>
-            <MessageList allTags={allTags} filteredThread={filteredThread} open={activeMsg.current} updateActiveMsg={updateActiveMsg}/>
+            <MessageList allTags={allTags} filteredThread={filteredThread} activeMsg={activeMsg} setActiveMsg={setActiveMsg}/>
           </Grid>
         </Grid>
       </Container>
