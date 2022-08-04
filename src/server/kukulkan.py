@@ -170,7 +170,7 @@ def create_app():
             db_write.begin_atomic()
             for msg in msgs:
                 msg.add_tag(tag)
-            msg.tags_to_maildir_flags()
+                msg.tags_to_maildir_flags()
             db_write.end_atomic()
         finally:
             db_write.close()
@@ -184,7 +184,7 @@ def create_app():
             db_write.begin_atomic()
             for msg in msgs:
                 msg.remove_tag(tag)
-            msg.tags_to_maildir_flags()
+                msg.tags_to_maildir_flags()
             db_write.end_atomic()
         finally:
             db_write.close()
@@ -244,6 +244,17 @@ def create_app():
             db_write = notmuch.Database(None, create = False, mode = notmuch.Database.MODE.READ_WRITE)
             try:
                 db_write.begin_atomic()
+                if request.values['action'] == "reply":
+                    refMsgs = get_query("mid:" + refId, db_write, False).search_messages()
+                    for refMsg in refMsgs:
+                        refMsg.add_tag("replied")
+                        refMsg.tags_to_maildir_flags()
+                elif request.values['action'] == "forward":
+                    refMsgs = get_query("mid:" + refId, db_write, False).search_messages()
+                    for refMsg in refMsgs:
+                        refMsg.add_tag("passed")
+                        refMsg.tags_to_maildir_flags()
+
                 (msg, status) = db_write.index_file(fname, True)
                 for tag in request.values['tags'].split(',') + account["additional_sent_tags"]:
                     msg.add_tag(tag)
