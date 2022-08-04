@@ -31,6 +31,7 @@ class AddrComplete extends React.Component {
   constructor(props) {
     super(props);
     this.state = { options: [] };
+    if(this.props.defVal) this.props.setValue(this.props.defVal);
   }
 
   render() {
@@ -92,11 +93,11 @@ export function Write() {
   const [sendingMsg, setSendingMsg] = React.useState("");
 
   const [from, setFrom] = React.useState(null);
-  const [to, setTo] = React.useState([]);
+  const [to, setTo] = React.useState("");
   const [toLoading, setToLoading] = React.useState(false);
-  const [cc, setCc] = React.useState([]);
+  const [cc, setCc] = React.useState("");
   const [ccLoading, setCcLoading] = React.useState(false);
-  const [bcc, setBcc] = React.useState([]);
+  const [bcc, setBcc] = React.useState("");
   const [bccLoading, setBccLoading] = React.useState(false);
 
   const [files, setFiles] = React.useState([]);
@@ -107,11 +108,15 @@ export function Write() {
   const messageId = useRef(null);
   const action = useRef(null);
 
+  const subject = useRef(null);
+  const body = useRef(null);
+  const tags = useRef(null);
+
   const [searchParams] = useSearchParams();
   useEffect(() => {
     action.current = searchParams.get("action");
     if(!action.current) {
-      action.current = "reply";
+      action.current = "compose";
     }
 
     messageId.current = searchParams.get("id");
@@ -125,7 +130,7 @@ export function Write() {
             setBaseMsg(result);
             if(action.current === "forward" && result.attachments) {
               // attach files attached to previous email
-              setFiles(result.attachments.map(a => a.filename));
+              setFiles(result.attachments.map(a => { return { dummy: true, name: a.filename }; }));
             }
             error.current = null;
           },
@@ -144,20 +149,42 @@ export function Write() {
   };
 
   const handleAttach = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setFiles(files.concat(Array.from(event.target.files).map(f => f.name)));
+    setFiles(files.concat(Array.from(event.target.files)));
   };
 
   const sendMsg = () => {
+    const formData = new FormData();
+    formData.append('refId', messageId.current);
+    formData.append('action', action.current);
+    formData.append('from', from);
+    formData.append('to', to);
+    formData.append('cc', cc);
+    formData.append('bcc', bcc);
+    formData.append('subject', subject.current.value);
+    formData.append('tags', tags.current.innerText.split('\n'));
+    formData.append('body', body.current.value);
+    files.map((f, i) => formData.append('attachment-' + i, f.dummy ? f.name : f));
+
+    fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/send', { method: 'POST', body: formData })
+      .then((response) => response.json())
+      .then((result) => {
+        if(result.sendStatus === 0) {
+          setSendingMsg("Message sent: " + result.sendOutput);
+        } else {
+          setSendingMsg("Failed to send message: " + result.sendOutput);
+        }
+      })
+      .catch((error) => {
+        setSendingMsg("Error: " + error);
+      })
+      .finally(() => {
+        setTimeout(() => setSending(false), 10000);
+      });
   };
 
   useEffect(() => {
     if(sending) {
-      console.log(to);
-      if(to.length === 0) {
-        setSendingMsg("No one to send message to!");
-      } else {
-        setTimeLeft(5);
-      }
+      setTimeLeft(5);
     } else {
       clearTimeout(timer);
     }
@@ -171,14 +198,14 @@ export function Write() {
     } else if(timeLeft === 0) {
       setSendingMsg("Sending...");
       sendMsg();
-      setSending(false);
     }
+  // eslint-disable-next-line
   }, [timeLeft]);
 
   const quote = (text) => {
     return "\n\n\nOn " + baseMsg.date + ", " + baseMsg.from + " wrote:\n\n>" +
       text.replace(/&gt;/g, ">").replace(/&lt;/g, "<").split('\n').join("\n>");
-  }
+  };
 
   const prefix = (text) => {
     let pre = "";
@@ -189,22 +216,25 @@ export function Write() {
       pre = "Fw: ";
     }
     return pre + text;
-  }
+  };
 
   const makeTo = (msg) => {
-    let to = [baseMsg.from].concat(baseMsg.to.split(/\s*[,|]\s*/));
-    to = to.filter(a => {
-      return accounts.reduce((cum, acct) => {
-        if(cum === false) return false;
+    let tmp = [];
+    if(action.current === "reply") {
+      tmp = [baseMsg.from].concat(baseMsg.to.split(/\s*[,|]\s*/));
+      tmp = tmp.filter(a => {
+        return accounts.reduce((cum, acct) => {
+          if(cum === false) return false;
 
-        if(a.includes(acct.email)) {
-          return false;
-        }
-        return true;
-      }, true);
-    });
-    return to;
-  }
+          if(a.includes(acct.email)) {
+            return false;
+          }
+          return true;
+        }, true);
+      });
+    }
+    return tmp;
+  };
 
   useEffect(() => {
     fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/accounts/')
@@ -238,22 +268,20 @@ export function Write() {
           { error.current && <Alert severity="error">Error querying backend: {error.current.message}</Alert> }
           { accounts && !loading &&
             <Paper elevation={3} sx={{ padding: 1, margin: 1, width: "80em" }}>
-              { accounts &&
-                <Grid container spacing={1} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-                  <Grid item>From:</Grid>
-                  <Grid item><TextField id="from"
-                    size="small"
-                    value={from}
-                    onChange={handleChange}
-                    select>
-                      {accounts.map((acct) => (
-                        <MenuItem key={acct.id} value={acct.id}>
-                          {acct.name + " <" + acct.email + ">"}
-                        </MenuItem>
-                    ))}
-                  </TextField></Grid>
-                </Grid>
-              }
+              <Grid container spacing={1} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                <Grid item>From:</Grid>
+                <Grid item><TextField id="from"
+                  size="small"
+                  value={from}
+                  onChange={handleChange}
+                  select>
+                    {accounts.map((acct) => (
+                      <MenuItem key={acct.id} value={acct.id}>
+                        {acct.name + " <" + acct.email + ">"}
+                      </MenuItem>
+                  ))}
+                </TextField></Grid>
+              </Grid>
               <Grid container spacing={1} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                 <Grid item>To:</Grid>
                 <Grid item xs>
@@ -274,7 +302,7 @@ export function Write() {
               </Grid>
               <Grid container spacing={1} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                 <Grid item>Subject:</Grid>
-                <Grid item xs><TextField variant="standard" defaultValue={baseMsg ? prefix(baseMsg.subject) : ""} fullWidth id="subject"/></Grid>
+                <Grid item xs><TextField variant="standard" defaultValue={baseMsg ? prefix(baseMsg.subject) : ""} fullWidth id="subject" inputRef={subject}/></Grid>
               </Grid>
 
               <Grid container spacing={1} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
@@ -290,6 +318,7 @@ export function Write() {
                   options={allTags.filter(tag => !hiddenTags.includes(tag))}
                   defaultValue={baseMsg ? baseMsg.tags.filter(tag => !hiddenTags.includes(tag)) : []}
                   filterSelectedOptions
+                  ref={tags}
                   renderTags={(value, getTagProps) => {
                     return value.map((option, index) => (
                       <Chip label={option}
@@ -304,9 +333,9 @@ export function Write() {
 
               <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
 
-              <TextField multiline minRows={10} fullWidth id="body" defaultValue={baseMsg ? quote(baseMsg.body["text/plain"]) : ""} style={{ marginBottom: ".5em" }}/>
+              <TextField multiline minRows={10} fullWidth id="body" defaultValue={baseMsg ? quote(baseMsg.body["text/plain"]) : ""} style={{ marginBottom: ".5em" }} inputRef={body}/>
               { files.map((f, i) => (
-                <Chip key={i} label={f} variant="outlined" style={{ margin: ".3em" }} onDelete={() => {
+                <Chip key={i} label={f.name} variant="outlined" style={{ margin: ".3em" }} onDelete={() => {
                   setFiles(files.filter(fi => fi !== f));
                 }}/>
               ))}

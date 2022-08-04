@@ -1,4 +1,4 @@
-"""Flask web app providing a REST API to notmuch. Based on API from netviel (https://github.com/DavidMStraub/netviel)."""
+"""Flask web app providing API to notmuch. Based on API from netviel (https://github.com/DavidMStraub/netviel)."""
 
 import email
 import email.policy
@@ -12,7 +12,7 @@ import json
 import re
 
 import notmuch
-from flask import Flask, current_app, g, send_file, send_from_directory
+from flask import Flask, current_app, g, send_file, send_from_directory, request
 from werkzeug.utils import safe_join
 from flask_restful import Api, Resource
 
@@ -72,11 +72,11 @@ def create_app():
 
     api = Api(app)
 
-    @app.route("/")
+    @app.route("/", methods=['GET', 'POST'])
     def send_index():
         return send_from_directory(app.static_folder, "index.html")
 
-    @app.route("/<path:path>")
+    @app.route("/static/<path:path>")
     def send_js(path):
         if path and os.path.exists(safe_join(app.static_folder, path)):
             return send_from_directory(app.static_folder, path)
@@ -170,7 +170,7 @@ def create_app():
             db_write.begin_atomic()
             for msg in msgs:
                 msg.add_tag(tag)
-                msg.tags_to_maildir_flags()
+            msg.tags_to_maildir_flags()
             db_write.end_atomic()
         finally:
             db_write.close()
@@ -184,11 +184,77 @@ def create_app():
             db_write.begin_atomic()
             for msg in msgs:
                 msg.remove_tag(tag)
-                msg.tags_to_maildir_flags()
+            msg.tags_to_maildir_flags()
             db_write.end_atomic()
         finally:
             db_write.close()
         return tag
+
+    @app.route('/api/send', methods=['GET', 'POST'])
+    def parse_request():
+        accounts = current_app.config.custom["accounts"]
+        account = [ acct for acct in accounts if acct["id"] == request.values['from'] ][0]
+
+        msg = email.message.EmailMessage()
+        msg['Subject'] = request.values['subject']
+        msg['From'] = account["name"] + " <" + account["email"] + ">"
+        msg['To'] = request.values['to']
+        msg['Cc'] = request.values['cc']
+        msg['Bcc'] = request.values['bcc']
+        msg['Date'] = email.utils.formatdate(localtime = True)
+
+        msg['Message-ID'] = email.utils.make_msgid("kukulkan")
+
+        if request.values['action'] == "reply":
+            refMsgs = get_query("mid:{}".format(request.values['refId']), exclude = False).search_messages()
+            refMsg = next(refMsgs)
+            refMsg = message_to_json(refMsg)
+            msg['In-Reply-To'] = '<' + refMsg['message_id'] + '>'
+            msg['References'] = refMsg['references'] + ' <' + refMsg['message_id'] + '>'
+
+        msg.set_content(request.values['body'])
+
+        if request.values['action'] == "forward":
+            # attach attachments from original mail
+            refMsgs = get_query("mid:{}".format(request.values['refId']), exclude = False).search_messages()
+            refMsg = next(refMsgs)
+            refAtts = message_attachment(refMsg)
+            for key in request.values.keys():
+                if key.startswith("attachment-") and key not in request.files:
+                    att = [ tmp for tmp in refAtts if tmp["filename"] == request.values[key] ][0]
+                    typ = att["content_type"].split('/', 1)
+                    msg.add_attachment(att["content"], maintype = typ[0], subtype = typ[1], filename = att["filename"])
+
+        for att in request.files:
+            content = request.files[att].read()
+            typ = request.files[att].mimetype.split('/', 1)
+            msg.add_attachment(content, maintype = typ[0], subtype = typ[1],
+                    filename = request.files[att].filename)
+
+        sendcmd = account["sendmail"]
+        p = subprocess.Popen(sendcmd.split(' '), stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        (out, err) = p.communicate(input = str(msg).encode())
+        sendOutput = out.decode() + err.decode()
+
+        if p.returncode == 0:
+            fname = account["save_sent_to"] + msg['Message-ID'] + ":2,"
+            with open(fname, "w") as f:
+                f.write(str(msg))
+
+            db_write = notmuch.Database(None, create = False, mode = notmuch.Database.MODE.READ_WRITE)
+            try:
+                db_write.begin_atomic()
+                (msg, status) = db_write.index_file(fname, True)
+                for tag in request.values['tags'].split(',') + account["additional_sent_tags"]:
+                    msg.add_tag(tag)
+                msg.tags_to_maildir_flags()
+                db_write.end_atomic()
+            finally:
+                db_write.close()
+        else:
+            print(sendOutput)
+
+        return { "sendStatus": p.returncode, "sendOutput": sendOutput }
 
     return app
 
@@ -324,14 +390,15 @@ def message_to_json(message):
         signature = None
 
     return {
-        "from": message.get_header("from").strip(),
-        "to": message.get_header("to").strip(),
-        "cc": message.get_header("cc").strip(),
-        "bcc": message.get_header("bcc").strip(),
+        "from": message.get_header("from").strip().replace('\t', ' '),
+        "to": message.get_header("to").strip().replace('\t', ' '),
+        "cc": message.get_header("cc").strip().replace('\t', ' '),
+        "bcc": message.get_header("bcc").strip().replace('\t', ' '),
         "date": message.get_header("date").strip(),
         "subject": message.get_header("subject").strip(),
         "message_id": message.get_header("Message-ID").strip(),
         "in_reply_to": message.get_header("In-Reply-To").strip() if message.get_header("In-Reply-To") else None,
+        "references": message.get_header("References").strip() if message.get_header("References") else None,
         "body": {
             "text/plain": body,
             "text/html": html_body
@@ -344,11 +411,13 @@ def message_to_json(message):
     }
 
 
-def message_attachment(message, num):
+def message_attachment(message, num = -1):
     """Returns attachment no. `num` of a `notmuch.message.Message` instance."""
     with open(message.get_filename(), "rb") as f:
         email_msg = email.message_from_binary_file(f, policy = email.policy.default)
     attachments = get_attachments(email_msg, True)
     if not attachments:
         return {}
+    if num == -1:
+        return attachments
     return attachments[num]
