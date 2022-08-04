@@ -289,17 +289,17 @@ export class Message extends React.Component {
                   <TagBar tagsObject={msg} options={this.props.allTags} id={msg.notmuch_id} type="message"/>
                 </Grid>
                 <Grid item key="reply">
-                  <a href={"/write?action=reply&id=" + msg.notmuch_id} target="_blank" rel="noreferrer" className="kukulkan-print">
+                  <a href={"/write?action=reply&id=" + msg.notmuch_id} target="_blank" rel="noreferrer">
                     <Reply/>
                   </a>
                 </Grid>
                 <Grid item key="forward">
-                  <a href={"/write?action=forward&id=" + msg.notmuch_id} target="_blank" rel="noreferrer" className="kukulkan-print">
+                  <a href={"/write?action=forward&id=" + msg.notmuch_id} target="_blank" rel="noreferrer">
                     <Forward/>
                   </a>
                 </Grid>
                 <Grid item key="print">
-                  <a href={"/message?id=" + msg.notmuch_id} target="_blank" rel="noreferrer" className="kukulkan-print">
+                  <a href={"/message?id=" + msg.notmuch_id} target="_blank" rel="noreferrer">
                     <Print/>
                   </a>
                 </Grid>

@@ -14,6 +14,7 @@ import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
 import CircularProgress from '@mui/material/CircularProgress';
 import AttachFile from '@mui/icons-material/AttachFile';
+import Create from '@mui/icons-material/Create';
 import Table from '@mui/material/Table';
 import TableContainer from '@mui/material/TableContainer';
 import TableRow from '@mui/material/TableRow';
@@ -252,6 +253,8 @@ function Kukulkan() {
 
   useHotkeys('Enter', () => window.open('/thread?id=' + threads[activeThread].thread_id, '_blank'), [threads, activeThread]);
 
+  useHotkeys('c', () => window.open('/write', '_blank'));
+
   useHotkeys('t', (e) => {
     e.preventDefault();
     document.getElementsByClassName("Mui-selected")[0].dispatchEvent(new CustomEvent('editTags'));
@@ -290,6 +293,11 @@ function Kukulkan() {
             </Grid>
             <Grid item>
               { loading && <CircularProgress /> }
+            </Grid>
+            <Grid item>
+              <a href="/write" target="_blank" rel="noreferrer">
+                <Create/>
+              </a>
             </Grid>
           </Grid>
           { error.current && <Alert severity="error">Error querying backend: {error.current.message}</Alert> }
