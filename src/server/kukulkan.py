@@ -312,10 +312,10 @@ def message_to_json(message):
             s.verify(p7, data_bio, flags = M2Crypto.SMIME.PKCS7_DETACHED)
             signature = { "valid": True }
         except M2Crypto.SMIME.PKCS7_Error as e:
-            if str(e) == "certificate verify error (Verify error:self signed certificate)":
+            if str(e) == "certificate verify error (Verify error:self signed certificate)" or str(e) == "certificate verify error (Verify error:self signed certificate in certificate chain)":
                 try:
                     s.verify(p7, data_bio, flags = M2Crypto.SMIME.PKCS7_NOVERIFY | M2Crypto.SMIME.PKCS7_DETACHED)
-                    signature = { "valid": True, "message": "self-signed certificate" }
+                    signature = { "valid": True, "message": "self-signed certificate(s)" }
                 except M2Crypto.SMIME.PKCS7_Error as e:
                     signature = { "valid": False, "message": str(e) }
             else:
