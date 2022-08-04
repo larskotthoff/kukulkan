@@ -15,6 +15,7 @@ import TextField from '@mui/material/TextField';
 import MenuItem from '@mui/material/MenuItem';
 import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
+import Snackbar from '@mui/material/Snackbar';
 import CircularProgress from '@mui/material/CircularProgress';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
@@ -27,6 +28,11 @@ import { getColor } from "./utils.js";
 import { hiddenTags } from "./tags.jsx";
 
 class AddrComplete extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { options: [] };
+  }
+
   render() {
     return (
       <Autocomplete
@@ -37,16 +43,19 @@ class AddrComplete extends React.Component {
       disableClearable={true}
       multiple
       fullWidth
-      options={this.props.options}
+      options={this.state.options}
       defaultValue={this.props.defVal}
       filterSelectedOptions
+      onChange={(ev, value) => {
+        this.props.setValue(value);
+      }}
       onInputChange={(ev, value) => {
         if(value.length > 2) {
           this.props.setLoading(true);
           fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/address/' + value)
             .then(res => res.json())
             .then((result) => {
-              this.props.setOptions(result);
+              this.setState({ options: result});
             })
             .finally(() => {
               this.props.setLoading(false);
@@ -76,6 +85,11 @@ export function Write() {
   const [accounts, setAccounts] = useState(null);
   const [allTags, setAllTags] = useState([]);
   const [loading, setLoading] = React.useState(false);
+
+  const [sending, setSending] = React.useState(false);
+  const [timeLeft, setTimeLeft] = React.useState(-1);
+  const [timer, setTimer] = React.useState(null);
+  const [sendingMsg, setSendingMsg] = React.useState("");
 
   const [from, setFrom] = React.useState(null);
   const [to, setTo] = React.useState([]);
@@ -133,6 +147,34 @@ export function Write() {
     setFiles(files.concat(Array.from(event.target.files).map(f => f.name)));
   };
 
+  const sendMsg = () => {
+  };
+
+  useEffect(() => {
+    if(sending) {
+      console.log(to);
+      if(to.length === 0) {
+        setSendingMsg("No one to send message to!");
+      } else {
+        setTimeLeft(5);
+      }
+    } else {
+      clearTimeout(timer);
+    }
+  // eslint-disable-next-line
+  }, [sending]);
+
+  useEffect(() => {
+    if(timeLeft > 0) {
+      setSendingMsg("Sending in " + timeLeft + "... (close or press s to cancel)");
+      setTimer(setTimeout(() => setTimeLeft(timeLeft - 1), 1000));
+    } else if(timeLeft === 0) {
+      setSendingMsg("Sending...");
+      sendMsg();
+      setSending(false);
+    }
+  }, [timeLeft]);
+
   const quote = (text) => {
     return "\n\n\nOn " + baseMsg.date + ", " + baseMsg.from + " wrote:\n\n>" +
       text.replace(/&gt;/g, ">").replace(/&lt;/g, "<").split('\n').join("\n>");
@@ -182,7 +224,8 @@ export function Write() {
   }, []);
 
   useHotkeys('a', () => document.getElementById("attach").click());
-  useHotkeys('y', () => console.log("send"));
+  useHotkeys('y', () => setSending(true));
+  useHotkeys('s', () => setSending(false));
 
   const theme = createTheme();
 
@@ -214,19 +257,19 @@ export function Write() {
               <Grid container spacing={1} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                 <Grid item>To:</Grid>
                 <Grid item xs>
-                  <AddrComplete id="to" options={to} setOptions={setTo} loading={toLoading} setLoading={setToLoading} defVal={baseMsg ? makeTo(baseMsg) : []}/>
+                  <AddrComplete id="to" setValue={setTo} loading={toLoading} setLoading={setToLoading} defVal={baseMsg ? makeTo(baseMsg) : []}/>
                 </Grid>
               </Grid>
               <Grid container spacing={1} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                 <Grid item>CC:</Grid>
                 <Grid item xs>
-                  <AddrComplete id="cc" options={cc} setOptions={setCc} loading={ccLoading} setLoading={setCcLoading} defVal={baseMsg && baseMsg.cc.length > 0 ? baseMsg.cc.split(/\s*[,|]\s*/) : []}/>
+                  <AddrComplete id="cc" setValue={setCc} loading={ccLoading} setLoading={setCcLoading} defVal={baseMsg && baseMsg.cc.length > 0 ? baseMsg.cc.split(/\s*[,|]\s*/) : []}/>
                 </Grid>
               </Grid>
               <Grid container spacing={1} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                 <Grid item>BCC:</Grid>
                 <Grid item xs>
-                  <AddrComplete id="bcc" options={bcc} setOptions={setBcc} loading={bccLoading} setLoading={setBccLoading} />
+                  <AddrComplete id="bcc" setValue={setBcc} loading={bccLoading} setLoading={setBccLoading} />
                 </Grid>
               </Grid>
               <Grid container spacing={1} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
@@ -275,7 +318,8 @@ export function Write() {
                   </Button>
                 </Grid>
                 <Grid item>
-                  <Button key="send" startIcon={<Send/>} variant="outlined">Send</Button>
+                  <Button key="send" startIcon={<Send/>} variant="outlined" onClick={() => setSending(true)}>Send</Button>
+                  <Snackbar open={sending} message={sendingMsg} onClose={() => setSending(false)}/>
                 </Grid>
               </Grid>
             </Paper>
