@@ -220,7 +220,7 @@ export function Write() {
   const makeTo = (msg) => {
     let tmp = [];
     if(action.current === "reply") {
-      tmp = [baseMsg.from].concat(baseMsg.to.split(/\s*[,|]\s*/));
+      tmp = [baseMsg.from].concat(baseMsg.to.split(/(?<=>),\s*|(?<=@[^, ]+),\s*/));
       tmp = tmp.filter(a => {
         return accounts.reduce((cum, acct) => {
           if(cum === false) return false;
@@ -290,7 +290,7 @@ export function Write() {
               <Grid container spacing={1} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                 <Grid item>CC:</Grid>
                 <Grid item xs>
-                  <AddrComplete id="cc" elRef={cc} loading={ccLoading} setLoading={setCcLoading} defVal={baseMsg && baseMsg.cc.length > 0 ? baseMsg.cc.split(/\s*[,|]\s*/) : []}/>
+                  <AddrComplete id="cc" elRef={cc} loading={ccLoading} setLoading={setCcLoading} defVal={baseMsg && baseMsg.cc.length > 0 ? baseMsg.cc.split(/(?<=>),\s*|(?<=@[^, ]+),\s*/) : []}/>
                 </Grid>
               </Grid>
               <Grid container spacing={1} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
