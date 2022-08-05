@@ -201,19 +201,7 @@ export class Message extends React.Component {
   }
 
   getAttachment(attachment) {
-    fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/attachment/' + encodeURIComponent(this.props.msg.notmuch_id) + "/" + attachment)
-      .then(res => res.blob())
-      .then(blob => {
-        const href = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.download = this.props.msg.attachments[attachment].filename;
-        a.href = href;
-        a.click();
-        a.remove();
-      },
-      error => {
-        console.log(error);
-      });
+    window.open(window.location.protocol + '//' + window.location.hostname + ':5000/api/attachment/' + encodeURIComponent(this.props.msg.notmuch_id) + "/" + attachment, '_blank');
   }
 
   formatAddrs(addrs) {
