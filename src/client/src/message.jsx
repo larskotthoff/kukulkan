@@ -304,9 +304,12 @@ export class Message extends React.Component {
                   <Grid container spacing={1}>
                     { msg.attachments.map((attachment, index2) => (
                         <Grid item align="center" key={index2} style={{ minHeight: "3em" }} onClick={() => { this.getAttachment(index2); }}>
-                          <Button key={index2} startIcon={<AttachFile/>} variant="outlined">
-                            {attachment.filename} ({attachment.content_type})
-                          </Button>
+                          { attachment.content_type.includes("image") ?
+                            <img src={window.location.protocol + '//' + window.location.hostname + ':5000/api/attachment/' + encodeURIComponent(msg.notmuch_id) + "/" + index2} alt={attachment.filename} style={{ maxWidth: "30em" }}/> :
+                            <Button key={index2} startIcon={<AttachFile/>} variant="outlined">
+                              {attachment.filename} ({attachment.content_type})
+                            </Button>
+                          }
                         </Grid>
                     )) }
                   </Grid>
