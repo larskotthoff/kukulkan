@@ -210,7 +210,10 @@ def create_app():
             refMsg = next(refMsgs)
             refMsg = message_to_json(refMsg)
             msg['In-Reply-To'] = '<' + refMsg['message_id'] + '>'
-            msg['References'] = refMsg['references'] + ' <' + refMsg['message_id'] + '>'
+            if refMsg['references']:
+                msg['References'] = refMsg['references'] + ' <' + refMsg['message_id'] + '>'
+            else:
+                msg['References'] = '<' + refMsg['message_id'] + '>'
 
         msg.set_content(request.values['body'])
 
