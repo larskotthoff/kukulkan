@@ -240,7 +240,7 @@ def create_app():
         sendOutput = out.decode() + err.decode()
 
         if p.returncode == 0:
-            fname = account["save_sent_to"] + msg['Message-ID'][1:-1] + ":2,"
+            fname = account["save_sent_to"] + msg['Message-ID'][1:-1] + ":2,S"
             with open(fname, "w") as f:
                 f.write(str(msg))
 
@@ -259,6 +259,7 @@ def create_app():
                         refMsg.tags_to_maildir_flags()
 
                 (msg, status) = db_write.index_file(fname, True)
+                msg.maildir_flags_to_tags()
                 for tag in request.values['tags'].split(',') + account["additional_sent_tags"]:
                     msg.add_tag(tag)
                 msg.tags_to_maildir_flags()
