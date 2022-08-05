@@ -262,6 +262,7 @@ def create_app():
                 msg.maildir_flags_to_tags()
                 for tag in request.values['tags'].split(',') + account["additional_sent_tags"]:
                     msg.add_tag(tag)
+                msg.add_tag("sent")
                 msg.tags_to_maildir_flags()
                 db_write.end_atomic()
             finally:
