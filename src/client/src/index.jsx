@@ -192,6 +192,8 @@ class Threads extends React.PureComponent {
   }
 }
 
+export const theme = createTheme({ palette: { mode: 'dark' } });
+
 function Kukulkan() {
   const [threads, setThreads] = useState(null);
   const [allTags, setAllTags] = useState([]);
@@ -200,8 +202,6 @@ function Kukulkan() {
 
   const query = useRef("");
   const error = useRef(null);
-
-  const theme = createTheme();
 
   const [searchParams, setSearchParams] = useSearchParams();
   useEffect(() => {

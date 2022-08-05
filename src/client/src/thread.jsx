@@ -7,12 +7,13 @@ import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import CircularProgress from '@mui/material/CircularProgress';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { ThemeProvider } from '@mui/material/styles';
 
 import { useHotkeys } from 'react-hotkeys-hook';
 
 import { getColor, extractEmailsSort, filterTagsColor, filterSubjectColor } from "./utils.js";
 import { Message, DeletedMessage } from "./message.jsx";
+import { theme } from "./index.jsx";
 
 class MessageList extends React.Component {
   render() {
@@ -195,8 +196,6 @@ export function Thread() {
       el.getElementsByClassName("MuiAutocomplete-root")[0].dispatchEvent(new CustomEvent('delete'));
     }
   });
-
-  const theme = createTheme();
 
   return (
     <ThemeProvider theme={theme}>

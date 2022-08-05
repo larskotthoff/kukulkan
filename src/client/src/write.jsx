@@ -17,13 +17,14 @@ import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
 import Snackbar from '@mui/material/Snackbar';
 import CircularProgress from '@mui/material/CircularProgress';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { ThemeProvider } from '@mui/material/styles';
 
 import AttachFile from '@mui/icons-material/AttachFile';
 import Send from '@mui/icons-material/Send';
 
 import invert from 'invert-color';
 import { getColor } from "./utils.js";
+import { theme } from "./index.jsx";
 
 import { hiddenTags } from "./tags.jsx";
 
@@ -255,8 +256,6 @@ export function Write() {
   useHotkeys('a', () => document.getElementById("attach").click());
   useHotkeys('y', () => setSending(true));
   useHotkeys('s', () => setSending(false));
-
-  const theme = createTheme();
 
   return (
     <ThemeProvider theme={theme}>
