@@ -168,7 +168,7 @@ export function Write() {
       .then((response) => response.json())
       .then((result) => {
         if(result.sendStatus === 0) {
-          setSendingMsg("Message sent: " + result.sendOutput);
+          setSendingMsg("Message sent.");
         } else {
           setSendingMsg("Failed to send message: " + result.sendOutput);
         }
