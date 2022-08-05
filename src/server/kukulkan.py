@@ -196,25 +196,6 @@ def create_app():
         account = [ acct for acct in accounts if acct["id"] == request.values['from'] ][0]
 
         msg = email.message.EmailMessage()
-        msg['Subject'] = request.values['subject']
-        msg['From'] = account["name"] + " <" + account["email"] + ">"
-        msg['To'] = request.values['to']
-        msg['Cc'] = request.values['cc']
-        msg['Bcc'] = request.values['bcc']
-        msg['Date'] = email.utils.formatdate(localtime = True)
-
-        msg['Message-ID'] = email.utils.make_msgid("kukulkan")
-
-        if request.values['action'] == "reply":
-            refMsgs = get_query("mid:{}".format(request.values['refId']), exclude = False).search_messages()
-            refMsg = next(refMsgs)
-            refMsg = message_to_json(refMsg)
-            msg['In-Reply-To'] = '<' + refMsg['message_id'] + '>'
-            if refMsg['references']:
-                msg['References'] = refMsg['references'] + ' <' + refMsg['message_id'] + '>'
-            else:
-                msg['References'] = '<' + refMsg['message_id'] + '>'
-
         msg.set_content(request.values['body'])
 
         if request.values['action'] == "forward":
@@ -234,13 +215,44 @@ def create_app():
             msg.add_attachment(content, maintype = typ[0], subtype = typ[1],
                     filename = request.files[att].filename)
 
+        if account["key"] and account["cert"]:
+            buf = BIO.MemoryBuffer(bytes(msg))
+            smime = SMIME.SMIME()
+            smime.load_key(account["key"], account["cert"])
+            p7 = smime.sign(buf, SMIME.PKCS7_DETACHED)
+
+            out = BIO.MemoryBuffer()
+            buf = BIO.MemoryBuffer(bytes(msg))
+            smime.write(out, p7, buf)
+            msg = email.message_from_bytes(out.read())
+
+        msg['Subject'] = request.values['subject']
+        msg['From'] = account["name"] + " <" + account["email"] + ">"
+        msg['To'] = request.values['to']
+        msg['Cc'] = request.values['cc']
+        msg['Bcc'] = request.values['bcc']
+        msg['Date'] = email.utils.formatdate(localtime = True)
+
+        msg_id = email.utils.make_msgid("kukulkan")
+        msg['Message-ID'] = msg_id
+
+        if request.values['action'] == "reply":
+            refMsgs = get_query("mid:{}".format(request.values['refId']), exclude = False).search_messages()
+            refMsg = next(refMsgs)
+            refMsg = message_to_json(refMsg)
+            msg['In-Reply-To'] = '<' + refMsg['message_id'] + '>'
+            if refMsg['references']:
+                msg['References'] = refMsg['references'] + ' <' + refMsg['message_id'] + '>'
+            else:
+                msg['References'] = '<' + refMsg['message_id'] + '>'
+
         sendcmd = account["sendmail"]
         p = subprocess.Popen(sendcmd.split(' '), stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
         (out, err) = p.communicate(input = str(msg).encode())
         sendOutput = out.decode() + err.decode()
 
         if p.returncode == 0:
-            fname = account["save_sent_to"] + msg['Message-ID'][1:-1] + ":2,S"
+            fname = account["save_sent_to"] + msg_id[1:-1] + ":2,S"
             with open(fname, "w") as f:
                 f.write(str(msg))
 
@@ -258,12 +270,12 @@ def create_app():
                         refMsg.add_tag("passed")
                         refMsg.tags_to_maildir_flags()
 
-                (msg, status) = db_write.index_file(fname, True)
-                msg.maildir_flags_to_tags()
+                (notmuch_msg, status) = db_write.index_file(fname, True)
+                notmuch_msg.maildir_flags_to_tags()
                 for tag in request.values['tags'].split(',') + account["additional_sent_tags"]:
-                    msg.add_tag(tag)
-                msg.add_tag("sent")
-                msg.tags_to_maildir_flags()
+                    notmuch_msg.add_tag(tag)
+                notmuch_msg.add_tag("sent")
+                notmuch_msg.tags_to_maildir_flags()
                 db_write.end_atomic()
             finally:
                 db_write.close()
@@ -386,29 +398,35 @@ def message_to_json(message):
 
     # signature verification
     # https://gist.github.com/russau/c0123ef934ef88808050462a8638a410
-    try:
-        # detached signature
-        attachments.index({ "filename": "smime.p7s", "content_type": "application/pkcs7-signature", "content": None })
-        p7, data_bio = SMIME.smime_load_pkcs7_bio(BIO.MemoryBuffer(bytes(email_msg)))
-
-        s = SMIME.SMIME()
-        s.set_x509_store(X509.X509_Store())
-
-        certStack = p7.get0_signers(X509.X509_Stack())
-        s.set_x509_stack(certStack)
+    if 'signed' in email_msg.get_content_type():
         try:
-            s.verify(p7, data_bio, flags = M2Crypto.SMIME.PKCS7_DETACHED)
-            signature = { "valid": True }
-        except M2Crypto.SMIME.PKCS7_Error as e:
-            if str(e) == "certificate verify error (Verify error:self signed certificate)" or str(e) == "certificate verify error (Verify error:self signed certificate in certificate chain)":
-                try:
-                    s.verify(p7, data_bio, flags = M2Crypto.SMIME.PKCS7_NOVERIFY | M2Crypto.SMIME.PKCS7_DETACHED)
-                    signature = { "valid": True, "message": "self-signed certificate(s)" }
-                except M2Crypto.SMIME.PKCS7_Error as e:
+            p7, data_bio = SMIME.smime_load_pkcs7_bio(BIO.MemoryBuffer(bytes(email_msg)))
+
+            s = SMIME.SMIME()
+            store = X509.X509_Store()
+            certStack = p7.get0_signers(X509.X509_Stack())
+            accounts = current_app.config.custom["accounts"]
+            accts = [ acct for acct in accounts if acct["email"] in message.get_header("from").strip().replace('\t', ' ') ]
+            if accts and accts[0]["cert"]:
+                cert = M2Crypto.X509.load_cert(accts[0]["cert"])
+                store.load_info(accts[0]["cert"])
+            s.set_x509_store(store)
+            s.set_x509_stack(certStack)
+            try:
+                s.verify(p7, data_bio, flags = M2Crypto.SMIME.PKCS7_DETACHED)
+                signature = { "valid": True }
+            except M2Crypto.SMIME.PKCS7_Error as e:
+                if str(e) == "certificate verify error (Verify error:self signed certificate)" or str(e) == "certificate verify error (Verify error:self signed certificate in certificate chain)":
+                    try:
+                        s.verify(p7, data_bio, flags = M2Crypto.SMIME.PKCS7_NOVERIFY | M2Crypto.SMIME.PKCS7_DETACHED)
+                        signature = { "valid": True, "message": "self-signed certificate(s)" }
+                    except M2Crypto.SMIME.PKCS7_Error as e:
+                        signature = { "valid": False, "message": str(e) }
+                else:
                     signature = { "valid": False, "message": str(e) }
-            else:
-                signature = { "valid": False, "message": str(e) }
-    except ValueError:
+        except Exception as e:
+            signature = { "valid": False, "message": str(e) }
+    else:
         signature = None
 
     return {
