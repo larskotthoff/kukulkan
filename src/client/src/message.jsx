@@ -28,6 +28,8 @@ import { TagBar } from "./tags.jsx";
 import invert from 'invert-color';
 import { strip, getColor } from "./utils.js";
 
+import ICAL from 'ical.js';
+
 const timeout = 200;
 
 class ShadowRoot extends React.Component {
@@ -101,6 +103,7 @@ export class Message extends React.Component {
     this.handleCollapse = this.handleCollapse.bind(this);
     this.handleHtml = this.handleHtml.bind(this);
     this.getAttachment = this.getAttachment.bind(this);
+    this.handleAttachment = this.handleAttachment.bind(this);
     this.formatAddrs = this.formatAddrs.bind(this);
 
     this.prevActive = false;
@@ -204,6 +207,32 @@ export class Message extends React.Component {
     window.open(window.location.protocol + '//' + window.location.hostname + ':5000/api/attachment/' + encodeURIComponent(this.props.msg.notmuch_id) + "/" + attachment, '_blank');
   }
 
+  handleAttachment(msg, attachment, index) {
+    if(attachment.content_type.includes("image")) {
+      return (<img src={window.location.protocol + '//' + window.location.hostname + ':5000/api/attachment/' + encodeURIComponent(msg.notmuch_id) + "/" + index} alt={attachment.filename} style={{ maxWidth: "30em" }}/>);
+    } else if(attachment.content_type.includes("calendar")) {
+      let id = "att-" + msg.notmuch_id + "-" + index;
+      fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/attachment/' + encodeURIComponent(msg.notmuch_id) + "/" + index)
+        .then(res => res.text())
+        .then(
+          (result) => {
+            let comp = new ICAL.Component(ICAL.parse(result));
+            let vevent = comp.getFirstSubcomponent("vevent");
+            let evt = new ICAL.Event(vevent);
+            document.getElementById(id).innerText = evt.summary + " (" + evt.location + ")\n" + evt.startDate + " -- " + evt.endDate + "\n" + evt.attendees.map((a) => a.jCal[1].cn).join(", ");
+          },
+          (e) => {
+            console.log(e);
+          }
+        );
+      return (<Paper elevation={3} style={{ padding: ".5em" }} id={id}></Paper>);
+    } else {
+      return (<Button key={index} startIcon={<AttachFile/>} variant="outlined">
+        {attachment.filename} ({attachment.content_type})
+      </Button>);
+    }
+  }
+
   formatAddrs(addrs) {
     // split on , preceded by > or by email address
     return addrs.split(/(?<=>),\s*|(?<=@[^, ]+),\s*/).map((addr, index) => (
@@ -304,12 +333,7 @@ export class Message extends React.Component {
                   <Grid container spacing={1}>
                     { msg.attachments.map((attachment, index2) => (
                         <Grid item align="center" key={index2} style={{ minHeight: "3em" }} onClick={() => { this.getAttachment(index2); }}>
-                          { attachment.content_type.includes("image") ?
-                            <img src={window.location.protocol + '//' + window.location.hostname + ':5000/api/attachment/' + encodeURIComponent(msg.notmuch_id) + "/" + index2} alt={attachment.filename} style={{ maxWidth: "30em" }}/> :
-                            <Button key={index2} startIcon={<AttachFile/>} variant="outlined">
-                              {attachment.filename} ({attachment.content_type})
-                            </Button>
-                          }
+                          { this.handleAttachment(msg, attachment, index2) }
                         </Grid>
                     )) }
                   </Grid>
