@@ -398,6 +398,7 @@ def message_to_json(message):
 
     # signature verification
     # https://gist.github.com/russau/c0123ef934ef88808050462a8638a410
+    # TODO: Doesn't work for emails coming back from mailing lists...
     if 'signed' in email_msg.get_content_type():
         try:
             p7, data_bio = SMIME.smime_load_pkcs7_bio(BIO.MemoryBuffer(bytes(email_msg)))
