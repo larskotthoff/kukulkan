@@ -237,7 +237,7 @@ def create_app():
         sendOutput = out.decode() + err.decode()
 
         if p.returncode == 0:
-            fname = account["save_sent_to"] + msg['Message-ID'] + ":2,"
+            fname = account["save_sent_to"] + msg['Message-ID'][1:-1] + ":2,"
             with open(fname, "w") as f:
                 f.write(str(msg))
 
@@ -245,12 +245,12 @@ def create_app():
             try:
                 db_write.begin_atomic()
                 if request.values['action'] == "reply":
-                    refMsgs = get_query("mid:" + refId, db_write, False).search_messages()
+                    refMsgs = get_query("mid:" + request.values['refId'], db_write, False).search_messages()
                     for refMsg in refMsgs:
                         refMsg.add_tag("replied")
                         refMsg.tags_to_maildir_flags()
                 elif request.values['action'] == "forward":
-                    refMsgs = get_query("mid:" + refId, db_write, False).search_messages()
+                    refMsgs = get_query("mid:" + request.values['refId'], db_write, False).search_messages()
                     for refMsg in refMsgs:
                         refMsg.add_tag("passed")
                         refMsg.tags_to_maildir_flags()
@@ -337,9 +337,15 @@ def get_nested_body(email_msg, html_only = False):
         else:
             content = ""
     else:
-        # always clean up "plain" text -- sometimes it's HTML...
-        soup = BeautifulSoup(content_plain if content_plain else content_html, features = 'html.parser')
-        content = ''.join(soup.get_text("\n\n", strip = True))
+        # "plain" text might be HTML...
+        if content_plain:
+            content = content_plain
+            if "<html" in content_plain:
+                soup = BeautifulSoup(content_plain, features = 'html.parser')
+                content = ''.join(soup.get_text("\n\n", strip = True))
+        else:
+            soup = BeautifulSoup(content_html, features = 'html.parser')
+            content = ''.join(soup.get_text("\n\n", strip = True))
         content = bleach.linkify(content)
 
     return content

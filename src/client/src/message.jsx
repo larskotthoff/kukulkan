@@ -153,7 +153,7 @@ export class Message extends React.Component {
       window.open('/write?action=forward&id=' + this.props.msg.notmuch_id, '_blank');
     });
 
-    if(this.props.msg.tags.includes("unread")) {
+    if(this.state.expanded && this.props.msg.tags.includes("unread")) {
       setTimeout(() =>
         this.elementTop.current.getElementsByClassName("MuiAutocomplete-root")[0].dispatchEvent(new CustomEvent('read')),
       2000);
@@ -171,6 +171,12 @@ export class Message extends React.Component {
       this.elementTop.current.scrollIntoView({block: "nearest"});
     }
     this.prevActive = this.props.active;
+
+    if(this.state.expanded && this.props.msg.tags.includes("unread")) {
+      setTimeout(() =>
+        this.elementTop.current.getElementsByClassName("MuiAutocomplete-root")[0].dispatchEvent(new CustomEvent('read')),
+      2000);
+    }
   }
 
   handleCollapse() {
@@ -212,7 +218,7 @@ export class Message extends React.Component {
 
   formatAddrs(addrs) {
     // split on , preceded by > or by email address
-    return addrs.split(/(?<=>),\s*|(?<=@.+),\s*/).map((addr, index) => (
+    return addrs.split(/(?<=>),\s*|(?<=@[^, ]+),\s*/).map((addr, index) => (
       <span key={index} style={{ backgroundColor: getColor(addr), color: invert(getColor(addr), true), padding: 2, margin: 2, borderRadius: 3 }}>{addr}</span>
     ))
   }

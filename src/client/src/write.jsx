@@ -31,7 +31,6 @@ class AddrComplete extends React.Component {
   constructor(props) {
     super(props);
     this.state = { options: [] };
-    if(this.props.defVal) this.props.setValue(this.props.defVal);
   }
 
   render() {
@@ -47,9 +46,7 @@ class AddrComplete extends React.Component {
       options={this.state.options}
       defaultValue={this.props.defVal}
       filterSelectedOptions
-      onChange={(ev, value) => {
-        this.props.setValue(value);
-      }}
+      ref={this.props.elRef}
       onInputChange={(ev, value) => {
         if(value.length > 2) {
           this.props.setLoading(true);
@@ -92,17 +89,17 @@ export function Write() {
   const [timer, setTimer] = React.useState(null);
   const [sendingMsg, setSendingMsg] = React.useState("");
 
-  const [from, setFrom] = React.useState(null);
-  const [to, setTo] = React.useState("");
-  const [toLoading, setToLoading] = React.useState(false);
-  const [cc, setCc] = React.useState("");
-  const [ccLoading, setCcLoading] = React.useState(false);
-  const [bcc, setBcc] = React.useState("");
-  const [bccLoading, setBccLoading] = React.useState(false);
-
   const [files, setFiles] = React.useState([]);
 
   const [baseMsg, setBaseMsg] = useState(null);
+
+  const to = useRef("");
+  const cc = useRef("");
+  const bcc = useRef("");
+  const [from, setFrom] = React.useState(null);
+  const [toLoading, setToLoading] = React.useState(false);
+  const [ccLoading, setCcLoading] = React.useState(false);
+  const [bccLoading, setBccLoading] = React.useState(false);
 
   const error = useRef(null);
   const messageId = useRef(null);
@@ -131,6 +128,12 @@ export function Write() {
             if(action.current === "forward" && result.attachments) {
               // attach files attached to previous email
               setFiles(result.attachments.map(a => { return { dummy: true, name: a.filename }; }));
+            } else if(action.current === "reply" && accounts) {
+              let acct = accounts.find(a => result.to.includes(a.email));
+              if(!acct) {
+                acct = accounts.find(a => result.from.includes(a.email));
+              }
+              setFrom(acct.id);
             }
             error.current = null;
           },
@@ -142,11 +145,7 @@ export function Write() {
           setLoading(false);
         });
     }
-  }, [searchParams]);
-
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setFrom(event.target.value);
-  };
+  }, [searchParams, accounts]);
 
   const handleAttach = (event: React.ChangeEvent<HTMLInputElement>) => {
     setFiles(files.concat(Array.from(event.target.files)));
@@ -157,9 +156,9 @@ export function Write() {
     formData.append('refId', messageId.current);
     formData.append('action', action.current);
     formData.append('from', from);
-    formData.append('to', to);
-    formData.append('cc', cc);
-    formData.append('bcc', bcc);
+    formData.append('to', to.current.innerText.split('\n'));
+    formData.append('cc', cc.current.innerText.split('\n'));
+    formData.append('bcc', bcc.current.innerText.split('\n'));
     formData.append('subject', subject.current.value);
     formData.append('tags', tags.current.innerText.split('\n'));
     formData.append('body', body.current.value);
@@ -273,7 +272,7 @@ export function Write() {
                 <Grid item><TextField id="from"
                   size="small"
                   value={from}
-                  onChange={handleChange}
+                  onChange={(ev) => setFrom(ev.target.value)}
                   select>
                     {accounts.map((acct) => (
                       <MenuItem key={acct.id} value={acct.id}>
@@ -285,19 +284,19 @@ export function Write() {
               <Grid container spacing={1} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                 <Grid item>To:</Grid>
                 <Grid item xs>
-                  <AddrComplete id="to" setValue={setTo} loading={toLoading} setLoading={setToLoading} defVal={baseMsg ? makeTo(baseMsg) : []}/>
+                  <AddrComplete id="to" elRef={to} loading={toLoading} setLoading={setToLoading} defVal={baseMsg ? makeTo(baseMsg) : []}/>
                 </Grid>
               </Grid>
               <Grid container spacing={1} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                 <Grid item>CC:</Grid>
                 <Grid item xs>
-                  <AddrComplete id="cc" setValue={setCc} loading={ccLoading} setLoading={setCcLoading} defVal={baseMsg && baseMsg.cc.length > 0 ? baseMsg.cc.split(/\s*[,|]\s*/) : []}/>
+                  <AddrComplete id="cc" elRef={cc} loading={ccLoading} setLoading={setCcLoading} defVal={baseMsg && baseMsg.cc.length > 0 ? baseMsg.cc.split(/\s*[,|]\s*/) : []}/>
                 </Grid>
               </Grid>
               <Grid container spacing={1} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                 <Grid item>BCC:</Grid>
                 <Grid item xs>
-                  <AddrComplete id="bcc" setValue={setBcc} loading={bccLoading} setLoading={setBccLoading} />
+                  <AddrComplete id="bcc" elRef={bcc} loading={bccLoading} setLoading={setBccLoading} />
                 </Grid>
               </Grid>
               <Grid container spacing={1} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
