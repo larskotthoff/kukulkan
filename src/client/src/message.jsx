@@ -325,7 +325,7 @@ export class Message extends React.Component {
           <Grid container justifyContent="flex-end">
             { msg.body["text/html"] && <Button variant="outlined" className="kukulkan-content" onClick={this.handleHtml}>{this.state.html ? "Text" : "HTML"}</Button> }
           </Grid>
-          { this.state.html ?
+          { this.state.html && msg.body["text/html"] ?
             <ShadowRoot><Box dangerouslySetInnerHTML={{ __html: msg.body["text/html"] }} /></ShadowRoot> :
             <MessageText key={msg.notmuch_id + "_text"} id={msg.notmuch_id} mainPart={this.mainPart} quotedPart={this.quotedPart} /> }
         </Collapse>
