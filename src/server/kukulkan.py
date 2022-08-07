@@ -215,7 +215,7 @@ def create_app():
             msg.add_attachment(content, maintype = typ[0], subtype = typ[1],
                     filename = request.files[att].filename)
 
-        if account["key"] and account["cert"]:
+        if "key" in account and "cert" in account:
             buf = BIO.MemoryBuffer(bytes(msg))
             smime = SMIME.SMIME()
             smime.load_key(account["key"], account["cert"])
