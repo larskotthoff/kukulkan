@@ -194,16 +194,16 @@ class Threads extends React.PureComponent {
 
 export const theme = createTheme({
   palette: {
-    mode: 'dark',
+    mode: 'light',
     primary: {
-      main: '#5893df',
+      main: '#8bc34a',
     },
     secondary: {
-      main: '#2ec5d3',
+      main: '#c0ca33',
     },
     background: {
-      default: '#192231',
-      paper: '#24344d',
+      default: '#dcedc8',
+      paper: '#f0f4c3',
     }
   }
 });
