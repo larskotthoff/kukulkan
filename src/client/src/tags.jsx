@@ -7,7 +7,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import invert from 'invert-color';
 import { getColor } from "./utils.js";
 
-export const hiddenTags = ["attachment", "replied", "sent"];
+export const hiddenTags = ["attachment", "replied", "sent", "passed", "signed"];
 
 export class TagBar extends React.Component {
   constructor(props) {
