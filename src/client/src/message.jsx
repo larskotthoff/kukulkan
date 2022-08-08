@@ -147,13 +147,13 @@ export class Message extends React.Component {
     this.elementTop.current.addEventListener("toggleContent", this.handleHtml);
     this.elementTop.current.addEventListener("toggleCollapse", this.handleCollapse);
     this.elementTop.current.addEventListener("print", () => {
-      window.open('/message?id=' + this.props.msg.notmuch_id, '_blank');
+      window.open('/message?id=' + encodeURIComponent(this.props.msg.notmuch_id), '_blank');
     });
     this.elementTop.current.addEventListener("reply", () => {
-      window.open('/write?action=reply&id=' + this.props.msg.notmuch_id, '_blank');
+      window.open('/write?action=reply&id=' + encodeURIComponent(this.props.msg.notmuch_id), '_blank');
     });
     this.elementTop.current.addEventListener("forward", () => {
-      window.open('/write?action=forward&id=' + this.props.msg.notmuch_id, '_blank');
+      window.open('/write?action=forward&id=' + encodeURIComponent(this.props.msg.notmuch_id), '_blank');
     });
 
     if(this.state.expanded && this.props.msg.tags.includes("unread")) {
@@ -312,17 +312,17 @@ export class Message extends React.Component {
                   <TagBar tagsObject={msg} options={this.props.allTags} id={msg.notmuch_id} type="message"/>
                 </Grid>
                 <Grid item key="reply">
-                  <a href={"/write?action=reply&id=" + msg.notmuch_id} target="_blank" rel="noreferrer">
+                  <a href={"/write?action=reply&id=" + encodeURIComponent(msg.notmuch_id)} target="_blank" rel="noreferrer">
                     <Reply/>
                   </a>
                 </Grid>
                 <Grid item key="forward">
-                  <a href={"/write?action=forward&id=" + msg.notmuch_id} target="_blank" rel="noreferrer">
+                  <a href={"/write?action=forward&id=" + encodeURIComponent(msg.notmuch_id)} target="_blank" rel="noreferrer">
                     <Forward/>
                   </a>
                 </Grid>
                 <Grid item key="print">
-                  <a href={"/message?id=" + msg.notmuch_id} target="_blank" rel="noreferrer">
+                  <a href={"/message?id=" + encodeURIComponent(msg.notmuch_id)} target="_blank" rel="noreferrer">
                     <Print/>
                   </a>
                 </Grid>
