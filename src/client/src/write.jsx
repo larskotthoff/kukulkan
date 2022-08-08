@@ -129,7 +129,8 @@ export function Write() {
             if(action.current === "forward" && result.attachments) {
               // attach files attached to previous email
               setFiles(result.attachments.map(a => { return { dummy: true, name: a.filename }; }));
-            } else if(action.current === "reply" && accounts) {
+            }
+            if(accounts) {
               let acct = accounts.find(a => result.to.includes(a.email));
               if(!acct) {
                 acct = accounts.find(a => result.from.includes(a.email));
