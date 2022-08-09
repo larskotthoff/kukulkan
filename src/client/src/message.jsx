@@ -133,7 +133,7 @@ export class Message extends React.Component {
       }
     }
 
-    if(lastLine - (lines.length - 1) < 2) lastLine = lines.length;
+    if((lines.length - 1) - lastLine < 2) lastLine = lines.length;
 
     this.mainPart = lines.slice(0, lastLine).join('\n');
     this.quotedPart = lines.slice(lastLine).join('\n');
