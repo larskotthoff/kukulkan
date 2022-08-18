@@ -373,7 +373,7 @@ def get_attachments(email_msg, content = False):
     for part in email_msg.walk():
         if part.get_content_maintype() == "multipart":
             continue
-        if part.get_content_disposition() in ["attachment", "inline"] or part.get_content_type() == "text/calendar":
+        if (part.get_content_disposition() in ["attachment", "inline"] or part.get_content_type() == "text/calendar") and not (part.get_content_disposition() == "inline" and part.get_content_type() == "text/plain"):
             attachments.append({
                 "filename": part.get_filename() if part.get_filename() else "unnamed attachment",
                 "content_type": part.get_content_type(),
