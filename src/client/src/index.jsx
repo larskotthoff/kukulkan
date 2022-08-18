@@ -205,6 +205,18 @@ export const theme = createTheme({
       default: '#fff8e1',
       paper: '#f0f4c3',
     }
+  },
+  components: {
+    MuiCssBaseline: {
+      styleOverrides: `
+      body {
+        background-image: url("serpent.png");
+        background-repeat: no-repeat;
+        background-position: bottom right;
+        background-attachment: fixed;
+      }
+    `
+    }
   }
 });
 
