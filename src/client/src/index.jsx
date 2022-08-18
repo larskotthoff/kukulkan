@@ -230,7 +230,7 @@ function Kukulkan() {
       localStorage.setItem("queries", JSON.stringify(qs.slice(0, 10)));
 
       setLoading(true);
-      fetch(apiURL("api/query/" + query.current))
+      fetch(apiURL("api/query/" + encodeURIComponent(query.current)))
         .then(res => res.json())
         .then(
           (result) => {
