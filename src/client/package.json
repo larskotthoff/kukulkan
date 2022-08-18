@@ -20,6 +20,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "GENERATE_SOURCEMAP=false react-scripts build",
+    "postbuild": "rm -rf ../server/static/* && cp -r build/* ../server/static/ && mv ../server/static/static/* ../server/static/ && rm -rf ../server/static/static",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

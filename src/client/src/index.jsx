@@ -29,7 +29,7 @@ import { TagBar, hiddenTags } from "./tags.jsx";
 import { Write } from "./write.jsx";
 
 import invert from 'invert-color';
-import { formatDate, formatDuration, getColor } from "./utils.js";
+import { formatDate, formatDuration, getColor, apiURL } from "./utils.js";
 
 class Search extends React.PureComponent {
   constructor(props) {
@@ -230,7 +230,7 @@ function Kukulkan() {
       localStorage.setItem("queries", JSON.stringify(qs.slice(0, 10)));
 
       setLoading(true);
-      fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/query/' + query.current)
+      fetch(apiURL("api/query/" + query.current))
         .then(res => res.json())
         .then(
           (result) => {
@@ -251,7 +251,7 @@ function Kukulkan() {
   }, [searchParams]);
 
   useEffect(() => {
-    fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/tags/')
+    fetch(apiURL("api/tags/"))
       .then(res => res.json())
       .then((result) => {
         setAllTags(result);

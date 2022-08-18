@@ -11,7 +11,7 @@ import { ThemeProvider } from '@mui/material/styles';
 
 import { useHotkeys } from 'react-hotkeys-hook';
 
-import { getColor, extractEmailsSort, filterTagsColor, filterSubjectColor } from "./utils.js";
+import { getColor, extractEmailsSort, filterTagsColor, filterSubjectColor, apiURL } from "./utils.js";
 import { Message, DeletedMessage } from "./message.jsx";
 import { theme } from "./index.jsx";
 
@@ -120,7 +120,7 @@ export function Thread() {
   useEffect(() => {
     threadId.current = searchParams.get("id");
     if(threadId.current !== null) {
-      fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/thread/' + encodeURIComponent(threadId.current))
+      fetch(apiURL("api/thread/" + encodeURIComponent(threadId.current)))
         .then(res => res.json())
         .then(
           (result) => {
@@ -156,7 +156,7 @@ export function Thread() {
   }, [searchParams]);
 
   useEffect(() => {
-    fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/tags/')
+    fetch(apiURL("api/tags/"))
       .then(res => res.json())
       .then((result) => {
         setAllTags(result);

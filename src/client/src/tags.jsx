@@ -5,7 +5,7 @@ import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
 
 import invert from 'invert-color';
-import { getColor } from "./utils.js";
+import { getColor, apiURL } from "./utils.js";
 
 export const hiddenTags = ["attachment", "replied", "sent", "passed", "signed"];
 
@@ -21,7 +21,7 @@ export class TagBar extends React.Component {
 
   addTag(tag) {
     this.setState({ updating: true });
-    fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/tag/add/' + this.props.type + '/' + encodeURIComponent(this.props.id) + '/' + tag)
+    fetch(apiURL("api/tag/add/" + this.props.type + '/' + encodeURIComponent(this.props.id) + '/' + tag))
       .then(
         (result) => {
           if(!this.props.tagsObject.tags.includes(tag)) {
@@ -34,7 +34,7 @@ export class TagBar extends React.Component {
 
   delTag(tag) {
     this.setState({ updating: true });
-    fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/tag/remove/' + this.props.type + '/' + encodeURIComponent(this.props.id) + '/' + tag)
+    fetch(apiURL("api/tag/remove/" + this.props.type + '/' + encodeURIComponent(this.props.id) + '/' + tag))
       .then(
         (result) => {
           this.props.tagsObject.tags = this.props.tagsObject.tags.filter(t => t !== tag);

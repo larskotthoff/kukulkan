@@ -61,7 +61,7 @@ def close_db(e = None):
 
 def create_app():
     """Flask application factory."""
-    app = Flask(__name__, static_folder = "client")
+    app = Flask(__name__, static_folder = "static")
     app.config["PROPAGATE_EXCEPTIONS"] = True
 
     configPath = os.getenv("XDG_CONFIG_HOME") if os.getenv("XDG_CONFIG_HOME") else os.getenv("HOME") + os.path.sep + ".config"
@@ -76,7 +76,7 @@ def create_app():
     def send_index():
         return send_from_directory(app.static_folder, "index.html")
 
-    @app.route("/static/<path:path>")
+    @app.route("/<path:path>", methods=['GET', 'POST'])
     def send_js(path):
         if path and os.path.exists(safe_join(app.static_folder, path)):
             return send_from_directory(app.static_folder, path)
@@ -90,15 +90,17 @@ def create_app():
 
     @app.after_request
     def security_headers(response):
-        #response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
-        #response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
-        #response.headers["X-Frame-Options"] = "SAMEORIGIN"
         response.headers["X-Content-Type-Options"] = "nosniff"
 
-        response.headers["Access-Control-Allow-Origin"] = "*"
-        response.headers["Cross-Origin-Opener-Policy"] = "cross-origin"
-        response.headers["Cross-Origin-Resource-Policy"] = "cross-origin"
-        response.headers["X-Frame-Options"] = "CORSSORIGIN"
+        if os.getenv("FLASK_ENV") == "development":
+            response.headers["Access-Control-Allow-Origin"] = "*"
+            response.headers["Cross-Origin-Opener-Policy"] = "cross-origin"
+            response.headers["Cross-Origin-Resource-Policy"] = "cross-origin"
+            response.headers["X-Frame-Options"] = "CORSSORIGIN"
+        else:
+            response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
+            response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
+            response.headers["X-Frame-Options"] = "SAMEORIGIN"
         return response
 
     class Query(Resource):

@@ -23,7 +23,7 @@ import AttachFile from '@mui/icons-material/AttachFile';
 import Send from '@mui/icons-material/Send';
 
 import invert from 'invert-color';
-import { getColor } from "./utils.js";
+import { getColor, apiURL } from "./utils.js";
 import { theme } from "./index.jsx";
 
 import { hiddenTags } from "./tags.jsx";
@@ -51,7 +51,7 @@ class AddrComplete extends React.Component {
       onInputChange={(ev, value) => {
         if(value.length > 2) {
           this.props.setLoading(true);
-          fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/address/' + value)
+          fetch(apiURL("api/address/" + encodeURIComponent(value)))
             .then(res => res.json())
             .then((result) => {
               this.setState({ options: result});
@@ -121,7 +121,7 @@ export function Write() {
     if(messageId.current !== null) {
       setLoading(true);
       setBaseMsg(null);
-      fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/message/' + encodeURIComponent(messageId.current))
+      fetch(apiURL("api/message/" + encodeURIComponent(messageId.current)))
         .then(res => res.json())
         .then(
           (result) => {
@@ -166,7 +166,7 @@ export function Write() {
     formData.append('body', body.current.value);
     files.map((f, i) => formData.append('attachment-' + i, f.dummy ? f.name : f));
 
-    fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/send', { method: 'POST', body: formData })
+    fetch(apiURL("api/send"), { method: 'POST', body: formData })
       .then((response) => response.json())
       .then((result) => {
         if(result.sendStatus === 0) {
@@ -238,7 +238,7 @@ export function Write() {
   };
 
   useEffect(() => {
-    fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/accounts/')
+    fetch(apiURL("api/accounts/"))
       .then(res => res.json())
       .then((result) => {
         setAccounts(result);
@@ -247,7 +247,7 @@ export function Write() {
   }, []);
 
   useEffect(() => {
-    fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/tags/')
+    fetch(apiURL("api/tags/"))
       .then(res => res.json())
       .then((result) => {
         setAllTags(result);

@@ -26,7 +26,7 @@ import Forward from '@mui/icons-material/Forward';
 import { TagBar } from "./tags.jsx";
 
 import invert from 'invert-color';
-import { strip, getColor } from "./utils.js";
+import { strip, getColor, apiURL } from "./utils.js";
 
 import ICAL from 'ical.js';
 
@@ -204,15 +204,15 @@ export class Message extends React.Component {
   }
 
   getAttachment(attachment) {
-    window.open(window.location.protocol + '//' + window.location.hostname + ':5000/api/attachment/' + encodeURIComponent(this.props.msg.notmuch_id) + "/" + attachment, '_blank');
+    window.open(apiURL("api/attachment/" + encodeURIComponent(this.props.msg.notmuch_id) + "/" + attachment), '_blank');
   }
 
   handleAttachment(msg, attachment, index) {
     if(attachment.content_type.includes("image")) {
-      return (<img src={window.location.protocol + '//' + window.location.hostname + ':5000/api/attachment/' + encodeURIComponent(msg.notmuch_id) + "/" + index} alt={attachment.filename} style={{ maxWidth: "30em" }}/>);
+      return (<img src={apiURL("api/attachment/" + encodeURIComponent(msg.notmuch_id) + "/" + index)} alt={attachment.filename} style={{ maxWidth: "30em" }}/>);
     } else if(attachment.content_type.includes("calendar")) {
       let id = "att-" + msg.notmuch_id + "-" + index;
-      fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/attachment/' + encodeURIComponent(msg.notmuch_id) + "/" + index)
+      fetch(apiURL("api/attachment/" + encodeURIComponent(msg.notmuch_id) + "/" + index))
         .then(res => res.text())
         .then(
           (result) => {
@@ -393,7 +393,7 @@ export function SingleMessage() {
     messageId.current = searchParams.get("id");
     if(messageId.current !== null) {
       setMessage(null);
-      fetch(window.location.protocol + '//' + window.location.hostname + ':5000/api/message/' + encodeURIComponent(messageId.current))
+      fetch(apiURL("api/message/" + encodeURIComponent(messageId.current)))
         .then(res => res.json())
         .then(
           (result) => {

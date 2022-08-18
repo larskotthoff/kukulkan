@@ -77,4 +77,12 @@ export function formatDuration(from, to) {
   }
 }
 
+export function apiURL(suffix) {
+  if(process.env.NODE_ENV === "production") {
+    return "/" + suffix;
+  } else {
+    return window.location.protocol + "//" + window.location.hostname + ":5000/" + suffix;
+  }
+}
+
 // vim: tabstop=2 shiftwidth=2 expandtab
