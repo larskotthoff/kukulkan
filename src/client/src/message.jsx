@@ -215,7 +215,7 @@ export class Message extends React.Component {
 
   handleAttachment(msg, attachment, index) {
     if(attachment.content_type.includes("image")) {
-      return (<img src={apiURL("api/attachment/" + encodeURIComponent(msg.notmuch_id) + "/" + index)} alt={attachment.filename} style={{ maxWidth: "30em" }}/>);
+      return (<img src={apiURL("api/attachment/" + encodeURIComponent(msg.notmuch_id) + "/" + index)} alt={attachment.filename} style={{ maxWidth: "30em", maxHeight: "20em" }}/>);
     } else if(attachment.content_type.includes("calendar")) {
       let id = "att-" + msg.notmuch_id + "-" + index;
       fetch(apiURL("api/attachment/" + encodeURIComponent(msg.notmuch_id) + "/" + index))
