@@ -276,6 +276,7 @@ function Kukulkan() {
   useHotkeys('j', () => setActiveThread(Math.min(threads.length - 1, activeThread + 1)), [threads, activeThread]);
   useHotkeys('Shift+J', () => setActiveThread(Math.min(threads.length - 1, activeThread + 10)), [threads, activeThread]);
   useHotkeys('End', () => setActiveThread(threads.length - 1), [threads]);
+  useHotkeys('0', () => setActiveThread(threads.length - 1), [threads]);
 
   useHotkeys('Enter', () => window.open('/thread?id=' + threads[activeThread].thread_id, '_blank'), [threads, activeThread]);
 
