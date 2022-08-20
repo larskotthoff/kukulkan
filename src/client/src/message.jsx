@@ -109,7 +109,7 @@ export class Message extends React.Component {
     this.handleAttachment = this.handleAttachment.bind(this);
     this.formatAddrs = this.formatAddrs.bind(this);
 
-    this.prevActive = false;
+    this.prevActive = this.props.active;
 
     this.elementTop = React.createRef();
 
