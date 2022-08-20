@@ -365,7 +365,6 @@ def get_nested_body(email_msg, html_only = False):
         else:
             soup = BeautifulSoup(content_html, features = 'html.parser')
             content = ''.join(soup.get_text("\n\n", strip = True))
-        content = bleach.linkify(content)
 
     return content
 

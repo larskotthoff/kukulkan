@@ -29,6 +29,9 @@ import invert from 'invert-color';
 import { strip, getColor, apiURL } from "./utils.js";
 
 import ICAL from 'ical.js';
+import linkifyStr from 'linkify-string';
+
+const linkifyOpts = { target: "_blank", rel: "nofollow" }
 
 const timeout = 200;
 
@@ -74,7 +77,7 @@ class MessageText extends React.Component {
   render() {
     return (
       <React.Fragment>
-        <Box style={{ whiteSpace: "pre-line" }} dangerouslySetInnerHTML={{ __html: this.props.mainPart }} />
+        <Box style={{ whiteSpace: "pre-line" }} dangerouslySetInnerHTML={{ __html: linkifyStr(this.props.mainPart, linkifyOpts) }} />
         { this.props.quotedPart.length > 0 &&
           <Box onClick={this.handleCollapse}>
             <Collapse key={ this.props.id + "_quoted_collapsed" } in={!this.state.expanded} timeout={timeout} unmountOnExit>
@@ -85,7 +88,7 @@ class MessageText extends React.Component {
             </Collapse>
             <Collapse key={ this.props.id + "_quoted_expanded" } in={this.state.expanded} timeout={timeout} unmountOnExit>
               <Grid container justifyContent="space-between">
-                <Grid item xs><Box style={{ whiteSpace: "pre-line" }} dangerouslySetInnerHTML={{ __html: this.props.quotedPart }} /></Grid>
+                <Grid item xs><Box style={{ whiteSpace: "pre-line" }} dangerouslySetInnerHTML={{ __html: linkifyStr(this.props.quotedPart, linkifyOpts) }} /></Grid>
                 <Grid item><ExpandLess/></Grid>
               </Grid>
             </Collapse>
@@ -124,7 +127,10 @@ export class Message extends React.Component {
       } else if(line === "-----Original Message-----") { // also outlook
         lastLine = index;
         break;
-      } else if(line === "________________________________") { // outlook mailing lists I think
+      } else if(line.match(/^-+$/)) {
+        lastLine = index;
+        break;
+      } else if(line.match(/^_+$/)) { // outlook mailing lists I think
         lastLine = index;
         break;
       } else if(line.length > 1 && !line.startsWith(">") && !line.startsWith("&gt;")) {
