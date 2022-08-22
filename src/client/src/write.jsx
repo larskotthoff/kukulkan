@@ -112,6 +112,7 @@ export function Write() {
 
   const [searchParams] = useSearchParams();
   useEffect(() => {
+    document.title = "New Message";
     action.current = searchParams.get("action");
     if(!action.current) {
       action.current = "compose";
@@ -140,6 +141,7 @@ export function Write() {
               }
             }
             error.current = null;
+            document.title = "Compose: " + prefix(result.subject);
           },
           (e) => {
             setBaseMsg(null);
@@ -182,6 +184,7 @@ export function Write() {
       })
       .finally(() => {
         setTimeout(() => setSending(false), 10000);
+        document.title = "Sent: " + document.title;
       });
   };
 
