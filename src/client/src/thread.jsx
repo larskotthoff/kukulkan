@@ -11,6 +11,8 @@ import { ThemeProvider } from '@mui/material/styles';
 
 import { useHotkeys } from 'react-hotkeys-hook';
 
+import invert from 'invert-color';
+
 import { getColor, extractEmailsSort, filterTagsColor, filterSubjectColor, apiURL } from "./utils.js";
 import { Message, DeletedMessage } from "./message.jsx";
 import { theme } from "./index.jsx";
@@ -53,6 +55,9 @@ class ThreadNav extends React.Component {
                         opacity: (this.props.filteredThread && this.props.filteredThread.find((i) => { return i.message_id === msg.message_id; })) ?
                           1 :
                           .3,
+                        borderRadius: msg.tags.includes("unread") ? "10px" : "0px",
+                        border: (index2 === msg.depth - 1 && this.props.filteredThread[this.props.activeMsg].message_id === msg.message_id) ? "3px solid " + invert(getColor(filterSubjectColor(msg.subject) +
+                            filterTagsColor(msg.tags) + extractEmailsSort(msg.from + msg.to + msg.cc))) : "",
                         backgroundColor: (index2 === msg.depth - 1 ?
                           getColor(filterSubjectColor(msg.subject) +
                             filterTagsColor(msg.tags) + extractEmailsSort(msg.from + msg.to + msg.cc)) :
@@ -207,7 +212,7 @@ export function Thread() {
         </center>
         <Grid container direction="row" alignItems="flex-start">
           <Grid item xs="auto" style={{height: '100vh', overflowY: 'auto'}}>
-            <ThreadNav thread={thread} filteredThread={filteredThread} setFilteredThread={setFilteredThread} setActiveMsg={setActiveMsg} />
+            <ThreadNav thread={thread} filteredThread={filteredThread} setFilteredThread={setFilteredThread} setActiveMsg={setActiveMsg} activeMsg={activeMsg}/>
           </Grid>
           <Grid item xs style={{height: '100vh', overflowY: 'auto'}}>
             <MessageList allTags={allTags} filteredThread={filteredThread} activeMsg={activeMsg} setActiveMsg={setActiveMsg}/>
