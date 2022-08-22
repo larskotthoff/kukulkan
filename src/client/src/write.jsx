@@ -207,7 +207,7 @@ export function Write() {
 
   const quote = (text) => {
     return "\n\n\nOn " + baseMsg.date + ", " + baseMsg.from + " wrote:\n\n>" +
-      text.replace(/&gt;/g, ">").replace(/&lt;/g, "<").split('\n').join("\n>");
+      text.replace(/&gt;/g, ">").replace(/&lt;/g, "<").split('\n').join("\n> ");
   };
 
   const prefix = (text) => {
@@ -221,11 +221,13 @@ export function Write() {
     return pre + text;
   };
 
-  const makeTo = (msg) => {
-    let tmp = [];
+  const makeToCc = (msg) => {
+    if(!msg) return [ [], [] ];
+
+    let tmpTo = [], tmpCc = [];
     if(action.current === "reply") {
-      tmp = [baseMsg.from].concat(baseMsg.to.split(/(?<=>),\s*|(?<=@[^, ]+),\s*/));
-      tmp = tmp.filter(a => {
+      tmpTo = [msg.from].concat(msg.to.split(/(?<=>),\s*|(?<=@[^, ]+),\s*/));
+      tmpTo = tmpTo.filter(a => {
         return a.length > 0 && accounts.reduce((cum, acct) => {
           if(cum === false) return false;
 
@@ -235,8 +237,22 @@ export function Write() {
           return true;
         }, true);
       });
+
+      if(msg.cc.length > 0) {
+        tmpCc = msg.cc.split(/(?<=>),\s*|(?<=@[^, ]+),\s*/);
+        tmpCc = tmpCc.filter(a => {
+          return a.length > 0 && !tmpTo.includes(a) && accounts.reduce((cum, acct) => {
+            if(cum === false) return false;
+
+            if(a.includes(acct.email)) {
+              return false;
+            }
+            return true;
+          }, true);
+        });
+      }
     }
-    return tmp;
+    return [ tmpTo, tmpCc ];
   };
 
   useEffect(() => {
@@ -259,6 +275,8 @@ export function Write() {
   useHotkeys('a', () => document.getElementById("attach").click());
   useHotkeys('y', () => setSending(true));
   useHotkeys('s', () => setSending(false));
+
+  const [defTo, defCc] = makeToCc(baseMsg);
 
   return (
     <ThemeProvider theme={theme}>
@@ -286,13 +304,13 @@ export function Write() {
               <Grid container spacing={1} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                 <Grid item>To:</Grid>
                 <Grid item xs>
-                  <AddrComplete id="to" elRef={to} loading={toLoading} setLoading={setToLoading} defVal={baseMsg ? makeTo(baseMsg) : []}/>
+                  <AddrComplete id="to" elRef={to} loading={toLoading} setLoading={setToLoading} defVal={defTo}/>
                 </Grid>
               </Grid>
               <Grid container spacing={1} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                 <Grid item>CC:</Grid>
                 <Grid item xs>
-                  <AddrComplete id="cc" elRef={cc} loading={ccLoading} setLoading={setCcLoading} defVal={baseMsg && baseMsg.cc.length > 0 ? baseMsg.cc.split(/(?<=>),\s*|(?<=@[^, ]+),\s*/) : []}/>
+                  <AddrComplete id="cc" elRef={cc} loading={ccLoading} setLoading={setCcLoading} defVal={defCc}/>
                 </Grid>
               </Grid>
               <Grid container spacing={1} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
