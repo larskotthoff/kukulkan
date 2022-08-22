@@ -225,7 +225,7 @@ export function Write() {
   };
 
   const makeToCc = (msg) => {
-    if(!msg) return [ [], [] ];
+    if(!msg || !action || !accounts) return [ [], [] ];
 
     let tmpTo = [], tmpCc = [];
     if(action.current === "reply") {
