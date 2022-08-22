@@ -135,7 +135,9 @@ export function Write() {
               if(!acct) {
                 acct = accounts.find(a => result.from.includes(a.email));
               }
-              setFrom(acct.id);
+              if(acct) {
+                setFrom(acct.id);
+              }
             }
             error.current = null;
           },
@@ -224,7 +226,7 @@ export function Write() {
     if(action.current === "reply") {
       tmp = [baseMsg.from].concat(baseMsg.to.split(/(?<=>),\s*|(?<=@[^, ]+),\s*/));
       tmp = tmp.filter(a => {
-        return accounts.reduce((cum, acct) => {
+        return a.length > 0 && accounts.reduce((cum, acct) => {
           if(cum === false) return false;
 
           if(a.includes(acct.email)) {
