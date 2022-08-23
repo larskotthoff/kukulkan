@@ -34,7 +34,7 @@ import { formatDate, formatDuration, getColor, apiURL } from "./utils.js";
 class Search extends React.PureComponent {
   constructor(props) {
     super(props);
-    let opts = ["tag:unread", "tag:todo", "date:1d.."];
+    let opts = ["tag:unread", "tag:todo", "date:today"];
     let qs = localStorage.getItem("queries");
     if(qs !== null) opts = [...new Set(opts.concat(JSON.parse(qs)))];
     this.state = { opts: opts };
