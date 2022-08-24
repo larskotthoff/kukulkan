@@ -399,36 +399,38 @@ def message_to_json(message):
 
     # signature verification
     # https://gist.github.com/russau/c0123ef934ef88808050462a8638a410
-    if 'signed' in email_msg.get_content_type():
-        try:
-            p7, data_bio = SMIME.smime_load_pkcs7_bio(BIO.MemoryBuffer(bytes(email_msg)))
-
-            s = SMIME.SMIME()
-            store = X509.X509_Store()
-            certStack = p7.get0_signers(X509.X509_Stack())
-            accounts = current_app.config.custom["accounts"]
-            accts = [ acct for acct in accounts if acct["email"] in message.get_header("from").strip().replace('\t', ' ') ]
-            if accts and accts[0]["cert"]:
-                cert = M2Crypto.X509.load_cert(accts[0]["cert"])
-                store.load_info(accts[0]["cert"])
-            s.set_x509_store(store)
-            s.set_x509_stack(certStack)
+    for part in email_msg.walk():
+        if 'signed' in part.get_content_type():
             try:
-                s.verify(p7, data_bio, flags = M2Crypto.SMIME.PKCS7_DETACHED)
-                signature = { "valid": True }
-            except M2Crypto.SMIME.PKCS7_Error as e:
-                if str(e) == "certificate verify error (Verify error:self signed certificate)" or str(e) == "certificate verify error (Verify error:self signed certificate in certificate chain)" or str(e) == "certificate verify error (Verify error:unable to get local issuer certificate)":
-                    try:
-                        s.verify(p7, data_bio, flags = M2Crypto.SMIME.PKCS7_NOVERIFY | M2Crypto.SMIME.PKCS7_DETACHED)
-                        signature = { "valid": True, "message": "self-signed or unavailable certificate(s)" }
-                    except M2Crypto.SMIME.PKCS7_Error as e:
+                p7, data_bio = SMIME.smime_load_pkcs7_bio(BIO.MemoryBuffer(bytes(part)))
+
+                s = SMIME.SMIME()
+                store = X509.X509_Store()
+                certStack = p7.get0_signers(X509.X509_Stack())
+                accounts = current_app.config.custom["accounts"]
+                accts = [ acct for acct in accounts if acct["email"] in message.get_header("from").strip().replace('\t', ' ') ]
+                if accts and accts[0]["cert"]:
+                    cert = M2Crypto.X509.load_cert(accts[0]["cert"])
+                    store.load_info(accts[0]["cert"])
+                s.set_x509_store(store)
+                s.set_x509_stack(certStack)
+                try:
+                    s.verify(p7, data_bio, flags = M2Crypto.SMIME.PKCS7_DETACHED)
+                    signature = { "valid": True }
+                except M2Crypto.SMIME.PKCS7_Error as e:
+                    if str(e) == "certificate verify error (Verify error:self signed certificate)" or str(e) == "certificate verify error (Verify error:self signed certificate in certificate chain)" or str(e) == "certificate verify error (Verify error:unable to get local issuer certificate)":
+                        try:
+                            s.verify(p7, data_bio, flags = M2Crypto.SMIME.PKCS7_NOVERIFY | M2Crypto.SMIME.PKCS7_DETACHED)
+                            signature = { "valid": True, "message": "self-signed or unavailable certificate(s)" }
+                        except M2Crypto.SMIME.PKCS7_Error as e:
+                            signature = { "valid": False, "message": str(e) }
+                    else:
                         signature = { "valid": False, "message": str(e) }
-                else:
-                    signature = { "valid": False, "message": str(e) }
-        except Exception as e:
-            signature = { "valid": False, "message": str(e) }
-    else:
-        signature = None
+            except Exception as e:
+                signature = { "valid": False, "message": str(e) }
+            break
+        else:
+            signature = None
 
     try:
         dkim_verify = dkim.verify(bytes(email_msg))
