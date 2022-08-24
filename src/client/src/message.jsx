@@ -301,6 +301,7 @@ export class Message extends React.Component {
         <Collapse key={msg.notmuch_id + "_expanded" } in={this.state.expanded} timeout={timeout} unmountOnExit>
           <Box onClick={this.handleCollapse}>
             { msg.from && <Typography>From: {this.formatAddrs(msg.from)}</Typography> }
+            { msg.reply_to && <Typography>Reply-To: {this.formatAddrs(msg.reply_to)}</Typography> }
             { msg.to && <Typography>To: {this.formatAddrs(msg.to)}</Typography> }
             { msg.cc && <Typography>CC: {this.formatAddrs(msg.cc)}</Typography> }
             { msg.bcc && <Typography>BCC: {this.formatAddrs(msg.bcc)}</Typography> }
