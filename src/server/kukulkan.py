@@ -317,6 +317,13 @@ def thread_to_json(thread):
     }
 
 
+def strip_tags(soup):
+    for typ in ["a","span","em","strong","u","i","font","mark","label","s","sub","sup","tt","bdo","button","cite","del","b"]:
+        for t in soup.find_all(typ):
+            t.unwrap()
+    soup.smooth()
+
+
 def get_nested_body(email_msg, html_only = False):
     """Gets all, potentially MIME-nested bodies."""
     content_plain = ""
@@ -361,9 +368,11 @@ def get_nested_body(email_msg, html_only = False):
             content = content_plain
             if "<html" in content_plain:
                 soup = BeautifulSoup(content_plain, features = 'html.parser')
+                strip_tags(soup)
                 content = ''.join(soup.get_text("\n\n", strip = True))
         else:
             soup = BeautifulSoup(content_html, features = 'html.parser')
+            strip_tags(soup)
             content = ''.join(soup.get_text("\n\n", strip = True))
 
     return content
