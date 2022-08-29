@@ -324,7 +324,7 @@ def strip_tags(soup):
     soup.smooth()
 
 
-def get_nested_body(email_msg, html_only = False):
+def get_nested_body(email_msg):
     """Gets all, potentially MIME-nested bodies."""
     content_plain = ""
     for part in email_msg.walk():
@@ -349,33 +349,32 @@ def get_nested_body(email_msg, html_only = False):
                 None
             content_html += tmp
 
-    if html_only:
-        if content_html:
-            # remove any conflicting document encodings
-            html = lxml.html.fromstring(re.sub("\<\?xml[^>]+>", "", content_html))
-            for tag in html.xpath('//img'):
-                if 'src' in tag.attrib:
-                    tag.attrib.pop('src')
-            for tag in html.xpath('//link'):
-                if 'src' in tag.attrib:
-                    tag.attrib.pop('src')
-            content = lxml.html.tostring(cleaner.clean_html(html), encoding = str)
-        else:
-            content = ""
+    if content_html:
+        # remove any conflicting document encodings
+        html = lxml.html.fromstring(re.sub("\<\?xml[^>]+>", "", content_html))
+        for tag in html.xpath('//img'):
+            if 'src' in tag.attrib:
+                tag.attrib.pop('src')
+        for tag in html.xpath('//link'):
+            if 'src' in tag.attrib:
+                tag.attrib.pop('src')
+        content_html = lxml.html.tostring(cleaner.clean_html(html), encoding = str)
     else:
-        # "plain" text might be HTML...
-        if content_plain:
-            content = content_plain
-            if "<html" in content_plain:
-                soup = BeautifulSoup(content_plain, features = 'html.parser')
-                strip_tags(soup)
-                content = ''.join(soup.get_text("\n\n", strip = True))
-        else:
-            soup = BeautifulSoup(content_html, features = 'html.parser')
+        content_html = ""
+
+    # "plain" text might be HTML...
+    if content_plain:
+        content = content_plain
+        if "<html" in content_plain:
+            soup = BeautifulSoup(content_plain, features = 'html.parser')
             strip_tags(soup)
             content = ''.join(soup.get_text("\n\n", strip = True))
+    else:
+        soup = BeautifulSoup(content_html, features = 'html.parser')
+        strip_tags(soup)
+        content = ''.join(soup.get_text("\n\n", strip = True))
 
-    return content
+    return content, content_html
 
 def get_attachments(email_msg, content = False):
     """Returns all attachments for an email message."""
@@ -403,8 +402,7 @@ def message_to_json(message):
         email_msg = email.message_from_binary_file(f, policy = email.policy.default)
 
     attachments = get_attachments(email_msg)
-    body = get_nested_body(email_msg)
-    html_body = get_nested_body(email_msg, True)
+    body, html_body = get_nested_body(email_msg)
 
     # signature verification
     # https://gist.github.com/russau/c0123ef934ef88808050462a8638a410
