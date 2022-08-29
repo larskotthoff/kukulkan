@@ -54,7 +54,7 @@ export function formatDate(date) {
   } else if((now - date) / (7 * 24 * 60 * 60 * 1000) < 1) { // less than one week ago
     return date.toLocaleDateString([], { weekday: 'short' }) + " " + time;
   } else if(date.getFullYear() === now.getFullYear()) { // this year
-    return date.toLocaleDateString([], { day: 'numeric', month: 'numeric' }) + " " + time;
+    return (date.getDate() + "").padStart(2, "0") + "/" + ((date.getMonth() + 1) + "").padStart(2, "0") + " " + time;
   } else {
     return date.toLocaleDateString() + " " + time;
   }
