@@ -46,15 +46,19 @@ export function filterSubjectColor(subject) {
   return subject.replace(new RegExp('^( *(RE|FWD|FW|AW) *: *)+', "igm"), "");
 }
 
+function padZ(number) {
+  return ("" + number).padStart(2, "0");
+}
+
 export function formatDate(date) {
   let now = new Date(),
-      time = date.toLocaleTimeString([], { hour: 'numeric', minute: 'numeric' });
+      time = padZ(date.getHours()) + ":" + padZ(date.getMinutes());
   if(date.setHours(0, 0, 0, 0) === now.setHours(0, 0, 0, 0)) { // today
     return time;
   } else if((now - date) / (7 * 24 * 60 * 60 * 1000) < 1) { // less than one week ago
     return date.toLocaleDateString([], { weekday: 'short' }) + " " + time;
   } else if(date.getFullYear() === now.getFullYear()) { // this year
-    return (date.getDate() + "").padStart(2, "0") + "/" + ((date.getMonth() + 1) + "").padStart(2, "0") + " " + time;
+    return padZ(date.getDate()) + "/" + padZ(date.getMonth() + 1) + " " + time;
   } else {
     return date.toLocaleDateString() + " " + time;
   }
