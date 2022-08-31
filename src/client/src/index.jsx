@@ -149,7 +149,7 @@ class ThreadRow extends React.PureComponent {
                     e.stopPropagation();
                     this.setState({ editTags: true });
                   }}>
-                  { this.props.thread.tags.filter(tag => !hiddenTags.includes(tag)).map((tag, index2) => (
+                  { this.props.thread.tags.filter(tag => !hiddenTags.includes(tag)).sort().map((tag, index2) => (
                     <span key={index2} style={{ backgroundColor: getColor(tag), color: invert(getColor(tag), true), padding: 2, margin: 2, borderRadius: 3 }}>{tag}</span>
                   )) }
                   </span>
