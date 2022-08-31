@@ -155,12 +155,12 @@ class ThreadRow extends React.PureComponent {
                   </span>
                 }
               </Grid>
-              <Grid item>
+              <Grid item style={{ maxWidth: "40vw", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                 {this.props.thread.subject}
               </Grid>
             </Grid>
           </TableCell>
-          <TableCell>
+          <TableCell style={{ maxWidth: "40vw", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
             {this.props.thread.authors.split(/\s*[,|]\s*/).map((author, index) => (
               <span key={index} style={{ backgroundColor: getColor(author), color: invert(getColor(author), true), padding: 2, margin: 2, borderRadius: 3 }}>{author}</span>
             )) }
