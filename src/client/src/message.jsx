@@ -26,7 +26,7 @@ import Forward from '@mui/icons-material/Forward';
 import { TagBar } from "./tags.jsx";
 
 import invert from 'invert-color';
-import { strip, getColor, apiURL } from "./utils.js";
+import { strip, getColor, apiURL, formatDate } from "./utils.js";
 
 import ICAL from 'ical.js';
 import linkifyStr from 'linkify-string';
@@ -289,7 +289,7 @@ export class Message extends React.Component {
           <Grid container direction="column" onClick={this.handleCollapse}>
             <Grid container direction="row" justifyContent="space-between">
               <Grid item><Typography>{this.formatAddrs(msg.from)}</Typography></Grid>
-              <Grid item><Typography>{msg.date}</Typography></Grid>
+              <Grid item><Typography>{formatDate(new Date(msg.date))}</Typography></Grid>
             </Grid>
             <Grid container direction="row" justifyContent="space-between">
               <Grid item xs><Typography style={{ overflow: "hidden", maxHeight: "3em" }} dangerouslySetInnerHTML={{ __html: this.mainPart }} /></Grid>
@@ -305,7 +305,7 @@ export class Message extends React.Component {
             { msg.to && <Typography>To: {this.formatAddrs(msg.to)}</Typography> }
             { msg.cc && <Typography>CC: {this.formatAddrs(msg.cc)}</Typography> }
             { msg.bcc && <Typography>BCC: {this.formatAddrs(msg.bcc)}</Typography> }
-            <Typography>Date: {msg.date}</Typography>
+            <Typography>Date: {msg.date} {(new Date()).getTimezoneOffset() !== (msg.date.substring(msg.date.length - 5, msg.date.length - 4) === "+" ? -1 : 1) * (parseInt(msg.date.substring(msg.date.length - 4, msg.date.length - 2)) * 60 + parseInt(msg.date.substring(msg.date.length - 2))) && "(" + (new Date(msg.date)).toLocaleString() + ")"}</Typography>
             <Grid container justifyContent="space-between">
               <Grid item xs><Typography>Subject: {msg.subject}</Typography></Grid>
               { this.props.print || <Grid item><ExpandLess/></Grid> }
