@@ -28,7 +28,6 @@ import { TagBar } from "./tags.jsx";
 import invert from 'invert-color';
 import { strip, getColor, apiURL, formatDate } from "./utils.js";
 
-import ICAL from 'ical.js';
 import linkifyStr from 'linkify-string';
 
 const linkifyOpts = { target: "_blank", rel: "nofollow" }
@@ -222,10 +221,12 @@ export class Message extends React.Component {
         .then(res => res.text())
         .then(
           (result) => {
-            let comp = new ICAL.Component(ICAL.parse(result));
-            let vevent = comp.getFirstSubcomponent("vevent");
-            let evt = new ICAL.Event(vevent);
-            document.getElementById(id).innerText = evt.summary + " (" + evt.location + ")\n" + evt.startDate + " -- " + evt.endDate + "\n" + evt.attendees.map((a) => a.jCal[1].cn).join(", ");
+            import("ical.js").then(ICAL => {
+              let comp = new ICAL.Component(ICAL.parse(result));
+              let vevent = comp.getFirstSubcomponent("vevent");
+              let evt = new ICAL.Event(vevent);
+              document.getElementById(id).innerText = evt.summary + " (" + evt.location + ")\n" + evt.startDate + " -- " + evt.endDate + "\n" + evt.attendees.map((a) => a.jCal[1].cn).join(", ");
+            });
           },
           (e) => {
             console.log(e);
