@@ -352,12 +352,10 @@ def get_nested_body(email_msg):
     if content_html:
         # remove any conflicting document encodings
         html = lxml.html.fromstring(re.sub("\<\?xml[^>]+>", "", content_html))
-        for tag in html.xpath('//*[@src]'):
-            tag.attrib.pop('src')
-        for tag in html.xpath('//*[@background]'):
-            tag.attrib.pop('background')
         for tag in html.xpath('//*[@*[contains(.,"http")]]'):
-            tag.attrib.clear()
+            for name, value in tag.items():
+                if "http" in value:
+                    del tag.attrib[name]
         content_html = lxml.html.tostring(cleaner.clean_html(html), encoding = str)
     else:
         content_html = ""
