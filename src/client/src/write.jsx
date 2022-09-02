@@ -209,7 +209,7 @@ export function Write() {
   }, [timeLeft]);
 
   const quote = (text) => {
-    return "\n\n\nOn " + baseMsg.date + ", " + baseMsg.from + " wrote:\n\n>" +
+    return "\n\n\nOn " + baseMsg.date + ", " + baseMsg.from + " wrote:\n> " +
       text.replace(/&gt;/g, ">").replace(/&lt;/g, "<").split('\n').join("\n> ");
   };
 
