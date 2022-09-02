@@ -89,4 +89,10 @@ export function apiURL(suffix) {
   }
 }
 
+// https://stackoverflow.com/questions/10420352/converting-file-size-in-bytes-to-human-readable-string
+export function formatFSz(size) {
+  var i = Math.floor(Math.log(size) / Math.log(1024));
+  return (size / Math.pow(1024, i)).toFixed(2) * 1 + ' ' + ['Bi', 'kiB', 'MiB', 'GiB', 'TiB'][i];
+};
+
 // vim: tabstop=2 shiftwidth=2 expandtab

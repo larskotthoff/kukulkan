@@ -381,10 +381,12 @@ def get_attachments(email_msg, content = False):
         if part.get_content_maintype() == "multipart":
             continue
         if (part.get_content_disposition() in ["attachment", "inline"] or part.get_content_type() == "text/calendar") and not (part.get_content_disposition() == "inline" and part.get_content_type() == "text/plain"):
+            ctnt = part.get_content()
             attachments.append({
                 "filename": part.get_filename() if part.get_filename() else "unnamed attachment",
                 "content_type": part.get_content_type(),
-                "content": part.get_content() if content else None
+                "content_size": len(bytes(ctnt, "utf8")) if isinstance(ctnt, str) else len(bytes(ctnt)),
+                "content": ctnt if content else None
             })
     return attachments
 

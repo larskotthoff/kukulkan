@@ -26,7 +26,7 @@ import Forward from '@mui/icons-material/Forward';
 import { TagBar } from "./tags.jsx";
 
 import invert from 'invert-color';
-import { strip, getColor, apiURL, formatDate } from "./utils.js";
+import { strip, getColor, apiURL, formatDate, formatFSz } from "./utils.js";
 
 import linkifyStr from 'linkify-string';
 
@@ -235,7 +235,7 @@ export class Message extends React.Component {
       return (<Paper elevation={3} style={{ padding: ".5em" }} id={id}></Paper>);
     } else {
       return (<Button key={index} startIcon={<AttachFile/>} variant="outlined">
-        {attachment.filename} ({attachment.content_type})
+        {attachment.filename} ({formatFSz(attachment.content_size)}, {attachment.content_type})
       </Button>);
     }
   }
