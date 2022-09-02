@@ -115,7 +115,7 @@ export class Message extends React.Component {
     // separate into non-quoted and quoted text
     let lines = props.msg.body["text/plain"].split('\n');
     let lastLine = lines.length - 1;
-    for(let index = 0; index < lines.length; index++) {
+    for(let index = 1; index < lines.length; index++) {
       let line = strip(lines[index].trim());
       if((line === "--") || (line === "—")) { // signature block
         lastLine = index - 1;
