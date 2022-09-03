@@ -354,7 +354,7 @@ def get_nested_body(email_msg):
         html = lxml.html.fromstring(re.sub("\<\?xml[^>]+>", "", content_html))
         for tag in html.xpath('//*[@*[contains(.,"http")]]'):
             for name, value in tag.items():
-                if "http" in value:
+                if "http" in value and not name == "href":
                     del tag.attrib[name]
         content_html = lxml.html.tostring(cleaner.clean_html(html), encoding = str)
     else:
