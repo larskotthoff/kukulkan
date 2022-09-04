@@ -162,9 +162,9 @@ export function Write() {
     formData.append('refId', messageId.current);
     formData.append('action', action.current);
     formData.append('from', from);
-    formData.append('to', to.current.innerText.split('\n').join(", "));
-    formData.append('cc', cc.current.innerText.split('\n').join(", "));
-    formData.append('bcc', bcc.current.innerText.split('\n').join(", "));
+    formData.append('to', to.current.innerText);
+    formData.append('cc', cc.current.innerText);
+    formData.append('bcc', bcc.current.innerText);
     formData.append('subject', subject.current.value);
     formData.append('tags', tags.current.innerText.split('\n'));
     formData.append('body', body.current.value);

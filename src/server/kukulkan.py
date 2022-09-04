@@ -59,6 +59,22 @@ def close_db(e = None):
     g.db.close()
 
 
+def email_header(emails):
+    """Encodes email names and addresses as email header from list of addresses separated by newline."""
+    tmp = email.header.Header()
+    if len(emails) > 0:
+        parts = emails.split('\n')
+        for i in range(0, len(parts)):
+            [ name, address ] = parts[i].split('<')
+            if name.isascii():
+                tmp.append(name.strip(), 'ascii')
+            else:
+                tmp.append(name.strip(), 'utf8')
+            tmp.append('<' + address.strip() + ("," if i < (len(parts) - 1) else ""), 'ascii')
+
+    return tmp
+
+
 def create_app():
     """Flask application factory."""
     app = Flask(__name__, static_folder = "static")
@@ -230,9 +246,9 @@ def create_app():
 
         msg['Subject'] = request.values['subject']
         msg['From'] = account["name"] + " <" + account["email"] + ">"
-        msg['To'] = request.values['to']
-        msg['Cc'] = request.values['cc']
-        msg['Bcc'] = request.values['bcc']
+        msg['To'] = email_header(request.values['to'])
+        msg['Cc'] = email_header(request.values['cc'])
+        msg['Bcc'] = email_header(request.values['bcc'])
         msg['Date'] = email.utils.formatdate(localtime = True)
 
         msg_id = email.utils.make_msgid("kukulkan")
