@@ -65,12 +65,16 @@ def email_header(emails):
     if len(emails) > 0:
         parts = emails.split('\n')
         for i in range(0, len(parts)):
-            [ name, address ] = parts[i].split('<')
-            if name.isascii():
-                tmp.append(name.strip(), 'ascii')
-            else:
-                tmp.append(name.strip(), 'utf8')
-            tmp.append('<' + address.strip() + ("," if i < (len(parts) - 1) else ""), 'ascii')
+            try:
+                [ name, address ] = parts[i].split('<')
+                if name.isascii():
+                    tmp.append(name.strip(), 'ascii')
+                else:
+                    tmp.append(name.strip(), 'utf8')
+                address = '<' + address
+            except ValueError: # only email address, no name
+                address = parts[i]
+            tmp.append(address.strip() + ("," if i < (len(parts) - 1) else ""), 'ascii')
 
     return tmp
 
