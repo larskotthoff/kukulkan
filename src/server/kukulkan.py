@@ -459,10 +459,11 @@ def message_to_json(message):
         else:
             signature = None
 
-    try:
-        dkim_verify = dkim.verify(bytes(email_msg))
-    except Exception as e:
-        dkim_verify = False
+    #try:
+    #    dkim_verify = dkim.verify(bytes(email_msg))
+    #except Exception as e:
+    #    dkim_verify = False
+    dkim_verify = False
 
     return {
         "from": message.get_header("from").strip().replace('\t', ' '),
