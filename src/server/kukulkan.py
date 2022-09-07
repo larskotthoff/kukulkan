@@ -116,7 +116,7 @@ def create_app():
             response.headers["Access-Control-Allow-Origin"] = "*"
             response.headers["Cross-Origin-Opener-Policy"] = "cross-origin"
             response.headers["Cross-Origin-Resource-Policy"] = "cross-origin"
-            response.headers["X-Frame-Options"] = "CORSSORIGIN"
+            response.headers["X-Frame-Options"] = "CROSSORIGIN"
         else:
             response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
             response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
