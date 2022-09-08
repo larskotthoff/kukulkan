@@ -107,6 +107,7 @@ export class Message extends React.Component {
     this.getAttachment = this.getAttachment.bind(this);
     this.handleAttachment = this.handleAttachment.bind(this);
     this.formatAddrs = this.formatAddrs.bind(this);
+    this.updateAuth = this.updateAuth.bind(this);
 
     this.prevActive = this.props.active;
 
@@ -142,6 +143,40 @@ export class Message extends React.Component {
 
     this.mainPart = lines.slice(0, lastLine).join('\n');
     this.quotedPart = lines.slice(lastLine).join('\n');
+
+    this.sigMsg = "";
+    this.sigSev = "warning";
+
+    if(this.props.msg.signature) {
+      if(this.props.msg.signature.valid) {
+        this.sigMsg += "Signature verified";
+        this.sigSev = "success";
+      } else {
+        this.sigMsg += "Signature verification failed";
+        this.sigSev = "error";
+      }
+      if(this.props.msg.signature.message) {
+        this.sigMsg += " (" + this.props.msg.signature.message + ")";
+      }
+    } else {
+        this.sigMsg = "Message not signed";
+        this.sigSev = "info";
+    }
+    this.sigMsg += ".";
+  }
+
+  updateAuth() {
+    fetch(apiURL("api/auth_message/" + encodeURIComponent(this.props.msg.notmuch_id)))
+      .then(res => res.json())
+      .then(
+        (result) => {
+          this.authMsg = result.arc.authResults.replace(/\r\n/g, "");
+          this.forceUpdate();
+        },
+        (e) => {
+          console.log(e);
+        }
+      );
   }
 
   componentDidMount() {
@@ -166,6 +201,10 @@ export class Message extends React.Component {
         this.elementTop.current.getElementsByClassName("MuiAutocomplete-root")[0].dispatchEvent(new CustomEvent('read')),
       2000);
     }
+
+    if(this.state.expanded && !this.authMsg) {
+      this.updateAuth();
+    }
   }
 
   componentDidUpdate() {
@@ -184,6 +223,10 @@ export class Message extends React.Component {
       setTimeout(() =>
         this.elementTop.current.getElementsByClassName("MuiAutocomplete-root")[0].dispatchEvent(new CustomEvent('read')),
       500);
+    }
+
+    if(this.state.expanded && !this.authMsg) {
+      this.updateAuth();
     }
   }
 
@@ -260,30 +303,6 @@ export class Message extends React.Component {
       if(isEscape) document.activeElement.blur();
     };
 
-    let validMsg = "";
-    let validSev = "warning";
-
-    if(msg.dkim) {
-      validMsg = "DKIM verified";
-      validSev = "success";
-    } else {
-      validMsg = "DKIM verification failed";
-    }
-    if(msg.signature) {
-      validMsg += ", ";
-      if(msg.signature.valid) {
-        validMsg += "signature verified";
-        validSev = "success";
-      } else {
-        validMsg += "signature verification failed";
-        validSev = "error";
-      }
-      if(msg.signature.message) {
-        validMsg += " (" + msg.signature.message + ")";
-      }
-    }
-    validMsg += ".";
-
     return (
       <Paper elevation={this.props.active ? 20 : 3} sx={{ padding: 1, margin: 1, width: "80em" }} className={ this.props.active ? "kukulkan-active-thread" : ""} ref={this.elementTop}>
         <Collapse key={msg.notmuch_id + "_collapsed" } in={!this.state.expanded} timeout={timeout} unmountOnExit>
@@ -348,7 +367,10 @@ export class Message extends React.Component {
                 }
               </React.Fragment>
 
-              <Alert width="100%" severity={ validSev }>{ validMsg }</Alert>
+              <Alert width="100%" severity={ this.sigSev } style={{ whiteSpace: "pre-line" }}>
+                { this.sigMsg }
+                { this.authMsg && "\n" + this.authMsg }
+              </Alert>
             </React.Fragment>
           }
 

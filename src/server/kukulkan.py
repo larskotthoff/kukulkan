@@ -18,7 +18,6 @@ from flask_restful import Api, Resource
 
 import M2Crypto
 from M2Crypto import SMIME, BIO, X509
-import dkim
 
 import bleach
 from bs4 import BeautifulSoup
@@ -183,6 +182,13 @@ def create_app():
         msg = next(msgs)  # there can be only 1
         return send_file(msg.get_filename(), mimetype = "message/rfc822",
             as_attachment = True, attachment_filename = message_id+".eml")
+
+    @app.route("/api/auth_message/<path:message_id>")
+    def auth_message(message_id):
+        msgs = get_query("mid:{}".format(message_id), exclude = False).search_messages()
+        msg = next(msgs)  # there can be only 1
+        # https://npm.io/package/mailauth
+        return os.popen("mailauth " + msg.get_filename()).read()
 
     @app.route("/api/tag/add/<string:typ>/<path:nid>/<tag>")
     def tag_add(typ, nid, tag):
@@ -459,12 +465,6 @@ def message_to_json(message):
         else:
             signature = None
 
-    #try:
-    #    dkim_verify = dkim.verify(bytes(email_msg))
-    #except Exception as e:
-    #    dkim_verify = False
-    dkim_verify = False
-
     return {
         "from": message.get_header("from").strip().replace('\t', ' '),
         "to": message.get_header("to").strip().replace('\t', ' '),
@@ -483,8 +483,7 @@ def message_to_json(message):
         "attachments": attachments,
         "notmuch_id": message.get_message_id(),
         "tags": [ tag for tag in message.get_tags() ],
-        "signature": signature,
-        "dkim": dkim_verify
+        "signature": signature
     }
 
 
