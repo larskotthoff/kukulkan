@@ -107,7 +107,6 @@ export class Message extends React.Component {
     this.getAttachment = this.getAttachment.bind(this);
     this.handleAttachment = this.handleAttachment.bind(this);
     this.formatAddrs = this.formatAddrs.bind(this);
-    this.updateAuth = this.updateAuth.bind(this);
 
     this.prevActive = this.props.active;
 
@@ -158,25 +157,8 @@ export class Message extends React.Component {
       if(this.props.msg.signature.message) {
         this.sigMsg += " (" + this.props.msg.signature.message + ")";
       }
-    } else {
-        this.sigMsg = "Message not signed";
-        this.sigSev = "info";
     }
     this.sigMsg += ".";
-  }
-
-  updateAuth() {
-    fetch(apiURL("api/auth_message/" + encodeURIComponent(this.props.msg.notmuch_id)))
-      .then(res => res.json())
-      .then(
-        (result) => {
-          this.authMsg = result.arc.authResults.replace(/\r\n/g, "");
-          this.forceUpdate();
-        },
-        (e) => {
-          console.log(e);
-        }
-      );
   }
 
   componentDidMount() {
@@ -201,10 +183,6 @@ export class Message extends React.Component {
         this.elementTop.current.getElementsByClassName("MuiAutocomplete-root")[0].dispatchEvent(new CustomEvent('read')),
       2000);
     }
-
-    if(this.state.expanded && !this.authMsg) {
-      this.updateAuth();
-    }
   }
 
   componentDidUpdate() {
@@ -223,10 +201,6 @@ export class Message extends React.Component {
       setTimeout(() =>
         this.elementTop.current.getElementsByClassName("MuiAutocomplete-root")[0].dispatchEvent(new CustomEvent('read')),
       500);
-    }
-
-    if(this.state.expanded && !this.authMsg) {
-      this.updateAuth();
     }
   }
 
@@ -367,10 +341,11 @@ export class Message extends React.Component {
                 }
               </React.Fragment>
 
-              <Alert width="100%" severity={ this.sigSev } style={{ whiteSpace: "pre-line" }}>
-                { this.sigMsg }
-                { this.authMsg && "\n" + this.authMsg }
-              </Alert>
+              { msg.signature &&
+                <Alert width="100%" severity={ this.sigSev } style={{ whiteSpace: "pre-line" }}>
+                  { this.sigMsg }
+                </Alert>
+              }
             </React.Fragment>
           }
 
