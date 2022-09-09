@@ -188,7 +188,7 @@ def create_app():
         msgs = get_query("mid:{}".format(message_id), exclude = False).search_messages()
         msg = next(msgs)  # there can be only 1
         # https://npm.io/package/mailauth
-        return os.popen("mailauth " + msg.get_filename()).read()
+        return json.loads(os.popen("mailauth " + msg.get_filename()).read())['arc']['authResults']
 
     @app.route("/api/tag/add/<string:typ>/<path:nid>/<tag>")
     def tag_add(typ, nid, tag):

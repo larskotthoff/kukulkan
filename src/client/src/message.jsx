@@ -20,6 +20,7 @@ import ExpandMore from '@mui/icons-material/ExpandMore';
 
 import AttachFile from '@mui/icons-material/AttachFile';
 import Print from '@mui/icons-material/Print';
+import Security from '@mui/icons-material/Security';
 import Reply from '@mui/icons-material/Reply';
 import Forward from '@mui/icons-material/Forward';
 
@@ -177,6 +178,9 @@ export class Message extends React.Component {
     this.elementTop.current.addEventListener("forward", () => {
       window.open('/write?action=forward&id=' + encodeURIComponent(this.props.msg.notmuch_id), '_blank');
     });
+    this.elementTop.current.addEventListener("security", () => {
+      window.open(apiURL("api/auth_message/" + encodeURIComponent(this.props.msg.notmuch_id)), '_blank');
+    });
 
     if(this.state.expanded && this.props.msg.tags.includes("unread")) {
       setTimeout(() =>
@@ -308,7 +312,7 @@ export class Message extends React.Component {
 
           { this.props.print ||
             <React.Fragment>
-              <Grid container spacing={1} justifyContent="space-between" direction="row" style={{ minHeight: "3.5em" }}>
+              <Grid container justifyContent="space-between" direction="row" style={{ minHeight: "3.5em" }}>
                 <Grid item xs={11}>
                   <TagBar tagsObject={msg} options={this.props.allTags} id={msg.notmuch_id} type="message"/>
                 </Grid>
@@ -325,6 +329,11 @@ export class Message extends React.Component {
                 <Grid item key="print">
                   <a href={"/message?id=" + encodeURIComponent(msg.notmuch_id)} target="_blank" rel="noreferrer">
                     <Print/>
+                  </a>
+                </Grid>
+                <Grid item key="security">
+                  <a href={apiURL("api/auth_message/" + encodeURIComponent(msg.notmuch_id))} target="_blank" rel="noreferrer">
+                    <Security/>
                   </a>
                 </Grid>
               </Grid>
