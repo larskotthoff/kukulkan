@@ -99,6 +99,22 @@ class MessageText extends React.Component {
   }
 }
 
+function printUrl(id) {
+  return '/message?id=' + encodeURIComponent(id);
+}
+
+function replyUrl(id) {
+  return '/write?action=reply&id=' + encodeURIComponent(id);
+}
+
+function fwdUrl(id) {
+  return '/write?action=forward&id=' + encodeURIComponent(id);
+}
+
+function secUrl(id) {
+  return apiURL("api/auth_message/" + encodeURIComponent(id));
+}
+
 export class Message extends React.Component {
   constructor(props) {
     super(props);
@@ -170,16 +186,16 @@ export class Message extends React.Component {
     this.elementTop.current.addEventListener("toggleContent", this.handleHtml);
     this.elementTop.current.addEventListener("toggleCollapse", this.handleCollapse);
     this.elementTop.current.addEventListener("print", () => {
-      window.open('/message?id=' + encodeURIComponent(this.props.msg.notmuch_id), '_blank');
+      window.open(printUrl(this.props.msg.notmuch_id), '_blank');
     });
     this.elementTop.current.addEventListener("reply", () => {
-      window.open('/write?action=reply&id=' + encodeURIComponent(this.props.msg.notmuch_id), '_blank');
+      window.open(replyUrl(this.props.msg.notmuch_id), '_blank');
     });
     this.elementTop.current.addEventListener("forward", () => {
-      window.open('/write?action=forward&id=' + encodeURIComponent(this.props.msg.notmuch_id), '_blank');
+      window.open(fwdUrl(this.props.msg.notmuch_id), '_blank');
     });
     this.elementTop.current.addEventListener("security", () => {
-      window.open(apiURL("api/auth_message/" + encodeURIComponent(this.props.msg.notmuch_id)), '_blank');
+      window.open(secUrl(this.props.msg.notmuch_id), '_blank');
     });
 
     if(this.state.expanded && this.props.msg.tags.includes("unread")) {
@@ -317,22 +333,22 @@ export class Message extends React.Component {
                   <TagBar tagsObject={msg} options={this.props.allTags} id={msg.notmuch_id} type="message"/>
                 </Grid>
                 <Grid item key="reply">
-                  <a href={"/write?action=reply&id=" + encodeURIComponent(msg.notmuch_id)} target="_blank" rel="noreferrer">
+                  <a href={replyUrl(msg.notmuch_id)} target="_blank" rel="noreferrer">
                     <Reply/>
                   </a>
                 </Grid>
                 <Grid item key="forward">
-                  <a href={"/write?action=forward&id=" + encodeURIComponent(msg.notmuch_id)} target="_blank" rel="noreferrer">
+                  <a href={fwdUrl(msg.notmuch_id)} target="_blank" rel="noreferrer">
                     <Forward/>
                   </a>
                 </Grid>
                 <Grid item key="print">
-                  <a href={"/message?id=" + encodeURIComponent(msg.notmuch_id)} target="_blank" rel="noreferrer">
+                  <a href={printUrl(msg.notmuch_id)} target="_blank" rel="noreferrer">
                     <Print/>
                   </a>
                 </Grid>
                 <Grid item key="security">
-                  <a href={apiURL("api/auth_message/" + encodeURIComponent(msg.notmuch_id))} target="_blank" rel="noreferrer">
+                  <a href={secUrl(msg.notmuch_id)} target="_blank" rel="noreferrer">
                     <Security/>
                   </a>
                 </Grid>
