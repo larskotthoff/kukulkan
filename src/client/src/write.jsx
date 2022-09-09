@@ -118,40 +118,50 @@ export function Write() {
       action.current = "compose";
     }
 
-    messageId.current = searchParams.get("id");
-    if(messageId.current !== null) {
-      setLoading(true);
-      setBaseMsg(null);
-      fetch(apiURL("api/message/" + encodeURIComponent(messageId.current)))
-        .then(res => res.json())
-        .then(
-          (result) => {
-            setBaseMsg(result);
-            if(action.current === "forward" && result.attachments) {
-              // attach files attached to previous email
-              setFiles(result.attachments.map(a => { return { dummy: true, name: a.filename }; }));
+    fetch(apiURL("api/accounts/"))
+      .then(res => res.json())
+      .then((accounts) => {
+        fetch(apiURL("api/tags/"))
+          .then(res => res.json())
+          .then((tags) => {
+            setAccounts(accounts);
+            setFrom(accounts.find(a => a.default).id);
+            setAllTags(tags);
+
+            messageId.current = searchParams.get("id");
+            if(messageId.current !== null) {
+              setLoading(true);
+              setBaseMsg(null);
+              fetch(apiURL("api/message/" + encodeURIComponent(messageId.current)))
+                .then(res => res.json())
+                .then(
+                  (result) => {
+                    setBaseMsg(result);
+                    if(action.current === "forward" && result.attachments) {
+                      // attach files attached to previous email
+                      setFiles(result.attachments.map(a => { return { dummy: true, name: a.filename }; }));
+                    }
+                    let acct = accounts.find(a => result.to.includes(a.email));
+                    if(!acct) {
+                      acct = accounts.find(a => result.from.includes(a.email));
+                    }
+                    if(acct) {
+                      setFrom(acct.id);
+                    }
+                    error.current = null;
+                    document.title = "Compose: " + prefix(result.subject);
+                  },
+                  (e) => {
+                    setBaseMsg(null);
+                    error.current = e;
+                  })
+                .finally(() => {
+                  setLoading(false);
+                });
             }
-            if(accounts) {
-              let acct = accounts.find(a => result.to.includes(a.email));
-              if(!acct) {
-                acct = accounts.find(a => result.from.includes(a.email));
-              }
-              if(acct) {
-                setFrom(acct.id);
-              }
-            }
-            error.current = null;
-            document.title = "Compose: " + prefix(result.subject);
-          },
-          (e) => {
-            setBaseMsg(null);
-            error.current = e;
-          })
-        .finally(() => {
-          setLoading(false);
-        });
-    }
-  }, [searchParams, accounts]);
+          });
+      });
+  }, [searchParams]);
 
   const handleAttach = (event: React.ChangeEvent<HTMLInputElement>) => {
     setFiles(files.concat(Array.from(event.target.files)));
@@ -261,23 +271,6 @@ export function Write() {
     }
     return [ tmpTo, tmpCc ];
   };
-
-  useEffect(() => {
-    fetch(apiURL("api/accounts/"))
-      .then(res => res.json())
-      .then((result) => {
-        setAccounts(result);
-        setFrom(result.find(a => a.default).id);
-      });
-  }, []);
-
-  useEffect(() => {
-    fetch(apiURL("api/tags/"))
-      .then(res => res.json())
-      .then((result) => {
-        setAllTags(result);
-      });
-  }, []);
 
   useHotkeys('a', () => document.getElementById("attach").click());
   useHotkeys('y', () => setSending(true));
