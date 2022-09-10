@@ -416,12 +416,19 @@ def get_attachments(email_msg, content = False):
                 gcal = icalendar.Calendar.from_ical(ctnt)
                 for component in gcal.walk():
                     if component.name == "VEVENT":
+                        people = [component.get("organizer").params["CN"]]
+                        a = component.get("attendee")
+                        if type(a) == list:
+                            people += [ c.params["CN"] for c in a ]
+                        else:
+                            people.append(a.params["CN"])
+                        print(people)
                         preview = {
                             "summary": component.get("summary"),
                             "location": component.get("location"),
                             "start": component.get("dtstart").dt.astimezone(tz.tzlocal()).strftime("%c"),
                             "end": component.get("dtend").dt.astimezone(tz.tzlocal()).strftime("%c"),
-                            "attendees": ", ".join([ c.params["CN"] for c in [component.get("organizer")] + component.get("attendee") ])
+                            "attendees": ", ".join(people)
                         }
 
             attachments.append({
