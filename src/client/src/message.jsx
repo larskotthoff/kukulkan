@@ -253,23 +253,11 @@ export class Message extends React.Component {
     if(attachment.content_type.includes("image")) {
       return (<img src={apiURL("api/attachment/" + encodeURIComponent(msg.notmuch_id) + "/" + index)} alt={attachment.filename} style={{ maxWidth: "30em", maxHeight: "20em" }}/>);
     } else if(attachment.content_type.includes("calendar")) {
-      let id = "att-" + msg.notmuch_id + "-" + index;
-      fetch(apiURL("api/attachment/" + encodeURIComponent(msg.notmuch_id) + "/" + index))
-        .then(res => res.text())
-        .then(
-          (result) => {
-            import("ical.js").then(ICAL => {
-              let comp = new ICAL.Component(ICAL.parse(result));
-              let vevent = comp.getFirstSubcomponent("vevent");
-              let evt = new ICAL.Event(vevent);
-              document.getElementById(id).innerText = evt.summary + " (" + evt.location + ")\n" + evt.startDate + " -- " + evt.endDate + "\n" + evt.attendees.map((a) => a.jCal[1].cn).join(", ");
-            });
-          },
-          (e) => {
-            console.log(e);
-          }
-        );
-      return (<Paper elevation={3} style={{ padding: ".5em" }} id={id}></Paper>);
+      return (<Paper elevation={3} style={{ padding: ".5em", whiteSpace: "pre-line" }}>
+        { attachment.preview.summary + " (" + attachment.preview.location + ")\n" +
+          attachment.preview.start + " — " + attachment.preview.end + "\n" +
+          attachment.preview.attendees }
+        </Paper>);
     } else {
       return (<Button key={index} startIcon={<AttachFile/>} variant="outlined">
         {attachment.filename} ({formatFSz(attachment.content_size)}, {attachment.content_type})

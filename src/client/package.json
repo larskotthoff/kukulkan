@@ -8,7 +8,6 @@
     "@mui/icons-material": "^5.8.0",
     "@mui/material": "^5.8.0",
     "crypto-random-string": "^5.0.0",
-    "ical.js": "^1.5.0",
     "invert-color": "^2.0.0",
     "linkify-string": "^3.0.4",
     "linkifyjs": "^3.0.5",

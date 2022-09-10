@@ -16,6 +16,9 @@ from flask import Flask, current_app, g, send_file, send_from_directory, request
 from werkzeug.utils import safe_join
 from flask_restful import Api, Resource
 
+import icalendar
+from dateutil import tz
+
 import M2Crypto
 from M2Crypto import SMIME, BIO, X509
 
@@ -408,11 +411,25 @@ def get_attachments(email_msg, content = False):
             continue
         if (part.get_content_disposition() in ["attachment", "inline"] or part.get_content_type() == "text/calendar") and not (part.get_content_disposition() == "inline" and part.get_content_type() == "text/plain"):
             ctnt = part.get_content()
+            if part.get_content_type() == "text/calendar":
+                # create "preview"
+                gcal = icalendar.Calendar.from_ical(ctnt)
+                for component in gcal.walk():
+                    if component.name == "VEVENT":
+                        preview = {
+                            "summary": component.get("summary"),
+                            "location": component.get("location"),
+                            "start": component.get("dtstart").dt.astimezone(tz.tzlocal()).strftime("%c"),
+                            "end": component.get("dtend").dt.astimezone(tz.tzlocal()).strftime("%c"),
+                            "attendees": ", ".join([ c.params["CN"] for c in [component.get("organizer")] + component.get("attendee") ])
+                        }
+
             attachments.append({
                 "filename": part.get_filename() if part.get_filename() else "unnamed attachment",
                 "content_type": part.get_content_type(),
                 "content_size": len(bytes(ctnt, "utf8")) if isinstance(ctnt, str) else len(bytes(ctnt)),
-                "content": ctnt if content else None
+                "content": ctnt if content else None,
+                "preview": preview
             })
     return attachments
 
