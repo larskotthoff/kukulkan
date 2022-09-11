@@ -411,6 +411,7 @@ def get_attachments(email_msg, content = False):
             continue
         if (part.get_content_disposition() in ["attachment", "inline"] or part.get_content_type() == "text/calendar") and not (part.get_content_disposition() == "inline" and part.get_content_type() == "text/plain"):
             ctnt = part.get_content()
+            preview = None
             if part.get_content_type() == "text/calendar":
                 # create "preview"
                 gcal = icalendar.Calendar.from_ical(ctnt)
