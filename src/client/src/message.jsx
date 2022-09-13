@@ -137,7 +137,7 @@ export class Message extends React.Component {
       if((line === "--") || (line === "—")) { // signature block
         lastLine = index - 1;
         break;
-      } else if(line === "From:") { // outlook
+      } else if(line.match(/^From:/)) { // outlook
         lastLine = index;
         break;
       } else if(line === "-----Original Message-----") { // also outlook
