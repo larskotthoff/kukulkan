@@ -140,6 +140,9 @@ export class Message extends React.Component {
       } else if(line.match(/^From:/)) { // outlook
         lastLine = index;
         break;
+      } else if(line.match(/^On.*wrote:$/)) { // also outlook?
+        lastLine = index;
+        break;
       } else if(line === "-----Original Message-----") { // also outlook
         lastLine = index;
         break;
@@ -294,7 +297,7 @@ export class Message extends React.Component {
               <Grid item><Typography>{formatDate(new Date(msg.date))}</Typography></Grid>
             </Grid>
             <Grid container direction="row" justifyContent="space-between">
-              <Grid item xs><Typography style={{ overflow: "hidden", maxHeight: "3em" }} dangerouslySetInnerHTML={{ __html: this.mainPart }} /></Grid>
+              <Grid item xs><Typography style={{ overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }} dangerouslySetInnerHTML={{ __html: this.mainPart }} /></Grid>
               <Grid item><ExpandMore/></Grid>
             </Grid>
           </Grid>
