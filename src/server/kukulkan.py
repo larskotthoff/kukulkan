@@ -423,7 +423,6 @@ def get_attachments(email_msg, content = False):
                             people += [ c.params["CN"] for c in a ]
                         else:
                             people.append(a.params["CN"])
-                        print(people)
                         preview = {
                             "summary": component.get("summary"),
                             "location": component.get("location"),
