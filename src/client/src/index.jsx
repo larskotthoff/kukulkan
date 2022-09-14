@@ -137,9 +137,9 @@ class ThreadRow extends React.PureComponent {
           }
         }}>
           <TableCell>{ this.props.thread.tags.includes("attachment") && <AttachFile /> }</TableCell>
-          <TableCell>{ this.renderDateNum(this.props.thread) }</TableCell>
-          <TableCell>
-            <Grid container spacing={1} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+          <TableCell style={{ maxWidth: "10vw", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{ this.renderDateNum(this.props.thread) }</TableCell>
+          <TableCell style={{ maxWidth: "50vw", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            <Grid container spacing={1} wrap="nowrap">
               <Grid item>
                 { this.state.editTags ?
                   <TagBar className="kukulkan-tagBar"
@@ -155,12 +155,12 @@ class ThreadRow extends React.PureComponent {
                   </span>
                 }
               </Grid>
-              <Grid item style={{ maxWidth: "40vw", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              <Grid item style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
                 {this.props.thread.subject}
               </Grid>
             </Grid>
           </TableCell>
-          <TableCell style={{ maxWidth: "40vw", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          <TableCell style={{ maxWidth: "30vw", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
             {this.props.thread.authors.split(/\s*[,|]\s*/).map((author, index) => (
               <span key={index} style={{ backgroundColor: getColor(author), color: invert(getColor(author), true), padding: 2, margin: 2, borderRadius: 3 }}>{author}</span>
             )) }
@@ -174,7 +174,7 @@ class ThreadRow extends React.PureComponent {
 class Threads extends React.PureComponent {
   render() {
     return (
-      <Box id="threads" sx={{ mt: 1, width: "90%" }}>
+      <Box id="threads" style={{ width: "100%" }}>
       { this.props.threads &&
         <React.Fragment>
         <Typography align="right">{this.props.threads.length} threads.</Typography>
@@ -298,7 +298,7 @@ function Kukulkan() {
 
   return (
     <ThemeProvider theme={theme}>
-      <Container component="main" maxWidth="90%">
+      <Container component="main" maxWidth="100%">
         <CssBaseline />
         <Box
           sx={{
@@ -313,7 +313,7 @@ function Kukulkan() {
                 flexDirection: 'row',
                 alignItems: 'center',
                 mt: 1,
-                width: "70%"
+                width: "80%"
               }}>
             <Grid item sx={{ width: "90%" }}>
               <Search setSearchParams={setSearchParams} query={query.current} allTags={allTags} />
