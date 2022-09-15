@@ -82,7 +82,7 @@ class ThreadRow extends React.PureComponent {
     this.focusTagBar = false;
     this.del = false;
 
-    this.height = 31;
+    this.height = "2em";
   }
 
   renderDateNum(thread) {
