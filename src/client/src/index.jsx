@@ -64,7 +64,7 @@ class Search extends React.PureComponent {
               }
             }
           }}
-          renderInput={(params) => <TextField {...params} label="Search" className="kukulkan-queryBox" name="search" variant="standard" fullWidth autoFocus margin="normal" />}
+          renderInput={(params) => <TextField {...params} className="kukulkan-queryBox" name="search" variant="standard" fullWidth autoFocus margin="normal" />}
         />
       </Box>
     );
