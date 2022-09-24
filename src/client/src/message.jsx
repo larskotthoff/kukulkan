@@ -131,7 +131,7 @@ export class Message extends React.Component {
 
     // separate into non-quoted and quoted text
     let lines = props.msg.body["text/plain"].split('\n');
-    let lastLine = lines.length - 1;
+    let lastLine = lines.length;
     for(let index = 1; index < lines.length; index++) {
       let line = strip(lines[index].trim());
       if((line === "--") || (line === "—")) { // signature block
@@ -158,6 +158,8 @@ export class Message extends React.Component {
       } else if(line.length > 1 && !line.startsWith(">") && !line.startsWith("&gt;")) {
         // don't break if we see a > because there may be inline replies
         lastLine = index + 1;
+      } else if(lastLine === lines.length && (line.startsWith(">") || line.startsWith("&gt;"))) {
+        lastLine = index;
       }
     }
 
