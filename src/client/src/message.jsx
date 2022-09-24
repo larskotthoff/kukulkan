@@ -78,7 +78,7 @@ class MessageText extends React.Component {
     return (
       <React.Fragment>
         <Box style={{ whiteSpace: "pre-line" }} dangerouslySetInnerHTML={{ __html: linkifyStr(this.props.mainPart, linkifyOpts) }} />
-        { this.props.quotedPart.length > 0 &&
+        { this.props.quotedPart &&
           <Box onClick={this.handleCollapse}>
             <Collapse key={ this.props.id + "_quoted_collapsed" } in={!this.state.expanded} timeout={timeout} unmountOnExit>
               <Grid container justifyContent="space-between">
@@ -140,9 +140,12 @@ export class Message extends React.Component {
       } else if(line.match(/^From:/)) { // outlook
         lastLine = index;
         break;
-      } else if(line.match(/^On.*wrote:$/)) { // also outlook?
+      } else if(line.match(/^On.*wrote:$/)) { // various
         lastLine = index;
-        break;
+        if(!lines.slice(lastLine).some(l => l.startsWith(">") || l.startsWith("&gt;"))) {
+          // only break if there are no quote signs afterwards (outlook)
+          break;
+        }
       } else if(line === "-----Original Message-----") { // also outlook
         lastLine = index;
         break;
@@ -154,14 +157,17 @@ export class Message extends React.Component {
         break;
       } else if(line.length > 1 && !line.startsWith(">") && !line.startsWith("&gt;")) {
         // don't break if we see a > because there may be inline replies
-        lastLine = index;
+        lastLine = index + 1;
       }
     }
 
-    if((lines.length - 1) - lastLine < 2) lastLine = lines.length;
+    // only whitespace on remaining lines
+    if(lines.slice(lastLine).join("").match(/^\s*$/)) lastLine = lines.length;
 
     this.mainPart = lines.slice(0, lastLine).join('\n');
-    this.quotedPart = lines.slice(lastLine).join('\n');
+    if(lastLine !== lines.length) {
+      this.quotedPart = lines.slice(lastLine).join('\n');
+    }
 
     this.sigMsg = "";
     this.sigSev = "warning";
