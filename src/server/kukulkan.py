@@ -183,8 +183,9 @@ def create_app():
     def download_raw_message(message_id):
         msgs = get_query("mid:{}".format(message_id), exclude = False).search_messages()
         msg = next(msgs)  # there can be only 1
-        return send_file(msg.get_filename(), mimetype = "message/rfc822",
-            as_attachment = True, attachment_filename = message_id+".eml")
+        with open(msg.get_filename(), "r") as f:
+            content = f.read()
+        return content
 
     @app.route("/api/auth_message/<path:message_id>")
     def auth_message(message_id):

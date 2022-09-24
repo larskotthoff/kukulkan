@@ -208,6 +208,9 @@ export class Message extends React.Component {
     this.elementTop.current.addEventListener("security", () => {
       window.open(secUrl(this.props.msg.notmuch_id), '_blank');
     });
+    this.elementTop.current.addEventListener("raw", () => {
+      window.open(apiURL("api/raw_message/" + encodeURIComponent(this.props.msg.notmuch_id)), '_blank');
+    });
 
     if(this.state.expanded && this.props.msg.tags.includes("unread")) {
       setTimeout(() =>
