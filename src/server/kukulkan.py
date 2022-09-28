@@ -305,7 +305,8 @@ def create_app():
                 (notmuch_msg, status) = db_write.index_file(fname, True)
                 notmuch_msg.maildir_flags_to_tags()
                 for tag in request.values['tags'].split(',') + account["additional_sent_tags"]:
-                    notmuch_msg.add_tag(tag)
+                    if tag != "":
+                        notmuch_msg.add_tag(tag)
                 notmuch_msg.add_tag("sent")
                 notmuch_msg.tags_to_maildir_flags()
                 db_write.end_atomic()
