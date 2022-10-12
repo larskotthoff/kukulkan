@@ -358,6 +358,7 @@ def strip_tags(soup):
 def get_nested_body(email_msg):
     """Gets all, potentially MIME-nested bodies."""
     content_plain = ""
+    content_html = ""
     for part in email_msg.walk():
         if part.get_content_type() == "text/plain":
             tmp = part.get_content()
@@ -367,18 +368,19 @@ def get_nested_body(email_msg):
             except Exception as e:
                 print(e)
             content_plain += tmp
-
-    content_html = ""
-    for part in email_msg.walk():
-        if part.get_content_type() == "text/html":
+        elif part.get_content_type() == "text/html":
             tmp = part.get_content()
             try:
                 repl = current_app.config.custom["filter"]["content"]["text/html"]
                 tmp = re.sub(repl[0], repl[1], tmp)
             except Exception as e:
                 print(e)
-                None
             content_html += tmp
+        elif part.get_content_type() == "application/pkcs7-mime":
+            tmp = email.message_from_bytes(part.get_payload(decode = True), policy = email.policy.default)
+            tmp_plain, tmp_html = get_nested_body(tmp)
+            content_plain += tmp_plain
+            content_html += tmp_html
 
     if content_html:
         # remove any conflicting document encodings
@@ -459,7 +461,7 @@ def message_to_json(message):
     # signature verification
     # https://gist.github.com/russau/c0123ef934ef88808050462a8638a410
     for part in email_msg.walk():
-        if 'signed' in part.get_content_type():
+        if 'signed' in part.get_content_type() or part.get_content_type() == "application/pkcs7-mime":
             try:
                 p7, data_bio = SMIME.smime_load_pkcs7_bio(BIO.MemoryBuffer(bytes(part)))
 
