@@ -377,7 +377,11 @@ def get_nested_body(email_msg):
                 print(e)
             content_html += tmp
         elif part.get_content_type() == "application/pkcs7-mime":
-            tmp = email.message_from_bytes(part.get_payload(decode = True), policy = email.policy.default)
+            from asn1crypto import cms
+            content_info = cms.ContentInfo.load(part.get_payload(decode = True))
+            compressed_data = content_info['content']
+            smime = compressed_data['encap_content_info']['content'].native
+            tmp = email.message_from_bytes(smime, policy = email.policy.default)
             tmp_plain, tmp_html = get_nested_body(tmp)
             content_plain += tmp_plain
             content_html += tmp_html
