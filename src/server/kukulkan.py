@@ -377,6 +377,7 @@ def get_nested_body(email_msg):
                 print(e)
             content_html += tmp
         elif part.get_content_type() == "application/pkcs7-mime":
+            # https://stackoverflow.com/questions/58427642/how-to-extract-data-from-application-pkcs7-mime-using-the-email-module-in-pyth
             from asn1crypto import cms
             content_info = cms.ContentInfo.load(part.get_payload(decode = True))
             compressed_data = content_info['content']
