@@ -39,7 +39,7 @@ export function extractEmailsSort(string) {
 }
 
 export function filterTagsColor(tags) {
-  return tags.filter(i => { return i !== "replied" && i !== "sent"; });
+  return tags.filter(i => { return i !== "replied" && i !== "sent" && i !== "signed" && i !== "passed"; });
 }
 
 export function filterSubjectColor(subject) {
