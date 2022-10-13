@@ -447,6 +447,17 @@ def get_attachments(email_msg, content = False):
                 "content": ctnt if content else None,
                 "preview": preview
             })
+
+            # "nested" attachments
+            if part.get_content_type() == "application/pkcs7-mime":
+                # https://stackoverflow.com/questions/58427642/how-to-extract-data-from-application-pkcs7-mime-using-the-email-module-in-pyth
+                from asn1crypto import cms
+                content_info = cms.ContentInfo.load(part.get_payload(decode = True))
+                compressed_data = content_info['content']
+                smime = compressed_data['encap_content_info']['content'].native
+                tmp = email.message_from_bytes(smime, policy = email.policy.default)
+                att_tmp = get_attachments(tmp, content)
+                attachments += att_tmp
     return attachments
 
 
