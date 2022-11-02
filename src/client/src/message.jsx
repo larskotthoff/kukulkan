@@ -69,9 +69,11 @@ class MessageText extends React.Component {
   }
 
   handleCollapse() {
-    this.setState(prevState => ({
-      expanded: !prevState.expanded
-    }));
+    if(document.drag === false) {
+      this.setState(prevState => ({
+        expanded: !prevState.expanded
+      }));
+    }
   }
 
   render() {
@@ -187,6 +189,10 @@ export class Message extends React.Component {
       }
     }
     this.sigMsg += ".";
+
+    document.drag = false;
+    document.addEventListener('mousedown', () => document.drag = false);
+    document.addEventListener('mousemove', () => document.drag = true);
   }
 
   componentDidMount() {
@@ -239,17 +245,19 @@ export class Message extends React.Component {
   }
 
   handleCollapse() {
-    this.setState(prevState => ({
-      expanded: !prevState.expanded,
-      html: prevState.html
-    }), () => {
-      if(this.state.expanded) {
-        if(this.props.setActiveMsg) {
-          // not available in print view
-          this.props.setActiveMsg(this.props.index);
+    if(document.drag === false) {
+      this.setState(prevState => ({
+        expanded: !prevState.expanded,
+        html: prevState.html
+      }), () => {
+        if(this.state.expanded) {
+          if(this.props.setActiveMsg) {
+            // not available in print view
+            this.props.setActiveMsg(this.props.index);
+          }
         }
-      }
-    });
+      });
+    }
   }
 
   handleHtml() {
