@@ -114,7 +114,7 @@ def create_app():
     def security_headers(response):
         response.headers["X-Content-Type-Options"] = "nosniff"
 
-        if os.getenv("FLASK_ENV") == "development":
+        if os.getenv("FLASK_DEBUG"):
             response.headers["Access-Control-Allow-Origin"] = "*"
             response.headers["Cross-Origin-Opener-Policy"] = "cross-origin"
             response.headers["Cross-Origin-Resource-Policy"] = "cross-origin"
