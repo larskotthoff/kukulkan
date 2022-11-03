@@ -25,17 +25,7 @@ export function strip(html) {
 }
 
 export function extractEmailsSort(string) {
-  let tmp = string.split('');
-  let res = [];
-
-  let keep = false;
-  for(let i = 0; i < tmp.length; i++) {
-    if(tmp[i] === '<') keep = true;
-    if(tmp[i] === '>') keep = false;
-    if(keep) res.push(tmp[i]);
-  }
-
-  return res.sort().join('');
+  return string.match(/([^ <>]+@[^ >]+)/g).join('').split('').sort().join('');
 }
 
 export function filterTagsColor(tags) {
