@@ -271,10 +271,12 @@ export class Message extends React.Component {
     window.open(apiURL("api/attachment/" + encodeURIComponent(this.props.msg.notmuch_id) + "/" + attachment), '_blank');
   }
 
-  handleAttachment(msg, attachment, index) {
+  handleAttachment(msg, attachment, index, summary) {
     if(attachment.content_type.includes("image")) {
-      return (<img src={apiURL("api/attachment/" + encodeURIComponent(msg.notmuch_id) + "/" + index)} alt={attachment.filename} style={{ maxWidth: "30em", maxHeight: "20em" }}/>);
-    } else if(attachment.content_type.includes("calendar")) {
+      let mw = summary ? "3em" : "30em",
+          mh = summary ? "2em" : "20em";
+      return (<img src={apiURL("api/attachment/" + encodeURIComponent(msg.notmuch_id) + "/" + index)} alt={attachment.filename} style={{ maxWidth: mw, maxHeight: mh }}/>);
+    } else if(attachment.content_type.includes("calendar") && summary === false) {
       return (<Paper elevation={3} style={{ padding: ".5em", whiteSpace: "pre-line" }}>
         { attachment.preview.summary + " (" + attachment.preview.location + ")\n" +
           attachment.preview.start + " — " + attachment.preview.end + "\n" +
@@ -282,7 +284,7 @@ export class Message extends React.Component {
         </Paper>);
     } else {
       return (<Button key={index} startIcon={<AttachFile/>} variant="outlined">
-        {attachment.filename} ({formatFSz(attachment.content_size)}, {attachment.content_type})
+        {attachment.filename} {summary || (formatFSz(attachment.content_size), attachment.content_type)}
       </Button>);
     }
   }
@@ -311,8 +313,13 @@ export class Message extends React.Component {
       <Paper elevation={this.props.active ? 20 : 3} sx={{ padding: 1, margin: 1, width: "80em" }} className={ this.props.active ? "kukulkan-active-thread" : ""} ref={this.elementTop}>
         <Collapse key={msg.notmuch_id + "_collapsed" } in={!this.state.expanded} timeout={timeout} unmountOnExit>
           <Grid container direction="column" onClick={this.handleCollapse}>
-            <Grid container direction="row" justifyContent="space-between">
+            <Grid container direction="row" justifyContent="space-between" wrap="nowrap">
               <Grid item><Typography>{this.formatAddrs(msg.from)}</Typography></Grid>
+              { msg.attachments.filter((a) => a.filename !== "smime.p7s").map((attachment, index2) => (
+                  <Grid item key={index2} xs={1} onClick={() => { this.getAttachment(index2); }} style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      { this.handleAttachment(msg, attachment, index2, true) }
+                  </Grid>
+              )) }
               <Grid item><Typography>{formatDate(new Date(msg.date))}</Typography></Grid>
             </Grid>
             <Grid container direction="row" justifyContent="space-between">
@@ -369,7 +376,7 @@ export class Message extends React.Component {
                   <Grid container spacing={1}>
                     { msg.attachments.map((attachment, index2) => (
                         <Grid item align="center" key={index2} style={{ minHeight: "3em" }} onClick={() => { this.getAttachment(index2); }}>
-                          { this.handleAttachment(msg, attachment, index2) }
+                          { this.handleAttachment(msg, attachment, index2, false) }
                         </Grid>
                     )) }
                   </Grid>
