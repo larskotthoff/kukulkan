@@ -283,9 +283,14 @@ export class Message extends React.Component {
           attachment.preview.attendees }
         </Paper>);
     } else {
-      return (<Button key={index} startIcon={<AttachFile/>} variant="outlined">
-        {attachment.filename} {summary || (formatFSz(attachment.content_size), attachment.content_type)}
-      </Button>);
+      if(summary) {
+        // eslint-disable-next-line
+        return (<a href="#"><AttachFile/>{attachment.filename}</a>);
+      } else {
+        return (<Button key={index} startIcon={<AttachFile/>} variant="outlined">
+          {attachment.filename} ({formatFSz(attachment.content_size)}, {attachment.content_type})
+        </Button>);
+      }
     }
   }
 
@@ -309,6 +314,8 @@ export class Message extends React.Component {
       if(isEscape) document.activeElement.blur();
     };
 
+    const saw = 6 / msg.attachments.length;
+
     return (
       <Paper elevation={this.props.active ? 20 : 3} sx={{ padding: 1, margin: 1, width: "80em" }} className={ this.props.active ? "kukulkan-active-thread" : ""} ref={this.elementTop}>
         <Collapse key={msg.notmuch_id + "_collapsed" } in={!this.state.expanded} timeout={timeout} unmountOnExit>
@@ -316,7 +323,7 @@ export class Message extends React.Component {
             <Grid container direction="row" justifyContent="space-between" wrap="nowrap">
               <Grid item><Typography>{this.formatAddrs(msg.from)}</Typography></Grid>
               { msg.attachments.filter((a) => a.filename !== "smime.p7s").map((attachment, index2) => (
-                  <Grid item key={index2} xs={1} onClick={() => { this.getAttachment(index2); }} style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  <Grid item key={index2} xs={saw} onClick={() => { this.getAttachment(index2); }} style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                       { this.handleAttachment(msg, attachment, index2, true) }
                   </Grid>
               )) }
