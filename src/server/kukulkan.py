@@ -495,7 +495,7 @@ def message_to_json(message):
                     s.verify(p7, data_bio, flags = M2Crypto.SMIME.PKCS7_DETACHED)
                     signature = { "valid": True }
                 except M2Crypto.SMIME.PKCS7_Error as e:
-                    if str(e) == "certificate verify error (Verify error:self signed certificate)" or str(e) == "certificate verify error (Verify error:self signed certificate in certificate chain)" or str(e) == "certificate verify error (Verify error:unable to get local issuer certificate)":
+                    if "self-signed certificate" in str(e) or "self signed certificate" in str(e) or "unable to get local issuer certificate" in str(e):
                         try:
                             s.verify(p7, data_bio, flags = M2Crypto.SMIME.PKCS7_NOVERIFY | M2Crypto.SMIME.PKCS7_DETACHED)
                             signature = { "valid": True, "message": "self-signed or unavailable certificate(s)" }
