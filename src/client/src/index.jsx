@@ -238,8 +238,8 @@ function Kukulkan() {
       else qs = JSON.parse(qs);
       qs.unshift(query.current);
       qs = [...new Set(qs)];
-      // store up to 10 most recent queries
-      localStorage.setItem("queries", JSON.stringify(qs.slice(0, 10)));
+      // store up to 20 most recent queries
+      localStorage.setItem("queries", JSON.stringify(qs.slice(0, 20)));
 
       setLoading(true);
       fetch(apiURL("api/query/" + encodeURIComponent(query.current)))
