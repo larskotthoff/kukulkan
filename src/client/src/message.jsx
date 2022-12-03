@@ -123,7 +123,6 @@ export class Message extends React.Component {
     this.state = { expanded: this.props.open, html: false };
     this.handleCollapse = this.handleCollapse.bind(this);
     this.handleHtml = this.handleHtml.bind(this);
-    this.getAttachment = this.getAttachment.bind(this);
     this.handleAttachment = this.handleAttachment.bind(this);
     this.formatAddrs = this.formatAddrs.bind(this);
 
@@ -244,8 +243,8 @@ export class Message extends React.Component {
     }
   }
 
-  handleCollapse() {
-    if(document.drag === false) {
+  handleCollapse(e) {
+    if(document.drag === false && e.target.tagName !== "A") {
       this.setState(prevState => ({
         expanded: !prevState.expanded,
         html: prevState.html
@@ -267,30 +266,25 @@ export class Message extends React.Component {
     }));
   }
 
-  getAttachment(attachment) {
-    window.open(apiURL("api/attachment/" + encodeURIComponent(this.props.msg.notmuch_id) + "/" + attachment), '_blank');
-  }
-
   handleAttachment(msg, attachment, index, summary) {
     if(attachment.content_type.includes("image")) {
       let mw = summary ? "3em" : "30em",
           mh = summary ? "2em" : "20em";
-      return (<img src={apiURL("api/attachment/" + encodeURIComponent(msg.notmuch_id) + "/" + index)} alt={attachment.filename} style={{ maxWidth: mw, maxHeight: mh }}/>);
+      return (<a href={apiURL("api/attachment/" + encodeURIComponent(this.props.msg.notmuch_id) + "/" + index)} target="_blank" rel="noreferrer">
+          <img src={apiURL("api/attachment/" + encodeURIComponent(msg.notmuch_id) + "/" + index)} alt={attachment.filename} style={{ maxWidth: mw, maxHeight: mh }}/>
+        </a>);
     } else if(attachment.content_type.includes("calendar") && summary === false) {
-      return (<Paper elevation={3} style={{ padding: ".5em", whiteSpace: "pre-line" }}>
-        { attachment.preview.summary + " (" + attachment.preview.location + ")\n" +
-          attachment.preview.start + " — " + attachment.preview.end + "\n" +
-          attachment.preview.attendees }
-        </Paper>);
+      return (<a href={apiURL("api/attachment/" + encodeURIComponent(this.props.msg.notmuch_id) + "/" + index)} target="_blank" rel="noreferrer">
+          <Paper elevation={3} style={{ padding: ".5em", whiteSpace: "pre-line" }}>
+          { attachment.preview.summary + " (" + attachment.preview.location + ")\n" +
+            attachment.preview.start + " — " + attachment.preview.end + "\n" +
+            attachment.preview.attendees }
+          </Paper>
+        </a>);
     } else {
-      if(summary) {
-        // eslint-disable-next-line
-        return (<a href="#"><AttachFile/>{attachment.filename}</a>);
-      } else {
-        return (<Button key={index} startIcon={<AttachFile/>} variant="outlined">
-          {attachment.filename} ({formatFSz(attachment.content_size)}, {attachment.content_type})
-        </Button>);
-      }
+      return (<a href={apiURL("api/attachment/" + encodeURIComponent(this.props.msg.notmuch_id) + "/" + index)} target="_blank" rel="noreferrer"><AttachFile/>{attachment.filename}
+        {summary ? "" : " (" + formatFSz(attachment.content_size) + ", " + attachment.content_type + ")"}
+        </a>);
     }
   }
 
@@ -323,7 +317,7 @@ export class Message extends React.Component {
             <Grid container direction="row" justifyContent="space-between" wrap="nowrap">
               <Grid item><Typography>{this.formatAddrs(msg.from)}</Typography></Grid>
               { msg.attachments.filter((a) => a.filename !== "smime.p7s").map((attachment, index2) => (
-                  <Grid item key={index2} xs={saw} onClick={() => { this.getAttachment(index2); }} style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  <Grid item key={index2} xs={saw} style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                       { this.handleAttachment(msg, attachment, index2, true) }
                   </Grid>
               )) }
@@ -382,7 +376,7 @@ export class Message extends React.Component {
                 { msg.attachments &&
                   <Grid container spacing={1}>
                     { msg.attachments.map((attachment, index2) => (
-                        <Grid item align="center" key={index2} style={{ minHeight: "3em" }} onClick={() => { this.getAttachment(index2); }}>
+                        <Grid item align="center" xs={4} key={index2} style={{ minHeight: "3em" }}>
                           { this.handleAttachment(msg, attachment, index2, false) }
                         </Grid>
                     )) }
