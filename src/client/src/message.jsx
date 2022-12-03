@@ -244,7 +244,7 @@ export class Message extends React.Component {
   }
 
   handleCollapse(e) {
-    if(document.drag === false && e.target.tagName !== "A") {
+    if(document.drag === false && e !== null && e.target.tagName !== "A") {
       this.setState(prevState => ({
         expanded: !prevState.expanded,
         html: prevState.html
