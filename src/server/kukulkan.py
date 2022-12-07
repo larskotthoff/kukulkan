@@ -161,7 +161,7 @@ def create_app():
 
     @app.route("/api/attachment/<path:message_id>/<int:num>")
     def download_attachment(message_id, num):
-        msgs = get_query("mid:{}".format(message_id), exclude = False).search_messages()
+        msgs = get_query("id:{}".format(message_id), exclude = False).search_messages()
         msg = next(msgs)  # there can be only 1
         d = message_attachment(msg, num)
         if not d:
@@ -175,13 +175,13 @@ def create_app():
 
     @app.route("/api/message/<path:message_id>")
     def download_message(message_id):
-        msgs = get_query("mid:{}".format(message_id), exclude = False).search_messages()
+        msgs = get_query("id:{}".format(message_id), exclude = False).search_messages()
         msg = next(msgs)  # there can be only 1
         return message_to_json(msg)
 
     @app.route("/api/raw_message/<path:message_id>")
     def download_raw_message(message_id):
-        msgs = get_query("mid:{}".format(message_id), exclude = False).search_messages()
+        msgs = get_query("id:{}".format(message_id), exclude = False).search_messages()
         msg = next(msgs)  # there can be only 1
         with open(msg.get_filename(), "r") as f:
             content = f.read()
@@ -189,7 +189,7 @@ def create_app():
 
     @app.route("/api/auth_message/<path:message_id>")
     def auth_message(message_id):
-        msgs = get_query("mid:{}".format(message_id), exclude = False).search_messages()
+        msgs = get_query("id:{}".format(message_id), exclude = False).search_messages()
         msg = next(msgs)  # there can be only 1
         # https://npm.io/package/mailauth
         return json.loads(os.popen("mailauth " + msg.get_filename()).read())['arc']['authResults']
@@ -197,7 +197,7 @@ def create_app():
     @app.route("/api/tag/add/<string:typ>/<path:nid>/<tag>")
     def tag_add(typ, nid, tag):
         db_write = notmuch.Database(None, create = False, mode = notmuch.Database.MODE.READ_WRITE)
-        msgs = get_query(("mid" if typ == "message" else typ) + ":" + nid, db_write, False).search_messages()
+        msgs = get_query(("id" if typ == "message" else typ) + ":" + nid, db_write, False).search_messages()
         try:
             db_write.begin_atomic()
             for msg in msgs:
@@ -211,7 +211,7 @@ def create_app():
     @app.route("/api/tag/remove/<string:typ>/<path:nid>/<tag>")
     def tag_remove(typ, nid, tag):
         db_write = notmuch.Database(None, create = False, mode = notmuch.Database.MODE.READ_WRITE)
-        msgs = get_query(("mid" if typ == "message" else typ) + ":" + nid, db_write, False).search_messages()
+        msgs = get_query(("id" if typ == "message" else typ) + ":" + nid, db_write, False).search_messages()
         try:
             db_write.begin_atomic()
             for msg in msgs:
@@ -232,7 +232,7 @@ def create_app():
 
         if request.values['action'] == "forward":
             # attach attachments from original mail
-            refMsgs = get_query("mid:{}".format(request.values['refId']), exclude = False).search_messages()
+            refMsgs = get_query("id:{}".format(request.values['refId']), exclude = False).search_messages()
             refMsg = next(refMsgs)
             refAtts = message_attachment(refMsg)
             for key in request.values.keys():
@@ -269,7 +269,7 @@ def create_app():
         msg['Message-ID'] = msg_id
 
         if request.values['action'] == "reply":
-            refMsgs = get_query("mid:{}".format(request.values['refId']), exclude = False).search_messages()
+            refMsgs = get_query("id:{}".format(request.values['refId']), exclude = False).search_messages()
             refMsg = next(refMsgs)
             refMsg = message_to_json(refMsg)
             msg['In-Reply-To'] = '<' + refMsg['message_id'] + '>'
@@ -292,12 +292,12 @@ def create_app():
             try:
                 db_write.begin_atomic()
                 if request.values['action'] == "reply":
-                    refMsgs = get_query("mid:" + request.values['refId'], db_write, False).search_messages()
+                    refMsgs = get_query("id:" + request.values['refId'], db_write, False).search_messages()
                     for refMsg in refMsgs:
                         refMsg.add_tag("replied")
                         refMsg.tags_to_maildir_flags()
                 elif request.values['action'] == "forward":
-                    refMsgs = get_query("mid:" + request.values['refId'], db_write, False).search_messages()
+                    refMsgs = get_query("id:" + request.values['refId'], db_write, False).search_messages()
                     for refMsg in refMsgs:
                         refMsg.add_tag("passed")
                         refMsg.tags_to_maildir_flags()
