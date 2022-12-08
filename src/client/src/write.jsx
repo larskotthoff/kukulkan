@@ -136,39 +136,45 @@ export function Write() {
               fetch(apiURL("api/message/" + encodeURIComponent(messageId.current)))
                 .then(res => res.json())
                 .then((result) => {
-                    setBaseMsg(result);
-                    if(action.current === "forward" && result.attachments) {
-                      // attach files attached to previous email
-                      setFiles(result.attachments.map(a => { return { dummy: true, name: a.filename }; }));
-                    }
-                    let acct = accounts.find(a => result.to.includes(a.email));
-                    if(!acct) {
-                      acct = accounts.find(a => result.from.includes(a.email));
-                    }
-                    if(acct) {
-                      setFrom(acct.id);
-                    }
-                    error.current = false;
-                    document.title = "Compose: " + prefix(result.subject);
-                  },
-                  (e) => {
-                    setBaseMsg(null);
-                    error.current = true;
-                    statusMsg.current = "Error querying backend: " + e.message;
-                  })
-                  .finally(() => {
-                    setLoading(false);
-                  });
+                  setBaseMsg(result);
+                  if(action.current === "forward" && result.attachments) {
+                    // attach files attached to previous email
+                    setFiles(result.attachments.map(a => { return { dummy: true, name: a.filename }; }));
+                  }
+                  let acct = accounts.find(a => result.to.includes(a.email));
+                  if(!acct) {
+                    acct = accounts.find(a => result.from.includes(a.email));
+                  }
+                  if(acct) {
+                    setFrom(acct.id);
+                  }
+                  error.current = false;
+                  document.title = "Compose: " + prefix(result.subject);
+                })
+                .catch((e) => {
+                  setBaseMsg(null);
+                  error.current = true;
+                  statusMsg.current = "Error querying backend: " + e.message;
+                })
+                .finally(() => {
+                  setLoading(false);
+                });
+            } else {
+              setLoading(false);
             }
-          },
-          (e) => {
+          })
+          .catch((e) => {
             setBaseMsg(null);
             error.current = true;
             statusMsg.current = "Error querying backend: " + e.message;
-          })
-          .finally(() => {
             setLoading(false);
           });
+        })
+        .catch((e) => {
+          setBaseMsg(null);
+          error.current = true;
+          statusMsg.current = "Error querying backend: " + e.message;
+          setLoading(false);
         });
   }, [searchParams]);
 
