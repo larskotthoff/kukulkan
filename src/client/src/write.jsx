@@ -102,7 +102,8 @@ export function Write() {
   const [ccLoading, setCcLoading] = React.useState(false);
   const [bccLoading, setBccLoading] = React.useState(false);
 
-  const error = useRef(null);
+  const error = useRef(false);
+  const statusMsg = useRef(null);
   const messageId = useRef(null);
   const action = useRef(null);
 
@@ -134,8 +135,7 @@ export function Write() {
               setBaseMsg(null);
               fetch(apiURL("api/message/" + encodeURIComponent(messageId.current)))
                 .then(res => res.json())
-                .then(
-                  (result) => {
+                .then((result) => {
                     setBaseMsg(result);
                     if(action.current === "forward" && result.attachments) {
                       // attach files attached to previous email
@@ -148,19 +148,28 @@ export function Write() {
                     if(acct) {
                       setFrom(acct.id);
                     }
-                    error.current = null;
+                    error.current = false;
                     document.title = "Compose: " + prefix(result.subject);
                   },
                   (e) => {
                     setBaseMsg(null);
-                    error.current = e;
+                    error.current = true;
+                    statusMsg.current = "Error querying backend: " + e.message;
                   })
-                .finally(() => {
-                  setLoading(false);
-                });
+                  .finally(() => {
+                    setLoading(false);
+                  });
             }
+          },
+          (e) => {
+            setBaseMsg(null);
+            error.current = true;
+            statusMsg.current = "Error querying backend: " + e.message;
+          })
+          .finally(() => {
+            setLoading(false);
           });
-      });
+        });
   }, [searchParams]);
 
   const handleAttach = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -184,17 +193,18 @@ export function Write() {
       .then((response) => response.json())
       .then((result) => {
         if(result.sendStatus === 0) {
-          setSendingMsg("Message sent.");
+          statusMsg.current = "Message sent.";
         } else {
-          setSendingMsg("Failed to send message: " + result.sendOutput);
+          error.current = true;
+          statusMsg.current = "Failed to send message: " + result.sendOutput;
         }
       })
       .catch((error) => {
-        setSendingMsg("Error: " + error);
+        error.current = true;
+        statusMsg.current = "Error: " + error;
       })
       .finally(() => {
-        setTimeout(() => setSending(false), 10000);
-        document.title = "Sent: " + document.title;
+        setSending(false);
       });
   };
 
@@ -284,7 +294,7 @@ export function Write() {
         <CssBaseline />
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} >
           { loading && <CircularProgress /> }
-          { error.current && <Alert severity="error">Error querying backend: {error.current.message}</Alert> }
+          { statusMsg.current && <Alert severity={error.current ? "error" : "success"}>{statusMsg.current}</Alert> }
           { accounts && !loading &&
             <Paper elevation={3} sx={{ padding: 1, margin: 1, width: "80em" }}>
               <Grid container spacing={1} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
