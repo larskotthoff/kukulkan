@@ -120,7 +120,7 @@ function secUrl(id) {
 export class Message extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { expanded: this.props.open, html: false };
+    this.state = { expanded: this.props.open, html: false, lines: 2 };
     this.handleCollapse = this.handleCollapse.bind(this);
     this.handleHtml = this.handleHtml.bind(this);
     this.handleAttachment = this.handleAttachment.bind(this);
@@ -229,7 +229,8 @@ export class Message extends React.Component {
       if(!this.state.expanded) {
         this.setState(prevState => ({
           expanded: true,
-          html: prevState.html
+          html: prevState.html,
+          lines: prevState.lines
         }));
       }
       this.elementTop.current.scrollIntoView({block: "nearest"});
@@ -247,7 +248,8 @@ export class Message extends React.Component {
     if(document.drag === false && e !== null && e.target.tagName !== "A") {
       this.setState(prevState => ({
         expanded: !prevState.expanded,
-        html: prevState.html
+        html: prevState.html,
+        lines: prevState.lines
       }), () => {
         if(this.state.expanded) {
           if(this.props.setActiveMsg) {
@@ -262,7 +264,8 @@ export class Message extends React.Component {
   handleHtml() {
     this.setState(prevState => ({
       expanded: prevState.expanded,
-      html: !prevState.html
+      html: !prevState.html,
+      lines: prevState.lines
     }));
   }
 
@@ -323,8 +326,20 @@ export class Message extends React.Component {
               )) }
               <Grid item><Typography>{formatDate(new Date(msg.date))}</Typography></Grid>
             </Grid>
-            <Grid container direction="row" justifyContent="space-between">
-              <Grid item xs><Typography style={{ overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }} dangerouslySetInnerHTML={{ __html: this.mainPart }} /></Grid>
+            <Grid container direction="row" justifyContent="space-between" onMouseEnter={() =>
+              this.setState(prevState => ({
+                expanded: prevState.expanded,
+                html: prevState.html,
+                lines: 10
+              }))
+            } onMouseLeave={() =>
+              this.setState(prevState => ({
+                expanded: prevState.expanded,
+                html: prevState.html,
+                lines: 2
+              }))
+            }>
+              <Grid item xs><Typography style={{ overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: this.state.lines, WebkitBoxOrient: "vertical" }} dangerouslySetInnerHTML={{ __html: this.mainPart }} /></Grid>
               <Grid item><ExpandMore/></Grid>
             </Grid>
           </Grid>
