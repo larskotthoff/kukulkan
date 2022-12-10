@@ -7,3 +7,5 @@ Assumes that you have [notmuch](https://notmuchmail.org) installed and working. 
 For the production version, it should be sufficient to serve the `prod/` directory through a suitable WSGI container, e.g. `gunicorn 'kukulkan.prod.kukulkan:create_app()'`.
 The files in `prod/static` were created using `npm run build` in the `src/client` directory.
 The `deploy.sh` script automates deployment to the `prod/` directory.
+
+The server was inspired by [netviel](https://github.com/DavidMStraub/netviel).
