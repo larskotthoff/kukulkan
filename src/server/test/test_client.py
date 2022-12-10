@@ -6,7 +6,7 @@ import src.kukulkan as k
 @pytest.fixture
 def setup():
     flask_app = k.create_app()
-    db = MagicMock()
+    db = lambda: None
     db.close = MagicMock()
     with flask_app.app_context() as c:
         c.g.db = db
@@ -38,10 +38,10 @@ def test_tags(setup):
 def test_raw_message(setup):
     app, db = setup
 
-    mf = MagicMock()
+    mf = lambda: None
     mf.get_filename = MagicMock(return_value = "foo")
 
-    mq = MagicMock()
+    mq = lambda: None
     mq.search_messages = MagicMock(return_value = iter([mf]))
 
     with patch("notmuch.Query", return_value = mq) as q:
@@ -58,16 +58,16 @@ def test_raw_message(setup):
 def test_tag_add_message(setup):
     app, db = setup
 
-    dbw = MagicMock()
+    dbw = lambda: None
     dbw.close = MagicMock()
     dbw.begin_atomic = MagicMock()
     dbw.end_atomic = MagicMock()
 
-    mf = MagicMock()
+    mf = lambda: None
     mf.add_tag = MagicMock()
     mf.tags_to_maildir_flags = MagicMock()
 
-    mq = MagicMock()
+    mq = lambda: None
     mq.search_messages = MagicMock(return_value = iter([mf]))
 
     with patch("notmuch.Database", return_value = dbw):
@@ -90,16 +90,16 @@ def test_tag_add_message(setup):
 def test_tag_add_thread(setup):
     app, db = setup
 
-    dbw = MagicMock()
+    dbw = lambda: None
     dbw.close = MagicMock()
     dbw.begin_atomic = MagicMock()
     dbw.end_atomic = MagicMock()
 
-    mf = MagicMock()
+    mf = lambda: None
     mf.add_tag = MagicMock()
     mf.tags_to_maildir_flags = MagicMock()
 
-    mq = MagicMock()
+    mq = lambda: None
     mq.search_messages = MagicMock(return_value = iter([mf]))
 
     with patch("notmuch.Database", return_value = dbw):
@@ -122,16 +122,16 @@ def test_tag_add_thread(setup):
 def test_tag_remove_message(setup):
     app, db = setup
 
-    dbw = MagicMock()
+    dbw = lambda: None
     dbw.close = MagicMock()
     dbw.begin_atomic = MagicMock()
     dbw.end_atomic = MagicMock()
 
-    mf = MagicMock()
+    mf = lambda: None
     mf.remove_tag = MagicMock()
     mf.tags_to_maildir_flags = MagicMock()
 
-    mq = MagicMock()
+    mq = lambda: None
     mq.search_messages = MagicMock(return_value = iter([mf]))
 
     with patch("notmuch.Database", return_value = dbw):
@@ -154,16 +154,16 @@ def test_tag_remove_message(setup):
 def test_tag_remove_thread(setup):
     app, db = setup
 
-    dbw = MagicMock()
+    dbw = lambda: None
     dbw.close = MagicMock()
     dbw.begin_atomic = MagicMock()
     dbw.end_atomic = MagicMock()
 
-    mf = MagicMock()
+    mf = lambda: None
     mf.remove_tag = MagicMock()
     mf.tags_to_maildir_flags = MagicMock()
 
-    mq = MagicMock()
+    mq = lambda: None
     mq.search_messages = MagicMock(return_value = iter([mf]))
 
     with patch("notmuch.Database", return_value = dbw):
@@ -182,3 +182,92 @@ def test_tag_remove_thread(setup):
     dbw.begin_atomic.assert_called_once()
     dbw.end_atomic.assert_called_once()
     dbw.close.assert_called_once()
+
+def test_attachment_no_attachment(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.get_filename = MagicMock(return_value = "test/mails/simple.eml")
+
+    mq = lambda: None
+    mq.search_messages = MagicMock(return_value = iter([mf]))
+
+    with patch("notmuch.Query", return_value = mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/attachment/foo/0')
+            assert response.status_code == 404
+        q.assert_called_once_with(db, "id:foo")
+
+    mf.get_filename.assert_called_once()
+    mq.search_messages.assert_called_once()
+
+def test_attachment_invalid_index(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.get_filename = MagicMock(return_value = "test/mails/attachment.eml")
+
+    mq = lambda: None
+    mq.search_messages = MagicMock(return_value = iter([mf]))
+
+    with patch("notmuch.Query", return_value = mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/attachment/foo/1')
+            assert response.status_code == 404
+        q.assert_called_once_with(db, "id:foo")
+
+    mf.get_filename.assert_called_once()
+    mq.search_messages.assert_called_once()
+
+def test_attachment_single(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.get_filename = MagicMock(return_value = "test/mails/attachment.eml")
+
+    mq = lambda: None
+    mq.search_messages = MagicMock(return_value = iter([mf]))
+
+    with patch("notmuch.Query", return_value = mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/attachment/foo/0')
+            assert response.status_code == 200
+            assert 5368 == len(response.data)
+            assert type(response.data) is bytes
+            assert "application/x-gtar-compressed" == response.mimetype
+            assert "inline; filename=zendesk-email-loop2.tgz" == response.headers['Content-Disposition']
+        q.assert_called_once_with(db, "id:foo")
+
+    mf.get_filename.assert_called_once()
+    mq.search_messages.assert_called_once()
+
+def test_attachment_multiple(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.get_filename = MagicMock(return_value = "test/mails/attachments.eml")
+
+    mq = lambda: None
+    mq.search_messages = MagicMock()
+    mq.search_messages.side_effect = [iter([mf]), iter([mf])]
+
+    with patch("notmuch.Query", return_value = mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/attachment/foo/0')
+            assert response.status_code == 200
+            assert 445 == len(response.data)
+            assert type(response.data) is bytes
+            assert "text/plain" == response.mimetype
+            assert "inline; filename=text.txt" == response.headers['Content-Disposition']
+
+            response = test_client.get('/api/attachment/foo/1')
+            assert response.status_code == 200
+            assert 7392 == len(response.data)
+            assert type(response.data) is bytes
+            assert "application/pdf" == response.mimetype
+            assert "inline; filename=document.pdf" == response.headers['Content-Disposition']
+        assert q.call_count == 2
+        q.assert_called_with(db, "id:foo")
+
+    assert mf.get_filename.call_count == 2
+    assert mq.search_messages.call_count == 2

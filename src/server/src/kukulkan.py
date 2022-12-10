@@ -12,7 +12,7 @@ import json
 import re
 
 import notmuch
-from flask import Flask, current_app, g, send_file, send_from_directory, request
+from flask import Flask, current_app, g, send_file, send_from_directory, request, abort
 from werkzeug.utils import safe_join
 from flask_restful import Api, Resource
 
@@ -165,7 +165,7 @@ def create_app():
         msg = next(msgs)  # there can be only 1
         d = message_attachment(msg, num)
         if not d:
-            return None
+            abort(404)
         if isinstance(d["content"], str):
             f = io.BytesIO(io.StringIO(d["content"]).getvalue().encode())
         else:
@@ -536,8 +536,8 @@ def message_attachment(message, num = -1):
     with open(message.get_filename(), "rb") as f:
         email_msg = email.message_from_binary_file(f, policy = email.policy.default)
     attachments = get_attachments(email_msg, True)
-    if not attachments:
-        return {}
+    if not attachments or num > len(attachments) - 1:
+        return None
     if num == -1:
         return attachments
     return attachments[num]
