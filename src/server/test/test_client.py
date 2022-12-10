@@ -1,4 +1,5 @@
 import pytest
+import json
 from unittest.mock import MagicMock, mock_open, patch
 
 import src.kukulkan as k
@@ -249,7 +250,7 @@ def test_attachment_multiple(setup):
 
     mq = lambda: None
     mq.search_messages = MagicMock()
-    mq.search_messages.side_effect = [iter([mf]), iter([mf])]
+    mq.search_messages.side_effect = [iter([mf]), iter([mf]), iter([mf])]
 
     with patch("notmuch.Query", return_value = mq) as q:
         with app.test_client() as test_client:
@@ -266,8 +267,149 @@ def test_attachment_multiple(setup):
             assert type(response.data) is bytes
             assert "application/pdf" == response.mimetype
             assert "inline; filename=document.pdf" == response.headers['Content-Disposition']
-        assert q.call_count == 2
+
+            response = test_client.get('/api/attachment/foo/2')
+            assert response.status_code == 200
+            assert 2391 == len(response.data)
+            assert type(response.data) is bytes
+            assert "text/plain" == response.mimetype
+            assert "inline; filename=test.csv" == response.headers['Content-Disposition']
+        assert q.call_count == 3
         q.assert_called_with(db, "id:foo")
 
-    assert mf.get_filename.call_count == 2
-    assert mq.search_messages.call_count == 2
+    assert mf.get_filename.call_count == 3
+    assert mq.search_messages.call_count == 3
+
+def test_message_simple(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.get_filename = MagicMock(return_value = "test/mails/simple.eml")
+    mf.get_header = MagicMock(return_value = "  foo\tbar  ")
+    mf.get_message_id = MagicMock(return_value = "foo")
+    mf.get_tags = MagicMock(return_value = ["foo", "bar"])
+
+    mq = lambda: None
+    mq.search_messages = MagicMock(return_value = iter([mf]))
+
+    with patch("notmuch.Query", return_value = mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/message/foo')
+            assert response.status_code == 200
+            msg = json.loads(response.data.decode())
+            assert msg["from"] == "foo bar"
+            assert msg["to"] == "foo bar"
+            assert msg["cc"] == "foo bar"
+            assert msg["bcc"] == "foo bar"
+            assert msg["date"] == "foo\tbar"
+            assert msg["subject"] == "foo\tbar"
+            assert msg["message_id"] == "foo\tbar"
+            assert msg["in_reply_to"] == "foo\tbar"
+            assert msg["references"] == "foo\tbar"
+            assert msg["reply_to"] == "foo\tbar"
+
+            assert "With the new notmuch_message_get_flags() function" in msg["body"]["text/plain"]
+            assert msg["body"]["text/html"] == ''
+
+            assert msg["notmuch_id"] == "foo"
+            assert msg["tags"] == ["foo", "bar"]
+            assert msg["attachments"] == []
+            assert msg["signature"] == None
+        q.assert_called_once_with(db, "id:foo")
+
+    mf.get_filename.assert_called_once()
+    mf.get_message_id.assert_called_once()
+    mf.get_tags.assert_called_once()
+    assert mf.get_header.call_count == 13
+
+    mq.search_messages.assert_called_once()
+
+def test_message_attachments(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.get_filename = MagicMock(return_value = "test/mails/attachments.eml")
+    mf.get_header = MagicMock(return_value = "  foo\tbar  ")
+    mf.get_message_id = MagicMock(return_value = "foo")
+    mf.get_tags = MagicMock(return_value = ["foo", "bar"])
+
+    mq = lambda: None
+    mq.search_messages = MagicMock(return_value = iter([mf]))
+
+    with patch("notmuch.Query", return_value = mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/message/foo')
+            assert response.status_code == 200
+            msg = json.loads(response.data.decode())
+            assert msg["attachments"] == [{'content': None, 'content_size': 445, 'content_type': 'text/plain', 'filename': 'text.txt', 'preview': None},
+                 {'content': None, 'content_size': 7392, 'content_type': 'application/pdf', 'filename': 'document.pdf', 'preview': None},
+                 {'content': None, 'content_size': 2391, 'content_type': 'text/plain', 'filename': 'test.csv', 'preview': None}]
+        q.assert_called_once_with(db, "id:foo")
+
+    mf.get_filename.assert_called_once()
+    mf.get_message_id.assert_called_once()
+    mf.get_tags.assert_called_once()
+    assert mf.get_header.call_count == 13
+
+    mq.search_messages.assert_called_once()
+
+def test_message_signed(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.get_filename = MagicMock(return_value = "test/mails/signed.eml")
+    mf.get_header = MagicMock(return_value = "  foo\tbar  ")
+    mf.get_message_id = MagicMock(return_value = "foo")
+    mf.get_tags = MagicMock(return_value = ["foo", "bar"])
+
+    mq = lambda: None
+    mq.search_messages = MagicMock(return_value = iter([mf]))
+
+    app.config.custom["accounts"] = []
+
+    with patch("notmuch.Query", return_value = mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/message/foo')
+            assert response.status_code == 200
+            msg = json.loads(response.data.decode())
+            assert "Bob, we need to cancel this contract." in msg["body"]["text/plain"]
+
+            assert msg["signature"] == {'message': 'self-signed or unavailable certificate(s)', 'valid': True}
+        q.assert_called_once_with(db, "id:foo")
+
+    mf.get_filename.assert_called_once()
+    mf.get_message_id.assert_called_once()
+    mf.get_tags.assert_called_once()
+    assert mf.get_header.call_count == 13
+
+    mq.search_messages.assert_called_once()
+
+def test_message_signed_invalid(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.get_filename = MagicMock(return_value = "test/mails/signed-invalid.eml")
+    mf.get_header = MagicMock(return_value = "  foo\tbar  ")
+    mf.get_message_id = MagicMock(return_value = "foo")
+    mf.get_tags = MagicMock(return_value = ["foo", "bar"])
+
+    mq = lambda: None
+    mq.search_messages = MagicMock(return_value = iter([mf]))
+
+    app.config.custom["accounts"] = []
+
+    with patch("notmuch.Query", return_value = mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/message/foo')
+            assert response.status_code == 200
+            msg = json.loads(response.data.decode())
+            assert "Bob, we need to cancel this contract." in msg["body"]["text/plain"]
+            assert msg["signature"] == {'message': 'bad signature', 'valid': False}
+        q.assert_called_once_with(db, "id:foo")
+
+    mf.get_filename.assert_called_once()
+    mf.get_message_id.assert_called_once()
+    mf.get_tags.assert_called_once()
+    assert mf.get_header.call_count == 13
+
+    mq.search_messages.assert_called_once()
