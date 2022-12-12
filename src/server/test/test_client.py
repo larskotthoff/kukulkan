@@ -413,3 +413,157 @@ def test_message_signed_invalid(setup):
     assert mf.get_header.call_count == 13
 
     mq.search_messages.assert_called_once()
+
+def test_message_html_only(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.get_filename = MagicMock(return_value = "test/mails/html-only.eml")
+    mf.get_header = MagicMock(return_value = "  foo\tbar  ")
+    mf.get_message_id = MagicMock(return_value = "foo")
+    mf.get_tags = MagicMock(return_value = ["foo", "bar"])
+
+    mq = lambda: None
+    mq.search_messages = MagicMock(return_value = iter([mf]))
+
+    app.config.custom["accounts"] = []
+
+    with patch("notmuch.Query", return_value = mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/message/foo')
+            assert response.status_code == 200
+            msg = json.loads(response.data.decode())
+            assert "hunter2" == msg["body"]["text/plain"]
+            assert "hunter2" in msg["body"]["text/html"]
+        q.assert_called_once_with(db, "id:foo")
+
+    mf.get_filename.assert_called_once()
+    mf.get_message_id.assert_called_once()
+    mf.get_tags.assert_called_once()
+    assert mf.get_header.call_count == 13
+
+    mq.search_messages.assert_called_once()
+
+def test_message_html_broken(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.get_filename = MagicMock(return_value = "test/mails/broken-text.eml")
+    mf.get_header = MagicMock(return_value = "  foo\tbar  ")
+    mf.get_message_id = MagicMock(return_value = "foo")
+    mf.get_tags = MagicMock(return_value = ["foo", "bar"])
+
+    mq = lambda: None
+    mq.search_messages = MagicMock(return_value = iter([mf]))
+
+    app.config.custom["accounts"] = []
+
+    with patch("notmuch.Query", return_value = mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/message/foo')
+            assert response.status_code == 200
+            msg = json.loads(response.data.decode())
+            assert "hunter2" == msg["body"]["text/plain"]
+            assert '' == msg["body"]["text/html"]
+        q.assert_called_once_with(db, "id:foo")
+
+    mf.get_filename.assert_called_once()
+    mf.get_message_id.assert_called_once()
+    mf.get_tags.assert_called_once()
+    assert mf.get_header.call_count == 13
+
+    mq.search_messages.assert_called_once()
+
+def test_message_link_scrubbing(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.get_filename = MagicMock(return_value = "test/mails/clean-html.eml")
+    mf.get_header = MagicMock(return_value = "  foo\tbar  ")
+    mf.get_message_id = MagicMock(return_value = "foo")
+    mf.get_tags = MagicMock(return_value = ["foo", "bar"])
+
+    mq = lambda: None
+    mq.search_messages = MagicMock(return_value = iter([mf]))
+
+    app.config.custom["accounts"] = []
+
+    with patch("notmuch.Query", return_value = mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/message/foo')
+            assert response.status_code == 200
+            msg = json.loads(response.data.decode())
+            assert "foo" == msg["body"]["text/plain"]
+            assert "https://example.com" in msg["body"]["text/html"]
+            assert "https://tracking.com" not in msg["body"]["text/html"]
+        q.assert_called_once_with(db, "id:foo")
+
+    mf.get_filename.assert_called_once()
+    mf.get_message_id.assert_called_once()
+    mf.get_tags.assert_called_once()
+    assert mf.get_header.call_count == 13
+
+    mq.search_messages.assert_called_once()
+
+def test_message_filter_html(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.get_filename = MagicMock(return_value = "test/mails/html-only.eml")
+    mf.get_header = MagicMock(return_value = "  foo\tbar  ")
+    mf.get_message_id = MagicMock(return_value = "foo")
+    mf.get_tags = MagicMock(return_value = ["foo", "bar"])
+
+    mq = lambda: None
+    mq.search_messages = MagicMock(return_value = iter([mf]))
+
+    app.config.custom["accounts"] = []
+    app.config.custom["filter"]["content"]["text/html"] = [ '<input value="a>swordfish">', "meat" ]
+
+    with patch("notmuch.Query", return_value = mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/message/foo')
+            assert response.status_code == 200
+            msg = json.loads(response.data.decode())
+            assert "meat\n\nhunter2" == msg["body"]["text/plain"]
+            assert "meat" in msg["body"]["text/html"]
+            assert "swordfish" not in msg["body"]["text/html"]
+        q.assert_called_once_with(db, "id:foo")
+
+    mf.get_filename.assert_called_once()
+    mf.get_message_id.assert_called_once()
+    mf.get_tags.assert_called_once()
+    assert mf.get_header.call_count == 13
+
+    mq.search_messages.assert_called_once()
+
+def test_message_filter_text(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.get_filename = MagicMock(return_value = "test/mails/simple.eml")
+    mf.get_header = MagicMock(return_value = "  foo\tbar  ")
+    mf.get_message_id = MagicMock(return_value = "foo")
+    mf.get_tags = MagicMock(return_value = ["foo", "bar"])
+
+    mq = lambda: None
+    mq.search_messages = MagicMock(return_value = iter([mf]))
+
+    app.config.custom["accounts"] = []
+    app.config.custom["filter"]["content"]["text/plain"] = [ "notmuch_message_get_flags", "somefunc" ]
+
+    with patch("notmuch.Query", return_value = mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/message/foo')
+            assert response.status_code == 200
+            msg = json.loads(response.data.decode())
+            assert "somefunc" in msg["body"]["text/plain"]
+            assert "notmuch_message_get_flags" not in msg["body"]["text/plain"]
+        q.assert_called_once_with(db, "id:foo")
+
+    mf.get_filename.assert_called_once()
+    mf.get_message_id.assert_called_once()
+    mf.get_tags.assert_called_once()
+    assert mf.get_header.call_count == 13
+
+    mq.search_messages.assert_called_once()
