@@ -36,6 +36,34 @@ def test_tags(setup):
 
     db.get_all_tags.assert_called_once()
 
+def test_get_message_none(setup):
+    app, db = setup
+
+    mq = lambda: None
+    mq.search_messages = MagicMock(return_value = iter([]))
+
+    with patch("notmuch.Query", return_value = mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/message/foo')
+            assert response.status_code == 404
+        q.assert_called_once_with(db, "id:foo")
+
+    mq.search_messages.assert_called_once()
+
+def test_get_message_multiple(setup):
+    app, db = setup
+
+    mq = lambda: None
+    mq.search_messages = MagicMock(return_value = iter([1, 2]))
+
+    with patch("notmuch.Query", return_value = mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/message/foo')
+            assert response.status_code == 500
+        q.assert_called_once_with(db, "id:foo")
+
+    mq.search_messages.assert_called_once()
+
 def test_raw_message(setup):
     app, db = setup
 

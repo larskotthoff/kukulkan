@@ -56,6 +56,15 @@ def get_query(query_string, db = None, exclude = True):
             query.exclude_tag(tag)
     return query
 
+def get_message(message_id):
+    """Get a single message."""
+    msgs = list(get_query("id:{}".format(message_id), exclude = False).search_messages())
+    if not msgs:
+        abort(404)
+    if len(msgs) > 1:
+        abort(500)
+    return msgs[0]
+
 def close_db(e = None):
     """Close the Database. Called after every request."""
     g.db.close()
@@ -161,8 +170,7 @@ def create_app():
 
     @app.route("/api/attachment/<path:message_id>/<int:num>")
     def download_attachment(message_id, num):
-        msgs = get_query("id:{}".format(message_id), exclude = False).search_messages()
-        msg = next(msgs)  # there can be only 1
+        msg = get_message(message_id)
         d = message_attachment(msg, num)
         if not d:
             abort(404)
@@ -175,22 +183,19 @@ def create_app():
 
     @app.route("/api/message/<path:message_id>")
     def download_message(message_id):
-        msgs = get_query("id:{}".format(message_id), exclude = False).search_messages()
-        msg = next(msgs)  # there can be only 1
+        msg = get_message(message_id)
         return message_to_json(msg)
 
     @app.route("/api/raw_message/<path:message_id>")
     def download_raw_message(message_id):
-        msgs = get_query("id:{}".format(message_id), exclude = False).search_messages()
-        msg = next(msgs)  # there can be only 1
+        msg = get_message(message_id)
         with open(msg.get_filename(), "r") as f:
             content = f.read()
         return content
 
     @app.route("/api/auth_message/<path:message_id>")
     def auth_message(message_id):
-        msgs = get_query("id:{}".format(message_id), exclude = False).search_messages()
-        msg = next(msgs)  # there can be only 1
+        msg = get_message(message_id)
         # https://npm.io/package/mailauth
         return json.loads(os.popen("mailauth " + msg.get_filename()).read())['arc']['authResults']
 
@@ -232,8 +237,7 @@ def create_app():
 
         if request.values['action'] == "forward":
             # attach attachments from original mail
-            refMsgs = get_query("id:{}".format(request.values['refId']), exclude = False).search_messages()
-            refMsg = next(refMsgs)
+            refMsg = get_message(request.values['refId'])
             refAtts = message_attachment(refMsg)
             for key in request.values.keys():
                 if key.startswith("attachment-") and key not in request.files:
@@ -269,8 +273,7 @@ def create_app():
         msg['Message-ID'] = msg_id
 
         if request.values['action'] == "reply":
-            refMsgs = get_query("id:{}".format(request.values['refId']), exclude = False).search_messages()
-            refMsg = next(refMsgs)
+            refMsg = get_message(request.values['refId'])
             refMsg = message_to_json(refMsg)
             msg['In-Reply-To'] = '<' + refMsg['message_id'] + '>'
             if refMsg['references']:
