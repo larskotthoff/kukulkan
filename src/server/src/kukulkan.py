@@ -53,7 +53,8 @@ def get_query(query_string, db = None, exclude = True):
     query = notmuch.Query(db, query_string)
     if exclude:
         for tag in db.get_config("search.exclude_tags").split(';'):
-            query.exclude_tag(tag)
+            if tag != '':
+                query.exclude_tag(tag)
     return query
 
 def get_message(message_id):
