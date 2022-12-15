@@ -503,6 +503,40 @@ def test_message_attachment_calendar_preview(setup):
 
     mq.search_messages.assert_called_once()
 
+def test_message_attachment_calendar_preview_no_people(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.get_filename = MagicMock(return_value = "test/mails/calendar-nopeople.eml")
+    mf.get_header = MagicMock(return_value = "  foo\tbar  ")
+    mf.get_message_id = MagicMock(return_value = "foo")
+    mf.get_tags = MagicMock(return_value = ["foo", "bar"])
+
+    mq = lambda: None
+    mq.search_messages = MagicMock(return_value = iter([mf]))
+
+    with patch("notmuch.Query", return_value = mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/message/foo')
+            assert response.status_code == 200
+            msg = json.loads(response.data.decode())
+            assert msg["attachments"][0]['content_type'] == 'text/calendar'
+            assert msg["attachments"][0]['filename'] == 'unnamed attachment'
+            assert msg["attachments"][0]['preview']['summary'] == "testevent"
+            assert msg["attachments"][0]['preview']['location'] == "kskdcsd"
+            # this will break if you're not in Mountain Time
+            assert msg["attachments"][0]['preview']['start'] == "Tue Nov  1 02:00:00 2011"
+            assert msg["attachments"][0]['preview']['end'] == "Tue Nov  1 03:00:00 2011"
+            assert msg["attachments"][0]['preview']['attendees'] == ""
+        q.assert_called_once_with(db, "id:foo")
+
+    mf.get_filename.assert_called_once()
+    mf.get_message_id.assert_called_once()
+    mf.get_tags.assert_called_once()
+    assert mf.get_header.call_count == 13
+
+    mq.search_messages.assert_called_once()
+
 def test_message_signed(setup):
     app, db = setup
 

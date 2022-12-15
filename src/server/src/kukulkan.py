@@ -430,11 +430,14 @@ def get_attachments(email_msg, content = False):
                 gcal = icalendar.Calendar.from_ical(ctnt)
                 for component in gcal.walk():
                     if component.name == "VEVENT":
-                        people = [component.get("organizer").params["CN"]]
+                        if component.get("organizer"):
+                            people = [component.get("organizer").params["CN"]]
+                        else:
+                            people = []
                         a = component.get("attendee")
                         if type(a) == list:
                             people += [ c.params["CN"] for c in a ]
-                        else:
+                        elif a:
                             people.append(a.params["CN"])
                         preview = {
                             "summary": component.get("summary"),
