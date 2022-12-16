@@ -522,7 +522,7 @@ def message_to_json(message):
         "cc": message.get_header("cc").strip().replace('\t', ' '),
         "bcc": message.get_header("bcc").strip().replace('\t', ' '),
         "date": message.get_header("date").strip(),
-        "subject": message.get_header("subject").strip(),
+        "subject": message.get_header("subject").strip().replace('\t', ' '),
         "message_id": message.get_header("Message-ID").strip(),
         "in_reply_to": message.get_header("In-Reply-To").strip() if message.get_header("In-Reply-To") else None,
         "references": message.get_header("References").strip() if message.get_header("References") else None,

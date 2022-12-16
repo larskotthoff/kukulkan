@@ -418,7 +418,7 @@ def test_message_simple(setup):
             assert msg["cc"] == "foo bar"
             assert msg["bcc"] == "foo bar"
             assert msg["date"] == "foo\tbar"
-            assert msg["subject"] == "foo\tbar"
+            assert msg["subject"] == "foo bar"
             assert msg["message_id"] == "foo\tbar"
             assert msg["in_reply_to"] == "foo\tbar"
             assert msg["references"] == "foo\tbar"
