@@ -39,12 +39,18 @@ def test_tags(setup):
 def test_query(setup):
     app, db = setup
 
-    mm = lambda: None
-    mm.get_date = MagicMock(return_value = "foodate")
-    mm.get_tags = MagicMock(return_value = ["footag"])
+    mm1 = lambda: None
+    mm1.get_date = MagicMock(return_value = "foodate")
+    mm1.get_tags = MagicMock(return_value = ["footag"])
+    mm2 = lambda: None
+    mm2.get_date = MagicMock(return_value = "bardate")
+    mm2.get_tags = MagicMock(return_value = ["bartag"])
+    mm3 = lambda: None
+    mm3.get_date = MagicMock(return_value = "foobardate")
+    mm3.get_tags = MagicMock(return_value = ["foobartag"])
 
     mt = lambda: None
-    mt.get_messages = MagicMock(return_value = iter([mm]))
+    mt.get_messages = MagicMock(return_value = iter([mm1, mm2, mm3]))
     mt.get_authors = MagicMock(return_value = "foo bar")
     mt.get_matched_messages = MagicMock(return_value = 23)
     mt.get_subject = MagicMock(return_value = "foosub")
@@ -64,17 +70,21 @@ def test_query(setup):
             assert len(thrds) == 1
             assert thrds[0]["authors"] == "foo bar"
             assert thrds[0]["matched_messages"] == 23
-            assert thrds[0]["newest_date"] == "foodate"
+            assert thrds[0]["newest_date"] == "foobardate"
             assert thrds[0]["oldest_date"] == "foodate"
             assert thrds[0]["subject"] == "foosub"
-            assert thrds[0]["tags"] == [ "footag" ]
+            assert thrds[0]["tags"] == [ "bartag", "foobartag", "footag" ]
             assert thrds[0]["thread_id"] == "id"
             assert thrds[0]["total_messages"] == 50
 
         q.assert_called_once_with(db, "foo")
 
-    assert mm.get_date.call_count == 2
-    mm.get_tags.assert_called_once()
+    mm1.get_date.assert_called_once()
+    mm1.get_tags.assert_called_once()
+    assert mm2.get_date.call_count == 0
+    mm2.get_tags.assert_called_once()
+    mm3.get_date.assert_called_once()
+    mm3.get_tags.assert_called_once()
 
     mt.get_messages.assert_called_once()
     assert mt.get_authors.call_count == 2
@@ -745,3 +755,81 @@ def test_message_filter_text(setup):
 
     mq.search_messages.assert_called_once()
 
+def test_thread(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.get_filename = MagicMock(return_value = "test/mails/simple.eml")
+    mf.get_header = MagicMock(return_value = "  foo\tbar  ")
+    mf.get_message_id = MagicMock(return_value = "foo")
+    mf.get_tags = MagicMock(return_value = ["foo", "bar"])
+
+    mt = lambda: None
+    mt.get_messages = MagicMock(return_value = iter([mf]))
+
+    mq = lambda: None
+    mq.search_threads = MagicMock(return_value = iter([mt]))
+
+    with patch("notmuch.Query", return_value = mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/thread/foo')
+            assert response.status_code == 200
+            thread = json.loads(response.data.decode())
+            assert len(thread) == 1
+            msg = thread[0]
+            assert msg["from"] == "foo bar"
+            assert msg["to"] == "foo bar"
+            assert msg["cc"] == "foo bar"
+            assert msg["bcc"] == "foo bar"
+            assert msg["date"] == "foo\tbar"
+            assert msg["subject"] == "foo bar"
+            assert msg["message_id"] == "foo\tbar"
+            assert msg["in_reply_to"] == "foo\tbar"
+            assert msg["references"] == "foo\tbar"
+            assert msg["reply_to"] == "foo\tbar"
+
+            assert "With the new notmuch_message_get_flags() function" in msg["body"]["text/plain"]
+            assert msg["body"]["text/html"] == ''
+
+            assert msg["notmuch_id"] == "foo"
+            assert msg["tags"] == ["foo", "bar"]
+            assert msg["attachments"] == []
+            assert msg["signature"] == None
+        q.assert_called_once_with(db, "thread:foo")
+
+    mf.get_filename.assert_called_once()
+    mf.get_message_id.assert_called_once()
+    mf.get_tags.assert_called_once()
+    assert mf.get_header.call_count == 13
+
+    mt.get_messages.assert_called_once()
+
+    mq.search_threads.assert_called_once()
+
+def test_thread_none(setup):
+    app, db = setup
+
+    mq = lambda: None
+    mq.search_threads = MagicMock(return_value = iter([]))
+
+    with patch("notmuch.Query", return_value = mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/thread/foo')
+            assert response.status_code == 404
+        q.assert_called_once_with(db, "thread:foo")
+
+    mq.search_threads.assert_called_once()
+
+def test_thread_duplicate(setup):
+    app, db = setup
+
+    mq = lambda: None
+    mq.search_threads = MagicMock(return_value = iter([1, 2]))
+
+    with patch("notmuch.Query", return_value = mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/thread/foo')
+            assert response.status_code == 500
+        q.assert_called_once_with(db, "thread:foo")
+
+    mq.search_threads.assert_called_once()

@@ -148,9 +148,12 @@ def create_app():
 
     class Thread(Resource):
         def get(self, thread_id):
-            threads = get_query("thread:{}".format(thread_id), exclude = False).search_threads()
-            thread = next(threads)  # there can be only 1
-            messages = thread.get_messages()
+            threads = list(get_query("thread:{}".format(thread_id), exclude = False).search_threads())
+            if not threads:
+                abort(404)
+            if len(threads) > 1:
+                abort(500)
+            messages = threads[0].get_messages()
             return messages_to_json(messages)
     
     class Tags(Resource):
@@ -338,15 +341,16 @@ def thread_to_json(thread):
     """Converts a `notmuch.threads.Thread` instance to a JSON object."""
     # necessary to get accurate tags and metadata, work around the notmuch API
     # only considering the matched messages
-    messages = thread.get_messages()
-    msglist = list(messages)
+    messages = list(thread.get_messages())
+    tags = list(set([ tag for msg in messages for tag in msg.get_tags() ]))
+    tags.sort()
     return {
         "authors": thread.get_authors() if thread.get_authors() else "(no author)",
         "matched_messages": thread.get_matched_messages(),
-        "newest_date": msglist[-1].get_date(),
-        "oldest_date": msglist[0].get_date(),
+        "newest_date": messages[-1].get_date(),
+        "oldest_date": messages[0].get_date(),
         "subject": thread.get_subject(),
-        "tags": list(set([ tag for msg in msglist for tag in msg.get_tags() ])),
+        "tags": tags,
         "thread_id": thread.get_thread_id(),
         "total_messages": thread.get_total_messages(),
     }
