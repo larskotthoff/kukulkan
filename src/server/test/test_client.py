@@ -1009,6 +1009,87 @@ def test_send_reply(setup):
     mq.search_messages.side_effect = [iter([mf]), iter([mf])]
 
     with patch("notmuch.Query", return_value = mq) as q:
+        with patch("src.kukulkan.message_to_json", return_value = {"message_id": "oldFoo", "references": None}) as mtj:
+            with patch("notmuch.Database", return_value = dbw):
+                with patch("builtins.open", mock_open()) as m:
+                    with app.test_client() as test_client:
+                        response = test_client.post('/api/send', data = pd)
+                        assert response.status_code == 200
+                        assert response.json["sendStatus"] == 0
+                        assert response.json["sendOutput"] == ""
+                    m.assert_called_once()
+                    args = m.call_args.args
+                    assert "kukulkan" in args[0]
+                    assert "folder" in args[0]
+                    assert ":2,S" in args[0]
+                    assert args[1] == "w"
+                    hdl = m()
+                    hdl.write.assert_called_once()
+                    args = hdl.write.call_args.args
+                    assert "Content-Type: text/plain; charset=\"utf-8\"" in args[0]
+                    assert "Content-Transfer-Encoding: 7bit" in args[0]
+                    assert "MIME-Version: 1.0" in args[0]
+                    assert "Subject: test" in args[0]
+                    assert "From: Foo Bar <foo@bar.com>" in args[0]
+                    assert "To: bar" in args[0]
+                    assert "Cc:" in args[0]
+                    assert "Bcc:" in args[0]
+                    assert "Date: " in args[0]
+                    assert "Message-ID: <"
+                    assert "In-Reply-To: <oldFoo>" in args[0]
+                    assert "References: <oldFoo>" in args[0]
+                    assert "\n\nfoobar\n" in args[0]
+
+            mtj.assert_called_once_with(mf)
+
+        q.assert_has_calls([call(db, "id:oldFoo"), call(dbw, "id:oldFoo")])
+
+    assert mq.search_messages.call_count == 2
+
+    mf.add_tag.assert_called_once_with("replied")
+    mf.tags_to_maildir_flags.assert_called_once()
+
+    mm.maildir_flags_to_tags.assert_called_once()
+    mm.tags_to_maildir_flags.assert_called_once()
+    mm.add_tag.assert_has_calls([call("foo"), call("bar"), call("test"), call("sent")])
+
+    dbw.begin_atomic.assert_called_once()
+    dbw.end_atomic.assert_called_once()
+    dbw.close.assert_called_once()
+
+def test_send_reply_more_refs(setup):
+    app, db = setup
+
+    mm = lambda: None
+    mm.maildir_flags_to_tags = MagicMock()
+    mm.add_tag = MagicMock()
+    mm.tags_to_maildir_flags = MagicMock()
+
+    dbw = lambda: None
+    dbw.close = MagicMock()
+    dbw.begin_atomic = MagicMock()
+    dbw.end_atomic = MagicMock()
+    dbw.index_file = MagicMock(return_value = (mm, 0))
+
+    pd = {"from": "foo", "to": "bar", "cc": "", "bcc": "", "subject": "test",
+          "body": "foobar", "action": "reply", "tags": "foo,bar", "refId": "oldFoo"}
+
+    app.config.custom["accounts"] = [ { "id": "foo",
+                                        "name": "Foo Bar",
+                                        "email": "foo@bar.com",
+                                        "sendmail": "true",
+                                        "save_sent_to": "folder",
+                                        "additional_sent_tags": [ "test" ] } ]
+
+    mf = lambda: None
+    mf.add_tag = MagicMock()
+    mf.tags_to_maildir_flags = MagicMock()
+
+    mq = lambda: None
+    mq.search_messages = MagicMock()
+    mq.search_messages.side_effect = [iter([mf]), iter([mf])]
+
+    with patch("notmuch.Query", return_value = mq) as q:
         with patch("src.kukulkan.message_to_json", return_value = {"message_id": "oldFoo", "references": "olderFoo"}) as mtj:
             with patch("notmuch.Database", return_value = dbw):
                 with patch("builtins.open", mock_open()) as m:
