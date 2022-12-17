@@ -1,5 +1,6 @@
 import pytest
 import json
+import io
 from unittest.mock import MagicMock, mock_open, patch, call
 
 import src.kukulkan as k
@@ -132,7 +133,6 @@ def test_query_exclude_tags(setup):
     mq.exclude_tag.assert_has_calls([call("foo"), call("bar")])
     mq.search_threads.assert_called_once()
     db.get_config.assert_called_once_with("search.exclude_tags")
-
 
 def test_get_message_none(setup):
     app, db = setup
@@ -833,3 +833,309 @@ def test_thread_duplicate(setup):
         q.assert_called_once_with(db, "thread:foo")
 
     mq.search_threads.assert_called_once()
+
+def test_send(setup):
+    app, db = setup
+
+    mm = lambda: None
+    mm.maildir_flags_to_tags = MagicMock()
+    mm.add_tag = MagicMock()
+    mm.tags_to_maildir_flags = MagicMock()
+
+    dbw = lambda: None
+    dbw.close = MagicMock()
+    dbw.begin_atomic = MagicMock()
+    dbw.end_atomic = MagicMock()
+    dbw.index_file = MagicMock(return_value = (mm, 0))
+
+    pd = {"from": "foo", "to": "bar", "cc": "", "bcc": "", "subject": "test", "body": "foobar", "action": "compose", "tags": "foo,bar"}
+
+    app.config.custom["accounts"] = [ { "id": "foo",
+                                        "name": "Foo Bar",
+                                        "email": "foo@bar.com",
+                                        "sendmail": "true",
+                                        "save_sent_to": "folder",
+                                        "additional_sent_tags": [ "test" ] } ]
+
+    with patch("notmuch.Database", return_value = dbw):
+        with patch("builtins.open", mock_open()) as m:
+            with app.test_client() as test_client:
+                response = test_client.post('/api/send', data = pd)
+                assert response.status_code == 200
+                assert response.json["sendStatus"] == 0
+                assert response.json["sendOutput"] == ""
+            m.assert_called_once()
+            args = m.call_args.args
+            assert "kukulkan" in args[0]
+            assert "folder" in args[0]
+            assert ":2,S" in args[0]
+            assert args[1] == "w"
+            hdl = m()
+            hdl.write.assert_called_once()
+            args = hdl.write.call_args.args
+            assert "Content-Type: text/plain; charset=\"utf-8\"" in args[0]
+            assert "Content-Transfer-Encoding: 7bit" in args[0]
+            assert "MIME-Version: 1.0" in args[0]
+            assert "Subject: test" in args[0]
+            assert "From: Foo Bar <foo@bar.com>" in args[0]
+            assert "To: bar" in args[0]
+            assert "Cc:" in args[0]
+            assert "Bcc:" in args[0]
+            assert "Date: " in args[0]
+            assert "Message-ID: <"
+            assert "\n\nfoobar\n" in args[0]
+
+    mm.maildir_flags_to_tags.assert_called_once()
+    mm.tags_to_maildir_flags.assert_called_once()
+    mm.add_tag.assert_has_calls([call("foo"), call("bar"), call("test"), call("sent")])
+
+    dbw.begin_atomic.assert_called_once()
+    dbw.end_atomic.assert_called_once()
+    dbw.close.assert_called_once()
+
+def test_send_fail(setup):
+    app, db = setup
+
+    pd = {"from": "foo", "to": "bar", "cc": "", "bcc": "", "subject": "test", "body": "foobar", "action": "compose", "tags": "foo,bar"}
+
+    app.config.custom["accounts"] = [ { "id": "foo",
+                                        "name": "Foo Bar",
+                                        "email": "foo@bar.com",
+                                        "sendmail": "false",
+                                        "save_sent_to": "folder",
+                                        "additional_sent_tags": [ "test" ] } ]
+
+    with app.test_client() as test_client:
+        response = test_client.post('/api/send', data = pd)
+        assert response.status_code == 200
+        assert response.json["sendStatus"] == 1
+        assert response.json["sendOutput"] == ""
+
+def test_send_attachment(setup):
+    app, db = setup
+
+    mm = lambda: None
+    mm.maildir_flags_to_tags = MagicMock()
+    mm.add_tag = MagicMock()
+    mm.tags_to_maildir_flags = MagicMock()
+
+    dbw = lambda: None
+    dbw.close = MagicMock()
+    dbw.begin_atomic = MagicMock()
+    dbw.end_atomic = MagicMock()
+    dbw.index_file = MagicMock(return_value = (mm, 0))
+
+    pd = {"from": "foo", "to": "bar", "cc": "", "bcc": "", "subject": "test",
+          "body": "foobar", "action": "compose", "tags": "foo,bar" }
+    pd = {key: str(value) for key, value in pd.items()}
+    pd['file'] = (io.BytesIO(b"This is a file."), 'test.txt')
+
+    app.config.custom["accounts"] = [ { "id": "foo",
+                                        "name": "Foo Bar",
+                                        "email": "foo@bar.com",
+                                        "sendmail": "true",
+                                        "save_sent_to": "folder",
+                                        "additional_sent_tags": [ "test" ] } ]
+
+    with patch("notmuch.Database", return_value = dbw):
+        with patch("builtins.open", mock_open()) as m:
+            with app.test_client() as test_client:
+                response = test_client.post('/api/send', data = pd)
+                assert response.status_code == 200
+                assert response.json["sendStatus"] == 0
+                assert response.json["sendOutput"] == ""
+            assert m.call_count == 2
+            args = m.call_args.args
+            assert "kukulkan" in args[0]
+            assert "folder" in args[0]
+            assert ":2,S" in args[0]
+            assert args[1] == "w"
+            hdl = m()
+            hdl.write.assert_called_once()
+            args = hdl.write.call_args.args
+            assert "Content-Type: text/plain; charset=\"utf-8\"" in args[0]
+            assert "Content-Transfer-Encoding: 7bit" in args[0]
+            assert "MIME-Version: 1.0" in args[0]
+            assert "Subject: test" in args[0]
+            assert "From: Foo Bar <foo@bar.com>" in args[0]
+            assert "To: bar" in args[0]
+            assert "Cc:" in args[0]
+            assert "Bcc:" in args[0]
+            assert "Date: " in args[0]
+            assert "Message-ID: <"
+            assert "\n\nfoobar\n" in args[0]
+            assert "Content-Transfer-Encoding: base64" in args[0]
+            assert "Content-Disposition: attachment; filename=\"test.txt\"" in args[0]
+            assert "\nVGhpcyBpcyBhIGZpbGUu\n" in args[0]
+
+    mm.maildir_flags_to_tags.assert_called_once()
+    mm.tags_to_maildir_flags.assert_called_once()
+    mm.add_tag.assert_has_calls([call("foo"), call("bar"), call("test"), call("sent")])
+
+    dbw.begin_atomic.assert_called_once()
+    dbw.end_atomic.assert_called_once()
+    dbw.close.assert_called_once()
+
+def test_send_reply(setup):
+    app, db = setup
+
+    mm = lambda: None
+    mm.maildir_flags_to_tags = MagicMock()
+    mm.add_tag = MagicMock()
+    mm.tags_to_maildir_flags = MagicMock()
+
+    dbw = lambda: None
+    dbw.close = MagicMock()
+    dbw.begin_atomic = MagicMock()
+    dbw.end_atomic = MagicMock()
+    dbw.index_file = MagicMock(return_value = (mm, 0))
+
+    pd = {"from": "foo", "to": "bar", "cc": "", "bcc": "", "subject": "test",
+          "body": "foobar", "action": "reply", "tags": "foo,bar", "refId": "oldFoo"}
+
+    app.config.custom["accounts"] = [ { "id": "foo",
+                                        "name": "Foo Bar",
+                                        "email": "foo@bar.com",
+                                        "sendmail": "true",
+                                        "save_sent_to": "folder",
+                                        "additional_sent_tags": [ "test" ] } ]
+
+    mf = lambda: None
+    mf.add_tag = MagicMock()
+    mf.tags_to_maildir_flags = MagicMock()
+
+    mq = lambda: None
+    mq.search_messages = MagicMock()
+    mq.search_messages.side_effect = [iter([mf]), iter([mf])]
+
+    with patch("notmuch.Query", return_value = mq) as q:
+        with patch("src.kukulkan.message_to_json", return_value = {"message_id": "oldFoo", "references": "olderFoo"}) as mtj:
+            with patch("notmuch.Database", return_value = dbw):
+                with patch("builtins.open", mock_open()) as m:
+                    with app.test_client() as test_client:
+                        response = test_client.post('/api/send', data = pd)
+                        assert response.status_code == 200
+                        assert response.json["sendStatus"] == 0
+                        assert response.json["sendOutput"] == ""
+                    m.assert_called_once()
+                    args = m.call_args.args
+                    assert "kukulkan" in args[0]
+                    assert "folder" in args[0]
+                    assert ":2,S" in args[0]
+                    assert args[1] == "w"
+                    hdl = m()
+                    hdl.write.assert_called_once()
+                    args = hdl.write.call_args.args
+                    assert "Content-Type: text/plain; charset=\"utf-8\"" in args[0]
+                    assert "Content-Transfer-Encoding: 7bit" in args[0]
+                    assert "MIME-Version: 1.0" in args[0]
+                    assert "Subject: test" in args[0]
+                    assert "From: Foo Bar <foo@bar.com>" in args[0]
+                    assert "To: bar" in args[0]
+                    assert "Cc:" in args[0]
+                    assert "Bcc:" in args[0]
+                    assert "Date: " in args[0]
+                    assert "Message-ID: <"
+                    assert "In-Reply-To: <oldFoo>" in args[0]
+                    assert "References: olderFoo <oldFoo>" in args[0]
+                    assert "\n\nfoobar\n" in args[0]
+
+            mtj.assert_called_once_with(mf)
+
+        q.assert_has_calls([call(db, "id:oldFoo"), call(dbw, "id:oldFoo")])
+
+    assert mq.search_messages.call_count == 2
+
+    mf.add_tag.assert_called_once_with("replied")
+    mf.tags_to_maildir_flags.assert_called_once()
+
+    mm.maildir_flags_to_tags.assert_called_once()
+    mm.tags_to_maildir_flags.assert_called_once()
+    mm.add_tag.assert_has_calls([call("foo"), call("bar"), call("test"), call("sent")])
+
+    dbw.begin_atomic.assert_called_once()
+    dbw.end_atomic.assert_called_once()
+    dbw.close.assert_called_once()
+
+def test_send_forward(setup):
+    app, db = setup
+
+    mm = lambda: None
+    mm.maildir_flags_to_tags = MagicMock()
+    mm.add_tag = MagicMock()
+    mm.tags_to_maildir_flags = MagicMock()
+
+    dbw = lambda: None
+    dbw.close = MagicMock()
+    dbw.begin_atomic = MagicMock()
+    dbw.end_atomic = MagicMock()
+    dbw.index_file = MagicMock(return_value = (mm, 0))
+
+    pd = {"from": "foo", "to": "bar", "cc": "", "bcc": "", "subject": "test",
+          "body": "foobar", "action": "forward", "tags": "foo,bar",
+          "refId": "oldFoo", "attachment-0": "testfile"}
+
+    app.config.custom["accounts"] = [ { "id": "foo",
+                                        "name": "Foo Bar",
+                                        "email": "foo@bar.com",
+                                        "sendmail": "true",
+                                        "save_sent_to": "folder",
+                                        "additional_sent_tags": [ "test" ] } ]
+
+    mf = lambda: None
+    mf.add_tag = MagicMock()
+    mf.tags_to_maildir_flags = MagicMock()
+
+    mq = lambda: None
+    mq.search_messages = MagicMock()
+    mq.search_messages.side_effect = [iter([mf]), iter([mf])]
+
+    with patch("notmuch.Query", return_value = mq) as q:
+        with patch("src.kukulkan.message_attachment", return_value = [{"filename": "testfile", "content_type": "text/plain", "content": b"This is content."}]) as ma:
+            with patch("notmuch.Database", return_value = dbw):
+                with patch("builtins.open", mock_open()) as m:
+                    with app.test_client() as test_client:
+                        response = test_client.post('/api/send', data = pd)
+                        assert response.status_code == 200
+                        assert response.json["sendStatus"] == 0
+                        assert response.json["sendOutput"] == ""
+                    m.assert_called_once()
+                    args = m.call_args.args
+                    assert "kukulkan" in args[0]
+                    assert "folder" in args[0]
+                    assert ":2,S" in args[0]
+                    assert args[1] == "w"
+                    hdl = m()
+                    hdl.write.assert_called_once()
+                    args = hdl.write.call_args.args
+                    assert "Content-Type: text/plain; charset=\"utf-8\"" in args[0]
+                    assert "Content-Transfer-Encoding: 7bit" in args[0]
+                    assert "MIME-Version: 1.0" in args[0]
+                    assert "Subject: test" in args[0]
+                    assert "From: Foo Bar <foo@bar.com>" in args[0]
+                    assert "To: bar" in args[0]
+                    assert "Cc:" in args[0]
+                    assert "Bcc:" in args[0]
+                    assert "Date: " in args[0]
+                    assert "Message-ID: <"
+                    assert "Content-Transfer-Encoding: base64" in args[0]
+                    assert "Content-Disposition: attachment; filename=\"testfile\"" in args[0]
+                    assert "\nVGhpcyBpcyBjb250ZW50Lg==\n" in args[0]
+                    assert "\n\nfoobar\n" in args[0]
+
+            ma.assert_called_once_with(mf)
+
+        q.assert_has_calls([call(db, "id:oldFoo"), call(dbw, "id:oldFoo")])
+
+    assert mq.search_messages.call_count == 2
+
+    mf.add_tag.assert_called_once_with("passed")
+    mf.tags_to_maildir_flags.assert_called_once()
+
+    mm.maildir_flags_to_tags.assert_called_once()
+    mm.tags_to_maildir_flags.assert_called_once()
+    mm.add_tag.assert_has_calls([call("foo"), call("bar"), call("test"), call("sent")])
+
+    dbw.begin_atomic.assert_called_once()
+    dbw.end_atomic.assert_called_once()
+    dbw.close.assert_called_once()
