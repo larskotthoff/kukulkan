@@ -9,3 +9,5 @@ The files in `prod/static` were created using `npm run build` in the `src/client
 The `deploy.sh` script automates deployment to the `prod/` directory.
 
 The server was inspired by [netviel](https://github.com/DavidMStraub/netviel).
+
+Test emails from the [notmuch repository](https://git.notmuchmail.org/git?p=notmuch;a=tree;f=test/corpora), the [Python EML parse module](https://github.com/GOVCERT-LU/eml_parser/tree/master/samples), the [Apache James Project](https://github.com/xishian/james-project/tree/main/mailbox/store/src/test/resources/eml), and [Expresso Livre 3](https://github.com/emersonfaria/ExpressoLivre3/tree/master/tests/tine20/Felamimail/files).
