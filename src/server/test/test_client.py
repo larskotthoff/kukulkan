@@ -1,6 +1,7 @@
 import pytest
 import json
 import io
+from M2Crypto import SMIME
 from unittest.mock import MagicMock, mock_open, patch, call
 
 import src.kukulkan as k
@@ -567,6 +568,37 @@ def test_message_signed(setup):
             assert response.status_code == 200
             msg = json.loads(response.data.decode())
             assert "Bob, we need to cancel this contract." in msg["body"]["text/plain"]
+
+            assert msg["signature"] == {'message': 'self-signed or unavailable certificate(s)', 'valid': True}
+        q.assert_called_once_with(db, "id:foo")
+
+    mf.get_filename.assert_called_once()
+    mf.get_message_id.assert_called_once()
+    mf.get_tags.assert_called_once()
+    assert mf.get_header.call_count == 13
+
+    mq.search_messages.assert_called_once()
+
+def test_message_signed_attachment(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.get_filename = MagicMock(return_value = "test/mails/signed-attachment.eml")
+    mf.get_header = MagicMock(return_value = "  foo\tbar  ")
+    mf.get_message_id = MagicMock(return_value = "foo")
+    mf.get_tags = MagicMock(return_value = ["foo", "bar"])
+
+    mq = lambda: None
+    mq.search_messages = MagicMock(return_value = iter([mf]))
+
+    app.config.custom["accounts"] = []
+
+    with patch("notmuch.Query", return_value = mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/message/foo')
+            assert response.status_code == 200
+            msg = json.loads(response.data.decode())
+            assert "Invio messaggio SMIME (signed and clear text)" in msg["body"]["text/plain"]
 
             assert msg["signature"] == {'message': 'self-signed or unavailable certificate(s)', 'valid': True}
         q.assert_called_once_with(db, "id:foo")
@@ -1272,6 +1304,82 @@ def test_send_forward(setup):
 
     mf.add_tag.assert_called_once_with("passed")
     mf.tags_to_maildir_flags.assert_called_once()
+
+    mm.maildir_flags_to_tags.assert_called_once()
+    mm.tags_to_maildir_flags.assert_called_once()
+    mm.add_tag.assert_has_calls([call("foo"), call("bar"), call("test"), call("sent")])
+
+    dbw.begin_atomic.assert_called_once()
+    dbw.end_atomic.assert_called_once()
+    dbw.close.assert_called_once()
+
+def test_send_sign(setup):
+    app, db = setup
+
+    mm = lambda: None
+    mm.maildir_flags_to_tags = MagicMock()
+    mm.add_tag = MagicMock()
+    mm.tags_to_maildir_flags = MagicMock()
+
+    dbw = lambda: None
+    dbw.close = MagicMock()
+    dbw.begin_atomic = MagicMock()
+    dbw.end_atomic = MagicMock()
+    dbw.index_file = MagicMock(return_value = (mm, 0))
+
+    pd = {"from": "foo", "to": "bar", "cc": "", "bcc": "", "subject": "test",
+          "body": "foobar", "action": "compose", "tags": "foo,bar"}
+
+    app.config.custom["accounts"] = [ { "id": "foo",
+                                        "name": "Foo Bar",
+                                        "email": "foo@bar.com",
+                                        "key": "test/mails/cert.key",
+                                        "cert": "test/mails/cert.crt",
+                                        "sendmail": "true",
+                                        "save_sent_to": "folder",
+                                        "additional_sent_tags": [ "test" ] } ]
+
+    # need to create this here because open() is mocked later
+    smime = SMIME.SMIME()
+    smime.load_key(app.config.custom["accounts"][0]["key"],
+                   app.config.custom["accounts"][0]["cert"])
+
+    with patch("notmuch.Database", return_value = dbw):
+        with patch("builtins.open", mock_open()) as m:
+            with patch("M2Crypto.SMIME.SMIME", return_value = smime) as smim:
+                with patch.object(smime, "load_key") as smimload:
+                    with app.test_client() as test_client:
+                        response = test_client.post('/api/send', data = pd)
+                        assert response.status_code == 200
+                        assert response.json["sendStatus"] == 0
+                        assert response.json["sendOutput"] == ""
+                    smimload.assert_called_once()
+                smim.assert_called_once()
+            m.assert_called_once()
+            args = m.call_args.args
+            assert "kukulkan" in args[0]
+            assert "folder" in args[0]
+            assert ":2,S" in args[0]
+            assert args[1] == "w"
+            hdl = m()
+            hdl.write.assert_called_once()
+            args = hdl.write.call_args.args
+            assert "Content-Type: text/plain; charset=\"utf-8\"" in args[0]
+            assert "Content-Transfer-Encoding: 7bit" in args[0]
+            assert "MIME-Version: 1.0" in args[0]
+            assert "Subject: test" in args[0]
+            assert "From: Foo Bar <foo@bar.com>" in args[0]
+            assert "To: bar" in args[0]
+            assert "Cc:" in args[0]
+            assert "Bcc:" in args[0]
+            assert "Date: " in args[0]
+            assert "Message-ID: <"
+            assert "\n\nfoobar\n" in args[0]
+
+            assert "\n\nThis is an S/MIME signed message\n" in args[0]
+            assert "Content-Type: application/x-pkcs7-signature; name=\"smime.p7s\"" in args[0]
+            assert "Content-Transfer-Encoding: base64" in args[0]
+            assert "Content-Disposition: attachment; filename=\"smime.p7s\"" in args[0]
 
     mm.maildir_flags_to_tags.assert_called_once()
     mm.tags_to_maildir_flags.assert_called_once()
