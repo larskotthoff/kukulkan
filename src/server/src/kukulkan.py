@@ -19,7 +19,6 @@ from flask_restful import Api, Resource
 import icalendar
 from dateutil import tz
 
-import M2Crypto
 from M2Crypto import SMIME, BIO, X509
 
 import bleach
@@ -498,19 +497,19 @@ def message_to_json(message):
                 accounts = current_app.config.custom["accounts"]
                 accts = [ acct for acct in accounts if acct["email"] in message.get_header("from").strip().replace('\t', ' ') ]
                 if accts and accts[0]["cert"]:
-                    cert = M2Crypto.X509.load_cert(accts[0]["cert"])
+                    cert = X509.load_cert(accts[0]["cert"])
                     store.load_info(accts[0]["cert"])
                 s.set_x509_store(store)
                 s.set_x509_stack(certStack)
                 try:
-                    s.verify(p7, data_bio, flags = M2Crypto.SMIME.PKCS7_DETACHED)
+                    s.verify(p7, data_bio, flags = SMIME.PKCS7_DETACHED)
                     signature = { "valid": True }
-                except M2Crypto.SMIME.PKCS7_Error as e:
+                except SMIME.PKCS7_Error as e:
                     if "self-signed certificate" in str(e) or "self signed certificate" in str(e) or "unable to get local issuer certificate" in str(e):
                         try:
-                            s.verify(p7, data_bio, flags = M2Crypto.SMIME.PKCS7_NOVERIFY | M2Crypto.SMIME.PKCS7_DETACHED)
+                            s.verify(p7, data_bio, flags = SMIME.PKCS7_NOVERIFY | SMIME.PKCS7_DETACHED)
                             signature = { "valid": True, "message": "self-signed or unavailable certificate(s)" }
-                        except M2Crypto.SMIME.PKCS7_Error as e:
+                        except SMIME.PKCS7_Error as e:
                             signature = { "valid": False, "message": str(e) }
                     else:
                         signature = { "valid": False, "message": str(e) }
