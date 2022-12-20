@@ -101,7 +101,7 @@ def create_app():
             app.config.custom = json.load(f)
     except FileNotFoundError:
         app.logger.warning("Configuration file not found, setting empty config.")
-        app.config.custom = lambda: None
+        app.config.custom = {}
 
     app.logger.setLevel(logging.INFO)
 
