@@ -501,9 +501,10 @@ def test_message_attachment_calendar_preview(setup):
             assert msg["attachments"][0]['filename'] == 'unnamed attachment'
             assert msg["attachments"][0]['preview']['summary'] == "testevent"
             assert msg["attachments"][0]['preview']['location'] == "kskdcsd"
-            # this will break if you're not in Mountain Time
-            assert msg["attachments"][0]['preview']['start'] == "Tue Nov  1 02:00:00 2011"
-            assert msg["attachments"][0]['preview']['end'] == "Tue Nov  1 03:00:00 2011"
+            assert msg["attachments"][0]['preview']['start'] == "Tue Nov  1 "
+            assert msg["attachments"][0]['preview']['start'] == "2011"
+            assert msg["attachments"][0]['preview']['end'] == "Tue Nov  1 "
+            assert msg["attachments"][0]['preview']['end'] == "2011"
             assert msg["attachments"][0]['preview']['attendees'] == "unittest, TRUE"
         q.assert_called_once_with(db, "id:foo")
 
@@ -535,9 +536,10 @@ def test_message_attachment_calendar_preview_no_people(setup):
             assert msg["attachments"][0]['filename'] == 'unnamed attachment'
             assert msg["attachments"][0]['preview']['summary'] == "testevent"
             assert msg["attachments"][0]['preview']['location'] == "kskdcsd"
-            # this will break if you're not in Mountain Time
-            assert msg["attachments"][0]['preview']['start'] == "Tue Nov  1 02:00:00 2011"
-            assert msg["attachments"][0]['preview']['end'] == "Tue Nov  1 03:00:00 2011"
+            assert msg["attachments"][0]['preview']['start'] == "Tue Nov  1 "
+            assert msg["attachments"][0]['preview']['start'] == "2011"
+            assert msg["attachments"][0]['preview']['end'] == "Tue Nov  1 "
+            assert msg["attachments"][0]['preview']['end'] == "2011"
             assert msg["attachments"][0]['preview']['attendees'] == ""
         q.assert_called_once_with(db, "id:foo")
 
@@ -738,6 +740,9 @@ def test_message_filter_html(setup):
     mq.search_messages = MagicMock(return_value = iter([mf]))
 
     app.config.custom["accounts"] = []
+    if not app.config.custom["filter"]:
+        app.config.custom["filter"] = {}
+        app.config.custom["filter"]["content"] = {}
     app.config.custom["filter"]["content"]["text/html"] = [ '<input value="a>swordfish">', "meat" ]
 
     with patch("notmuch.Query", return_value = mq) as q:
@@ -769,6 +774,9 @@ def test_message_filter_text(setup):
     mq = lambda: None
     mq.search_messages = MagicMock(return_value = iter([mf]))
 
+    if not app.config.custom["filter"]:
+        app.config.custom["filter"] = {}
+        app.config.custom["filter"]["content"] = {}
     app.config.custom["filter"]["content"]["text/plain"] = [ "notmuch_message_get_flags", "somefunc" ]
 
     with patch("notmuch.Query", return_value = mq) as q:
