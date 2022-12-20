@@ -100,7 +100,8 @@ def create_app():
         with open(configPath + os.path.sep + "kukulkan" + os.path.sep + "config", "r") as f:
             app.config.custom = json.load(f)
     except FileNotFoundError:
-        app.logger.warning("Configuration file not found.")
+        app.logger.warning("Configuration file not found, setting empty config.")
+        app.config.custom = lambda: None
 
     app.logger.setLevel(logging.INFO)
 
