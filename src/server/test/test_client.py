@@ -136,6 +136,7 @@ def test_query_exclude_tags(setup):
             response = test_client.get('/api/query/foo')
             assert response.status_code == 200
             assert b'[]\n' == response.data
+        q.assert_called_once_with(db, "foo")
 
     mq.exclude_tag.assert_has_calls([call("foo"), call("bar")])
     mq.search_threads.assert_called_once()
@@ -459,7 +460,7 @@ def test_message_simple(setup):
             assert msg["notmuch_id"] == "foo"
             assert msg["tags"] == ["foo", "bar"]
             assert msg["attachments"] == []
-            assert msg["signature"] == None
+            assert msg["signature"] is None
         q.assert_called_once_with(db, "id:foo")
 
     mf.get_filename.assert_called_once()
@@ -488,8 +489,8 @@ def test_message_attachments(setup):
             assert response.status_code == 200
             msg = json.loads(response.data.decode())
             assert msg["attachments"] == [{'content': None, 'content_size': 445, 'content_type': 'text/plain', 'filename': 'text.txt', 'preview': None},
-                 {'content': None, 'content_size': 7392, 'content_type': 'application/pdf', 'filename': 'document.pdf', 'preview': None},
-                 {'content': None, 'content_size': 2391, 'content_type': 'text/plain', 'filename': 'test.csv', 'preview': None}]
+                                          {'content': None, 'content_size': 7392, 'content_type': 'application/pdf', 'filename': 'document.pdf', 'preview': None},
+                                          {'content': None, 'content_size': 2391, 'content_type': 'text/plain', 'filename': 'test.csv', 'preview': None}]
         q.assert_called_once_with(db, "id:foo")
 
     mf.get_filename.assert_called_once()
@@ -868,7 +869,7 @@ def test_thread(setup):
             assert msg["notmuch_id"] == "foo"
             assert msg["tags"] == ["foo", "bar"]
             assert msg["attachments"] == []
-            assert msg["signature"] == None
+            assert msg["signature"] is None
         q.assert_called_once_with(db, "thread:foo")
 
     mf.get_filename.assert_called_once()

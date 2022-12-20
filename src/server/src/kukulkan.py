@@ -72,7 +72,6 @@ def close_db(e=None):
     g.db.close()
 
 
-
 def email_header(emails):
     """Encodes email names and addresses as email header from list of addresses separated by newline."""
     tmp = email.header.Header()
@@ -86,7 +85,7 @@ def email_header(emails):
                 else:
                     tmp.append(name.strip(), 'utf8')
                 address = '<' + address
-            except ValueError: # only email address, no name
+            except ValueError:  # only email address, no name
                 address = parts[i]
             tmp.append(address.strip() + ("," if i < (len(parts) - 1) else ""), 'ascii')
 
@@ -161,7 +160,7 @@ def create_app():
                 abort(500)
             messages = threads[0].get_messages()
             return messages_to_json(messages)
-    
+
     class Tags(Resource):
         def get(self):
             tags = [tag for tag in get_db().get_all_tags() if tag != "(null)"]
@@ -328,7 +327,7 @@ def create_app():
         else:
             print(sendOutput)
 
-        return { "sendStatus": p.returncode, "sendOutput": sendOutput }
+        return {"sendStatus": p.returncode, "sendOutput": sendOutput}
 
     return app
 
