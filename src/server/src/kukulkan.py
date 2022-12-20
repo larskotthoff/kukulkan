@@ -96,8 +96,11 @@ def create_app():
     app.config["PROPAGATE_EXCEPTIONS"] = True
 
     configPath = os.getenv("XDG_CONFIG_HOME") if os.getenv("XDG_CONFIG_HOME") else os.getenv("HOME") + os.path.sep + ".config"
-    with open(configPath + os.path.sep + "kukulkan" + os.path.sep + "config", "r") as f:
-        app.config.custom = json.load(f)
+    try:
+        with open(configPath + os.path.sep + "kukulkan" + os.path.sep + "config", "r") as f:
+            app.config.custom = json.load(f)
+    except FileNotFoundError:
+        app.logger.warning("Configuration file not found.")
 
     app.logger.setLevel(logging.INFO)
 
