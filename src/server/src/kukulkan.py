@@ -80,7 +80,7 @@ def email_header(emails):
         parts = emails.split('\n')
         for i in range(0, len(parts)):
             try:
-                 name, address] = parts[i].split('<')
+                [name, address] = parts[i].split('<')
                 if name.isascii():
                     tmp.append(name.strip(), 'ascii')
                 else:
