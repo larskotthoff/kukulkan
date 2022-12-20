@@ -1,0 +1,12 @@
+asn1crypto
+beautifulsoup4
+bleach
+Flask
+Flask_RESTful
+icalendar
+lxml
+M2Crypto
+notmuch
+pytest
+python_dateutil
+Werkzeug
