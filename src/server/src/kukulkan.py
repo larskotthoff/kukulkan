@@ -434,9 +434,7 @@ def get_attachments(email_msg, content=False):
     for part in email_msg.walk():
         if part.get_content_maintype() == "multipart":
             continue
-        if (part.get_content_disposition() in ["attachment", "inline"] or
-            part.get_content_type() == "text/calendar") and not
-            (part.get_content_disposition() == "inline" and part.get_content_type() == "text/plain"):
+        if (part.get_content_disposition() in ["attachment", "inline"] or part.get_content_type() == "text/calendar") and not (part.get_content_disposition() == "inline" and part.get_content_type() == "text/plain"):
             ctnt = part.get_content()
             preview = None
             if part.get_content_type() == "text/calendar":
