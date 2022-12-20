@@ -740,10 +740,12 @@ def test_message_filter_html(setup):
     mq.search_messages = MagicMock(return_value = iter([mf]))
 
     app.config.custom["accounts"] = []
-    if not app.config.custom["filter"]:
+    try:
+        app.config.custom["filter"]["content"]["text/html"] = [ '<input value="a>swordfish">', "meat" ]
+    except KeyError:
         app.config.custom["filter"] = {}
         app.config.custom["filter"]["content"] = {}
-    app.config.custom["filter"]["content"]["text/html"] = [ '<input value="a>swordfish">', "meat" ]
+        app.config.custom["filter"]["content"]["text/html"] = [ '<input value="a>swordfish">', "meat" ]
 
     with patch("notmuch.Query", return_value = mq) as q:
         with app.test_client() as test_client:
@@ -774,10 +776,12 @@ def test_message_filter_text(setup):
     mq = lambda: None
     mq.search_messages = MagicMock(return_value = iter([mf]))
 
-    if not app.config.custom["filter"]:
+    try:
+        app.config.custom["filter"]["content"]["text/plain"] = [ "notmuch_message_get_flags", "somefunc" ]
+    except KeyError:
         app.config.custom["filter"] = {}
         app.config.custom["filter"]["content"] = {}
-    app.config.custom["filter"]["content"]["text/plain"] = [ "notmuch_message_get_flags", "somefunc" ]
+        app.config.custom["filter"]["content"]["text/plain"] = [ "notmuch_message_get_flags", "somefunc" ]
 
     with patch("notmuch.Query", return_value = mq) as q:
         with app.test_client() as test_client:
