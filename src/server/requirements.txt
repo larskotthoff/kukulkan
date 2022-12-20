@@ -1,6 +1,5 @@
 asn1crypto
 beautifulsoup4
-bleach
 Flask
 Flask_RESTful
 icalendar

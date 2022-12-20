@@ -21,7 +21,6 @@ from dateutil import tz
 
 from M2Crypto import SMIME, BIO, X509
 
-import bleach
 from bs4 import BeautifulSoup
 
 import lxml
@@ -39,16 +38,17 @@ cleaner.remove_unknown_tags = True
 cleaner.safe_attrs_only = False
 cleaner.add_nofollow = True
 
+
 def get_db():
     """Get a new `Database` instance. Called before every request. Cached on first call."""
     if "db" not in g:
-        g.db = notmuch.Database(None, create = False)
+        g.db = notmuch.Database(None, create=False)
     return g.db
 
 
-def get_query(query_string, db = None, exclude = True):
+def get_query(query_string, db=None, exclude=True):
     """Get a Query with config set."""
-    db = get_db() if db == None else db
+    db = get_db() if db is None else db
     query = notmuch.Query(db, query_string)
     if exclude:
         for tag in db.get_config("search.exclude_tags").split(';'):
@@ -56,18 +56,21 @@ def get_query(query_string, db = None, exclude = True):
                 query.exclude_tag(tag)
     return query
 
+
 def get_message(message_id):
     """Get a single message."""
-    msgs = list(get_query("id:{}".format(message_id), exclude = False).search_messages())
+    msgs = list(get_query("id:{}".format(message_id), exclude=False).search_messages())
     if not msgs:
         abort(404)
     if len(msgs) > 1:
         abort(500)
     return msgs[0]
 
-def close_db(e = None):
+
+def close_db(e=None):
     """Close the Database. Called after every request."""
     g.db.close()
+
 
 
 def email_header(emails):
@@ -77,7 +80,7 @@ def email_header(emails):
         parts = emails.split('\n')
         for i in range(0, len(parts)):
             try:
-                [ name, address ] = parts[i].split('<')
+                 name, address] = parts[i].split('<')
                 if name.isascii():
                     tmp.append(name.strip(), 'ascii')
                 else:
@@ -92,7 +95,7 @@ def email_header(emails):
 
 def create_app():
     """Flask application factory."""
-    app = Flask(__name__, static_folder = "static")
+    app = Flask(__name__, static_folder="static")
     app.config["PROPAGATE_EXCEPTIONS"] = True
 
     configPath = os.getenv("XDG_CONFIG_HOME") if os.getenv("XDG_CONFIG_HOME") else os.getenv("HOME") + os.path.sep + ".config"
@@ -141,17 +144,17 @@ def create_app():
     class Query(Resource):
         def get(self, query_string):
             threads = get_query(query_string).search_threads()
-            return threads_to_json(threads, number = None)
+            return threads_to_json(threads, number=None)
 
     class Address(Resource):
         def get(self, query_string):
             # not supported by API...
             addrs = os.popen("notmuch address " + query_string).read()
-            return [ addr for addr in addrs.split('\n') if addr ]
+            return [addr for addr in addrs.split('\n') if addr]
 
     class Thread(Resource):
         def get(self, thread_id):
-            threads = list(get_query("thread:{}".format(thread_id), exclude = False).search_threads())
+            threads = list(get_query("thread:{}".format(thread_id), exclude=False).search_threads())
             if not threads:
                 abort(404)
             if len(threads) > 1:
@@ -161,7 +164,7 @@ def create_app():
     
     class Tags(Resource):
         def get(self):
-            tags = [ tag for tag in get_db().get_all_tags() if tag != "(null)" ]
+            tags = [tag for tag in get_db().get_all_tags() if tag != "(null)"]
             return tags
 
     class Accounts(Resource):
@@ -185,8 +188,8 @@ def create_app():
             f = io.BytesIO(io.StringIO(d["content"]).getvalue().encode())
         else:
             f = io.BytesIO(bytes(d["content"]))
-        return send_file(f, mimetype = d["content_type"], as_attachment = False,
-            download_name = d["filename"])
+        return send_file(f, mimetype=d["content_type"], as_attachment=False,
+                         download_name=d["filename"])
 
     @app.route("/api/message/<path:message_id>")
     def download_message(message_id):
@@ -208,7 +211,7 @@ def create_app():
 
     @app.route("/api/tag/add/<string:typ>/<path:nid>/<tag>")
     def tag_add(typ, nid, tag):
-        db_write = notmuch.Database(None, create = False, mode = notmuch.Database.MODE.READ_WRITE)
+        db_write = notmuch.Database(None, create=False, mode=notmuch.Database.MODE.READ_WRITE)
         msgs = get_query(("id" if typ == "message" else typ) + ":" + nid, db_write, False).search_messages()
         try:
             db_write.begin_atomic()
@@ -222,7 +225,7 @@ def create_app():
 
     @app.route("/api/tag/remove/<string:typ>/<path:nid>/<tag>")
     def tag_remove(typ, nid, tag):
-        db_write = notmuch.Database(None, create = False, mode = notmuch.Database.MODE.READ_WRITE)
+        db_write = notmuch.Database(None, create=False, mode=notmuch.Database.MODE.READ_WRITE)
         msgs = get_query(("id" if typ == "message" else typ) + ":" + nid, db_write, False).search_messages()
         try:
             db_write.begin_atomic()
@@ -237,7 +240,7 @@ def create_app():
     @app.route('/api/send', methods=['GET', 'POST'])
     def parse_request():
         accounts = current_app.config.custom["accounts"]
-        account = [ acct for acct in accounts if acct["id"] == request.values['from'] ][0]
+        account = [acct for acct in accounts if acct["id"] == request.values['from']][0]
 
         msg = email.message.EmailMessage()
         msg.set_content(request.values['body'])
@@ -248,15 +251,15 @@ def create_app():
             refAtts = message_attachment(refMsg)
             for key in request.values.keys():
                 if key.startswith("attachment-") and key not in request.files:
-                    att = [ tmp for tmp in refAtts if tmp["filename"] == request.values[key] ][0]
+                    att = [tmp for tmp in refAtts if tmp["filename"] == request.values[key]][0]
                     typ = att["content_type"].split('/', 1)
-                    msg.add_attachment(att["content"], maintype = typ[0], subtype = typ[1], filename = att["filename"])
+                    msg.add_attachment(att["content"], maintype=typ[0], subtype=typ[1], filename=att["filename"])
 
         for att in request.files:
             content = request.files[att].read()
             typ = request.files[att].mimetype.split('/', 1)
-            msg.add_attachment(content, maintype = typ[0], subtype = typ[1],
-                    filename = request.files[att].filename)
+            msg.add_attachment(content, maintype=typ[0], subtype=typ[1],
+                               filename=request.files[att].filename)
 
         if "key" in account and "cert" in account:
             buf = BIO.MemoryBuffer(bytes(msg))
@@ -274,7 +277,7 @@ def create_app():
         msg['To'] = email_header(request.values['to'])
         msg['Cc'] = email_header(request.values['cc'])
         msg['Bcc'] = email_header(request.values['bcc'])
-        msg['Date'] = email.utils.formatdate(localtime = True)
+        msg['Date'] = email.utils.formatdate(localtime=True)
 
         msg_id = email.utils.make_msgid("kukulkan")
         msg['Message-ID'] = msg_id
@@ -289,8 +292,8 @@ def create_app():
                 msg['References'] = '<' + refMsg['message_id'] + '>'
 
         sendcmd = account["sendmail"]
-        p = subprocess.Popen(sendcmd.split(' '), stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-        (out, err) = p.communicate(input = str(msg).encode())
+        p = subprocess.Popen(sendcmd.split(' '), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        (out, err) = p.communicate(input=str(msg).encode())
         sendOutput = out.decode() + err.decode()
 
         if p.returncode == 0:
@@ -298,7 +301,7 @@ def create_app():
             with open(fname, "w") as f:
                 f.write(str(msg))
 
-            db_write = notmuch.Database(None, create = False, mode = notmuch.Database.MODE.READ_WRITE)
+            db_write = notmuch.Database(None, create=False, mode=notmuch.Database.MODE.READ_WRITE)
             try:
                 db_write.begin_atomic()
                 if request.values['action'] == "reply":
@@ -330,7 +333,7 @@ def create_app():
     return app
 
 
-def threads_to_json(threads, start = 0, number = None):
+def threads_to_json(threads, start=0, number=None):
     """Converts a list of `notmuch.threads.Threads` instances to a JSON object."""
     if number is None:
         stop = None
@@ -345,7 +348,7 @@ def thread_to_json(thread):
     # necessary to get accurate tags and metadata, work around the notmuch API
     # only considering the matched messages
     messages = list(thread.get_messages())
-    tags = list(set([ tag for msg in messages for tag in msg.get_tags() ]))
+    tags = list(set([tag for msg in messages for tag in msg.get_tags()]))
     tags.sort()
     return {
         "authors": thread.get_authors() if thread.get_authors() else "(no author)",
@@ -360,7 +363,8 @@ def thread_to_json(thread):
 
 
 def strip_tags(soup):
-    for typ in ["a","span","em","strong","u","i","font","mark","label","s","sub","sup","tt","bdo","button","cite","del","b"]:
+    for typ in ["a", "span", "em", "strong", "u", "i", "font", "mark", "label",
+                "s", "sub", "sup", "tt", "bdo", "button", "cite", "del", "b"]:
         for t in soup.find_all(typ):
             t.unwrap()
     soup.smooth()
@@ -390,10 +394,10 @@ def get_nested_body(email_msg):
         elif part.get_content_type() == "application/pkcs7-mime":
             # https://stackoverflow.com/questions/58427642/how-to-extract-data-from-application-pkcs7-mime-using-the-email-module-in-pyth
             from asn1crypto import cms
-            content_info = cms.ContentInfo.load(part.get_payload(decode = True))
+            content_info = cms.ContentInfo.load(part.get_payload(decode=True))
             compressed_data = content_info['content']
             smime = compressed_data['encap_content_info']['content'].native
-            tmp = email.message_from_bytes(smime, policy = email.policy.default)
+            tmp = email.message_from_bytes(smime, policy=email.policy.default)
             tmp_plain, tmp_html = get_nested_body(tmp)
             content_plain += tmp_plain
             content_html += tmp_html
@@ -405,7 +409,7 @@ def get_nested_body(email_msg):
             for name, value in tag.items():
                 if "http" in value and not name == "href":
                     del tag.attrib[name]
-        content_html = lxml.html.tostring(cleaner.clean_html(html), encoding = str)
+        content_html = lxml.html.tostring(cleaner.clean_html(html), encoding=str)
     else:
         content_html = ""
 
@@ -413,23 +417,26 @@ def get_nested_body(email_msg):
     if content_plain:
         content = content_plain
         if "<html" in content_plain:
-            soup = BeautifulSoup(content_plain, features = 'html.parser')
+            soup = BeautifulSoup(content_plain, features='html.parser')
             strip_tags(soup)
-            content = ''.join(soup.get_text("\n\n", strip = True))
+            content = ''.join(soup.get_text("\n\n", strip=True))
     else:
-        soup = BeautifulSoup(content_html, features = 'html.parser')
+        soup = BeautifulSoup(content_html, features='html.parser')
         strip_tags(soup)
-        content = ''.join(soup.get_text("\n\n", strip = True))
+        content = ''.join(soup.get_text("\n\n", strip=True))
 
     return content, content_html
 
-def get_attachments(email_msg, content = False):
+
+def get_attachments(email_msg, content=False):
     """Returns all attachments for an email message."""
     attachments = []
     for part in email_msg.walk():
         if part.get_content_maintype() == "multipart":
             continue
-        if (part.get_content_disposition() in ["attachment", "inline"] or part.get_content_type() == "text/calendar") and not (part.get_content_disposition() == "inline" and part.get_content_type() == "text/plain"):
+        if (part.get_content_disposition() in ["attachment", "inline"] or
+            part.get_content_type() == "text/calendar") and not
+            (part.get_content_disposition() == "inline" and part.get_content_type() == "text/plain"):
             ctnt = part.get_content()
             preview = None
             if part.get_content_type() == "text/calendar":
@@ -443,7 +450,7 @@ def get_attachments(email_msg, content = False):
                             people = []
                         a = component.get("attendee")
                         if type(a) == list:
-                            people += [ c.params["CN"] for c in a ]
+                            people += [c.params["CN"] for c in a]
                         elif a:
                             people.append(a.params["CN"])
                         preview = {
@@ -466,10 +473,10 @@ def get_attachments(email_msg, content = False):
             if part.get_content_type() == "application/pkcs7-mime":
                 # https://stackoverflow.com/questions/58427642/how-to-extract-data-from-application-pkcs7-mime-using-the-email-module-in-pyth
                 from asn1crypto import cms
-                content_info = cms.ContentInfo.load(part.get_payload(decode = True))
+                content_info = cms.ContentInfo.load(part.get_payload(decode=True))
                 compressed_data = content_info['content']
                 smime = compressed_data['encap_content_info']['content'].native
-                tmp = email.message_from_bytes(smime, policy = email.policy.default)
+                tmp = email.message_from_bytes(smime, policy=email.policy.default)
                 att_tmp = get_attachments(tmp, content)
                 attachments += att_tmp
     return attachments
@@ -477,13 +484,13 @@ def get_attachments(email_msg, content = False):
 
 def messages_to_json(messages):
     """Converts a list of `notmuch.message.Message` instances to a JSON object."""
-    return [ message_to_json(m) for m in messages ]
+    return [message_to_json(m) for m in messages]
 
 
 def message_to_json(message):
     """Converts a `notmuch.message.Message` instance to a JSON object."""
     with open(message.get_filename(), "rb") as f:
-        email_msg = email.message_from_binary_file(f, policy = email.policy.default)
+        email_msg = email.message_from_binary_file(f, policy=email.policy.default)
 
     attachments = get_attachments(email_msg)
     body, html_body = get_nested_body(email_msg)
@@ -499,26 +506,27 @@ def message_to_json(message):
                 store = X509.X509_Store()
                 certStack = p7.get0_signers(X509.X509_Stack())
                 accounts = current_app.config.custom["accounts"]
-                accts = [ acct for acct in accounts if acct["email"] in message.get_header("from").strip().replace('\t', ' ') ]
+                accts = [acct for acct in accounts if acct["email"] in
+                         message.get_header("from").strip().replace('\t', ' ')]
                 if accts and accts[0]["cert"]:
-                    cert = X509.load_cert(accts[0]["cert"])
+                    X509.load_cert(accts[0]["cert"])
                     store.load_info(accts[0]["cert"])
                 s.set_x509_store(store)
                 s.set_x509_stack(certStack)
                 try:
-                    s.verify(p7, data_bio, flags = SMIME.PKCS7_DETACHED)
-                    signature = { "valid": True }
+                    s.verify(p7, data_bio, flags=SMIME.PKCS7_DETACHED)
+                    signature = {"valid": True}
                 except SMIME.PKCS7_Error as e:
                     if "self-signed certificate" in str(e) or "self signed certificate" in str(e) or "unable to get local issuer certificate" in str(e):
                         try:
-                            s.verify(p7, data_bio, flags = SMIME.PKCS7_NOVERIFY | SMIME.PKCS7_DETACHED)
-                            signature = { "valid": True, "message": "self-signed or unavailable certificate(s)" }
+                            s.verify(p7, data_bio, flags=SMIME.PKCS7_NOVERIFY | SMIME.PKCS7_DETACHED)
+                            signature = {"valid": True, "message": "self-signed or unavailable certificate(s)"}
                         except SMIME.PKCS7_Error as e:
-                            signature = { "valid": False, "message": str(e) }
+                            signature = {"valid": False, "message": str(e)}
                     else:
-                        signature = { "valid": False, "message": str(e) }
+                        signature = {"valid": False, "message": str(e)}
             except Exception as e:
-                signature = { "valid": False, "message": str(e) }
+                signature = {"valid": False, "message": str(e)}
             break
         else:
             signature = None
@@ -540,15 +548,15 @@ def message_to_json(message):
         },
         "attachments": attachments,
         "notmuch_id": message.get_message_id(),
-        "tags": [ tag for tag in message.get_tags() ],
+        "tags": [tag for tag in message.get_tags()],
         "signature": signature
     }
 
 
-def message_attachment(message, num = -1):
+def message_attachment(message, num=-1):
     """Returns attachment no. `num` of a `notmuch.message.Message` instance."""
     with open(message.get_filename(), "rb") as f:
-        email_msg = email.message_from_binary_file(f, policy = email.policy.default)
+        email_msg = email.message_from_binary_file(f, policy=email.policy.default)
     attachments = get_attachments(email_msg, True)
     if not attachments or num > len(attachments) - 1:
         return None
