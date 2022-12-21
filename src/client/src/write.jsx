@@ -23,8 +23,7 @@ import AttachFile from '@mui/icons-material/AttachFile';
 import Send from '@mui/icons-material/Send';
 
 import invert from 'invert-color';
-import { getColor, apiURL } from "./utils.js";
-import { theme } from "./index.jsx";
+import { getColor, apiURL, theme } from "./utils.js";
 
 import { hiddenTags } from "./tags.jsx";
 

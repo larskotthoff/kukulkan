@@ -12,7 +12,7 @@ import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
 import CircularProgress from '@mui/material/CircularProgress';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { ThemeProvider } from '@mui/material/styles';
 
 import Collapse from '@mui/material/Collapse';
 import ExpandLess from '@mui/icons-material/ExpandLess';
@@ -27,7 +27,7 @@ import Forward from '@mui/icons-material/Forward';
 import { TagBar } from "./tags.jsx";
 
 import invert from 'invert-color';
-import { strip, getColor, apiURL, formatDate, formatFSz } from "./utils.js";
+import { strip, getColor, apiURL, formatDate, formatFSz, theme } from "./utils.js";
 
 import linkifyStr from 'linkify-string';
 
@@ -470,8 +470,6 @@ export function SingleMessage() {
         );
     }
   }, [searchParams]);
-
-  const theme = createTheme();
 
   return (
     <ThemeProvider theme={theme}>

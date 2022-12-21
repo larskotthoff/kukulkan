@@ -13,9 +13,8 @@ import { useHotkeys } from 'react-hotkeys-hook';
 
 import invert from 'invert-color';
 
-import { getColor, extractEmailsSort, filterTagsColor, filterSubjectColor, apiURL } from "./utils.js";
+import { getColor, extractEmailsSort, filterTagsColor, filterSubjectColor, apiURL, theme } from "./utils.js";
 import { Message, DeletedMessage } from "./message.jsx";
-import { theme } from "./index.jsx";
 
 class MessageList extends React.Component {
   render() {
