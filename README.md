@@ -1,5 +1,6 @@
 # Kukulkan
 
+![Security Scanner](https://github.com/larskotthoff/kukulkan/actions/workflows/codeql.yml/badge.svg)
 ![Python Backend](https://github.com/larskotthoff/kukulkan/actions/workflows/python-app.yml/badge.svg)
 
 Email client in alpha stage.
