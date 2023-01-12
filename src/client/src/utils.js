@@ -15,18 +15,30 @@ export const theme = createTheme({
     }
   },
   components: {
-    MuiCssBaseline: {
-      styleOverrides: `
-      body {
-        background-image: url("serpent.png");
-        background-repeat: no-repeat;
-        background-position: bottom right;
-        background-attachment: fixed;
+    MuiTableRow: {
+      styleOverrides: {
+        root: {
+          "&.Mui-selected": {
+            backgroundColor: 'rgba(85, 139, 47, 0.3)'
+          }
+        }
       }
-    `
+    },
+    MuiCssBaseline: {
+      styleOverrides: {
+        body: {
+          backgroundImage: 'url("serpent.png")',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'bottom right',
+          backgroundAttachment: 'fixed'
+        }
+      }
     }
   }
 });
+
+theme.overrides = {
+}
 
 // https://stackoverflow.com/questions/36721830/convert-hsl-to-rgb-and-hex
 function hslToHex(h, s, l) {
