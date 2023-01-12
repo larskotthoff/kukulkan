@@ -20,6 +20,12 @@ export const theme = createTheme({
         root: {
           "&.Mui-selected": {
             backgroundColor: 'rgba(85, 139, 47, 0.3)'
+          },
+          "&.Mui-selected:hover": {
+            backgroundColor: 'rgba(85, 139, 47, 0.4) !important'
+          },
+          "&:hover": {
+            backgroundColor: 'rgba(85, 139, 47, 0.2) !important'
           }
         }
       }
