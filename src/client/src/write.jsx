@@ -198,6 +198,7 @@ export function Write() {
       .then((response) => response.json())
       .then((result) => {
         if(result.sendStatus === 0) {
+          error.current = false;
           statusMsg.current = "Message sent.";
         } else {
           error.current = true;
