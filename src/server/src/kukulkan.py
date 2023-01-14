@@ -252,7 +252,10 @@ def create_app():
                 if key.startswith("attachment-") and key not in request.files:
                     att = [tmp for tmp in refAtts if tmp["filename"] == request.values[key]][0]
                     typ = att["content_type"].split('/', 1)
-                    msg.add_attachment(att["content"], maintype=typ[0], subtype=typ[1], filename=att["filename"])
+                    if isinstance(att["content"], bytes):
+                        msg.add_attachment(att["content"], maintype=typ[0], subtype=typ[1], filename=att["filename"])
+                    else:
+                        msg.add_attachment(att["content"], subtype=typ[1], filename=att["filename"])
 
         for att in request.files:
             content = request.files[att].read()
