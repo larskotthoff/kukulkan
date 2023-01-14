@@ -453,6 +453,7 @@ def test_message_simple(setup):
             assert msg["in_reply_to"] == "foo\tbar"
             assert msg["references"] == "foo\tbar"
             assert msg["reply_to"] == "foo\tbar"
+            assert msg["delivered_to"] == "foo\tbar"
 
             assert "With the new notmuch_message_get_flags() function" in msg["body"]["text/plain"]
             assert msg["body"]["text/html"] == ''
@@ -466,7 +467,7 @@ def test_message_simple(setup):
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 13
+    assert mf.get_header.call_count == 15
 
     mq.search_messages.assert_called_once()
 
@@ -496,7 +497,7 @@ def test_message_attachments(setup):
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 13
+    assert mf.get_header.call_count == 15
 
     mq.search_messages.assert_called_once()
 
@@ -532,7 +533,7 @@ def test_message_attachment_calendar_preview(setup):
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 13
+    assert mf.get_header.call_count == 15
 
     mq.search_messages.assert_called_once()
 
@@ -568,7 +569,7 @@ def test_message_attachment_calendar_preview_no_people(setup):
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 13
+    assert mf.get_header.call_count == 15
 
     mq.search_messages.assert_called_once()
 
@@ -600,7 +601,7 @@ def test_message_signed(setup):
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 13
+    assert mf.get_header.call_count == 15
 
     mq.search_messages.assert_called_once()
 
@@ -632,7 +633,7 @@ def test_message_signed_attachment(setup):
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 13
+    assert mf.get_header.call_count == 15
 
     mq.search_messages.assert_called_once()
 
@@ -663,7 +664,7 @@ def test_message_signed_invalid(setup):
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 13
+    assert mf.get_header.call_count == 15
 
     mq.search_messages.assert_called_once()
 
@@ -692,7 +693,7 @@ def test_message_html_only(setup):
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 13
+    assert mf.get_header.call_count == 15
 
     mq.search_messages.assert_called_once()
 
@@ -721,7 +722,7 @@ def test_message_html_broken(setup):
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 13
+    assert mf.get_header.call_count == 15
 
     mq.search_messages.assert_called_once()
 
@@ -751,7 +752,7 @@ def test_message_link_scrubbing(setup):
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 13
+    assert mf.get_header.call_count == 15
 
     mq.search_messages.assert_called_once()
 
@@ -789,7 +790,7 @@ def test_message_filter_html(setup):
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 13
+    assert mf.get_header.call_count == 15
 
     mq.search_messages.assert_called_once()
 
@@ -825,7 +826,7 @@ def test_message_filter_text(setup):
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 13
+    assert mf.get_header.call_count == 15
 
     mq.search_messages.assert_called_once()
 
@@ -875,7 +876,7 @@ def test_thread(setup):
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 13
+    assert mf.get_header.call_count == 15
 
     mt.get_messages.assert_called_once()
 

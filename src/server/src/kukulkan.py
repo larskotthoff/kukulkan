@@ -542,6 +542,7 @@ def message_to_json(message):
         "in_reply_to": message.get_header("In-Reply-To").strip() if message.get_header("In-Reply-To") else None,
         "references": message.get_header("References").strip() if message.get_header("References") else None,
         "reply_to": message.get_header("Reply-To").strip() if message.get_header("Reply-To") else None,
+        "delivered_to": message.get_header("Delivered-To").strip() if message.get_header("Delivered-To") else None,
         "body": {
             "text/plain": body,
             "text/html": html_body

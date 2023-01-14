@@ -145,6 +145,15 @@ export function Write() {
                   if(!acct) {
                     acct = accounts.find(a => result.from.includes(a.email));
                   }
+                  if(!acct && result.cc) {
+                    acct = accounts.find(a => result.cc.includes(a.email));
+                  }
+                  if(!acct && result.bcc) {
+                    acct = accounts.find(a => result.bcc.includes(a.email));
+                  }
+                  if(!acct && result.delivered_to) {
+                    acct = accounts.find(a => result.delivered_to.includes(a.email));
+                  }
                   if(acct) {
                     setFrom(acct.id);
                   }
