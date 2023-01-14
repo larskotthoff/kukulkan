@@ -1,0 +1,34 @@
+{
+    "accounts": [
+        {
+            "id": "foo",
+            "name": "My Name",
+            "email": "foo@bar.com",
+            "key": "/path/to/key.key",
+            "cert": "/path/to/cert.cert",
+            "sendmail": "msmtp --account=foo -t",
+            "default": "true",
+            "save_sent_to": "/path/to/mail/foo/cur/",
+            "additional_sent_tags": [ "foo" ]
+        },
+
+        {
+            "id": "bar",
+            "name": "Foo Bar",
+            "email": "bar@foo.com",
+            "sendmail": "msmtp --account=bar -t",
+            "default": "false",
+            "save_sent_to": "/path/to/mail/bar/cur/",
+            "additional_sent_tags": [ "bar" ]
+        }
+
+    ],
+
+    "filter": {
+        "content": {
+            "text/html": [ "<p>spam banner to be removed</p>", "" ],
+            "text/plain": [ "Some warning that message was from external source.", "" ]
+        }
+    }
+
+}

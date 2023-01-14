@@ -1,0 +1,14 @@
+[Unit]
+Description=Kukulkan Mail Server
+
+[Service]
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Type=simple
+Restart=on-failure
+WorkingDirectory=/some/directory/
+ExecStart=gunicorn --timeout 0 'kukulkan.prod.kukulkan:create_app()'
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop = /bin/kill -s TERM $MAINPID
+
+[Install]
+WantedBy = default.target
