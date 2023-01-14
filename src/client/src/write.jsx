@@ -102,6 +102,7 @@ export function Write() {
   const [bccLoading, setBccLoading] = React.useState(false);
 
   const error = useRef(false);
+  const sendingTimer = useRef(false);
   const statusMsg = useRef(null);
   const messageId = useRef(null);
   const action = useRef(null);
@@ -217,8 +218,10 @@ export function Write() {
   useEffect(() => {
     if(sending) {
       setTimeLeft(5);
+      sendingTimer.current = true;
     } else {
       clearTimeout(timer);
+      sendingTimer.current = false;
     }
   // eslint-disable-next-line
   }, [sending]);
@@ -228,6 +231,8 @@ export function Write() {
       setSendingMsg("Sending in " + timeLeft + "... (close or press s to cancel)");
       setTimer(setTimeout(() => setTimeLeft(timeLeft - 1), 1000));
     } else if(timeLeft === 0) {
+      clearTimeout(timer);
+      sendingTimer.current = false;
       setSendingMsg("Sending...");
       sendMsg();
     }
@@ -290,7 +295,7 @@ export function Write() {
 
   useHotkeys('a', () => document.getElementById("attach").click());
   useHotkeys('y', () => setSending(true));
-  useHotkeys('s', () => setSending(false));
+  useHotkeys('s', () => sendingTimer.current === true && setSending(false));
 
   const [defTo, defCc] = makeToCc(baseMsg);
 
@@ -383,7 +388,7 @@ export function Write() {
                 </Grid>
                 <Grid item>
                   <Button key="send" startIcon={<Send/>} variant="outlined" onClick={() => setSending(true)}>Send</Button>
-                  <Snackbar open={sending} message={sendingMsg} onClose={() => setSending(false)}/>
+                  <Snackbar open={sending} message={sendingMsg} onClose={() => sendingTimer.current === true && setSending(false)}/>
                 </Grid>
               </Grid>
             </Paper>
