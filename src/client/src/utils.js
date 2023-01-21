@@ -43,9 +43,6 @@ export const theme = createTheme({
   }
 });
 
-theme.overrides = {
-}
-
 // https://stackoverflow.com/questions/36721830/convert-hsl-to-rgb-and-hex
 function hslToHex(h, s, l) {
   l /= 100;
