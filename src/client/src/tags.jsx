@@ -22,25 +22,25 @@ export class TagBar extends React.Component {
   addTag(tag) {
     this.setState({ updating: true });
     fetch(apiURL("api/tag/add/" + this.props.type + '/' + encodeURIComponent(this.props.id) + '/' + tag))
-      .then(
-        (result) => {
+      .then((response) => response.json())
+      .then((result) => {
           if(!this.props.tagsObject.tags.includes(tag)) {
             this.props.tagsObject.tags.push(tag);
           }
-        },
-        (error) => {console.log(error);}
-      ).finally(() => this.setState({ updating: false }));
+      })
+      .catch((error) => console.warn(error))
+      .finally(() => this.setState({ updating: false }));
   }
 
   delTag(tag) {
     this.setState({ updating: true });
     fetch(apiURL("api/tag/remove/" + this.props.type + '/' + encodeURIComponent(this.props.id) + '/' + tag))
-      .then(
-        (result) => {
+      .then((response) => response.json())
+      .then((result) => {
           this.props.tagsObject.tags = this.props.tagsObject.tags.filter(t => t !== tag);
-        },
-        (error) => {console.log(error);}
-      ).finally(() => this.setState({ updating: false }));
+      })
+      .catch((error) => console.warn(error))
+      .finally(() => this.setState({ updating: false }));
   }
 
   componentDidMount() {
