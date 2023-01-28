@@ -277,13 +277,23 @@ export class Message extends React.Component {
           <img src={apiURL("api/attachment/" + encodeURIComponent(msg.notmuch_id) + "/" + index)} alt={attachment.filename} style={{ maxWidth: mw, maxHeight: mh }}/>
         </a>);
     } else if(attachment.content_type.includes("calendar") && summary === false) {
-      return (<a href={apiURL("api/attachment/" + encodeURIComponent(this.props.msg.notmuch_id) + "/" + index)} target="_blank" rel="noreferrer">
+      return (<div><a href={apiURL("api/attachment/" + encodeURIComponent(this.props.msg.notmuch_id) + "/" + index)} target="_blank" rel="noreferrer">
+          <AttachFile/>{attachment.filename}
+          {" (" + formatFSz(attachment.content_size) + ", " + attachment.content_type + ")"}
+        </a>
+        <a target="_blank" rel="noreferrer"
+          href={"https://www.google.com/calendar/render?action=TEMPLATE&text=" +
+            encodeURIComponent(attachment.preview.summary) + "&dates=" +
+            encodeURIComponent(attachment.preview.dtstart) + "/" +
+            encodeURIComponent(attachment.preview.dtend) + "&location=" +
+            encodeURIComponent(attachment.preview.location) + "&ctz=" +
+            encodeURIComponent(attachment.preview.tz) + "&sf=true&output=xml"}>
           <Paper elevation={3} style={{ padding: ".5em", whiteSpace: "pre-line" }}>
           { attachment.preview.summary + " (" + attachment.preview.location + ")\n" +
             attachment.preview.start + " — " + attachment.preview.end + "\n" +
             attachment.preview.attendees }
           </Paper>
-        </a>);
+        </a></div>);
     } else {
       return (<a href={apiURL("api/attachment/" + encodeURIComponent(this.props.msg.notmuch_id) + "/" + index)} target="_blank" rel="noreferrer"><AttachFile/>{attachment.filename}
         {summary ? "" : " (" + formatFSz(attachment.content_size) + ", " + attachment.content_type + ")"}

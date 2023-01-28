@@ -523,6 +523,9 @@ def test_message_attachment_calendar_preview(setup):
             assert msg["attachments"][0]['filename'] == 'unnamed attachment'
             assert msg["attachments"][0]['preview']['summary'] == "testevent"
             assert msg["attachments"][0]['preview']['location'] == "kskdcsd"
+            assert msg["attachments"][0]['preview']['tz'] == "Europe/Berlin"
+            assert msg["attachments"][0]['preview']['dtstart'] == "20111101T090000"
+            assert msg["attachments"][0]['preview']['dtend'] == "20111101T100000"
             assert "Tue Nov  1 " in msg["attachments"][0]['preview']['start']
             assert "2011" in msg["attachments"][0]['preview']['start']
             assert "Tue Nov  1 " in msg["attachments"][0]['preview']['end']
@@ -559,6 +562,9 @@ def test_message_attachment_calendar_preview_no_people(setup):
             assert msg["attachments"][0]['filename'] == 'unnamed attachment'
             assert msg["attachments"][0]['preview']['summary'] == "testevent"
             assert msg["attachments"][0]['preview']['location'] == "kskdcsd"
+            assert msg["attachments"][0]['preview']['tz'] == "Europe/Berlin"
+            assert msg["attachments"][0]['preview']['dtstart'] == "20111101T090000"
+            assert msg["attachments"][0]['preview']['dtend'] == "20111101T100000"
             assert "Tue Nov  1 " in msg["attachments"][0]['preview']['start']
             assert "2011" in msg["attachments"][0]['preview']['start']
             assert "Tue Nov  1 " in msg["attachments"][0]['preview']['end']

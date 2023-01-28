@@ -442,6 +442,7 @@ def get_attachments(email_msg, content=False):
             if part.get_content_type() == "text/calendar":
                 # create "preview"
                 gcal = icalendar.Calendar.from_ical(ctnt)
+                timezone = None
                 for component in gcal.walk():
                     if component.name == "VEVENT":
                         if component.get("organizer"):
@@ -453,13 +454,22 @@ def get_attachments(email_msg, content=False):
                             people += [c.params["CN"] for c in a]
                         elif a:
                             people.append(a.params["CN"])
+                        # TODO: handle repeating events
                         preview = {
                             "summary": component.get("summary"),
                             "location": component.get("location"),
                             "start": component.get("dtstart").dt.astimezone(tz.tzlocal()).strftime("%c"),
+                            "dtstart": component.get("dtstart").to_ical().decode("utf8"),
                             "end": component.get("dtend").dt.astimezone(tz.tzlocal()).strftime("%c"),
+                            "dtend": component.get("dtend").to_ical().decode("utf8"),
                             "attendees": ", ".join(people)
                         }
+                    elif component.name == "VTIMEZONE":
+                        # this assumes that start and end are the same timezone
+                        timezone = component.get("tzid")
+
+                if preview and timezone:
+                    preview["tz"] = timezone
 
             attachments.append({
                 "filename": part.get_filename() if part.get_filename() else "unnamed attachment",
