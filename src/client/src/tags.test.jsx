@@ -169,9 +169,7 @@ it('deletes on event', async () => {
 });
 
 it('logs error for tag add', async () => {
-  const mockFetch = jest.fn(() => Promise.resolve({
-    json: () => Promise.reject("error")
-  }));
+  const mockFetch = jest.fn(() => Promise.reject("error"));
   global.fetch = mockFetch;
   const mockLog = jest.spyOn(console, "warn").mockImplementation();
 
@@ -204,9 +202,7 @@ it('logs error for tag add', async () => {
 });
 
 it('logs error for tag remove', async () => {
-  const mockFetch = jest.fn(() => Promise.resolve({
-    json: () => Promise.reject("error")
-  }));
+  const mockFetch = jest.fn(() => Promise.reject("error"));
   global.fetch = mockFetch;
   const mockLog = jest.spyOn(console, "warn").mockImplementation();
 
