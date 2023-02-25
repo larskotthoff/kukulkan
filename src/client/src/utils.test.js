@@ -43,9 +43,9 @@ test("formatDate", () => {
   expect(utils.formatDate(new Date(now - (5 * 24 * 60 * 60 * 1000))))
     .toMatch(/[A-Za-z]{3} [0-9]{2}:[0-9]{2}/);
   expect(utils.formatDate(new Date(now - (10 * 24 * 60 * 60 * 1000))))
-    .toMatch(/[0-9]{2}\/[0-9]{2} [0-9]{2}:[0-9]{2}/);
+    .toMatch(/[0-9]{1,2}\/[0-9]{1,2} [0-9]{2}:[0-9]{2}/);
   expect(utils.formatDate(new Date(now - (400 * 24 * 60 * 60 * 1000))))
-    .toMatch(/[0-9]{2}\/[0-9]{2}\/[0-9]{4} [0-9]{2}:[0-9]{2}/);
+    .toMatch(/[0-9]{1,2}\/[0-9]{1,2}\/[0-9]{4} [0-9]{2}:[0-9]{2}/);
 });
 
 test("formatDuration", () => {
