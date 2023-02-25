@@ -73,6 +73,17 @@ class ThreadNav extends React.Component {
 }
 
 function filterThread(msg, thread, setActiveMsg) {
+  if(msg === null) {
+    let firstUnread = thread.findIndex((m) => {
+      return m.tags.includes("unread");
+    });
+    if(firstUnread > -1) {
+      msg = thread[firstUnread];
+    } else {
+      msg = thread[thread.length - 1];
+    }
+  }
+
   let prv = [];
   let tmp = msg;
   while(tmp.in_reply_to) {
@@ -93,19 +104,7 @@ function filterThread(msg, thread, setActiveMsg) {
   }
 
   let res = prv.reverse().concat(nxt);
-
-  if(msg === res[res.length - 1]) {
-    let firstUnread = res.findIndex((msg) => {
-      return msg.tags.includes("unread");
-    });
-    if(firstUnread > -1) {
-      setActiveMsg(firstUnread);
-    } else {
-      setActiveMsg(res.length - 1);
-    }
-  } else {
-    setActiveMsg(res.findIndex(m => m === msg));
-  }
+  setActiveMsg(res.findIndex(m => m === msg));
 
   return res;
 }
@@ -147,7 +146,7 @@ export function Thread() {
                   depth++;
                 }
 
-                setFilteredThread(filterThread(thread.current[thread.current.length - 1], thread.current, setActiveMsg));
+                setFilteredThread(filterThread(null, thread.current, setActiveMsg));
               }
           },
           (e) => {
@@ -168,7 +167,7 @@ export function Thread() {
   }, []);
 
   const updateActiveDepth = (d) => {
-    let msg = thread.current[thread.current.length - 1];
+    let msg = null;
     thread.current.forEach(function(m) {
       if(m.depth === d) msg = m;
     });
