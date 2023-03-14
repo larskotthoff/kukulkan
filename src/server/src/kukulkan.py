@@ -446,7 +446,10 @@ def get_attachments(email_msg, content=False):
                 for component in gcal.walk():
                     if component.name == "VEVENT":
                         if component.get("organizer"):
-                            people = [component.get("organizer").params["CN"]]
+                            try:
+                                people = [component.get("organizer").params["CN"]]
+                            except KeyError:
+                                people = []
                         else:
                             people = []
                         a = component.get("attendee")
