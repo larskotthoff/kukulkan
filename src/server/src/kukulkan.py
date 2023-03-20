@@ -458,12 +458,18 @@ def get_attachments(email_msg, content=False):
                         elif a:
                             people.append(a.params["CN"])
                         # TODO: handle repeating events
+                        try:
+                            dtstart = component.get("dtstart").dt.astimezone(tz.tzlocal()).strftime("%c")
+                            dtend = component.get("dtend").dt.astimezone(tz.tzlocal()).strftime("%c")
+                        except AttributeError: # only date, no time
+                            dtstart = component.get("dtstart").dt.strftime("%c")
+                            dtend = component.get("dtend").dt.strftime("%c")
                         preview = {
                             "summary": component.get("summary"),
                             "location": component.get("location"),
-                            "start": component.get("dtstart").dt.astimezone(tz.tzlocal()).strftime("%c"),
+                            "start": dtstart,
                             "dtstart": component.get("dtstart").to_ical().decode("utf8"),
-                            "end": component.get("dtend").dt.astimezone(tz.tzlocal()).strftime("%c"),
+                            "end": dtend,
                             "dtend": component.get("dtend").to_ical().decode("utf8"),
                             "attendees": ", ".join(people)
                         }
