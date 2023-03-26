@@ -539,7 +539,7 @@ def message_to_json(message):
                     if "self-signed certificate" in str(e) or "self signed certificate" in str(e) or "unable to get local issuer certificate" in str(e):
                         try:
                             s.verify(p7, data_bio, flags=SMIME.PKCS7_NOVERIFY | SMIME.PKCS7_DETACHED)
-                            signature = {"valid": True, "message": "self-signed or unavailable certificate(s)"}
+                            signature = {"valid": None, "message": "self-signed or unavailable certificate(s)"}
                         except SMIME.PKCS7_Error as e:
                             signature = {"valid": False, "message": str(e)}
                     else:

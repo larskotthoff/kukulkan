@@ -638,7 +638,7 @@ def test_message_signed(setup):
             msg = json.loads(response.data.decode())
             assert "Bob, we need to cancel this contract." in msg["body"]["text/plain"]
 
-            assert msg["signature"] == {'message': 'self-signed or unavailable certificate(s)', 'valid': True}
+            assert msg["signature"] == {'message': 'self-signed or unavailable certificate(s)', 'valid': None}
         q.assert_called_once_with(db, "id:foo")
 
     mf.get_filename.assert_called_once()
@@ -670,7 +670,7 @@ def test_message_signed_attachment(setup):
             msg = json.loads(response.data.decode())
             assert "Invio messaggio SMIME (signed and clear text)" in msg["body"]["text/plain"]
 
-            assert msg["signature"] == {'message': 'self-signed or unavailable certificate(s)', 'valid': True}
+            assert msg["signature"] == {'message': 'self-signed or unavailable certificate(s)', 'valid': None}
         q.assert_called_once_with(db, "id:foo")
 
     mf.get_filename.assert_called_once()

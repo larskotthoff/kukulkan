@@ -179,6 +179,8 @@ export class Message extends React.Component {
       if(this.props.msg.signature.valid) {
         this.sigMsg += "Signature verified";
         this.sigSev = "success";
+      } else if(this.props.msg.signature.valid === null) {
+        this.sigMsg += "Signature could not be verified";
       } else {
         this.sigMsg += "Signature verification failed";
         this.sigSev = "error";
