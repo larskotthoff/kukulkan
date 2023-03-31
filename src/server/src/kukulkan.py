@@ -461,6 +461,9 @@ def get_attachments(email_msg, content=False):
                         try:
                             dtstart = component.get("dtstart").dt.astimezone(tz.tzlocal()).strftime("%c")
                             dtend = component.get("dtend").dt.astimezone(tz.tzlocal()).strftime("%c")
+
+                            # this assumes that start and end are the same timezone
+                            timezone = str(component.get("dtstart").dt.tzinfo)
                         except AttributeError: # only date, no time
                             dtstart = component.get("dtstart").dt.strftime("%c")
                             dtend = component.get("dtend").dt.strftime("%c")
@@ -473,9 +476,6 @@ def get_attachments(email_msg, content=False):
                             "dtend": component.get("dtend").to_ical().decode("utf8"),
                             "attendees": ", ".join(people)
                         }
-                    elif component.name == "VTIMEZONE":
-                        # this assumes that start and end are the same timezone
-                        timezone = component.get("tzid")
 
                 if preview and timezone:
                     preview["tz"] = timezone

@@ -285,11 +285,12 @@ export class Message extends React.Component {
         </a>
         <a target="_blank" rel="noreferrer"
           href={"https://www.google.com/calendar/render?action=TEMPLATE&text=" +
-            encodeURIComponent(attachment.preview.summary) + "&dates=" +
-            encodeURIComponent(attachment.preview.dtstart) + "/" +
-            encodeURIComponent(attachment.preview.dtend) + "&location=" +
-            encodeURIComponent(attachment.preview.location) + "&ctz=" +
-            encodeURIComponent(attachment.preview.tz) + "&sf=true&output=xml"}>
+            encodeURIComponent(attachment.preview.summary) +
+            "&dates=" + encodeURIComponent(attachment.preview.dtstart) +
+            "/" + encodeURIComponent(attachment.preview.dtend) +
+            "&location=" + encodeURIComponent(attachment.preview.location) +
+            "&ctz=" + encodeURIComponent(attachment.preview.tz) +
+            "&sf=true&output=xml"}>
           <Paper elevation={3} style={{ padding: ".5em", whiteSpace: "pre-line" }}>
           { attachment.preview.summary + " (" + attachment.preview.location + ")\n" +
             attachment.preview.start + " — " + attachment.preview.end + "\n" +

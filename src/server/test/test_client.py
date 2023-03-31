@@ -541,6 +541,45 @@ def test_message_attachment_calendar_preview(setup):
     mq.search_messages.assert_called_once()
 
 
+def test_message_attachment_calendar_preview_tz(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.get_filename = MagicMock(return_value="test/mails/calendar-tz.eml")
+    mf.get_header = MagicMock(return_value="  foo\tbar  ")
+    mf.get_message_id = MagicMock(return_value="foo")
+    mf.get_tags = MagicMock(return_value=["foo", "bar"])
+
+    mq = lambda: None
+    mq.search_messages = MagicMock(return_value=iter([mf]))
+
+    with patch("notmuch.Query", return_value=mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/message/foo')
+            assert response.status_code == 200
+            msg = json.loads(response.data.decode())
+            assert msg["attachments"][0]['content_type'] == 'text/calendar'
+            assert msg["attachments"][0]['filename'] == 'unnamed attachment'
+            assert msg["attachments"][0]['preview']['summary'] == "testevent"
+            assert msg["attachments"][0]['preview']['location'] == "kskdcsd"
+            assert msg["attachments"][0]['preview']['tz'] == "America/New_York"
+            assert msg["attachments"][0]['preview']['dtstart'] == "20111101T090000"
+            assert msg["attachments"][0]['preview']['dtend'] == "20111101T100000"
+            assert "Tue Nov  1 " in msg["attachments"][0]['preview']['start']
+            assert "2011" in msg["attachments"][0]['preview']['start']
+            assert "Tue Nov  1 " in msg["attachments"][0]['preview']['end']
+            assert "2011" in msg["attachments"][0]['preview']['end']
+            assert msg["attachments"][0]['preview']['attendees'] == "unittest, TRUE"
+        q.assert_called_once_with(db, "id:foo")
+
+    mf.get_filename.assert_called_once()
+    mf.get_message_id.assert_called_once()
+    mf.get_tags.assert_called_once()
+    assert mf.get_header.call_count == 15
+
+    mq.search_messages.assert_called_once()
+
+
 def test_message_attachment_calendar_preview_no_people(setup):
     app, db = setup
 
