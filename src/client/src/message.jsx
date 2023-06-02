@@ -278,7 +278,7 @@ export class Message extends React.Component {
       return (<a href={apiURL("api/attachment/" + encodeURIComponent(this.props.msg.notmuch_id) + "/" + index)} target="_blank" rel="noreferrer">
           <img src={apiURL("api/attachment/" + encodeURIComponent(msg.notmuch_id) + "/" + index)} alt={attachment.filename} style={{ maxWidth: mw, maxHeight: mh }}/>
         </a>);
-    } else if(attachment.content_type.includes("calendar") && summary === false) {
+    } else if(attachment.content_type.includes("calendar") && attachment.preview !== null && summary === false) {
       return (<div><a href={apiURL("api/attachment/" + encodeURIComponent(this.props.msg.notmuch_id) + "/" + index)} target="_blank" rel="noreferrer">
           <AttachFile/>{attachment.filename}
           {" (" + formatFSz(attachment.content_size) + ", " + attachment.content_type + ")"}
