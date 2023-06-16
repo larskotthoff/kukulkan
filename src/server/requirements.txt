@@ -9,3 +9,4 @@ notmuch
 pytest
 python_dateutil
 Werkzeug
+recurrent

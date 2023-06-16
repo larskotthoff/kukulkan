@@ -290,11 +290,12 @@ export class Message extends React.Component {
             "/" + encodeURIComponent(attachment.preview.dtend) +
             "&location=" + encodeURIComponent(attachment.preview.location) +
             "&ctz=" + encodeURIComponent(attachment.preview.tz) +
+            (attachment.preview.rrule !== null ? ("&recur=RRULE:" + encodeURIComponent(attachment.preview.rrule)) : "") +
             "&sf=true&output=xml"}>
           <Paper elevation={3} style={{ padding: ".5em", whiteSpace: "pre-line" }}>
           { attachment.preview.summary + " (" + attachment.preview.location + ")\n" +
             attachment.preview.start + " — " + attachment.preview.end + "\n" +
-            attachment.preview.attendees }
+            attachment.preview.attendees + "\n" + attachment.preview.recur }
           </Paper>
         </a></div>);
     } else {
