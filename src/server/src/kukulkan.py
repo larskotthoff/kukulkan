@@ -454,11 +454,15 @@ def get_attachments(email_msg, content=False):
                                 people = []
                         else:
                             people = []
-                        a = component.get("attendee")
-                        if type(a) == list:
-                            people += [c.params["CN"] for c in a]
-                        elif a:
-                            people.append(a.params["CN"])
+                        try:
+                            a = component.get("attendee")
+                            if type(a) == list:
+                                people += [c.params["CN"] for c in a]
+                            elif a:
+                                people.append(a.params["CN"])
+                        except KeyError:
+                            None
+
                         try:
                             dtstart = component.get("dtstart").dt.astimezone(tz.tzlocal()).strftime("%c")
                             dtend = component.get("dtend").dt.astimezone(tz.tzlocal()).strftime("%c")
