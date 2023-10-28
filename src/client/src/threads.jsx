@@ -82,8 +82,8 @@ class ThreadRow extends React.PureComponent {
           }
         }}>
           <TableCell>{ this.props.thread.tags.includes("attachment") && <AttachFile /> }</TableCell>
-          <TableCell style={{ maxWidth: "10vw", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{ this.renderDateNum(this.props.thread) }</TableCell>
-          <TableCell style={{ maxWidth: "50vw", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          <TableCell style={{ maxWidth: "10vw", whiteSpace: "break-spaces" }}>{ this.renderDateNum(this.props.thread) }</TableCell>
+          <TableCell style={{ maxWidth: "50vw", whiteSpace: "break-spaces" }}>
             <Grid container spacing={1} wrap="nowrap">
               <Grid item>
                 { this.state.editTags ?
@@ -100,12 +100,12 @@ class ThreadRow extends React.PureComponent {
                   </span>
                 }
               </Grid>
-              <Grid item style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+              <Grid item>
                 {this.props.thread.subject}
               </Grid>
             </Grid>
           </TableCell>
-          <TableCell style={{ maxWidth: "30vw", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          <TableCell style={{ maxWidth: "30vw", whiteSpace: "break-spaces" }}>
             {this.props.thread.authors.split(/\s*[,|]\s*/).map((author, index) => (
               <span key={index} style={{ backgroundColor: getColor(author), color: invert(getColor(author), true), padding: 2, margin: 2, borderRadius: 3 }}>{author}</span>
             )) }

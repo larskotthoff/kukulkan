@@ -328,7 +328,7 @@ export class Message extends React.Component {
     const saw = 6 / msg.attachments.length;
 
     return (
-      <Paper elevation={this.props.active ? 20 : 3} sx={{ padding: 1, margin: 1, width: "80em" }} className={ this.props.active ? "kukulkan-active-thread" : ""} ref={this.elementTop}>
+      <Paper elevation={this.props.active ? 20 : 3} sx={{ padding: 1, margin: 1, width: "min(80em, 80vw)" }} className={ this.props.active ? "kukulkan-active-thread" : ""} ref={this.elementTop}>
         <Collapse key={msg.notmuch_id + "_collapsed" } in={!this.state.expanded} timeout={timeout} unmountOnExit>
           <Grid container direction="column" onClick={this.handleCollapse}>
             <Grid container direction="row" justifyContent="space-between" wrap="nowrap">

@@ -317,7 +317,7 @@ export function Write() {
           { loading && <CircularProgress /> }
           { statusMsg.current && <Alert severity={error.current ? "error" : "success"}>{statusMsg.current}</Alert> }
           { accounts && !loading &&
-            <Paper elevation={3} sx={{ padding: 1, margin: 1, width: "80em" }}>
+            <Paper elevation={3} sx={{ padding: 1, margin: 1, width: "min(80em, 80vw)" }}>
               <Grid container spacing={1} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                 <Grid item>From:</Grid>
                 <Grid item><TextField id="from"
