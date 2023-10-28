@@ -225,11 +225,12 @@ export function Write() {
   };
 
   useEffect(() => {
+    clearTimeout(timer);
     if(sending) {
       setTimeLeft(5);
       sendingTimer.current = true;
     } else {
-      clearTimeout(timer);
+      setTimeLeft(-1);
       sendingTimer.current = false;
     }
   // eslint-disable-next-line
