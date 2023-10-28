@@ -51,7 +51,7 @@ test("formatDate", () => {
 test("formatDuration", () => {
   const now = new Date();
   expect(utils.formatDuration(new Date(now - (30 * 60 * 1000)), now))
-    .toBe("30 minutes");
+    .toBe("30 mins");
   expect(utils.formatDuration(new Date(now - (2 * 60 * 60 * 1000)), now))
     .toBe("2 hours");
   expect(utils.formatDuration(new Date(now - (2 * 24 * 60 * 60 * 1000)), now))

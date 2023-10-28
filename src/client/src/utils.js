@@ -102,7 +102,7 @@ export function formatDate(date) {
 export function formatDuration(from, to) {
   let diff = to - from;
   if(diff < (91 * 60 * 1000)) {
-    return (Math.round(diff / (60 * 1000))) + " minutes";
+    return (Math.round(diff / (60 * 1000))) + " mins";
   } if(diff < (48 * 60 * 60 * 1000)) {
     return (Math.round(diff / (60 * 60 * 1000))) + " hours";
   } if(diff < (14 * 24 * 60 * 60 * 1000)) {
