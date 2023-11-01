@@ -36,7 +36,8 @@ export const theme = createTheme({
           backgroundImage: 'url("serpent.png")',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'bottom right',
-          backgroundAttachment: 'fixed'
+          backgroundAttachment: 'fixed',
+          backgroundSize: '20vw'
         }
       }
     }
