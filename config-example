@@ -29,6 +29,14 @@
             "text/html": [ "<p>spam banner to be removed</p>", "" ],
             "text/plain": [ "Some warning that message was from external source.", "" ]
         }
-    }
+    },
+
+    "templates": [
+        {
+            "shortcut": "1",
+            "description": "foo",
+            "template": "Thank you for your message."
+        }
+    ]
 
 }

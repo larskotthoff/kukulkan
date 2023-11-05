@@ -30,6 +30,16 @@ def test_accounts(setup):
         assert b'"foo"\n' == response.data
 
 
+def test_templates(setup):
+    app, db = setup
+
+    app.config.custom["templates"] = "foo"
+    with app.test_client() as test_client:
+        response = test_client.get('/api/templates/')
+        assert response.status_code == 200
+        assert b'"foo"\n' == response.data
+
+
 def test_tags(setup):
     app, db = setup
 

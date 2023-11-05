@@ -172,12 +172,17 @@ def create_app():
         def get(self):
             return current_app.config.custom["accounts"]
 
+    class Templates(Resource):
+        def get(self):
+            return current_app.config.custom["templates"]
+
     # all requests that return lists must be defined this way
     api.add_resource(Query, "/api/query/<path:query_string>")
     api.add_resource(Address, "/api/address/<path:query_string>")
     api.add_resource(Thread, "/api/thread/<path:thread_id>")
     api.add_resource(Tags, "/api/tags/")
     api.add_resource(Accounts, "/api/accounts/")
+    api.add_resource(Templates, "/api/templates/")
 
     @app.route("/api/attachment/<path:message_id>/<int:num>")
     def download_attachment(message_id, num):

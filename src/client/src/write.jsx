@@ -27,6 +27,18 @@ import { getColor, apiURL, theme } from "./utils.js";
 
 import { hiddenTags } from "./tags.jsx";
 
+class Templates extends React.PureComponent {
+  render() {
+    return (
+      <Grid container spacing={1} sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
+        { this.props.templates.map((template) => (
+          <Grid item><Button id={"template-" + template.shortcut} variant="outlined" onClick={() => this.props.setTemplate(template.template) }>{template.description} ({template.shortcut})</Button></Grid>
+        )) }
+      </Grid>
+    )
+  }
+}
+
 class AddrComplete extends React.Component {
   constructor(props) {
     super(props);
@@ -81,6 +93,7 @@ class AddrComplete extends React.Component {
 
 export function Write() {
   const [accounts, setAccounts] = useState(null);
+  const [templates, setTemplates] = useState(null);
   const [allTags, setAllTags] = useState([]);
   const [loading, setLoading] = React.useState(false);
 
@@ -92,6 +105,7 @@ export function Write() {
   const [files, setFiles] = React.useState([]);
 
   const [baseMsg, setBaseMsg] = useState(null);
+  const [template, setTemplate] = useState(null);
 
   const to = useRef("");
   const cc = useRef("");
@@ -122,55 +136,66 @@ export function Write() {
     fetch(apiURL("api/accounts/"))
       .then(res => res.json())
       .then((accounts) => {
-        fetch(apiURL("api/tags/"))
+        fetch(apiURL("api/templates/"))
           .then(res => res.json())
-          .then((tags) => {
-            setAccounts(accounts);
-            setFrom(accounts.find(a => a.default).id);
-            setAllTags(tags);
+          .then((templates) => {
+            fetch(apiURL("api/tags/"))
+              .then(res => res.json())
+              .then((tags) => {
+                setAccounts(accounts);
+                setFrom(accounts.find(a => a.default).id);
+                setTemplates(templates);
+                setAllTags(tags);
 
-            messageId.current = searchParams.get("id");
-            if(messageId.current !== null) {
-              setLoading(true);
-              setBaseMsg(null);
-              fetch(apiURL("api/message/" + encodeURIComponent(messageId.current)))
-                .then(res => res.json())
-                .then((result) => {
-                  setBaseMsg(result);
-                  if(action.current === "forward" && result.attachments) {
-                    // attach files attached to previous email
-                    setFiles(result.attachments.map(a => { return { dummy: true, name: a.filename }; }));
-                  }
-                  let acct = accounts.find(a => result.to.includes(a.email));
-                  if(!acct) {
-                    acct = accounts.find(a => result.from.includes(a.email));
-                  }
-                  if(!acct && result.cc) {
-                    acct = accounts.find(a => result.cc.includes(a.email));
-                  }
-                  if(!acct && result.bcc) {
-                    acct = accounts.find(a => result.bcc.includes(a.email));
-                  }
-                  if(!acct && result.delivered_to) {
-                    acct = accounts.find(a => result.delivered_to.includes(a.email));
-                  }
-                  if(acct) {
-                    setFrom(acct.id);
-                  }
-                  error.current = false;
-                  document.title = "Compose: " + prefix(result.subject);
-                })
-                .catch((e) => {
+                messageId.current = searchParams.get("id");
+                if(messageId.current !== null) {
+                  setLoading(true);
                   setBaseMsg(null);
-                  error.current = true;
-                  statusMsg.current = "Error querying backend: " + e.message;
-                })
-                .finally(() => {
+                  fetch(apiURL("api/message/" + encodeURIComponent(messageId.current)))
+                    .then(res => res.json())
+                    .then((result) => {
+                      setBaseMsg(result);
+                      if(action.current === "forward" && result.attachments) {
+                        // attach files attached to previous email
+                        setFiles(result.attachments.map(a => { return { dummy: true, name: a.filename }; }));
+                      }
+                      let acct = accounts.find(a => result.to.includes(a.email));
+                      if(!acct) {
+                        acct = accounts.find(a => result.from.includes(a.email));
+                      }
+                      if(!acct && result.cc) {
+                        acct = accounts.find(a => result.cc.includes(a.email));
+                      }
+                      if(!acct && result.bcc) {
+                        acct = accounts.find(a => result.bcc.includes(a.email));
+                      }
+                      if(!acct && result.delivered_to) {
+                        acct = accounts.find(a => result.delivered_to.includes(a.email));
+                      }
+                      if(acct) {
+                        setFrom(acct.id);
+                      }
+                      error.current = false;
+                      document.title = "Compose: " + prefix(result.subject);
+                    })
+                    .catch((e) => {
+                      setBaseMsg(null);
+                      error.current = true;
+                      statusMsg.current = "Error querying backend: " + e.message;
+                    })
+                    .finally(() => {
+                      setLoading(false);
+                    });
+                } else {
                   setLoading(false);
-                });
-            } else {
-              setLoading(false);
-            }
+                }
+              })
+              .catch((e) => {
+                setBaseMsg(null);
+                error.current = true;
+                statusMsg.current = "Error querying backend: " + e.message;
+                setLoading(false);
+              });
           })
           .catch((e) => {
             setBaseMsg(null);
@@ -178,13 +203,13 @@ export function Write() {
             statusMsg.current = "Error querying backend: " + e.message;
             setLoading(false);
           });
-        })
-        .catch((e) => {
-          setBaseMsg(null);
-          error.current = true;
-          statusMsg.current = "Error querying backend: " + e.message;
-          setLoading(false);
-        });
+      })
+      .catch((e) => {
+        setBaseMsg(null);
+        error.current = true;
+        statusMsg.current = "Error querying backend: " + e.message;
+        setLoading(false);
+      });
   }, [searchParams]);
 
   const handleAttach = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -249,6 +274,13 @@ export function Write() {
   // eslint-disable-next-line
   }, [timeLeft]);
 
+  useEffect(() => {
+    if(body.current) {
+      body.current.value = (template ? template : "") + body.current.defaultValue;
+    }
+  // eslint-disable-next-line
+  }, [template]);
+
   const quote = (text) => {
     return "\n\n\nOn " + baseMsg.date + ", " + baseMsg.from + " wrote:\n> " +
       text.replace(/&gt;/g, ">").replace(/&lt;/g, "<").split('\n').join("\n> ");
@@ -303,6 +335,12 @@ export function Write() {
     return [ tmpTo, tmpCc ];
   };
 
+  useHotkeys('*', (ev) => {
+    if(document.getElementById("template-" + ev.key)) {
+      document.getElementById("template-" + ev.key).click();
+    }
+  });
+
   useHotkeys('a', () => document.getElementById("attach").click());
   useHotkeys('y', () => setSending(true));
   useHotkeys('s', () => sendingTimer.current === true && setSending(false));
@@ -316,6 +354,7 @@ export function Write() {
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} >
           { loading && <CircularProgress /> }
           { statusMsg.current && <Alert severity={error.current ? "error" : "success"}>{statusMsg.current}</Alert> }
+          { templates && <Templates templates={templates} setTemplate={setTemplate} /> }
           { accounts && !loading &&
             <Paper elevation={3} sx={{ padding: 1, margin: 1, width: "min(80em, 80vw)" }}>
               <Grid container spacing={1} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
