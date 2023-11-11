@@ -103,17 +103,17 @@ export function formatDate(date) {
 export function formatDuration(from, to) {
   let diff = to - from;
   if(diff < (91 * 60 * 1000)) {
-    return (Math.round(diff / (60 * 1000))) + " mins";
+    return (Math.round(diff / (60 * 1000))) + "分";
   } if(diff < (48 * 60 * 60 * 1000)) {
-    return (Math.round(diff / (60 * 60 * 1000))) + " hours";
+    return (Math.round(diff / (60 * 60 * 1000))) + "時";
   } if(diff < (14 * 24 * 60 * 60 * 1000)) {
-    return (Math.round(diff / (24 * 60 * 60 * 1000))) + " days";
+    return (Math.round(diff / (24 * 60 * 60 * 1000))) + "日";
   } if(diff < (12 * 7 * 24 * 60 * 60 * 1000)) {
-    return (Math.round(diff / (7 * 24 * 60 * 60 * 1000))) + " weeks";
+    return (Math.round(diff / (7 * 24 * 60 * 60 * 1000))) + "週";
   } if(diff < (500 * 24 * 60 * 60 * 1000)) {
-    return (Math.round(diff / (30 * 24 * 60 * 60 * 1000))) + " months";
+    return (Math.round(diff / (30 * 24 * 60 * 60 * 1000))) + "月";
   } else {
-    return (Math.round(diff / (365.25 * 24 * 60 * 60 * 1000))) + " years";
+    return (Math.round(diff / (365.25 * 24 * 60 * 60 * 1000))) + "年";
   }
 }
 

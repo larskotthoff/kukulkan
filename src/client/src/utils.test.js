@@ -51,17 +51,17 @@ test("formatDate", () => {
 test("formatDuration", () => {
   const now = new Date();
   expect(utils.formatDuration(new Date(now - (30 * 60 * 1000)), now))
-    .toBe("30 mins");
+    .toBe("30分");
   expect(utils.formatDuration(new Date(now - (2 * 60 * 60 * 1000)), now))
-    .toBe("2 hours");
+    .toBe("2時");
   expect(utils.formatDuration(new Date(now - (2 * 24 * 60 * 60 * 1000)), now))
-    .toBe("2 days");
+    .toBe("2日");
   expect(utils.formatDuration(new Date(now - (2 * 7 * 24 * 60 * 60 * 1000)), now))
-    .toBe("2 weeks");
+    .toBe("2週");
   expect(utils.formatDuration(new Date(now - (4 * 30 * 24 * 60 * 60 * 1000)), now))
-    .toBe("4 months");
+    .toBe("4月");
   expect(utils.formatDuration(new Date(now - (2 * 365 * 24 * 60 * 60 * 1000)), now))
-    .toBe("2 years");
+    .toBe("2年");
 });
 
 test("apiURL", () => {
