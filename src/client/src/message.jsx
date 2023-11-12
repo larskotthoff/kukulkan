@@ -197,10 +197,6 @@ export class Message extends React.Component {
   }
 
   componentDidMount() {
-    if(this.props.active) {
-      this.elementTop.current.scrollIntoView({block: "nearest"});
-    }
-
     this.elementTop.current.addEventListener("toggleContent", this.handleHtml);
     this.elementTop.current.addEventListener("toggleCollapse", this.handleCollapse);
     this.elementTop.current.addEventListener("print", () => {
@@ -222,7 +218,7 @@ export class Message extends React.Component {
     if(this.state.expanded && this.props.msg.tags.includes("unread")) {
       setTimeout(() =>
         this.elementTop.current.getElementsByClassName("MuiAutocomplete-root")[0].dispatchEvent(new CustomEvent('read')),
-      2000);
+      1000);
     }
   }
 
@@ -234,8 +230,9 @@ export class Message extends React.Component {
           html: prevState.html,
           lines: prevState.lines
         }));
+      } else {
+        this.elementTop.current.scrollIntoView({block: "nearest"});
       }
-      this.elementTop.current.scrollIntoView({block: "nearest"});
     }
     this.prevActive = this.props.active;
 
@@ -359,7 +356,7 @@ export class Message extends React.Component {
           </Grid>
         </Collapse>
 
-        <Collapse key={msg.notmuch_id + "_expanded" } in={this.state.expanded} timeout={timeout} unmountOnExit>
+        <Collapse key={msg.notmuch_id + "_expanded" } in={this.state.expanded} timeout={timeout} onEntered={() => this.elementTop.current.scrollIntoView({block: "nearest"})} unmountOnExit>
           <Box onClick={this.handleCollapse}>
             { msg.from && <Typography>From: {this.formatAddrs(msg.from)}</Typography> }
             { msg.reply_to && <Typography>Reply-To: {this.formatAddrs(msg.reply_to)}</Typography> }
