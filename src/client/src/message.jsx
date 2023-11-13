@@ -215,6 +215,10 @@ export class Message extends React.Component {
       window.open(apiURL("api/raw_message/" + encodeURIComponent(this.props.msg.notmuch_id)), '_blank');
     });
 
+    if(this.props.active) {
+      this.elementTop.current.scrollIntoView({block: "nearest"});
+    }
+
     if(this.state.expanded && this.props.msg.tags.includes("unread")) {
       setTimeout(() =>
         this.elementTop.current.getElementsByClassName("MuiAutocomplete-root")[0].dispatchEvent(new CustomEvent('read')),
