@@ -222,7 +222,7 @@ export class Message extends React.Component {
     if(this.state.expanded && this.props.msg.tags.includes("unread")) {
       setTimeout(() =>
         this.elementTop.current.getElementsByClassName("MuiAutocomplete-root")[0].dispatchEvent(new CustomEvent('read')),
-      1000);
+      500);
     }
   }
 

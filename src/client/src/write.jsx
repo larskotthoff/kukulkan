@@ -252,7 +252,7 @@ export function Write() {
   useEffect(() => {
     clearTimeout(timer);
     if(sending) {
-      setTimeLeft(5);
+      setTimeLeft(3);
       sendingTimer.current = true;
     } else {
       setTimeLeft(-1);
