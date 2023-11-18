@@ -34,6 +34,7 @@ import linkifyStr from 'linkify-string';
 const linkifyOpts = { target: "_blank", rel: "nofollow" }
 
 const timeout = 200;
+const unreadTimeout = 500;
 
 class ShadowRoot extends React.Component {
   constructor(props) {
@@ -222,7 +223,7 @@ export class Message extends React.Component {
     if(this.state.expanded && this.props.msg.tags.includes("unread")) {
       setTimeout(() =>
         this.elementTop.current.getElementsByClassName("MuiAutocomplete-root")[0].dispatchEvent(new CustomEvent('read')),
-      500);
+      unreadTimeout);
     }
   }
 
@@ -243,7 +244,7 @@ export class Message extends React.Component {
     if(this.state.expanded && this.props.msg.tags.includes("unread")) {
       setTimeout(() =>
         this.elementTop.current.getElementsByClassName("MuiAutocomplete-root")[0].dispatchEvent(new CustomEvent('read')),
-      500);
+      unreadTimeout);
     }
   }
 
