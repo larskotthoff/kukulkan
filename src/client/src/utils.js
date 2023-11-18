@@ -37,7 +37,7 @@ export const theme = createTheme({
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'bottom right',
           backgroundAttachment: 'fixed',
-          backgroundSize: '20vw'
+          backgroundSize: 'auto 25vh'
         }
       }
     }
