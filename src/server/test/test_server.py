@@ -163,7 +163,7 @@ def test_get_message_none(setup):
         with app.test_client() as test_client:
             response = test_client.get('/api/message/foo')
             assert response.status_code == 404
-        q.assert_called_once_with(db, "id:foo")
+        q.assert_called_once_with(db, 'id:"foo"')
 
     mq.search_messages.assert_called_once()
 
@@ -178,7 +178,7 @@ def test_get_message_multiple(setup):
         with app.test_client() as test_client:
             response = test_client.get('/api/message/foo')
             assert response.status_code == 500
-        q.assert_called_once_with(db, "id:foo")
+        q.assert_called_once_with(db, 'id:"foo"')
 
     mq.search_messages.assert_called_once()
 
@@ -198,7 +198,7 @@ def test_raw_message(setup):
                 response = test_client.get('/api/raw_message/foo')
                 assert response.status_code == 200
                 assert b'This is a test.' == response.data
-        q.assert_called_once_with(db, "id:foo")
+        q.assert_called_once_with(db, 'id:"foo"')
 
     mf.get_filename.assert_called_once()
     mq.search_messages.assert_called_once()
@@ -225,7 +225,7 @@ def test_tag_add_message(setup):
                 response = test_client.get('/api/tag/add/message/foo/bar')
                 assert response.status_code == 200
                 assert b'bar' == response.data
-            q.assert_called_once_with(dbw, "id:foo")
+            q.assert_called_once_with(dbw, 'id:"foo"')
 
     mf.add_tag.assert_called_once()
     mf.tags_to_maildir_flags.assert_called_once()
@@ -258,7 +258,7 @@ def test_tag_add_thread(setup):
                 response = test_client.get('/api/tag/add/thread/foo/bar')
                 assert response.status_code == 200
                 assert b'bar' == response.data
-            q.assert_called_once_with(dbw, "thread:foo")
+            q.assert_called_once_with(dbw, 'thread:"foo"')
 
     mf.add_tag.assert_called_once()
     mf.tags_to_maildir_flags.assert_called_once()
@@ -291,7 +291,7 @@ def test_tag_remove_message(setup):
                 response = test_client.get('/api/tag/remove/message/foo/bar')
                 assert response.status_code == 200
                 assert b'bar' == response.data
-            q.assert_called_once_with(dbw, "id:foo")
+            q.assert_called_once_with(dbw, 'id:"foo"')
 
     mf.remove_tag.assert_called_once()
     mf.tags_to_maildir_flags.assert_called_once()
@@ -324,7 +324,7 @@ def test_tag_remove_thread(setup):
                 response = test_client.get('/api/tag/remove/thread/foo/bar')
                 assert response.status_code == 200
                 assert b'bar' == response.data
-            q.assert_called_once_with(dbw, "thread:foo")
+            q.assert_called_once_with(dbw, 'thread:"foo"')
 
     mf.remove_tag.assert_called_once()
     mf.tags_to_maildir_flags.assert_called_once()
@@ -349,7 +349,7 @@ def test_attachment_no_attachment(setup):
         with app.test_client() as test_client:
             response = test_client.get('/api/attachment/foo/0')
             assert response.status_code == 404
-        q.assert_called_once_with(db, "id:foo")
+        q.assert_called_once_with(db, 'id:"foo"')
 
     mf.get_filename.assert_called_once()
     mq.search_messages.assert_called_once()
@@ -368,7 +368,7 @@ def test_attachment_invalid_index(setup):
         with app.test_client() as test_client:
             response = test_client.get('/api/attachment/foo/1')
             assert response.status_code == 404
-        q.assert_called_once_with(db, "id:foo")
+        q.assert_called_once_with(db, 'id:"foo"')
 
     mf.get_filename.assert_called_once()
     mq.search_messages.assert_called_once()
@@ -391,7 +391,7 @@ def test_attachment_single(setup):
             assert type(response.data) is bytes
             assert "application/x-gtar-compressed" == response.mimetype
             assert "inline; filename=zendesk-email-loop2.tgz" == response.headers['Content-Disposition']
-        q.assert_called_once_with(db, "id:foo")
+        q.assert_called_once_with(db, 'id:"foo"')
 
     mf.get_filename.assert_called_once()
     mq.search_messages.assert_called_once()
@@ -430,7 +430,7 @@ def test_attachment_multiple(setup):
             assert "text/plain" == response.mimetype
             assert "inline; filename=test.csv" == response.headers['Content-Disposition']
         assert q.call_count == 3
-        q.assert_called_with(db, "id:foo")
+        q.assert_called_with(db, 'id:"foo"')
 
     assert mf.get_filename.call_count == 3
     assert mq.search_messages.call_count == 3
@@ -472,7 +472,7 @@ def test_message_simple(setup):
             assert msg["tags"] == ["foo", "bar"]
             assert msg["attachments"] == []
             assert msg["signature"] is None
-        q.assert_called_once_with(db, "id:foo")
+        q.assert_called_once_with(db, 'id:"foo"')
 
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
@@ -502,7 +502,7 @@ def test_message_attachments(setup):
             assert msg["attachments"] == [{'content': None, 'content_size': 445, 'content_type': 'text/plain', 'filename': 'text.txt', 'preview': None},
                                           {'content': None, 'content_size': 7392, 'content_type': 'application/pdf', 'filename': 'document.pdf', 'preview': None},
                                           {'content': None, 'content_size': 2391, 'content_type': 'text/plain', 'filename': 'test.csv', 'preview': None}]
-        q.assert_called_once_with(db, "id:foo")
+        q.assert_called_once_with(db, 'id:"foo"')
 
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
@@ -542,7 +542,7 @@ def test_message_attachment_calendar_preview(setup):
             assert "2011" in msg["attachments"][0]['preview']['end']
             assert msg["attachments"][0]['preview']['recur'] == ""
             assert msg["attachments"][0]['preview']['attendees'] == "unittest, TRUE"
-        q.assert_called_once_with(db, "id:foo")
+        q.assert_called_once_with(db, 'id:"foo"')
 
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
@@ -581,7 +581,7 @@ def test_message_attachment_calendar_preview_tz(setup):
             assert "Tue Nov  1 " in msg["attachments"][0]['preview']['end']
             assert "2011" in msg["attachments"][0]['preview']['end']
             assert msg["attachments"][0]['preview']['attendees'] == "unittest, TRUE"
-        q.assert_called_once_with(db, "id:foo")
+        q.assert_called_once_with(db, 'id:"foo"')
 
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
@@ -620,7 +620,7 @@ def test_message_attachment_calendar_preview_no_attendees(setup):
             assert "Tue Nov  1 " in msg["attachments"][0]['preview']['end']
             assert "2011" in msg["attachments"][0]['preview']['end']
             assert msg["attachments"][0]['preview']['attendees'] == "unittest"
-        q.assert_called_once_with(db, "id:foo")
+        q.assert_called_once_with(db, 'id:"foo"')
 
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
@@ -659,7 +659,7 @@ def test_message_attachment_calendar_preview_no_people(setup):
             assert "Tue Nov  1 " in msg["attachments"][0]['preview']['end']
             assert "2011" in msg["attachments"][0]['preview']['end']
             assert msg["attachments"][0]['preview']['attendees'] == ""
-        q.assert_called_once_with(db, "id:foo")
+        q.assert_called_once_with(db, 'id:"foo"')
 
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
@@ -696,7 +696,7 @@ def test_message_attachment_calendar_preview_no_time(setup):
             assert "1970" in msg["attachments"][0]['preview']['start']
             assert "Mon Mar 30 " in msg["attachments"][0]['preview']['end']
             assert "1970" in msg["attachments"][0]['preview']['end']
-        q.assert_called_once_with(db, "id:foo")
+        q.assert_called_once_with(db, 'id:"foo"')
 
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
@@ -736,7 +736,7 @@ def test_message_attachment_calendar_preview_recur(setup):
             assert "2011" in msg["attachments"][0]['preview']['end']
             assert msg["attachments"][0]['preview']['recur'] == "every last Sun in Oct"
             assert msg["attachments"][0]['preview']['attendees'] == "unittest, TRUE"
-        q.assert_called_once_with(db, "id:foo")
+        q.assert_called_once_with(db, 'id:"foo"')
 
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
@@ -768,7 +768,7 @@ def test_message_signed(setup):
             assert "Bob, we need to cancel this contract." in msg["body"]["text/plain"]
 
             assert msg["signature"] == {'message': 'self-signed or unavailable certificate(s)', 'valid': None}
-        q.assert_called_once_with(db, "id:foo")
+        q.assert_called_once_with(db, 'id:"foo"')
 
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
@@ -800,7 +800,7 @@ def test_message_signed_attachment(setup):
             assert "Invio messaggio SMIME (signed and clear text)" in msg["body"]["text/plain"]
 
             assert msg["signature"] == {'message': 'self-signed or unavailable certificate(s)', 'valid': None}
-        q.assert_called_once_with(db, "id:foo")
+        q.assert_called_once_with(db, 'id:"foo"')
 
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
@@ -831,7 +831,7 @@ def test_message_signed_invalid(setup):
             msg = json.loads(response.data.decode())
             assert "Bob, we need to cancel this contract." in msg["body"]["text/plain"]
             assert msg["signature"] == {'message': 'bad signature', 'valid': False}
-        q.assert_called_once_with(db, "id:foo")
+        q.assert_called_once_with(db, 'id:"foo"')
 
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
@@ -860,7 +860,7 @@ def test_message_html_only(setup):
             msg = json.loads(response.data.decode())
             assert "hunter2" == msg["body"]["text/plain"]
             assert "hunter2" in msg["body"]["text/html"]
-        q.assert_called_once_with(db, "id:foo")
+        q.assert_called_once_with(db, 'id:"foo"')
 
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
@@ -889,7 +889,7 @@ def test_message_html_broken(setup):
             msg = json.loads(response.data.decode())
             assert "hunter2" == msg["body"]["text/plain"]
             assert '' == msg["body"]["text/html"]
-        q.assert_called_once_with(db, "id:foo")
+        q.assert_called_once_with(db, 'id:"foo"')
 
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
@@ -919,7 +919,7 @@ def test_message_link_scrubbing(setup):
             assert "foo" == msg["body"]["text/plain"]
             assert "https://example.com" in msg["body"]["text/html"]
             assert "https://tracking.com" not in msg["body"]["text/html"]
-        q.assert_called_once_with(db, "id:foo")
+        q.assert_called_once_with(db, 'id:"foo"')
 
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
@@ -957,7 +957,7 @@ def test_message_filter_html(setup):
             assert "meat\n\nhunter2" == msg["body"]["text/plain"]
             assert "meat" in msg["body"]["text/html"]
             assert "swordfish" not in msg["body"]["text/html"]
-        q.assert_called_once_with(db, "id:foo")
+        q.assert_called_once_with(db, 'id:"foo"')
 
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
@@ -993,7 +993,7 @@ def test_message_filter_text(setup):
             msg = json.loads(response.data.decode())
             assert "somefunc" in msg["body"]["text/plain"]
             assert "notmuch_message_get_flags" not in msg["body"]["text/plain"]
-        q.assert_called_once_with(db, "id:foo")
+        q.assert_called_once_with(db, 'id:"foo"')
 
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
@@ -1043,7 +1043,7 @@ def test_thread(setup):
             assert msg["tags"] == ["foo", "bar"]
             assert msg["attachments"] == []
             assert msg["signature"] is None
-        q.assert_called_once_with(db, "thread:foo")
+        q.assert_called_once_with(db, 'thread:"foo"')
 
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
@@ -1065,7 +1065,7 @@ def test_thread_none(setup):
         with app.test_client() as test_client:
             response = test_client.get('/api/thread/foo')
             assert response.status_code == 404
-        q.assert_called_once_with(db, "thread:foo")
+        q.assert_called_once_with(db, 'thread:"foo"')
 
     mq.search_threads.assert_called_once()
 
@@ -1080,7 +1080,7 @@ def test_thread_duplicate(setup):
         with app.test_client() as test_client:
             response = test_client.get('/api/thread/foo')
             assert response.status_code == 500
-        q.assert_called_once_with(db, "thread:foo")
+        q.assert_called_once_with(db, 'thread:"foo"')
 
     mq.search_threads.assert_called_once()
 
@@ -1357,7 +1357,7 @@ def test_send_reply(setup):
 
             mtj.assert_called_once_with(mf)
 
-        q.assert_has_calls([call(db, "id:oldFoo"), call(dbw, "id:oldFoo")])
+        q.assert_has_calls([call(db, 'id:"oldFoo"'), call(dbw, "id:oldFoo")])
 
     assert mq.search_messages.call_count == 2
 
@@ -1439,7 +1439,7 @@ def test_send_reply_more_refs(setup):
 
             mtj.assert_called_once_with(mf)
 
-        q.assert_has_calls([call(db, "id:oldFoo"), call(dbw, "id:oldFoo")])
+        q.assert_has_calls([call(db, 'id:"oldFoo"'), call(dbw, "id:oldFoo")])
 
     assert mq.search_messages.call_count == 2
 
@@ -1523,7 +1523,7 @@ def test_send_forward(setup):
 
             ma.assert_called_once_with(mf)
 
-        q.assert_has_calls([call(db, "id:oldFoo"), call(dbw, "id:oldFoo")])
+        q.assert_has_calls([call(db, 'id:"oldFoo"'), call(dbw, "id:oldFoo")])
 
     assert mq.search_messages.call_count == 2
 
@@ -1610,7 +1610,7 @@ def test_send_forward_text_attachment(setup):
 
             ma.assert_called_once_with(mf)
 
-        q.assert_has_calls([call(db, "id:oldFoo"), call(dbw, "id:oldFoo")])
+        q.assert_has_calls([call(db, 'id:"oldFoo"'), call(dbw, "id:oldFoo")])
 
     assert mq.search_messages.call_count == 2
 

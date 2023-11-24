@@ -61,7 +61,7 @@ def get_query(query_string, db=None, exclude=True):
 
 def get_message(message_id):
     """Get a single message."""
-    msgs = list(get_query("id:{}".format(message_id), exclude=False).search_messages())
+    msgs = list(get_query('id:"{}"'.format(message_id), exclude=False).search_messages())
     if not msgs:
         abort(404)
     if len(msgs) > 1:
@@ -155,7 +155,7 @@ def create_app():
 
     class Thread(Resource):
         def get(self, thread_id):
-            threads = list(get_query("thread:{}".format(thread_id), exclude=False).search_threads())
+            threads = list(get_query('thread:"{}"'.format(thread_id), exclude=False).search_threads())
             if not threads:
                 abort(404)
             if len(threads) > 1:
@@ -215,28 +215,17 @@ def create_app():
         # https://npm.io/package/mailauth
         return json.loads(os.popen("mailauth " + msg.get_filename()).read())['arc']['authResults']
 
-    @app.route("/api/tag/add/<string:typ>/<path:nid>/<tag>")
-    def tag_add(typ, nid, tag):
+    @app.route("/api/tag/<op>/<string:typ>/<path:nid>/<tag>")
+    def change_tag(op, typ, nid, tag):
         db_write = notmuch.Database(None, create=False, mode=notmuch.Database.MODE.READ_WRITE)
-        msgs = get_query(("id" if typ == "message" else typ) + ":" + nid, db_write, False).search_messages()
+        msgs = get_query(('id' if typ == "message" else typ) + ':"' + nid + '"', db_write, False).search_messages()
         try:
             db_write.begin_atomic()
             for msg in msgs:
-                msg.add_tag(tag)
-                msg.tags_to_maildir_flags()
-            db_write.end_atomic()
-        finally:
-            db_write.close()
-        return tag
-
-    @app.route("/api/tag/remove/<string:typ>/<path:nid>/<tag>")
-    def tag_remove(typ, nid, tag):
-        db_write = notmuch.Database(None, create=False, mode=notmuch.Database.MODE.READ_WRITE)
-        msgs = get_query(("id" if typ == "message" else typ) + ":" + nid, db_write, False).search_messages()
-        try:
-            db_write.begin_atomic()
-            for msg in msgs:
-                msg.remove_tag(tag)
+                if op == "add":
+                    msg.add_tag(tag)
+                elif op == "remove":
+                    msg.remove_tag(tag)
                 msg.tags_to_maildir_flags()
             db_write.end_atomic()
         finally:
