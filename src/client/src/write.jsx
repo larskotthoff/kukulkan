@@ -125,92 +125,76 @@ export function Write() {
   const body = useRef(null);
   const tags = useRef(null);
 
+  useEffect(() => {
+    Promise.all([
+      fetch(apiURL("api/accounts/")).then(v => v.json()),
+      fetch(apiURL("api/templates/")).then(v => v.json()),
+      fetch(apiURL("api/tags/")).then(v => v.json())
+    ]).then(([_accounts, _templates, _tags]) => {
+      setAccounts(_accounts);
+      setFrom(_accounts.find(a => a.default).id);
+      setTemplates(_templates);
+      setAllTags(_tags);
+    }).catch((e) => {
+      setBaseMsg(null);
+      error.current = true;
+      statusMsg.current = "Error querying backend: " + e.message;
+    });
+  }, []);
+
   const [searchParams] = useSearchParams();
   useEffect(() => {
+    if(accounts === null) return;
+
     document.title = "New Message";
     action.current = searchParams.get("action");
     if(!action.current) {
       action.current = "compose";
     }
 
-    fetch(apiURL("api/accounts/"))
-      .then(res => res.json())
-      .then((accounts) => {
-        fetch(apiURL("api/templates/"))
-          .then(res => res.json())
-          .then((templates) => {
-            fetch(apiURL("api/tags/"))
-              .then(res => res.json())
-              .then((tags) => {
-                setAccounts(accounts);
-                setFrom(accounts.find(a => a.default).id);
-                setTemplates(templates);
-                setAllTags(tags);
-
-                messageId.current = searchParams.get("id");
-                if(messageId.current !== null) {
-                  setLoading(true);
-                  setBaseMsg(null);
-                  fetch(apiURL("api/message/" + encodeURIComponent(messageId.current)))
-                    .then(res => res.json())
-                    .then((result) => {
-                      setBaseMsg(result);
-                      if(action.current === "forward" && result.attachments) {
-                        // attach files attached to previous email
-                        setFiles(result.attachments.map(a => { return { dummy: true, name: a.filename }; }));
-                      }
-                      let acct = accounts.find(a => result.to.includes(a.email));
-                      if(!acct) {
-                        acct = accounts.find(a => result.from.includes(a.email));
-                      }
-                      if(!acct && result.cc) {
-                        acct = accounts.find(a => result.cc.includes(a.email));
-                      }
-                      if(!acct && result.bcc) {
-                        acct = accounts.find(a => result.bcc.includes(a.email));
-                      }
-                      if(!acct && result.delivered_to) {
-                        acct = accounts.find(a => result.delivered_to.includes(a.email));
-                      }
-                      if(acct) {
-                        setFrom(acct.id);
-                      }
-                      error.current = false;
-                      document.title = "Compose: " + prefix(result.subject);
-                    })
-                    .catch((e) => {
-                      setBaseMsg(null);
-                      error.current = true;
-                      statusMsg.current = "Error querying backend: " + e.message;
-                    })
-                    .finally(() => {
-                      setLoading(false);
-                    });
-                } else {
-                  setLoading(false);
-                }
-              })
-              .catch((e) => {
-                setBaseMsg(null);
-                error.current = true;
-                statusMsg.current = "Error querying backend: " + e.message;
-                setLoading(false);
-              });
-          })
-          .catch((e) => {
-            setBaseMsg(null);
-            error.current = true;
-            statusMsg.current = "Error querying backend: " + e.message;
-            setLoading(false);
-          });
-      })
-      .catch((e) => {
-        setBaseMsg(null);
-        error.current = true;
-        statusMsg.current = "Error querying backend: " + e.message;
-        setLoading(false);
-      });
-  }, [searchParams]);
+    messageId.current = searchParams.get("id");
+    if(messageId.current !== null) {
+      setLoading(true);
+      setBaseMsg(null);
+      fetch(apiURL("api/message/" + encodeURIComponent(messageId.current)))
+        .then(res => res.json())
+        .then((result) => {
+          setBaseMsg(result);
+          if(action.current === "forward" && result.attachments) {
+            // attach files attached to previous email
+            setFiles(result.attachments.map(a => { return { dummy: true, name: a.filename }; }));
+          }
+          let acct = accounts.find(a => result.to.includes(a.email));
+          if(!acct) {
+            acct = accounts.find(a => result.from.includes(a.email));
+          }
+          if(!acct && result.cc) {
+            acct = accounts.find(a => result.cc.includes(a.email));
+          }
+          if(!acct && result.bcc) {
+            acct = accounts.find(a => result.bcc.includes(a.email));
+          }
+          if(!acct && result.delivered_to) {
+            acct = accounts.find(a => result.delivered_to.includes(a.email));
+          }
+          if(acct) {
+            setFrom(acct.id);
+          }
+          error.current = false;
+          document.title = "Compose: " + prefix(result.subject);
+        })
+        .catch((e) => {
+          setBaseMsg(null);
+          error.current = true;
+          statusMsg.current = "Error querying backend: " + e.message;
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    } else {
+      setLoading(false);
+    }
+  }, [searchParams, accounts]);
 
   const handleAttach = (event: React.ChangeEvent<HTMLInputElement>) => {
     setFiles(files.concat(Array.from(event.target.files)));
