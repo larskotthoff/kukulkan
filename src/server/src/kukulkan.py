@@ -437,52 +437,57 @@ def get_attachments(email_msg, content=False):
             preview = None
             if part.get_content_type() == "text/calendar" or part.get_content_type() == "text/x-vcalendar":
                 # create "preview"
-                gcal = icalendar.Calendar.from_ical(ctnt)
-                timezone = None
-                for component in gcal.walk():
-                    if component.name == "VEVENT":
-                        if component.get("organizer"):
-                            try:
-                                people = [component.get("organizer").params["CN"]]
-                            except KeyError:
+                try:
+                    if "BEGIN:VCALENDAR" in ctnt and not "END:VCALENDAR" in ctnt:
+                        ctnt += "END:VCALENDAR" # thanks outlook!
+                    gcal = icalendar.Calendar.from_ical(ctnt)
+                    timezone = None
+                    for component in gcal.walk():
+                        if component.name == "VEVENT":
+                            if component.get("organizer"):
+                                try:
+                                    people = [component.get("organizer").params["CN"]]
+                                except KeyError:
+                                    people = []
+                            else:
                                 people = []
-                        else:
-                            people = []
-                        try:
-                            a = component.get("attendee")
-                            if type(a) == list:
-                                people += [c.params["CN"] for c in a]
-                            elif a:
-                                people.append(a.params["CN"])
-                        except KeyError:
-                            None
+                            try:
+                                a = component.get("attendee")
+                                if type(a) == list:
+                                    people += [c.params["CN"] for c in a]
+                                elif a:
+                                    people.append(a.params["CN"])
+                            except KeyError:
+                                None
 
-                        try:
-                            dtstart = component.get("dtstart").dt.astimezone(tz.tzlocal()).strftime("%c")
-                            dtend = component.get("dtend").dt.astimezone(tz.tzlocal()).strftime("%c")
+                            try:
+                                dtstart = component.get("dtstart").dt.astimezone(tz.tzlocal()).strftime("%c")
+                                dtend = component.get("dtend").dt.astimezone(tz.tzlocal()).strftime("%c")
 
-                            # this assumes that start and end are the same timezone
-                            timezone = str(component.get("dtstart").dt.tzinfo)
-                        except AttributeError: # only date, no time
-                            dtstart = component.get("dtstart").dt.strftime("%c")
-                            dtend = component.get("dtend").dt.strftime("%c")
-                        try:
-                            rrule = component.get("rrule").to_ical().decode("utf8")
-                            recur = RecurringEvent().format(rrulestr(component.get("rrule").to_ical().decode("utf8")))
-                        except AttributeError:
-                            rrule = None
-                            recur = ""
-                        preview = {
-                            "summary": component.get("summary"),
-                            "location": component.get("location"),
-                            "start": dtstart,
-                            "dtstart": component.get("dtstart").to_ical().decode("utf8"),
-                            "end": dtend,
-                            "dtend": component.get("dtend").to_ical().decode("utf8"),
-                            "attendees": ", ".join(people),
-                            "recur": recur,
-                            "rrule": rrule
-                        }
+                                # this assumes that start and end are the same timezone
+                                timezone = str(component.get("dtstart").dt.tzinfo)
+                            except AttributeError: # only date, no time
+                                dtstart = component.get("dtstart").dt.strftime("%c")
+                                dtend = component.get("dtend").dt.strftime("%c")
+                            try:
+                                rrule = component.get("rrule").to_ical().decode("utf8")
+                                recur = RecurringEvent().format(rrulestr(component.get("rrule").to_ical().decode("utf8")))
+                            except AttributeError:
+                                rrule = None
+                                recur = ""
+                            preview = {
+                                "summary": component.get("summary"),
+                                "location": component.get("location"),
+                                "start": dtstart,
+                                "dtstart": component.get("dtstart").to_ical().decode("utf8"),
+                                "end": dtend,
+                                "dtend": component.get("dtend").to_ical().decode("utf8"),
+                                "attendees": ", ".join(people),
+                                "recur": recur,
+                                "rrule": rrule
+                            }
+                except ValueError as e:
+                    None
 
                 if preview and timezone:
                     preview["tz"] = timezone
