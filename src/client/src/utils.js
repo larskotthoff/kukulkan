@@ -33,7 +33,7 @@ export const theme = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          backgroundImage: 'url("serpent.png")',
+          backgroundImage: 'url("serpent.webp")',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'bottom right',
           backgroundAttachment: 'fixed',
