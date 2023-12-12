@@ -105,7 +105,58 @@ def test_query(setup):
     mt.get_messages.assert_called_once()
     assert mt.get_authors.call_count == 2
     mt.get_matched_messages.assert_called_once()
-    mt.get_subject.assert_called_once()
+    assert mt.get_subject.call_count == 2
+    mt.get_thread_id.assert_called_once()
+    mt.get_total_messages.assert_called_once()
+
+    mq.search_threads.assert_called_once()
+    db.get_config.assert_called_once_with("search.exclude_tags")
+
+
+def test_query_empty(setup):
+    app, db = setup
+
+    mm1 = lambda: None
+    mm1.get_date = MagicMock(return_value="foodate")
+    mm1.get_tags = MagicMock(return_value=["footag"])
+
+    mt = lambda: None
+    mt.get_messages = MagicMock(return_value=iter([mm1]))
+    mt.get_authors = MagicMock(return_value="")
+    mt.get_matched_messages = MagicMock(return_value=23)
+    mt.get_subject = MagicMock(return_value="")
+    mt.get_thread_id = MagicMock(return_value="id")
+    mt.get_total_messages = MagicMock(return_value=50)
+
+    mq = lambda: None
+    mq.search_threads = MagicMock(return_value=iter([mt]))
+
+    db.get_config = MagicMock(return_value="")
+
+    with patch("notmuch.Query", return_value=mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/query/foo')
+            assert response.status_code == 200
+            thrds = json.loads(response.data.decode())
+            assert len(thrds) == 1
+            assert thrds[0]["authors"] == "(no author)"
+            assert thrds[0]["matched_messages"] == 23
+            assert thrds[0]["newest_date"] == "foodate"
+            assert thrds[0]["oldest_date"] == "foodate"
+            assert thrds[0]["subject"] == "(no subject)"
+            assert thrds[0]["tags"] == ["footag"]
+            assert thrds[0]["thread_id"] == "id"
+            assert thrds[0]["total_messages"] == 50
+
+        q.assert_called_once_with(db, "foo")
+
+    assert mm1.get_date.call_count == 2
+    mm1.get_tags.assert_called_once()
+
+    mt.get_messages.assert_called_once()
+    assert mt.get_authors.call_count == 1
+    mt.get_matched_messages.assert_called_once()
+    assert mt.get_subject.call_count == 1
     mt.get_thread_id.assert_called_once()
     mt.get_total_messages.assert_called_once()
 
