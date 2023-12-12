@@ -353,7 +353,7 @@ def thread_to_json(thread):
         "matched_messages": thread.get_matched_messages(),
         "newest_date": messages[-1].get_date(),
         "oldest_date": messages[0].get_date(),
-        "subject": thread.get_subject().replace('\t', ' '),
+        "subject": thread.get_subject().replace('\t', ' ') if thread.get_subject() else "(no subject)",
         "tags": tags,
         "thread_id": thread.get_thread_id(),
         "total_messages": thread.get_total_messages(),
