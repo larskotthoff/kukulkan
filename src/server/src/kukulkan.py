@@ -28,6 +28,9 @@ from bs4 import BeautifulSoup
 import lxml
 from lxml.html.clean import Cleaner
 
+from tempfile import mkstemp
+from gnupg import GPG
+
 cleaner = Cleaner()
 cleaner.javascript = True
 cleaner.scripts = True
@@ -526,10 +529,11 @@ def message_to_json(message):
     attachments = get_attachments(email_msg)
     body, html_body = get_nested_body(email_msg)
 
+    signature = None
     # signature verification
     # https://gist.github.com/russau/c0123ef934ef88808050462a8638a410
     for part in email_msg.walk():
-        if 'signed' in part.get_content_type() or part.get_content_type() == "application/pkcs7-mime":
+        if part.get_content_type() == "application/pkcs7-mime":
             try:
                 p7, data_bio = SMIME.smime_load_pkcs7_bio(BIO.MemoryBuffer(bytes(part)))
 
@@ -559,8 +563,42 @@ def message_to_json(message):
             except Exception as e:
                 signature = {"valid": False, "message": str(e)}
             break
-        else:
-            signature = None
+        elif part.get('Content-Type') and "signed" in part.get('Content-Type') and "application/pgp-signature" in part.get('Content-Type'):
+            signed_content = (str(part.get_payload()[0]).strip() + '\n').encode()
+            sig = bytes(part.get_payload()[1])
+            gpg = GPG()
+            public_keys = gpg.list_keys()
+            fromAddr = message.get_header("from")
+            try:
+                [name, address] = fromAddr.split('<')
+                fromAddr = address.split('>')[0]
+            except ValueError:
+                fromAddr # only email address there anyway
+
+            found = False
+            for pkey in public_keys:
+                for uid in pkey.get('uids'):
+                    if fromAddr in uid:
+                        found = True
+            if not found:
+                keys = gpg.search_keys(fromAddr, 'keyserver.ubuntu.com')
+                if(len(keys) > 0):
+                    for key in keys:
+                        gpg.recv_keys('keyserver.ubuntu.com', key.get('keyid'))
+            osfile, path = mkstemp()
+            try:
+                with os.fdopen(osfile, 'wb') as fd:
+                    fd.write(signed_content)
+                    fd.close()
+                    verified = gpg.verify_file(io.BytesIO(sig), path)
+                    if verified.valid:
+                        signature = {"valid": True}
+                    else:
+                        signature = {"valid": False, "message": verified.stderr}
+            except Exception as e:
+                signature = {"valid": False, "message": str(e)}
+            finally:
+                os.unlink(path)
 
     return {
         "from": message.get_header("from").strip().replace('\t', ' '),

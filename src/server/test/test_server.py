@@ -932,6 +932,38 @@ def test_message_signed_invalid(setup):
     mq.search_messages.assert_called_once()
 
 
+def test_message_signed_pgp(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.get_filename = MagicMock(return_value="test/mails/signed-pgp.eml")
+    mf.get_header = MagicMock(return_value="Pierre THIERRY <nowhere.man@levallois.eu.org>")
+    mf.get_message_id = MagicMock(return_value="foo")
+    mf.get_tags = MagicMock(return_value=["foo", "bar"])
+
+    mq = lambda: None
+    mq.search_messages = MagicMock(return_value=iter([mf]))
+
+    app.config.custom["accounts"] = []
+
+    with patch("notmuch.Query", return_value=mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/message/foo')
+            assert response.status_code == 200
+            msg = json.loads(response.data.decode())
+            assert "Actually, the text seems to say the contrary" in msg["body"]["text/plain"]
+
+            assert msg["signature"] == {'valid': True}
+        q.assert_called_once_with(db, 'id:"foo"')
+
+    mf.get_filename.assert_called_once()
+    mf.get_message_id.assert_called_once()
+    mf.get_tags.assert_called_once()
+    assert mf.get_header.call_count == 16
+
+    mq.search_messages.assert_called_once()
+
+
 def test_message_html_only(setup):
     app, db = setup
 

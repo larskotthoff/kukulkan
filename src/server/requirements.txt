@@ -10,3 +10,4 @@ pytest
 python_dateutil
 Werkzeug
 recurrent
+gnupg
