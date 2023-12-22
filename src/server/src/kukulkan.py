@@ -564,7 +564,7 @@ def message_to_json(message):
                 signature = {"valid": False, "message": str(e)}
             break
         elif part.get('Content-Type') and "signed" in part.get('Content-Type') and "application/pgp-signature" in part.get('Content-Type'):
-            signed_content = (str(part.get_payload()[0]).strip() + '\n').encode()
+            signed_content = bytes(part.get_payload()[0])
             sig = bytes(part.get_payload()[1])
             gpg = GPG()
             public_keys = gpg.list_keys()
@@ -580,17 +580,19 @@ def message_to_json(message):
                 for uid in pkey.get('uids'):
                     if fromAddr in uid:
                         found = True
-            if not found:
-                keys = gpg.search_keys(fromAddr, 'keyserver.ubuntu.com')
+            if not found and current_app.config.custom['gpg-keyserver']:
+                current_app.logger.info("Key for " + fromAddr + " not found, attempting to download...")
+                keys = gpg.search_keys(fromAddr, current_app.config.custom['gpg-keyserver'])
                 if(len(keys) > 0):
                     for key in keys:
-                        gpg.recv_keys('keyserver.ubuntu.com', key.get('keyid'))
+                        current_app.logger.info("Getting key " + key.get('keyid'))
+                        gpg.recv_keys(current_app.config.custom['gpg-keyserver'], key.get('keyid'))
             osfile, path = mkstemp()
             try:
                 with os.fdopen(osfile, 'wb') as fd:
-                    fd.write(signed_content)
+                    fd.write(sig)
                     fd.close()
-                    verified = gpg.verify_file(io.BytesIO(sig), path)
+                    verified = gpg.verify_data(path, signed_content)
                     if verified.valid:
                         signature = {"valid": True}
                     else:

@@ -24,6 +24,8 @@
 
     ],
 
+    "gpg-keyserver": "",
+
     "filter": {
         "content": {
             "text/html": [ "<p>spam banner to be removed</p>", "" ],
