@@ -24,7 +24,7 @@
 
     ],
 
-    "gpg-keyserver": "",
+    "gpg-keyserver": "keyserver.ubuntu.com",
 
     "filter": {
         "content": {

@@ -580,7 +580,7 @@ def message_to_json(message):
                 for uid in pkey.get('uids'):
                     if fromAddr in uid:
                         found = True
-            if not found and current_app.config.custom['gpg-keyserver']:
+            if not found and 'gpg-keyserver' in current_app.config.custom:
                 current_app.logger.info("Key for " + fromAddr + " not found, attempting to download...")
                 keys = gpg.search_keys(fromAddr, current_app.config.custom['gpg-keyserver'])
                 if(len(keys) > 0):
