@@ -533,7 +533,7 @@ def message_to_json(message):
     # signature verification
     # https://gist.github.com/russau/c0123ef934ef88808050462a8638a410
     for part in email_msg.walk():
-        if part.get_content_type() == "application/pkcs7-mime":
+        if "pkcs7-signature" in part.get_content_type() or "pkcs7-mime" in part.get_content_type():
             try:
                 p7, data_bio = SMIME.smime_load_pkcs7_bio(BIO.MemoryBuffer(bytes(part)))
 
@@ -563,7 +563,7 @@ def message_to_json(message):
             except Exception as e:
                 signature = {"valid": False, "message": str(e)}
             break
-        elif part.get('Content-Type') and "signed" in part.get('Content-Type') and "application/pgp-signature" in part.get('Content-Type'):
+        elif part.get('Content-Type') and "signed" in part.get('Content-Type') and "pgp-signature" in part.get('Content-Type'):
             signed_content = bytes(part.get_payload()[0])
             sig = bytes(part.get_payload()[1])
             gpg = GPG()
