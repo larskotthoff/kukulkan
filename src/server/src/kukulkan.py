@@ -533,74 +533,74 @@ def message_to_json(message):
     # signature verification
     # https://gist.github.com/russau/c0123ef934ef88808050462a8638a410
     for part in email_msg.walk():
-        if "pkcs7-signature" in part.get_content_type() or "pkcs7-mime" in part.get_content_type():
-            try:
-                p7, data_bio = SMIME.smime_load_pkcs7_bio(BIO.MemoryBuffer(bytes(part)))
-
-                s = SMIME.SMIME()
-                store = X509.X509_Store()
-                certStack = p7.get0_signers(X509.X509_Stack())
-                accounts = current_app.config.custom["accounts"]
-                accts = [acct for acct in accounts if acct["email"] in
-                         message.get_header("from").strip().replace('\t', ' ')]
-                if accts and accts[0]["cert"]:
-                    X509.load_cert(accts[0]["cert"])
-                    store.load_info(accts[0]["cert"])
-                s.set_x509_store(store)
-                s.set_x509_stack(certStack)
+        if part.get('Content-Type') and "signed" in part.get('Content-Type'):
+            if "pkcs7-signature" in part.get('Content-Type') or "pkcs7-mime" in part.get('Content-Type'):
                 try:
-                    s.verify(p7, data_bio, flags=SMIME.PKCS7_DETACHED)
-                    signature = {"valid": True}
-                except SMIME.PKCS7_Error as e:
-                    if "self-signed certificate" in str(e) or "self signed certificate" in str(e) or "unable to get local issuer certificate" in str(e):
-                        try:
-                            s.verify(p7, data_bio, flags=SMIME.PKCS7_NOVERIFY | SMIME.PKCS7_DETACHED)
-                            signature = {"valid": None, "message": "self-signed or unavailable certificate(s)"}
-                        except SMIME.PKCS7_Error as e:
-                            signature = {"valid": False, "message": str(e)}
-                    else:
-                        signature = {"valid": False, "message": str(e)}
-            except Exception as e:
-                signature = {"valid": False, "message": str(e)}
-            break
-        elif part.get('Content-Type') and "signed" in part.get('Content-Type') and "pgp-signature" in part.get('Content-Type'):
-            signed_content = bytes(part.get_payload()[0])
-            sig = bytes(part.get_payload()[1])
-            gpg = GPG()
-            public_keys = gpg.list_keys()
-            fromAddr = message.get_header("from")
-            try:
-                [name, address] = fromAddr.split('<')
-                fromAddr = address.split('>')[0]
-            except ValueError:
-                fromAddr # only email address there anyway
+                    p7, data_bio = SMIME.smime_load_pkcs7_bio(BIO.MemoryBuffer(bytes(part)))
 
-            found = False
-            for pkey in public_keys:
-                for uid in pkey.get('uids'):
-                    if fromAddr in uid:
-                        found = True
-            if not found and 'gpg-keyserver' in current_app.config.custom:
-                current_app.logger.info("Key for " + fromAddr + " not found, attempting to download...")
-                keys = gpg.search_keys(fromAddr, current_app.config.custom['gpg-keyserver'])
-                if(len(keys) > 0):
-                    for key in keys:
-                        current_app.logger.info("Getting key " + key.get('keyid'))
-                        gpg.recv_keys(current_app.config.custom['gpg-keyserver'], key.get('keyid'))
-            osfile, path = mkstemp()
-            try:
-                with os.fdopen(osfile, 'wb') as fd:
-                    fd.write(sig)
-                    fd.close()
-                    verified = gpg.verify_data(path, signed_content)
-                    if verified.valid:
+                    s = SMIME.SMIME()
+                    store = X509.X509_Store()
+                    certStack = p7.get0_signers(X509.X509_Stack())
+                    accounts = current_app.config.custom["accounts"]
+                    accts = [acct for acct in accounts if acct["email"] in
+                             message.get_header("from").strip().replace('\t', ' ')]
+                    if accts and accts[0]["cert"]:
+                        X509.load_cert(accts[0]["cert"])
+                        store.load_info(accts[0]["cert"])
+                    s.set_x509_store(store)
+                    s.set_x509_stack(certStack)
+                    try:
+                        s.verify(p7, data_bio, flags=SMIME.PKCS7_DETACHED)
                         signature = {"valid": True}
-                    else:
-                        signature = {"valid": False, "message": verified.stderr}
-            except Exception as e:
-                signature = {"valid": False, "message": str(e)}
-            finally:
-                os.unlink(path)
+                    except SMIME.PKCS7_Error as e:
+                        if "self-signed certificate" in str(e) or "self signed certificate" in str(e) or "unable to get local issuer certificate" in str(e):
+                            try:
+                                s.verify(p7, data_bio, flags=SMIME.PKCS7_NOVERIFY | SMIME.PKCS7_DETACHED)
+                                signature = {"valid": None, "message": "self-signed or unavailable certificate(s)"}
+                            except SMIME.PKCS7_Error as e:
+                                signature = {"valid": False, "message": str(e)}
+                        else:
+                            signature = {"valid": False, "message": str(e)}
+                except Exception as e:
+                    signature = {"valid": False, "message": str(e)}
+            elif "pgp-signature" in part.get('Content-Type'):
+                signed_content = bytes(part.get_payload()[0])
+                sig = bytes(part.get_payload()[1])
+                gpg = GPG()
+                public_keys = gpg.list_keys()
+                fromAddr = message.get_header("from")
+                try:
+                    [name, address] = fromAddr.split('<')
+                    fromAddr = address.split('>')[0]
+                except ValueError:
+                    fromAddr # only email address there anyway
+
+                found = False
+                for pkey in public_keys:
+                    for uid in pkey.get('uids'):
+                        if fromAddr in uid:
+                            found = True
+                if not found and 'gpg-keyserver' in current_app.config.custom:
+                    current_app.logger.info("Key for " + fromAddr + " not found, attempting to download...")
+                    keys = gpg.search_keys(fromAddr, current_app.config.custom['gpg-keyserver'])
+                    if(len(keys) > 0):
+                        for key in keys:
+                            current_app.logger.info("Getting key " + key.get('keyid'))
+                            gpg.recv_keys(current_app.config.custom['gpg-keyserver'], key.get('keyid'))
+                osfile, path = mkstemp()
+                try:
+                    with os.fdopen(osfile, 'wb') as fd:
+                        fd.write(sig)
+                        fd.close()
+                        verified = gpg.verify_data(path, signed_content)
+                        if verified.valid:
+                            signature = {"valid": True}
+                        else:
+                            signature = {"valid": False, "message": verified.stderr}
+                except Exception as e:
+                    signature = {"valid": False, "message": str(e)}
+                finally:
+                    os.unlink(path)
 
     return {
         "from": message.get_header("from").strip().replace('\t', ' '),
