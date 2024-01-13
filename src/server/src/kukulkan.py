@@ -411,6 +411,7 @@ def get_nested_body(email_msg):
                 if "http" in value and not name == "href":
                     del tag.attrib[name]
         content_html = lxml.html.tostring(cleaner.clean_html(html), encoding=str)
+        content_html = re.sub(r'(?i)background-image:.*http.*?;', '', content_html)
     else:
         content_html = ""
 

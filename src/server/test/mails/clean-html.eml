@@ -8,8 +8,14 @@ Content-Type: text/html
 Content-Disposition: inline; filename=test.html
 
 <html>
+  <style>
+  div {
+    background-image: url('http://image.com/foo.png');
+  }
+  </style>
   <body>
   <a href="https://example.com">foo</a>
   <img src="https://tracking.com/bla.png"/>
+  <div></div>
   </body>
 </html>
