@@ -23,6 +23,9 @@ import Print from '@mui/icons-material/Print';
 import Security from '@mui/icons-material/Security';
 import Reply from '@mui/icons-material/Reply';
 import Forward from '@mui/icons-material/Forward';
+import CheckCircle from '@mui/icons-material/CheckCircle';
+import Cancel from '@mui/icons-material/Cancel';
+import Help from '@mui/icons-material/Help';
 
 import { TagBar } from "./tags.jsx";
 
@@ -116,6 +119,10 @@ function fwdUrl(id) {
 
 function secUrl(id) {
   return apiURL("api/auth_message/" + encodeURIComponent(id));
+}
+
+function calUrl(id, action, index) {
+  return '/write?action=cal-' + action + '&id=' + encodeURIComponent(id) + '&index=' + index;
 }
 
 export class Message extends React.Component {
@@ -273,6 +280,28 @@ export class Message extends React.Component {
     }));
   }
 
+  calendarAction(msg, attachment, index) {
+    if(attachment.preview.method === "REQUEST" && attachment.preview.status === "NEEDS-ACTION") {
+      return(<Grid container direction="row" justifyContent="space-around" m={1}>
+        <a href={calUrl(msg.notmuch_id, 'accept', index)} target="_blank" rel="noreferrer">
+          <CheckCircle fontSize="large"/>
+        </a>
+        <a href={calUrl(msg.notmuch_id, 'decline', index)} target="_blank" rel="noreferrer">
+          <Cancel fontSize="large"/>
+        </a>
+        <a href={calUrl(msg.notmuch_id, 'tentative', index)} target="_blank" rel="noreferrer">
+          <Help fontSize="large"/>
+        </a>
+        </Grid>)
+    } else if(attachment.preview.status === "ACCEPTED") {
+        return(<CheckCircle fontSize="large" style={{ margin: 8 }}/>)
+    } else if(attachment.preview.status === "DECLINED") {
+        return(<Cancel fontSize="large" style={{ margin: 8 }}/>)
+    } else if(attachment.preview.status === "TENTATIVE") {
+        return(<Help fontSize="large" style={{ margin: 8 }}/>)
+    }
+  }
+
   handleAttachment(msg, attachment, index, summary) {
     if(attachment.content_type.includes("image")) {
       let mw = summary ? "3em" : "30em",
@@ -299,7 +328,9 @@ export class Message extends React.Component {
             attachment.preview.start + " — " + attachment.preview.end + "\n" +
             attachment.preview.attendees + "\n" + attachment.preview.recur }
           </Paper>
-        </a></div>);
+        </a>
+        { this.calendarAction(msg, attachment, index) }
+        </div>);
     } else {
       return (<a href={apiURL("api/attachment/" + encodeURIComponent(this.props.msg.notmuch_id) + "/" + index)} target="_blank" rel="noreferrer"><AttachFile/>{attachment.filename}
         {summary ? "" : " (" + formatFSz(attachment.content_size) + ", " + attachment.content_type + ")"}

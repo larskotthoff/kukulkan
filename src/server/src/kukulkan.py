@@ -2,11 +2,14 @@
 
 import email
 import email.policy
+import email.mime.text
+
 import io
 import itertools
 import logging
 import os
 import subprocess
+import uuid
 
 import json
 import re
@@ -256,6 +259,43 @@ def create_app():
                     else:
                         msg.add_attachment(att["content"], subtype=typ[1], filename=att["filename"])
 
+        if request.values['action'].startswith("cal-"):
+            # create new calendar reply attachment
+            action = request.values['action'].split('-')[1].capitalize()
+            refMsg = get_message(request.values['refId'])
+            refAtts = message_attachment(refMsg)
+            for key in request.values.keys():
+                if key.startswith("attachment-") and key not in request.files:
+                    att = [tmp for tmp in refAtts if tmp["filename"] == request.values[key]][0]
+                    typ = att["content_type"].split('/', 1)
+                    gcal = icalendar.Calendar.from_ical(att["content"])
+                    for component in gcal.walk("VEVENT"):
+                        rcal = icalendar.Calendar()
+                        rcal["method"] = "REPLY"
+                        event = icalendar.Event()
+                        event["uid"] = uuid.uuid4()
+                        event["sequence"] = component["sequence"]
+                        event["dtstart"] = component["dtstart"]
+                        event["dtend"] = component["dtend"]
+                        event["organizer"] = component["organizer"]
+                        event["description"] = component["description"]
+                        event["location"] = component["location"]
+                        event["summary"] = action + ": " + component["summary"]
+                        attendee = icalendar.vCalAddress('mailto:' + account["email"])
+                        attendee.params['cn'] = account["name"]
+                        if action == "Accept":
+                            attendee.params['partstat'] = icalendar.vText('ACCEPTED')
+                        elif action == "Decline":
+                            attendee.params['partstat'] = icalendar.vText('DECLINED')
+                        else:
+                            attendee.params['partstat'] = icalendar.vText(action.upper())
+                        event.add('attendee', attendee)
+                        rcal.add_component(event)
+                        msg.add_attachment(rcal.to_ical().decode(),
+                                           subtype=typ[1],
+                                           filename=att["filename"])
+                        msg.attach(email.mime.text.MIMEText(rcal.to_ical().decode(), "calendar;method=REPLY"))
+
         for att in request.files:
             content = request.files[att].read()
             typ = request.files[att].mimetype.split('/', 1)
@@ -283,7 +323,7 @@ def create_app():
         msg_id = email.utils.make_msgid("kukulkan")
         msg['Message-ID'] = msg_id
 
-        if request.values['action'] == "reply":
+        if request.values['action'] == "reply" or request.values['action'].startswith("cal-"):
             refMsg = get_message(request.values['refId'])
             refMsg = message_to_json(refMsg)
             msg['In-Reply-To'] = '<' + refMsg['message_id'] + '>'
@@ -305,7 +345,7 @@ def create_app():
             db_write = notmuch.Database(None, create=False, mode=notmuch.Database.MODE.READ_WRITE)
             try:
                 db_write.begin_atomic()
-                if request.values['action'] == "reply":
+                if request.values['action'] == "reply" or request.values['action'].startswith("cal-"):
                     refMsgs = get_query("id:" + request.values['refId'], db_write, False).search_messages()
                     for refMsg in refMsgs:
                         refMsg.add_tag("replied")
@@ -430,6 +470,15 @@ def get_nested_body(email_msg):
     return content, content_html
 
 
+def attendee_matches_addr(c):
+    addr = str(c).split(':')[1]
+    accounts = current_app.config.custom["accounts"]
+    for acct in accounts:
+        if acct["email"] == addr:
+            return True
+    return False
+
+
 def get_attachments(email_msg, content=False):
     """Returns all attachments for an email message."""
     attachments = []
@@ -446,50 +495,57 @@ def get_attachments(email_msg, content=False):
                         ctnt += "END:VCALENDAR" # thanks outlook!
                     gcal = icalendar.Calendar.from_ical(ctnt)
                     timezone = None
-                    for component in gcal.walk():
-                        if component.name == "VEVENT":
-                            if component.get("organizer"):
-                                try:
-                                    people = [component.get("organizer").params["CN"]]
-                                except KeyError:
-                                    people = []
-                            else:
-                                people = []
+                    status = None
+                    for component in gcal.walk("VEVENT"):
+                        if component.get("organizer"):
                             try:
-                                a = component.get("attendee")
-                                if type(a) == list:
-                                    people += [c.params["CN"] for c in a]
-                                elif a:
-                                    people.append(a.params["CN"])
+                                people = [component.get("organizer").params["CN"]]
                             except KeyError:
-                                None
+                                people = []
+                        else:
+                            people = []
+                        try:
+                            a = component.get("attendee")
+                            if type(a) == list:
+                                for c in a:
+                                    people.append(c.params["CN"])
+                                    if attendee_matches_addr(c):
+                                        status = c.params["PARTSTAT"]
+                            elif a:
+                                people.append(a.params["CN"])
+                                if attendee_matches_addr(a):
+                                    status = a.params["PARTSTAT"]
+                        except KeyError:
+                            None
 
-                            try:
-                                dtstart = component.get("dtstart").dt.astimezone(tz.tzlocal()).strftime("%c")
-                                dtend = component.get("dtend").dt.astimezone(tz.tzlocal()).strftime("%c")
+                        try:
+                            dtstart = component.get("dtstart").dt.astimezone(tz.tzlocal()).strftime("%c")
+                            dtend = component.get("dtend").dt.astimezone(tz.tzlocal()).strftime("%c")
 
-                                # this assumes that start and end are the same timezone
-                                timezone = str(component.get("dtstart").dt.tzinfo)
-                            except AttributeError: # only date, no time
-                                dtstart = component.get("dtstart").dt.strftime("%c")
-                                dtend = component.get("dtend").dt.strftime("%c")
-                            try:
-                                rrule = component.get("rrule").to_ical().decode("utf8")
-                                recur = RecurringEvent().format(rrulestr(component.get("rrule").to_ical().decode("utf8")))
-                            except AttributeError:
-                                rrule = None
-                                recur = ""
-                            preview = {
-                                "summary": component.get("summary"),
-                                "location": component.get("location"),
-                                "start": dtstart,
-                                "dtstart": component.get("dtstart").to_ical().decode("utf8"),
-                                "end": dtend,
-                                "dtend": component.get("dtend").to_ical().decode("utf8"),
-                                "attendees": ", ".join(people),
-                                "recur": recur,
-                                "rrule": rrule
-                            }
+                            # this assumes that start and end are the same timezone
+                            timezone = str(component.get("dtstart").dt.tzinfo)
+                        except AttributeError: # only date, no time
+                            dtstart = component.get("dtstart").dt.strftime("%c")
+                            dtend = component.get("dtend").dt.strftime("%c")
+                        try:
+                            rrule = component.get("rrule").to_ical().decode("utf8")
+                            recur = RecurringEvent().format(rrulestr(component.get("rrule").to_ical().decode("utf8")))
+                        except AttributeError:
+                            rrule = None
+                            recur = ""
+                        preview = {
+                            "method": gcal["method"],
+                            "status": status,
+                            "summary": component.get("summary"),
+                            "location": component.get("location"),
+                            "start": dtstart,
+                            "dtstart": component.get("dtstart").to_ical().decode("utf8"),
+                            "end": dtend,
+                            "dtend": component.get("dtend").to_ical().decode("utf8"),
+                            "attendees": ", ".join(people),
+                            "recur": recur,
+                            "rrule": rrule
+                        }
                 except ValueError as e:
                     None
 
