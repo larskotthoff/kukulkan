@@ -272,6 +272,7 @@ def create_app():
                     for component in gcal.walk("VEVENT"):
                         rcal = icalendar.Calendar()
                         rcal["method"] = "REPLY"
+                        rcal["calscale"] = "GREGORIAN"
                         event = icalendar.Event()
                         event["uid"] = uuid.uuid4()
                         event["sequence"] = component["sequence"]

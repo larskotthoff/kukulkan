@@ -2022,6 +2022,7 @@ def test_send_reply_cal(setup):
                         assert "References: <oldFoo>" in args[0]
                         assert "\n\nfoobar\n" in args[0]
                         assert "METHOD:REPLY" in args[0]
+                        assert "CALSCALE:GREGORIAN" in args[0]
                         assert 'ATTENDEE;CN="Foo Bar";PARTSTAT=ACCEPTED:mailto:unittest@tine20.org' in args[0]
                         assert "SUMMARY:Accept: testevent" in args[0]
                         assert "SEQUENCE:1" in args[0]
