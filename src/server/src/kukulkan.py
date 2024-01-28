@@ -4,6 +4,7 @@ import email
 import email.policy
 import email.mime.text
 
+import datetime
 import io
 import itertools
 import logging
@@ -273,8 +274,10 @@ def create_app():
                         rcal = icalendar.Calendar()
                         rcal["method"] = "REPLY"
                         rcal["calscale"] = "GREGORIAN"
+                        rcal["version"] = "2.0"
                         event = icalendar.Event()
                         event["uid"] = uuid.uuid4()
+                        event["dtstamp"] = datetime.datetime.now().strftime("%Y%m%dT%H%M%SZ")
                         event["sequence"] = component["sequence"]
                         event["dtstart"] = component["dtstart"]
                         event["dtend"] = component["dtend"]
@@ -282,8 +285,8 @@ def create_app():
                         event["description"] = component["description"]
                         event["location"] = component["location"]
                         event["summary"] = action + ": " + component["summary"]
-                        attendee = icalendar.vCalAddress('mailto:' + account["email"])
-                        attendee.params['cn'] = account["name"]
+                        attendee = icalendar.vCalAddress('MAILTO:' + account["email"])
+                        attendee.params['cn'] = icalendar.vText(account["name"])
                         if action == "Accept":
                             attendee.params['partstat'] = icalendar.vText('ACCEPTED')
                         elif action == "Decline":
