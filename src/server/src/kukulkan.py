@@ -11,7 +11,6 @@ import itertools
 import logging
 import os
 import subprocess
-import uuid
 
 import json
 import re
@@ -275,7 +274,7 @@ def create_app():
                         rcal = icalendar.Calendar()
                         rcal["method"] = "REPLY"
                         event = icalendar.Event()
-                        event["uid"] = uuid.uuid4()
+                        event["uid"] = component["uid"]
                         event["dtstamp"] = datetime.datetime.now().strftime("%Y%m%dT%H%M%SZ")
                         event["sequence"] = component["sequence"]
                         event["dtstart"] = component["dtstart"]
@@ -294,16 +293,11 @@ def create_app():
                             attendee.params['partstat'] = icalendar.vText(action.upper())
                         event.add('attendee', attendee)
                         rcal.add_component(event)
-                        # requires a very specific MIME structure...
-                        msg = email.message.EmailMessage()
                         msg.add_attachment(rcal.to_ical().decode(),
                                            subtype=typ[1],
                                            filename=att["filename"])
-                        msgAlternative = email.mime.multipart.MIMEMultipart('alternative')
-                        msgAlternative.attach(email.mime.text.MIMEText(request.values['body']))
-                        msgAlternative.attach(email.mime.text.MIMEText(rcal.to_ical().decode(),
+                        msg.attach(email.mime.text.MIMEText(rcal.to_ical().decode(),
                                                                        "calendar;method=REPLY"))
-                        msg.attach(msgAlternative)
 
         for att in request.files:
             content = request.files[att].read()

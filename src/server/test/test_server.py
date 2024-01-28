@@ -2010,7 +2010,6 @@ def test_send_reply_cal(setup):
                         args = hdl.write.call_args.args
                         assert "Content-Type: text/plain" in args[0]
                         assert "Content-Type: multipart/mixed" in args[0]
-                        assert "Content-Type: multipart/alternative" in args[0]
                         assert "Content-Transfer-Encoding: 7bit" in args[0]
                         assert "Subject: Accept: test" in args[0]
                         assert "From: Foo Bar <unittest@tine20.org>" in args[0]
@@ -2027,6 +2026,7 @@ def test_send_reply_cal(setup):
                         assert 'ATTENDEE;CN="Foo Bar";PARTSTAT=ACCEPTED:MAILTO:unittest@tine20.org' in args[0]
                         assert "SUMMARY:Accept: testevent" in args[0]
                         assert "SEQUENCE:1" in args[0]
+                        assert "UID:6f59364f-987e-48bb-a0d1-5512a2ba5570" in args[0]
 
                 ma.assert_called_once_with(mf)
             mtj.assert_called_once_with(mf)
