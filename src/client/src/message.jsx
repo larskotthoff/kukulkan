@@ -122,7 +122,7 @@ function secUrl(id) {
 }
 
 function calUrl(id, action, index) {
-  return '/write?action=cal-' + action + '&id=' + encodeURIComponent(id) + '&index=' + index;
+  return '/write?action=reply-cal-' + action + '&id=' + encodeURIComponent(id) + '&index=' + index;
 }
 
 export class Message extends React.Component {

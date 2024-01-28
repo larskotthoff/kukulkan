@@ -259,9 +259,9 @@ def create_app():
                     else:
                         msg.add_attachment(att["content"], subtype=typ[1], filename=att["filename"])
 
-        if request.values['action'].startswith("cal-"):
+        if request.values['action'].startswith("reply-cal-"):
             # create new calendar reply attachment
-            action = request.values['action'].split('-')[1].capitalize()
+            action = request.values['action'].split('-')[2].capitalize()
             refMsg = get_message(request.values['refId'])
             refAtts = message_attachment(refMsg)
             for key in request.values.keys():
@@ -323,7 +323,7 @@ def create_app():
         msg_id = email.utils.make_msgid("kukulkan")
         msg['Message-ID'] = msg_id
 
-        if request.values['action'] == "reply" or request.values['action'].startswith("cal-"):
+        if request.values['action'] == "reply" or request.values['action'].startswith("reply-cal-"):
             refMsg = get_message(request.values['refId'])
             refMsg = message_to_json(refMsg)
             msg['In-Reply-To'] = '<' + refMsg['message_id'] + '>'
@@ -345,7 +345,7 @@ def create_app():
             db_write = notmuch.Database(None, create=False, mode=notmuch.Database.MODE.READ_WRITE)
             try:
                 db_write.begin_atomic()
-                if request.values['action'] == "reply" or request.values['action'].startswith("cal-"):
+                if request.values['action'] == "reply" or request.values['action'].startswith("reply-cal-"):
                     refMsgs = get_query("id:" + request.values['refId'], db_write, False).search_messages()
                     for refMsg in refMsgs:
                         refMsg.add_tag("replied")

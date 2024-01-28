@@ -164,7 +164,7 @@ export function Write() {
             // attach files attached to previous email
             setFiles(result.attachments.map(a => { return { dummy: true, name: a.filename }; }));
           }
-          if(action.current.startsWith("cal-")) {
+          if(action.current.startsWith("reply-cal-")) {
             let idx = searchParams.get("index");
             setFiles([{ dummy: true, name: result.attachments[idx].filename }]);
           }
@@ -282,8 +282,8 @@ export function Write() {
     if(action.current === "forward") {
       pre = "Fw: ";
     }
-    if(action.current.startsWith("cal-")) {
-      let act = action.current.split('-')[1];
+    if(action.current.startsWith("reply-cal-")) {
+      let act = action.current.split('-')[2];
       pre = act[0].toUpperCase() + act.slice(1) + ": ";
     }
     return pre + text;
@@ -293,7 +293,7 @@ export function Write() {
     if(!msg || !action || !accounts) return [ [], [] ];
 
     let tmpTo = [], tmpCc = [];
-    if(action.current === "reply" || action.current.startsWith("cal-")) {
+    if(action.current === "reply" || action.current.startsWith("reply-cal-")) {
       if(msg.reply_to) {
         tmpTo = [ msg.reply_to ];
       } else {

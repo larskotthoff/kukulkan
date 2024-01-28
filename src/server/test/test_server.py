@@ -1954,7 +1954,7 @@ def test_send_reply_cal(setup):
     dbw.index_file = MagicMock(return_value=(mm, 0))
 
     pd = {"from": "foo", "to": "bar", "cc": "", "bcc": "", "subject": "Accept: test",
-          "body": "foobar", "action": "cal-accept", "tags": "foo,bar",
+          "body": "foobar", "action": "reply-cal-accept", "tags": "foo,bar",
           "refId": "oldFoo", "attachment-0": "unnamed attachment"}
 
     app.config.custom["accounts"] = [{"id": "foo",
