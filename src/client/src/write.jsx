@@ -299,22 +299,10 @@ export function Write() {
       } else {
         tmpTo = [ msg.from ];
       }
-      tmpTo = tmpTo.concat(msg.to.split(/(?<=>),\s*|(?<=@[^, ]+),\s*/));
-      tmpTo = tmpTo.filter(a => {
-        return a.length > 0 && accounts.reduce((cum, acct) => {
-          if(cum === false) return false;
-
-          if(a.includes(acct.email)) {
-            return false;
-          }
-          return true;
-        }, true);
-      });
-
-      if(msg.cc.length > 0) {
-        tmpCc = msg.cc.split(/(?<=>),\s*|(?<=@[^, ]+),\s*/);
-        tmpCc = tmpCc.filter(a => {
-          return a.length > 0 && !tmpTo.includes(a) && accounts.reduce((cum, acct) => {
+      if(searchParams.get("mode") !== "one") {
+        tmpTo = tmpTo.concat(msg.to.split(/(?<=>),\s*|(?<=@[^, ]+),\s*/));
+        tmpTo = tmpTo.filter(a => {
+          return a.length > 0 && accounts.reduce((cum, acct) => {
             if(cum === false) return false;
 
             if(a.includes(acct.email)) {
@@ -323,6 +311,20 @@ export function Write() {
             return true;
           }, true);
         });
+
+        if(msg.cc.length > 0) {
+          tmpCc = msg.cc.split(/(?<=>),\s*|(?<=@[^, ]+),\s*/);
+          tmpCc = tmpCc.filter(a => {
+            return a.length > 0 && !tmpTo.includes(a) && accounts.reduce((cum, acct) => {
+              if(cum === false) return false;
+
+              if(a.includes(acct.email)) {
+                return false;
+              }
+              return true;
+            }, true);
+          });
+        }
       }
     }
     return [ tmpTo, tmpCc ];

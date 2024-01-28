@@ -109,8 +109,8 @@ function printUrl(id) {
   return '/message?id=' + encodeURIComponent(id);
 }
 
-function replyUrl(id) {
-  return '/write?action=reply&id=' + encodeURIComponent(id);
+function replyUrl(id, mode = "all") {
+  return '/write?action=reply&id=' + encodeURIComponent(id) + "&mode=" + mode;
 }
 
 function fwdUrl(id) {
@@ -212,6 +212,9 @@ export class Message extends React.Component {
     });
     this.elementTop.current.addEventListener("reply", () => {
       window.open(replyUrl(this.props.msg.notmuch_id), '_blank');
+    });
+    this.elementTop.current.addEventListener("replyOne", () => {
+      window.open(replyUrl(this.props.msg.notmuch_id, "one"), '_blank');
     });
     this.elementTop.current.addEventListener("forward", () => {
       window.open(fwdUrl(this.props.msg.notmuch_id), '_blank');
