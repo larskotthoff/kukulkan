@@ -2,6 +2,7 @@
 
 import email
 import email.policy
+import email.mime.multipart
 import email.mime.text
 
 import datetime
@@ -273,8 +274,6 @@ def create_app():
                     for component in gcal.walk("VEVENT"):
                         rcal = icalendar.Calendar()
                         rcal["method"] = "REPLY"
-                        rcal["calscale"] = "GREGORIAN"
-                        rcal["version"] = "2.0"
                         event = icalendar.Event()
                         event["uid"] = uuid.uuid4()
                         event["dtstamp"] = datetime.datetime.now().strftime("%Y%m%dT%H%M%SZ")
@@ -295,10 +294,16 @@ def create_app():
                             attendee.params['partstat'] = icalendar.vText(action.upper())
                         event.add('attendee', attendee)
                         rcal.add_component(event)
+                        # requires a very specific MIME structure...
+                        msg = email.message.EmailMessage()
                         msg.add_attachment(rcal.to_ical().decode(),
                                            subtype=typ[1],
                                            filename=att["filename"])
-                        msg.attach(email.mime.text.MIMEText(rcal.to_ical().decode(), "calendar;method=REPLY"))
+                        msgAlternative = email.mime.multipart.MIMEMultipart('alternative')
+                        msgAlternative.attach(email.mime.text.MIMEText(request.values['body']))
+                        msgAlternative.attach(email.mime.text.MIMEText(rcal.to_ical().decode(),
+                                                                       "calendar;method=REPLY"))
+                        msg.attach(msgAlternative)
 
         for att in request.files:
             content = request.files[att].read()

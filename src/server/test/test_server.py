@@ -2008,9 +2008,10 @@ def test_send_reply_cal(setup):
                         hdl = m()
                         hdl.write.assert_called_once()
                         args = hdl.write.call_args.args
-                        assert "Content-Type: text/plain; charset=\"utf-8\"" in args[0]
+                        assert "Content-Type: text/plain" in args[0]
+                        assert "Content-Type: multipart/mixed" in args[0]
+                        assert "Content-Type: multipart/alternative" in args[0]
                         assert "Content-Transfer-Encoding: 7bit" in args[0]
-                        assert "MIME-Version: 1.0" in args[0]
                         assert "Subject: Accept: test" in args[0]
                         assert "From: Foo Bar <unittest@tine20.org>" in args[0]
                         assert "To: bar" in args[0]
@@ -2022,7 +2023,6 @@ def test_send_reply_cal(setup):
                         assert "References: <oldFoo>" in args[0]
                         assert "\n\nfoobar\n" in args[0]
                         assert "METHOD:REPLY" in args[0]
-                        assert "CALSCALE:GREGORIAN" in args[0]
                         assert "DTSTAMP:" in args[0]
                         assert 'ATTENDEE;CN="Foo Bar";PARTSTAT=ACCEPTED:MAILTO:unittest@tine20.org' in args[0]
                         assert "SUMMARY:Accept: testevent" in args[0]
