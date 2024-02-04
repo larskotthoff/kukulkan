@@ -302,7 +302,7 @@ export function Write() {
       } else {
         tmpTo = [ msg.from ];
       }
-      if(searchParams.get("mode") !== "one") {
+      if(searchParams.get("mode") !== "one" && !action.current.startsWith("reply-cal-")) {
         tmpTo = tmpTo.concat(msg.to.split(/(?<=>),\s*|(?<=@[^, ]+),\s*/));
         tmpTo = tmpTo.filter(a => {
           return a.length > 0 && accounts.reduce((cum, acct) => {
