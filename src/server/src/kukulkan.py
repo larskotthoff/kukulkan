@@ -473,12 +473,15 @@ def get_nested_body(email_msg):
     return content, content_html
 
 
-def attendee_matches_addr(c):
+def attendee_matches_addr(c, message):
+    forwarded_to = message.get("X-Forwarded-To").strip() if message.get("X-Forwarded-To") else None
     addr = str(c).split(':')[1]
     accounts = current_app.config.custom["accounts"]
     for acct in accounts:
-        if acct["email"] == addr:
+        if acct["email"] == addr or forwarded_to == acct["email"]:
             return True
+    if forwarded_to == addr:
+        return True
     return False
 
 
@@ -512,11 +515,11 @@ def get_attachments(email_msg, content=False):
                             if type(a) == list:
                                 for c in a:
                                     people.append(c.params["CN"])
-                                    if attendee_matches_addr(c):
+                                    if attendee_matches_addr(c, email_msg):
                                         status = c.params["PARTSTAT"]
                             elif a:
                                 people.append(a.params["CN"])
-                                if attendee_matches_addr(a):
+                                if attendee_matches_addr(a, email_msg):
                                     status = a.params["PARTSTAT"]
                         except KeyError:
                             None
@@ -673,6 +676,7 @@ def message_to_json(message):
         "in_reply_to": message.get_header("In-Reply-To").strip() if message.get_header("In-Reply-To") else None,
         "references": message.get_header("References").strip() if message.get_header("References") else None,
         "reply_to": message.get_header("Reply-To").strip() if message.get_header("Reply-To") else None,
+        "forwarded_to": message.get_header("X-Forwarded-To").strip() if message.get_header("X-Forwarded-To") else None,
         "delivered_to": message.get_header("Delivered-To").strip() if message.get_header("Delivered-To") else None,
         "body": {
             "text/plain": body,

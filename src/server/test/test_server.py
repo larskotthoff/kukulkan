@@ -529,7 +529,43 @@ def test_message_simple(setup):
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 15
+    assert mf.get_header.call_count == 17
+
+    mq.search_messages.assert_called_once()
+
+
+def test_message_forwarded(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.get_filename = MagicMock(return_value="test/mails/forwarded.eml")
+    mf.get_header = MagicMock(return_value="something@other.org")
+    mf.get_message_id = MagicMock(return_value="foo")
+    mf.get_tags = MagicMock(return_value=["foo", "bar"])
+
+    mq = lambda: None
+    mq.search_messages = MagicMock(return_value=iter([mf]))
+
+    with patch("notmuch.Query", return_value=mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/message/foo')
+            assert response.status_code == 200
+            msg = json.loads(response.data.decode())
+            assert msg["forwarded_to"] == "something@other.org"
+
+            assert "With the new notmuch_message_get_flags() function" in msg["body"]["text/plain"]
+            assert msg["body"]["text/html"] == ''
+
+            assert msg["notmuch_id"] == "foo"
+            assert msg["tags"] == ["foo", "bar"]
+            assert msg["attachments"] == []
+            assert msg["signature"] is None
+        q.assert_called_once_with(db, 'id:"foo"')
+
+    mf.get_filename.assert_called_once()
+    mf.get_message_id.assert_called_once()
+    mf.get_tags.assert_called_once()
+    assert mf.get_header.call_count == 17
 
     mq.search_messages.assert_called_once()
 
@@ -559,7 +595,7 @@ def test_message_attachments(setup):
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 15
+    assert mf.get_header.call_count == 17
 
     mq.search_messages.assert_called_once()
 
@@ -603,7 +639,7 @@ def test_message_attachment_calendar_preview(setup):
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 15
+    assert mf.get_header.call_count == 17
 
     mq.search_messages.assert_called_once()
 
@@ -647,7 +683,7 @@ def test_message_attachment_calendar_preview_broken(setup):
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 15
+    assert mf.get_header.call_count == 17
 
     mq.search_messages.assert_called_once()
 
@@ -690,7 +726,7 @@ def test_message_attachment_calendar_preview_tz(setup):
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 15
+    assert mf.get_header.call_count == 17
 
     mq.search_messages.assert_called_once()
 
@@ -731,7 +767,7 @@ def test_message_attachment_calendar_preview_no_attendees(setup):
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 15
+    assert mf.get_header.call_count == 17
 
     mq.search_messages.assert_called_once()
 
@@ -772,7 +808,7 @@ def test_message_attachment_calendar_preview_no_people(setup):
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 15
+    assert mf.get_header.call_count == 17
 
     mq.search_messages.assert_called_once()
 
@@ -811,7 +847,7 @@ def test_message_attachment_calendar_preview_no_time(setup):
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 15
+    assert mf.get_header.call_count == 17
 
     mq.search_messages.assert_called_once()
 
@@ -855,7 +891,7 @@ def test_message_attachment_calendar_preview_recur(setup):
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 15
+    assert mf.get_header.call_count == 17
 
     mq.search_messages.assert_called_once()
 
@@ -899,7 +935,7 @@ def test_message_attachment_calendar_preview_request_accepted(setup):
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 15
+    assert mf.get_header.call_count == 17
 
     mq.search_messages.assert_called_once()
 
@@ -943,7 +979,7 @@ def test_message_attachment_calendar_preview_reply_accepted(setup):
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 15
+    assert mf.get_header.call_count == 17
 
     mq.search_messages.assert_called_once()
 
@@ -975,7 +1011,7 @@ def test_message_signed(setup):
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 15
+    assert mf.get_header.call_count == 17
 
     mq.search_messages.assert_called_once()
 
@@ -1007,7 +1043,7 @@ def test_message_signed_attachment(setup):
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 15
+    assert mf.get_header.call_count == 17
 
     mq.search_messages.assert_called_once()
 
@@ -1038,7 +1074,7 @@ def test_message_signed_invalid(setup):
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 15
+    assert mf.get_header.call_count == 17
 
     mq.search_messages.assert_called_once()
 
@@ -1072,7 +1108,7 @@ def test_message_signed_pgp(setup):
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 16
+    assert mf.get_header.call_count == 18
 
     mq.search_messages.assert_called_once()
 
@@ -1101,7 +1137,7 @@ def test_message_html_only(setup):
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 15
+    assert mf.get_header.call_count == 17
 
     mq.search_messages.assert_called_once()
 
@@ -1130,7 +1166,7 @@ def test_message_html_broken(setup):
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 15
+    assert mf.get_header.call_count == 17
 
     mq.search_messages.assert_called_once()
 
@@ -1161,7 +1197,7 @@ def test_message_link_scrubbing(setup):
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 15
+    assert mf.get_header.call_count == 17
 
     mq.search_messages.assert_called_once()
 
@@ -1199,7 +1235,7 @@ def test_message_filter_html(setup):
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 15
+    assert mf.get_header.call_count == 17
 
     mq.search_messages.assert_called_once()
 
@@ -1235,7 +1271,7 @@ def test_message_filter_text(setup):
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 15
+    assert mf.get_header.call_count == 17
 
     mq.search_messages.assert_called_once()
 
@@ -1285,7 +1321,7 @@ def test_thread(setup):
     mf.get_filename.assert_called_once()
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 15
+    assert mf.get_header.call_count == 17
 
     mt.get_messages.assert_called_once()
 

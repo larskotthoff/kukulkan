@@ -400,6 +400,7 @@ export class Message extends React.Component {
             { msg.from && <Typography>From: {this.formatAddrs(msg.from)}</Typography> }
             { msg.reply_to && <Typography>Reply-To: {this.formatAddrs(msg.reply_to)}</Typography> }
             { msg.to && <Typography>To: {this.formatAddrs(msg.to)}</Typography> }
+            { msg.forwarded_to && <Typography>Forwarded-To: {this.formatAddrs(msg.forwarded_to)}</Typography> }
             { msg.cc && <Typography>CC: {this.formatAddrs(msg.cc)}</Typography> }
             { msg.bcc && <Typography>BCC: {this.formatAddrs(msg.bcc)}</Typography> }
             <Typography>Date: {msg.date} {(new Date()).getTimezoneOffset() !== (msg.date.substring(msg.date.length - 5, msg.date.length - 4) === "+" ? -1 : 1) * (parseInt(msg.date.substring(msg.date.length - 4, msg.date.length - 2)) * 60 + parseInt(msg.date.substring(msg.date.length - 2))) && "(" + (new Date(msg.date)).toLocaleString() + ")"}</Typography>
