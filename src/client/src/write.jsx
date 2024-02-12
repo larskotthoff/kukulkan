@@ -181,7 +181,7 @@ export function Write() {
           if(!acct && result.delivered_to) {
             acct = accounts.find(a => result.delivered_to.includes(a.email));
           }
-          if(!acct && result.delivered_to) {
+          if(!acct && result.forwarded_to) {
             acct = accounts.find(a => result.forwarded_to.includes(a.email));
           }
           if(acct) {
