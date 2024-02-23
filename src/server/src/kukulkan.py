@@ -539,8 +539,12 @@ def get_attachments(email_msg, content=False):
                         except AttributeError:
                             rrule = None
                             recur = ""
+                        try:
+                            method = gcal["method"]
+                        except KeyError:
+                            method = None
                         preview = {
-                            "method": gcal["method"],
+                            "method": method,
                             "status": status,
                             "summary": component.get("summary"),
                             "location": component.get("location"),
