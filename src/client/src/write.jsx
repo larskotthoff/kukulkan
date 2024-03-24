@@ -30,9 +30,9 @@ import { hiddenTags } from "./tags.jsx";
 class Templates extends React.PureComponent {
   render() {
     return (
-      <Grid container spacing={1} sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
+      <Grid container spacing={1} sx={{ marginTop: 0, display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
         { this.props.templates.map((template) => (
-          <Grid item><Button id={"template-" + template.shortcut} variant="outlined" onClick={() => this.props.setTemplate(template.template) }>{template.description} ({template.shortcut})</Button></Grid>
+          <Grid item key={template.shortcut}><Button id={"template-" + template.shortcut} variant="outlined" onClick={() => this.props.setTemplate(template.template) }>{template.description} ({template.shortcut})</Button></Grid>
         )) }
       </Grid>
     )
@@ -420,7 +420,7 @@ export function Write() {
 
               <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
 
-              <TextField multiline minRows={10} fullWidth id="body" defaultValue={baseMsg ? quote(baseMsg.body["text/plain"]) : ""} style={{ marginBottom: ".5em" }} inputRef={body}/>
+              <TextField multiline minRows={10} maxRows={window.innerHeight / parseFloat(window.getComputedStyle(document.getElementsByTagName("body")[0]).getPropertyValue("line-height")) - 18} fullWidth id="body" defaultValue={baseMsg ? quote(baseMsg.body["text/plain"]) : ""} style={{ marginBottom: ".5em" }} inputRef={body}/>
               { files.map((f, i) => (
                 <Chip key={i} label={f.name} variant="outlined" style={{ margin: ".3em" }} onDelete={() => {
                   setFiles(files.filter(fi => fi !== f));
