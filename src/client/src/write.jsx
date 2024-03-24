@@ -73,6 +73,7 @@ class AddrComplete extends React.Component {
         }
       }}
       renderTags={(value, getTagProps) => {
+        localStorage.setItem("draft-" + this.props.draftKey.current + "-" + this.props.id, value.map(x => x).join('\n'));
         return value.map((option, index) => (
           <Chip label={option}
             {...getTagProps({ index })}
@@ -95,7 +96,7 @@ export function Write() {
   const [accounts, setAccounts] = useState(null);
   const [templates, setTemplates] = useState(null);
   const [allTags, setAllTags] = useState([]);
-  const [loading, setLoading] = React.useState(false);
+  const [loading, setLoading] = React.useState(true);
 
   const [sending, setSending] = React.useState(false);
   const [timeLeft, setTimeLeft] = React.useState(-1);
@@ -125,6 +126,8 @@ export function Write() {
   const body = useRef(null);
   const tags = useRef(null);
 
+  const draftKey = useRef(null);
+
   useEffect(() => {
     Promise.all([
       fetch(apiURL("api/accounts/")).then(v => v.json()),
@@ -146,10 +149,14 @@ export function Write() {
   useEffect(() => {
     if(accounts === null) return;
 
-    document.title = "New Message";
+    document.title = "Compose: New Message";
     action.current = searchParams.get("action");
     if(!action.current) {
       action.current = "compose";
+    }
+    draftKey.current = action.current;
+    if(localStorage.getItem("draft-" + draftKey.current + "-from")) {
+      setFrom(localStorage.getItem("draft-" + draftKey.current + "-from"));
     }
 
     messageId.current = searchParams.get("id");
@@ -160,6 +167,7 @@ export function Write() {
         .then(res => res.json())
         .then((result) => {
           setBaseMsg(result);
+          draftKey.current += "-" + result.message_id;
           if(action.current === "forward" && result.attachments) {
             // attach files attached to previous email
             setFiles(result.attachments.map(a => { return { dummy: true, name: a.filename }; }));
@@ -168,24 +176,29 @@ export function Write() {
             let idx = searchParams.get("index");
             setFiles([{ dummy: true, name: result.attachments[idx].filename }]);
           }
-          let acct = accounts.find(a => result.to.includes(a.email));
-          if(!acct) {
-            acct = accounts.find(a => result.from.includes(a.email));
-          }
-          if(!acct && result.cc) {
-            acct = accounts.find(a => result.cc.includes(a.email));
-          }
-          if(!acct && result.bcc) {
-            acct = accounts.find(a => result.bcc.includes(a.email));
-          }
-          if(!acct && result.delivered_to) {
-            acct = accounts.find(a => result.delivered_to.includes(a.email));
-          }
-          if(!acct && result.forwarded_to) {
-            acct = accounts.find(a => result.forwarded_to.includes(a.email));
-          }
-          if(acct) {
-            setFrom(acct.id);
+
+          if(localStorage.getItem("draft-" + draftKey.current + "-from")) {
+            setFrom(localStorage.getItem("draft-" + draftKey.current + "-from"));
+          } else {
+            let acct = accounts.find(a => result.to.includes(a.email));
+            if(!acct) {
+              acct = accounts.find(a => result.from.includes(a.email));
+            }
+            if(!acct && result.cc) {
+              acct = accounts.find(a => result.cc.includes(a.email));
+            }
+            if(!acct && result.bcc) {
+              acct = accounts.find(a => result.bcc.includes(a.email));
+            }
+            if(!acct && result.delivered_to) {
+              acct = accounts.find(a => result.delivered_to.includes(a.email));
+            }
+            if(!acct && result.forwarded_to) {
+              acct = accounts.find(a => result.forwarded_to.includes(a.email));
+            }
+            if(acct) {
+              setFrom(acct.id);
+            }
           }
           error.current = false;
           document.title = "Compose: " + prefix(result.subject);
@@ -226,6 +239,13 @@ export function Write() {
         if(result.sendStatus === 0) {
           error.current = false;
           statusMsg.current = "Message sent.";
+          localStorage.removeItem("draft-" + draftKey.current + "-from");
+          localStorage.removeItem("draft-" + draftKey.current + "-to");
+          localStorage.removeItem("draft-" + draftKey.current + "-cc");
+          localStorage.removeItem("draft-" + draftKey.current + "-bcc");
+          localStorage.removeItem("draft-" + draftKey.current + "-subject");
+          localStorage.removeItem("draft-" + draftKey.current + "-tags");
+          localStorage.removeItem("draft-" + draftKey.current + "-body");
         } else {
           error.current = true;
           statusMsg.current = "Failed to send message: " + result.sendOutput;
@@ -360,7 +380,7 @@ export function Write() {
                 <Grid item><TextField id="from"
                   size="small"
                   value={from}
-                  onChange={(ev) => setFrom(ev.target.value)}
+                  onChange={(ev) => { setFrom(ev.target.value); localStorage.setItem("draft-" + draftKey.current + "-from", ev.target.value) }}
                   select>
                     {accounts.map((acct) => (
                       <MenuItem key={acct.id} value={acct.id}>
@@ -372,24 +392,35 @@ export function Write() {
               <Grid container spacing={1} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                 <Grid item>To:</Grid>
                 <Grid item xs>
-                  <AddrComplete id="to" elRef={to} loading={toLoading} setLoading={setToLoading} defVal={defTo}/>
+                  <AddrComplete id="to" elRef={to} loading={toLoading} setLoading={setToLoading}
+                    draftKey={draftKey}
+                    defVal={localStorage.getItem("draft-" + draftKey.current + "-to") ? localStorage.getItem("draft-" + draftKey.current + "-to").split('\n') : defTo}/>
                 </Grid>
               </Grid>
               <Grid container spacing={1} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                 <Grid item>CC:</Grid>
                 <Grid item xs>
-                  <AddrComplete id="cc" elRef={cc} loading={ccLoading} setLoading={setCcLoading} defVal={defCc}/>
+                  <AddrComplete id="cc" elRef={cc} loading={ccLoading} setLoading={setCcLoading}
+                    draftKey={draftKey}
+                    defVal={localStorage.getItem("draft-" + draftKey.current + "-cc") ? localStorage.getItem("draft-" + draftKey.current + "-cc").split('\n') : defCc}/>
                 </Grid>
               </Grid>
               <Grid container spacing={1} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                 <Grid item>BCC:</Grid>
                 <Grid item xs>
-                  <AddrComplete id="bcc" elRef={bcc} loading={bccLoading} setLoading={setBccLoading} />
+                  <AddrComplete id="bcc" elRef={bcc} loading={bccLoading} setLoading={setBccLoading}
+                    draftKey={draftKey}
+                    defVal={localStorage.getItem("draft-" + draftKey.current + "-bcc") ? localStorage.getItem("draft-" + draftKey.current + "-bcc").split('\n') : []}/>
                 </Grid>
               </Grid>
               <Grid container spacing={1} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                 <Grid item>Subject:</Grid>
-                <Grid item xs><TextField variant="standard" defaultValue={baseMsg ? prefix(baseMsg.subject) : ""} fullWidth id="subject" inputRef={subject}/></Grid>
+                <Grid item xs><TextField variant="standard"
+                    defaultValue={localStorage.getItem("draft-" + draftKey.current + "-subject") ? localStorage.getItem("draft-" + draftKey.current + "-subject") : (baseMsg ? prefix(baseMsg.subject) : "")}
+                    onChange={() => { if(subject.current) { localStorage.setItem("draft-" + draftKey.current + "-subject", subject.current.value); document.title = "Compose: " + subject.current.value } }}
+                    fullWidth
+                    id="subject"
+                    inputRef={subject}/></Grid>
               </Grid>
 
               <Grid container spacing={1} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
@@ -403,10 +434,11 @@ export function Write() {
                   multiple
                   fullWidth
                   options={allTags.filter(tag => !hiddenTags.includes(tag))}
-                  defaultValue={baseMsg ? baseMsg.tags.filter(tag => !hiddenTags.includes(tag)) : []}
+                  defaultValue={localStorage.getItem("draft-" + draftKey.current + "-tags") ? localStorage.getItem("draft-" + draftKey.current + "-tags").split('\n') : (baseMsg ? baseMsg.tags.filter(tag => !hiddenTags.includes(tag)) : [])}
                   filterSelectedOptions
                   ref={tags}
                   renderTags={(value, getTagProps) => {
+                    localStorage.setItem("draft-" + draftKey.current + "-tags", value.map(x => x).join('\n'));
                     return value.map((option, index) => (
                       <Chip label={option}
                         {...getTagProps({ index })}
@@ -420,7 +452,16 @@ export function Write() {
 
               <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
 
-              <TextField multiline minRows={10} maxRows={window.innerHeight / parseFloat(window.getComputedStyle(document.getElementsByTagName("body")[0]).getPropertyValue("line-height")) - 18} fullWidth id="body" defaultValue={baseMsg ? quote(baseMsg.body["text/plain"]) : ""} style={{ marginBottom: ".5em" }} inputRef={body}/>
+              <TextField
+                multiline
+                minRows={10}
+                maxRows={window.innerHeight / parseFloat(window.getComputedStyle(document.getElementsByTagName("body")[0]).getPropertyValue("line-height")) - 18}
+                fullWidth
+                id="body"
+                defaultValue={localStorage.getItem("draft-" + draftKey.current + "-body") ? localStorage.getItem("draft-" + draftKey.current + "-body") : (baseMsg ? quote(baseMsg.body["text/plain"]) : "")}
+                style={{ marginBottom: ".5em" }}
+                inputRef={body}
+                onChange={() => body.current && localStorage.setItem("draft-" + draftKey.current + "-body", body.current.value)}/>
               { files.map((f, i) => (
                 <Chip key={i} label={f.name} variant="outlined" style={{ margin: ".3em" }} onDelete={() => {
                   setFiles(files.filter(fi => fi !== f));
