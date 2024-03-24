@@ -167,9 +167,13 @@ export function Thread() {
   }, []);
 
   const updateActiveDepth = (d) => {
-    let msg = null;
+    let msg = null,
+        unread = false;
     thread.current.forEach(function(m) {
-      if(m.depth === d) msg = m;
+      if(!unread && m.depth === d) {
+        unread = m.tags.includes("unread");
+        msg = m;
+      }
     });
     setFilteredThread(filterThread(msg, thread.current, setActiveMsg));
   }
