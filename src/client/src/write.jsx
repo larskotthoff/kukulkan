@@ -59,6 +59,9 @@ class AddrComplete extends React.Component {
       defaultValue={this.props.defVal}
       filterSelectedOptions
       ref={this.props.elRef}
+      onChange={(ev, value) => {
+        localStorage.setItem("draft-" + this.props.draftKey.current + "-" + this.props.id, value.map(x => x).join('\n'));
+      }}
       onInputChange={(ev, value) => {
         if(value.length > 2) {
           this.props.setLoading(true);
@@ -73,7 +76,6 @@ class AddrComplete extends React.Component {
         }
       }}
       renderTags={(value, getTagProps) => {
-        localStorage.setItem("draft-" + this.props.draftKey.current + "-" + this.props.id, value.map(x => x).join('\n'));
         return value.map((option, index) => (
           <Chip label={option}
             {...getTagProps({ index })}
