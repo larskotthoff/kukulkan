@@ -439,8 +439,10 @@ export function Write() {
                   defaultValue={localStorage.getItem("draft-" + draftKey.current + "-tags") ? localStorage.getItem("draft-" + draftKey.current + "-tags").split('\n') : (baseMsg ? baseMsg.tags.filter(tag => !hiddenTags.includes(tag)) : [])}
                   filterSelectedOptions
                   ref={tags}
-                  renderTags={(value, getTagProps) => {
+                  onChange={(ev, value) => {
                     localStorage.setItem("draft-" + draftKey.current + "-tags", value.map(x => x).join('\n'));
+                  }}
+                  renderTags={(value, getTagProps) => {
                     return value.map((option, index) => (
                       <Chip label={option}
                         {...getTagProps({ index })}
