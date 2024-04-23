@@ -87,6 +87,9 @@ function filterThread(msg, thread, setActiveMsg) {
   let prv = [];
   let tmp = msg;
   while(tmp.in_reply_to) {
+    if('<' + tmp.message_id + '>' === tmp.in_reply_to) { // thanks, Garmin
+      break;
+    }
     // eslint-disable-next-line
     tmp = thread.find(i => { return '<' + i.message_id + '>' === tmp.in_reply_to; });
     if(!tmp) { // we don't have the message replied to here (looking at you, spam filter)
@@ -99,6 +102,9 @@ function filterThread(msg, thread, setActiveMsg) {
   tmp = msg;
   while(tmp) {
     nxt.push(tmp);
+    if('<' + tmp.message_id + '>' === tmp.in_reply_to) { // thanks, Garmin
+      break;
+    }
     // eslint-disable-next-line
     tmp = thread.find(i => { return '<' + tmp.message_id + '>' === i.in_reply_to; });
   }
