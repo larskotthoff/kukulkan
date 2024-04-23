@@ -669,7 +669,7 @@ def message_to_json(message):
                 finally:
                     os.unlink(path)
 
-    return {
+    res = {
         "from": message.get_header("from").strip().replace('\t', ' '),
         "to": message.get_header("to").strip().replace('\t', ' '),
         "cc": message.get_header("cc").strip().replace('\t', ' '),
@@ -691,6 +691,10 @@ def message_to_json(message):
         "tags": [tag for tag in message.get_tags()],
         "signature": signature
     }
+    if '<' + res['message_id'] + '>' == res['in_reply_to']:
+        # this should never happen, but apparently does
+        res['in_reply_to'] = None
+    return res
 
 
 def message_attachment(message, num=-1):
