@@ -606,21 +606,23 @@ def message_to_json(message):
                     p7, data_bio = SMIME.smime_load_pkcs7_bio(BIO.MemoryBuffer(bytes(part)))
 
                     s = SMIME.SMIME()
-                    store = X509.X509_Store()
                     certStack = p7.get0_signers(X509.X509_Stack())
+                    s.set_x509_stack(certStack)
                     accounts = current_app.config.custom["accounts"]
                     accts = [acct for acct in accounts if acct["email"] in
                              message.get_header("from").strip().replace('\t', ' ')]
-                    if accts and accts[0]["cert"]:
-                        X509.load_cert(accts[0]["cert"])
-                        store.load_info(accts[0]["cert"])
+                    store = X509.X509_Store()
+                    if current_app.config.custom['ca-bundle']:
+                        store.load_info(current_app.config.custom['ca-bundle'])
+                    if accts and accts[0]["ca"]:
+                        for ca in accts[0]["ca"]:
+                            store.load_info(ca)
                     s.set_x509_store(store)
-                    s.set_x509_stack(certStack)
                     try:
                         s.verify(p7, data_bio, flags=SMIME.PKCS7_DETACHED)
                         signature = {"valid": True}
                     except SMIME.PKCS7_Error as e:
-                        if "self-signed certificate" in str(e) or "self signed certificate" in str(e) or "unable to get local issuer certificate" in str(e):
+                        if "self-signed certificate" in str(e) or "self signed certificate" in str(e) or "unable to get local issuer certificate" in str(e) or "unable to get issuer certificate" in str(e):
                             try:
                                 s.verify(p7, data_bio, flags=SMIME.PKCS7_NOVERIFY | SMIME.PKCS7_DETACHED)
                                 signature = {"valid": None, "message": "self-signed or unavailable certificate(s)"}
