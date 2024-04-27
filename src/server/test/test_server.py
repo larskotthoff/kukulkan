@@ -1016,7 +1016,7 @@ def test_message_signed(setup):
     mq.search_messages.assert_called_once()
 
 
-def test_message_signed_attachment(setup):
+def test_message_signed_expired(setup):
     app, db = setup
 
     mf = lambda: None
@@ -1037,7 +1037,7 @@ def test_message_signed_attachment(setup):
             msg = json.loads(response.data.decode())
             assert "Invio messaggio SMIME (signed and clear text)" in msg["body"]["text/plain"]
 
-            assert msg["signature"] == {'message': 'self-signed or unavailable certificate(s)', 'valid': None}
+            assert msg["signature"] == {'message': 'certificate verify error (Verify error: certificate has expired)', 'valid': False}
         q.assert_called_once_with(db, 'id:"foo"')
 
     mf.get_filename.assert_called_once()
