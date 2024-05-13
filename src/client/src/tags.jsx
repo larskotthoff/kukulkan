@@ -90,6 +90,7 @@ export class TagBar extends React.Component {
             <Chip label={option}
               {...getTagProps({ index })}
               style={{ backgroundColor: getColor(option), color: invert(getColor(option), true) }}
+              key={index}
             />
           ))
         }}
