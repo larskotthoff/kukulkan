@@ -200,7 +200,7 @@ export function Thread() {
     document.getElementsByClassName("kukulkan-active-thread")[0].getElementsByTagName("input")[0].focus();
   });
 
-  useHotkeys('Del', () => {
+  useHotkeys('Delete', () => {
     let el = document.getElementsByClassName("kukulkan-active-thread")[0];
     if(el && el.getElementsByClassName('MuiChip-root').length > 0) {
       el.getElementsByClassName("MuiAutocomplete-root")[0].dispatchEvent(new CustomEvent('delete'));

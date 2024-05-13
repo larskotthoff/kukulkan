@@ -84,7 +84,7 @@ export function Kukulkan() {
     document.getElementsByClassName("Mui-selected")[0].dispatchEvent(new CustomEvent('editTags'));
   });
 
-  useHotkeys('Del', () => {
+  useHotkeys('Delete', () => {
     document.getElementsByClassName("Mui-selected")[0].dispatchEvent(new CustomEvent('delete'));
   });
 
