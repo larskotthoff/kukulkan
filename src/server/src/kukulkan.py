@@ -475,7 +475,10 @@ def get_nested_body(email_msg):
 
 def attendee_matches_addr(c, message):
     forwarded_to = message.get("X-Forwarded-To").strip() if message.get("X-Forwarded-To") else None
-    addr = str(c).split(':')[1]
+    try:
+        addr = str(c).split(':')[1]
+    except IndexError:
+        addr = c
     accounts = current_app.config.custom["accounts"]
     for acct in accounts:
         if acct["email"] == addr or forwarded_to == acct["email"]:
