@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, mock_open, patch, call
 
 import src.kukulkan as k
 
+IN_GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"
 
 @pytest.fixture
 def setup():
@@ -984,6 +985,7 @@ def test_message_attachment_calendar_preview_reply_accepted(setup):
     mq.search_messages.assert_called_once()
 
 
+@pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="No CA certs on github.")
 def test_message_signed(setup):
     app, db = setup
 
@@ -1016,6 +1018,7 @@ def test_message_signed(setup):
     mq.search_messages.assert_called_once()
 
 
+@pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="No CA certs on github.")
 def test_message_signed_expired(setup):
     app, db = setup
 
@@ -1048,6 +1051,7 @@ def test_message_signed_expired(setup):
     mq.search_messages.assert_called_once()
 
 
+@pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="No CA certs on github.")
 def test_message_signed_invalid(setup):
     app, db = setup
 
