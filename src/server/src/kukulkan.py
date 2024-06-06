@@ -30,7 +30,7 @@ from M2Crypto import SMIME, BIO, X509
 from bs4 import BeautifulSoup
 
 import lxml
-from lxml.html.clean import Cleaner
+from lxml_html_clean import Cleaner
 
 from tempfile import mkstemp
 from gnupg import GPG

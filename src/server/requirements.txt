@@ -4,6 +4,7 @@ Flask
 Flask_RESTful
 icalendar
 lxml
+lxml_html_clean
 M2Crypto
 notmuch
 pytest
