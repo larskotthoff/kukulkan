@@ -1,0 +1,22 @@
+body {
+    background-image: url("assets/serpent.webp");
+    background-repeat: no-repeat;
+    background-position: bottom right;
+    background-attachment: fixed;
+    background-size: auto 25vh;
+    background-color: #fff8e1;
+}
+
+.chip {
+    height: auto !important;
+    border-radius: 5px !important;
+    margin-right: 3px !important;
+}
+.chip span {
+    padding: 3px;
+    white-space: break-spaces !important;
+}
+
+.paper {
+    background-color: #f0f4c3;
+}

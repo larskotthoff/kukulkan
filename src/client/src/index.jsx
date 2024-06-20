@@ -1,10 +1,31 @@
-import { createEffect, createSignal, createResource, For, onMount, onCleanup } from "solid-js";
+import { createEffect, createSignal, createResource, For, Show, onMount, onCleanup } from "solid-js";
 import { render } from "solid-js/web";
 import { Route, Router } from "@solidjs/router";
 
-import { TextField, Box, Grid } from "@suid/material";
+import { Alert, Box, Chip, Grid, LinearProgress, TextField, Typography } from "@suid/material";
+import AttachFile from "@suid/icons-material/AttachFile";
+import Create from "@suid/icons-material/Create";
+import Forward from "@suid/icons-material/Forward";
+import Gesture from "@suid/icons-material/Gesture";
+import Reply from "@suid/icons-material/Reply";
 
 import invert from 'invert-color';
+
+import "./Kukulkan.css";
+
+import { createTheme, ThemeProvider } from "@suid/material/styles";
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#558b2f',
+    },
+    secondary: {
+      main: '#ffecb3',
+    },
+  },
+});
+
+const hiddenTags = ["attachment", "replied", "sent", "passed", "signed"];
 
 // https://stackoverflow.com/questions/36721830/convert-hsl-to-rgb-and-hex
 function hslToHex(h, s, l) {
@@ -94,7 +115,8 @@ function apiURL(suffix) {
 
 const fetchThreads = async (query) => {
   if(query === null) return [];
-  return (await fetch(apiURL(`api/query/${query}`))).json();
+  const response = await fetch(apiURL(`api/query/${query}`));
+  return await response.json();
 }
 
 const Kukulkan = () => {
@@ -103,58 +125,84 @@ const Kukulkan = () => {
         [searchText, setSearchText] = createSignal(query()),
         [threads] = createResource(query, fetchThreads);
   
-  document.title = query();
+  document.title = query() || "Kukulkan";
 
   return (
     <>
-      <Box>
-        <TextField
-          className="kukulkan-queryBox"
-          name="search"
-          variant="standard"
-          fullWidth
-          autoFocus
-          margin="normal"
-          value={searchText() || ""}
-          onChange={(ev, value) => setSearchText(value) }
-          onKeyPress={(ev) => {
-            if(ev.key === 'Enter') {
-              const sp = new URLSearchParams(searchParams());
-              sp.set("query", searchText());
-              window.location.search = sp.toString();
-            }
-          }}
-        />
-      </Box>
-      <span>{threads.loading && "Loading..."}</span>
-      <Grid container spacing={2}>
-        <For each={threads()}>
-          {(thread) => (
-            <>
-            <Grid item xs={1}>
-              {renderDateNum(thread)}
-            </Grid>
-            <Grid item xs={3}>
-              <For each={thread.tags}>
-                {(tag) => (
-                  <span style={{ 'background-color': `${getColor(tag)}`, color: `${invert(getColor(tag), true)}`, padding: "2px", margin: "2px", 'border-radius': "3px" }}>{tag}</span>
-                )}
-              </For>
-            </Grid>
-            <Grid item xs={5}>
-              {thread.subject}
-            </Grid>
-            <Grid item xs={3}>
-              <For each={thread.authors.split(/\s*[,|]\s*/)}>
-                {(author) => (
-                  <span style={{ 'background-color': `${getColor(author)}`, color: `${invert(getColor(author), true)}`, padding: "2px", margin: "2px", 'border-radius': "3px" }}>{author}</span>
-                )}
-              </For>
-            </Grid>
-            </>
-          )}
-        </For>
-      </Grid>
+      <ThemeProvider theme={theme}>
+        <Grid container spacing={2} justifyContent="space-around" alignItems="center">
+          <Grid item xs={8}>
+            <TextField
+              className="kukulkan-queryBox"
+              name="search"
+              variant="standard"
+              fullWidth
+              autoFocus
+              margin="normal"
+              value={searchText() || ""}
+              onChange={(ev, value) => setSearchText(value) }
+              onKeyPress={(ev) => {
+                if(ev.key === 'Enter') {
+                  const sp = new URLSearchParams(searchParams());
+                  sp.set("query", searchText());
+                  window.location.search = sp.toString();
+                }
+              }}
+            />
+          </Grid>
+          <Grid item xs={1}>
+            <a href="/write" target="_blank" rel="noreferrer">
+              <Create/>
+            </a>
+          </Grid>
+        </Grid>
+        <Show when={threads.error}>
+          <Alert severity="error">Error querying backend: threads.error</Alert>
+        </Show>
+        <Show when={threads()} fallback={threads.loading && <LinearProgress/>}>
+          <Typography align="right">{threads().length}  threads.</Typography>
+          <Grid container spacing={.5}>
+            <For each={threads()}>
+              {(thread) => (
+                <>
+                <Grid item container xs={1} justifyContent="space-between">
+                  <Grid item>
+                    {renderDateNum(thread)}
+                  </Grid>
+                  <Grid item>
+                    {thread.tags.includes("attachment") && <AttachFile/>}
+                    {thread.tags.includes("signed") && <Gesture/>}
+                    {thread.tags.includes("replied") && <Reply/>}
+                    {thread.tags.includes("passed") && <Forward/>}
+                  </Grid>
+                </Grid>
+                <Grid item xs={3}>
+                  <For each={thread.tags.filter(tag => !hiddenTags.includes(tag)).sort()}>
+                    {(tag) => (
+                      <Chip label={tag}
+                        class="chip"
+                        style={{ 'background-color': `${getColor(tag)}`, color: `${invert(getColor(tag), true)}` }}/>
+                    )}
+                  </For>
+                </Grid>
+                <Grid item xs={5}>
+                  {thread.subject}
+                </Grid>
+                <Grid item xs={3}>
+                  <For each={thread.authors.split(/\s*[,|]\s*/)}>
+                    {(author) => (
+                      <Chip label={author}
+                        class="chip"
+                        style={{ 'background-color': `${getColor(author)}`, color: `${invert(getColor(author), true)}` }}/>
+                    )}
+                  </For>
+                </Grid>
+                </>
+              )}
+            </For>
+          </Grid>
+        </Show>
+      </ThemeProvider>
     </>
   );
 };
