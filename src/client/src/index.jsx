@@ -2,7 +2,7 @@ import { createEffect, createSignal, createResource, ErrorBoundary, For, Show, S
 import { render } from "solid-js/web";
 import { Route, Router } from "@solidjs/router";
 
-import { Alert, Box, Chip, Grid, LinearProgress, TextField, Typography } from "@suid/material";
+import { Alert, Box, Chip, Divider, Grid, LinearProgress, TextField, Typography } from "@suid/material";
 import AttachFile from "@suid/icons-material/AttachFile";
 import Create from "@suid/icons-material/Create";
 import Forward from "@suid/icons-material/Forward";
@@ -160,22 +160,34 @@ const Kukulkan = () => {
           <ErrorBoundary fallback={<Alert severity="error">Error querying backend: {threads.error.message}</Alert>}>
             <Show when={threads()}>
               <Typography align="right">{threads().length}  threads.</Typography>
-              <Grid container spacing={.5}>
+              <Grid container spacing={.5} width="95%" class="centered">
                 <For each={threads()}>
                   {(thread) => (
                     <>
-                    <Grid item container xs={1} justifyContent="space-between">
+                    <Grid item container xs={12} sm={3} lg={2} justifyContent="space-between">
                       <Grid item>
                         {renderDateNum(thread)}
                       </Grid>
-                      <Grid item>
+                      <Grid item class="centered">
                         {thread.tags.includes("attachment") && <AttachFile/>}
                         {thread.tags.includes("signed") && <Gesture/>}
                         {thread.tags.includes("replied") && <Reply/>}
                         {thread.tags.includes("passed") && <Forward/>}
                       </Grid>
                     </Grid>
-                    <Grid item xs={3}>
+                    <Grid item xs={12} sm={9} lg={3}>
+                      <For each={thread.authors.split(/\s*[,|]\s*/)}>
+                        {(author) => (
+                          <Chip label={author}
+                            class="chip"
+                            style={{ 'background-color': `${getColor(author)}`, color: `${invert(getColor(author), true)}` }}/>
+                        )}
+                      </For>
+                    </Grid>
+                    <Grid item xs={12} sm={9} lg={5}>
+                      {thread.subject}
+                    </Grid>
+                    <Grid item xs={12} sm={2}>
                       <For each={thread.tags.filter(tag => !hiddenTags.includes(tag)).sort()}>
                         {(tag) => (
                           <Chip label={tag}
@@ -184,17 +196,8 @@ const Kukulkan = () => {
                         )}
                       </For>
                     </Grid>
-                    <Grid item xs={5}>
-                      {thread.subject}
-                    </Grid>
-                    <Grid item xs={3}>
-                      <For each={thread.authors.split(/\s*[,|]\s*/)}>
-                        {(author) => (
-                          <Chip label={author}
-                            class="chip"
-                            style={{ 'background-color': `${getColor(author)}`, color: `${invert(getColor(author), true)}` }}/>
-                        )}
-                      </For>
+                    <Grid item xs={12}>
+                      <Divider/>
                     </Grid>
                     </>
                   )}

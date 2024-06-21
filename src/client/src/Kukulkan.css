@@ -5,12 +5,21 @@ body {
     background-attachment: fixed;
     background-size: auto 25vh;
     background-color: #fff8e1;
+
+    font-family: Fira Mono, Roboto;
+}
+
+.centered {
+    margin-left: auto !important;
+    margin-right: auto !important;
 }
 
 .chip {
     height: auto !important;
     border-radius: 5px !important;
     margin-right: 3px !important;
+
+    font-family: Fira Mono, Roboto !important;
 }
 .chip span {
     padding: 3px;
