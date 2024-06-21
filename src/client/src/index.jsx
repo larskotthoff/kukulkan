@@ -1,4 +1,4 @@
-import { createEffect, createSignal, createResource, For, Show, onMount, onCleanup } from "solid-js";
+import { createEffect, createSignal, createResource, ErrorBoundary, For, Show, Suspense, onMount, onCleanup } from "solid-js";
 import { render } from "solid-js/web";
 import { Route, Router } from "@solidjs/router";
 
@@ -131,7 +131,7 @@ const Kukulkan = () => {
     <>
       <ThemeProvider theme={theme}>
         <Grid container spacing={2} justifyContent="space-around" alignItems="center">
-          <Grid item xs={8}>
+          <Grid item width="80%">
             <TextField
               className="kukulkan-queryBox"
               name="search"
@@ -150,58 +150,59 @@ const Kukulkan = () => {
               }}
             />
           </Grid>
-          <Grid item xs={1}>
+          <Grid item>
             <a href="/write" target="_blank" rel="noreferrer">
               <Create/>
             </a>
           </Grid>
         </Grid>
-        <Show when={threads.error}>
-          <Alert severity="error">Error querying backend: threads.error</Alert>
-        </Show>
-        <Show when={threads()} fallback={threads.loading && <LinearProgress/>}>
-          <Typography align="right">{threads().length}  threads.</Typography>
-          <Grid container spacing={.5}>
-            <For each={threads()}>
-              {(thread) => (
-                <>
-                <Grid item container xs={1} justifyContent="space-between">
-                  <Grid item>
-                    {renderDateNum(thread)}
-                  </Grid>
-                  <Grid item>
-                    {thread.tags.includes("attachment") && <AttachFile/>}
-                    {thread.tags.includes("signed") && <Gesture/>}
-                    {thread.tags.includes("replied") && <Reply/>}
-                    {thread.tags.includes("passed") && <Forward/>}
-                  </Grid>
-                </Grid>
-                <Grid item xs={3}>
-                  <For each={thread.tags.filter(tag => !hiddenTags.includes(tag)).sort()}>
-                    {(tag) => (
-                      <Chip label={tag}
-                        class="chip"
-                        style={{ 'background-color': `${getColor(tag)}`, color: `${invert(getColor(tag), true)}` }}/>
-                    )}
-                  </For>
-                </Grid>
-                <Grid item xs={5}>
-                  {thread.subject}
-                </Grid>
-                <Grid item xs={3}>
-                  <For each={thread.authors.split(/\s*[,|]\s*/)}>
-                    {(author) => (
-                      <Chip label={author}
-                        class="chip"
-                        style={{ 'background-color': `${getColor(author)}`, color: `${invert(getColor(author), true)}` }}/>
-                    )}
-                  </For>
-                </Grid>
-                </>
-              )}
-            </For>
-          </Grid>
-        </Show>
+        <Suspense fallback={<LinearProgress/>}>
+          <ErrorBoundary fallback={<Alert severity="error">Error querying backend: {threads.error.message}</Alert>}>
+            <Show when={threads()}>
+              <Typography align="right">{threads().length}  threads.</Typography>
+              <Grid container spacing={.5}>
+                <For each={threads()}>
+                  {(thread) => (
+                    <>
+                    <Grid item container xs={1} justifyContent="space-between">
+                      <Grid item>
+                        {renderDateNum(thread)}
+                      </Grid>
+                      <Grid item>
+                        {thread.tags.includes("attachment") && <AttachFile/>}
+                        {thread.tags.includes("signed") && <Gesture/>}
+                        {thread.tags.includes("replied") && <Reply/>}
+                        {thread.tags.includes("passed") && <Forward/>}
+                      </Grid>
+                    </Grid>
+                    <Grid item xs={3}>
+                      <For each={thread.tags.filter(tag => !hiddenTags.includes(tag)).sort()}>
+                        {(tag) => (
+                          <Chip label={tag}
+                            class="chip"
+                            style={{ 'background-color': `${getColor(tag)}`, color: `${invert(getColor(tag), true)}` }}/>
+                        )}
+                      </For>
+                    </Grid>
+                    <Grid item xs={5}>
+                      {thread.subject}
+                    </Grid>
+                    <Grid item xs={3}>
+                      <For each={thread.authors.split(/\s*[,|]\s*/)}>
+                        {(author) => (
+                          <Chip label={author}
+                            class="chip"
+                            style={{ 'background-color': `${getColor(author)}`, color: `${invert(getColor(author), true)}` }}/>
+                        )}
+                      </For>
+                    </Grid>
+                    </>
+                  )}
+                </For>
+              </Grid>
+            </Show>
+          </ErrorBoundary>
+        </Suspense>
       </ThemeProvider>
     </>
   );
