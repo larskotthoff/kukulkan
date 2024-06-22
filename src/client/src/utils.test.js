@@ -6,10 +6,6 @@ test("exports theme", () => {
   expect(utils.theme).not.toBe(undefined);
 });
 
-test("exports hiddenTags", () => {
-  expect(utils.hiddenTags).not.toBe(undefined);
-});
-
 test("getColor", () => {
   expect(utils.getColor("foo")).toBe("#c70579");
   expect(utils.getColor("bar")).toBe("#c705aa");

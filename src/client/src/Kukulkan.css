@@ -12,6 +12,8 @@ body {
 .centered {
     margin-left: auto !important;
     margin-right: auto !important;
+
+    align-items: baseline;
 }
 
 .chip {
