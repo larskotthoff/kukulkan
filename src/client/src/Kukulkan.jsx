@@ -1,6 +1,7 @@
 import { createEffect, createSignal, createResource, ErrorBoundary, For, Show, Suspense, onMount, onCleanup } from "solid-js";
 
-import { Alert, Box, Chip, Divider, Grid, LinearProgress, Stack, TextField, Typography } from "@suid/material";
+import { Alert, Box, Chip, Divider, Grid, LinearProgress, Stack, Typography } from "@suid/material";
+import { Autocomplete } from "./Autocomplete.jsx";
 import { ThemeProvider } from "@suid/material/styles";
 import Create from "@suid/icons-material/Create";
 
@@ -15,11 +16,30 @@ async function fetchThreads(query) {
   return await response.json();
 }
 
+async function fetchAllTags() {
+  const response = await fetch(apiURL(`api/tags/`));
+  return await response.json();
+}
+
 export function Kukulkan() {
   const [searchParams] = createSignal(window.location.search),
         [query] = createSignal((new URLSearchParams(searchParams())).get("query")),
         [searchText, setSearchText] = createSignal(query()),
-        [threads] = createResource(query, fetchThreads);
+        [threads] = createResource(query, fetchThreads),
+        [allTags] = createResource(fetchAllTags);
+
+  let opts = ["tag:unread", "tag:todo", "date:today"],
+      qs = localStorage.getItem("queries");
+  if(qs !== null) {
+    qs = JSON.parse(qs);
+    if(query()) {
+      qs.unshift(query());
+      qs = [...new Set(qs)];
+      // store up to 20 most recent queries
+      localStorage.setItem("queries", JSON.stringify(qs.slice(0, 20)));
+    }
+    opts = [...new Set(opts.concat(qs))];
+  }
   
   document.title = query() || "Kukulkan";
 
@@ -27,23 +47,33 @@ export function Kukulkan() {
     <>
       <ThemeProvider theme={theme}>
         <Stack direction="row" class="centered" width="80%" spacing={2}>
-          <TextField
-            className="kukulkan-queryBox"
-            name="search"
-            variant="standard"
-            fullWidth
-            autoFocus
-            margin="normal"
-            value={searchText() || ""}
-            onChange={(ev, value) => setSearchText(value) }
-            onKeyPress={(ev) => {
-              if(ev.key === 'Enter') {
-                const sp = new URLSearchParams(searchParams());
-                sp.set("query", searchText());
-                window.location.search = sp.toString();
-              }
-            }}
-          />
+          <Box component="form" width="100%" noValidate onSubmit={(e) => {
+            e.preventDefault();
+            const sp = new URLSearchParams(searchParams());
+            sp.set("query", searchText());
+            window.location.search = sp.toString();
+          }}>
+            <Autocomplete
+              className="kukulkan-queryBox"
+              name="search"
+              variant="outlined"
+              fullWidth
+              autoFocus
+              margin="normal"
+              text={searchText}
+              setText={setSearchText}
+              getOptions={(text) => {
+                let pts = text.split(':'),
+                    last = pts.pop();
+                if(pts.length > 0 && pts[pts.length - 1].endsWith("tag") && last.length > 0) {
+                  // autocomplete possible tag
+                  return allTags().filter((t) => t.startsWith(last)).map((t) => pts.join(':') + ":" + t );
+                } else {
+                  return opts;
+                }
+              }}
+            />
+          </Box>
           <a href="/write" target="_blank" rel="noreferrer">
             <Create/>
           </a>
