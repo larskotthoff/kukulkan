@@ -44,6 +44,7 @@ export function Autocomplete(props) {
       select();
     } else if (event.code === 'Escape') {
       setShowPopover(false);
+      inputRef.querySelector("input").blur();
     } else {
       setShowPopover(true);
     }

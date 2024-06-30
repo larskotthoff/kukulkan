@@ -31,3 +31,15 @@ body {
 .paper {
     background-color: #f0f4c3;
 }
+
+.kukulkan-thread-selected {
+    background-color: rgba(85, 139, 47, 0.3);
+}
+
+.kukulkan-thread-selected:hover {
+    background-color: rgba(85, 139, 47, 0.4) !important;
+}
+
+.kukulkan-thread:hover {
+    background-color: rgba(85, 139, 47, 0.2) !important;
+}

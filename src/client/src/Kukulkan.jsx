@@ -8,7 +8,7 @@ import Create from "@suid/icons-material/Create";
 import invert from 'invert-color';
 
 import "./Kukulkan.css";
-import { apiURL, getColor, renderDateNum, theme } from "./utils.js";
+import { apiURL, getColor, mkShortcut, renderDateNum, simulateKeyPress, theme } from "./utils.js";
 
 async function fetchThreads(query) {
   if(query === null) return [];
@@ -26,6 +26,7 @@ export function Kukulkan() {
         [query] = createSignal((new URLSearchParams(searchParams())).get("query")),
         [searchText, setSearchText] = createSignal(query()),
         [threads] = createResource(query, fetchThreads),
+        [activeThread, setActiveThread] = createSignal(0),
         [allTags] = createResource(fetchAllTags);
 
   let opts = ["tag:unread", "tag:todo", "date:today"],
@@ -43,6 +44,49 @@ export function Kukulkan() {
   
   document.title = query() || "Kukulkan";
 
+  mkShortcut(["Home"],
+    () => setActiveThread(0)
+  );
+  mkShortcut(["k"],
+    () => setActiveThread(Math.max(0, activeThread() - 1))
+  );
+  mkShortcut(["Shift", "K"],
+    () => setActiveThread(Math.max(0, activeThread() - 10))
+  );
+  mkShortcut(["j"],
+    () => setActiveThread(Math.min(threads().length - 1, activeThread() + 1))
+  );
+  mkShortcut(["Shift", "J"],
+    () => setActiveThread(Math.min(threads().length - 1, activeThread() + 10))
+  );
+  mkShortcut(["End"],
+    () => setActiveThread(threads().length - 1)
+  );
+  mkShortcut(["0"],
+    () => setActiveThread(threads().length - 1)
+  );
+
+  mkShortcut(["Enter"],
+    () => { if(threads()[activeThread()]) window.open('/thread?id=' + threads()[activeThread()].thread_id, '_blank') }
+  );
+
+  mkShortcut(["c"],
+    () => window.open('/write', '_blank')
+  );
+
+  mkShortcut(["/"],
+    () => document.getElementsByClassName("kukulkan-queryBox")[0].getElementsByTagName("input")[0].focus(),
+    true
+  );
+
+  mkShortcut(["t"],
+    () => document.getElementsByClassName("Mui-selected")[0].dispatchEvent(new CustomEvent('editTags'))
+  );
+
+  mkShortcut(["Delete"],
+    () => document.getElementsByClassName("Mui-selected")[0].dispatchEvent(new CustomEvent('delete'))
+  );
+
   return (
     <>
       <ThemeProvider theme={theme}>
@@ -54,11 +98,10 @@ export function Kukulkan() {
             window.location.search = sp.toString();
           }}>
             <Autocomplete
-              className="kukulkan-queryBox"
+              class="kukulkan-queryBox"
               name="search"
               variant="outlined"
               fullWidth
-              autoFocus
               margin="normal"
               text={searchText}
               setText={setSearchText}
@@ -82,38 +125,40 @@ export function Kukulkan() {
           <ErrorBoundary fallback={<Alert severity="error">Error querying backend: {threads.error.message}</Alert>}>
             <Show when={threads()}>
               <Typography align="right">{threads().length}  threads.</Typography>
-              <Grid container spacing={.5} width="95%" class="centered">
+              <Grid container width="95%" class="centered">
                 <For each={threads()}>
-                  {(thread) => (
-                    <>
-                    <Grid item xs={12} sm={2} lg={1}>
-                      {renderDateNum(thread)}
+                  {(thread, index) => (
+                    <Grid item container padding={.3} class={index() === activeThread() ? "kukulkan-thread-selected" : "kukulkan-thread"}
+                      onClick={(e) => {
+                        setActiveThread(index());
+                        simulateKeyPress('Enter');
+                      }}
+                    >
+                      <Grid item xs={12} sm={2} lg={1}>
+                        {renderDateNum(thread)}
+                      </Grid>
+                      <Grid item xs={12} sm={10} lg={4}>
+                        <For each={thread.authors.split(/\s*[,|]\s*/)}>
+                          {(author) => (
+                            <Chip label={author}
+                              class="chip"
+                              style={{ 'background-color': `${getColor(author)}`, color: `${invert(getColor(author), true)}` }}/>
+                          )}
+                        </For>
+                      </Grid>
+                      <Grid item xs={12} sm={9} lg={5}>
+                        {thread.subject}
+                      </Grid>
+                      <Grid item xs={12} sm={2}>
+                        <For each={thread.tags.sort()}>
+                          {(tag) => (
+                            <Chip label={tag}
+                              class="chip"
+                              style={{ 'background-color': `${getColor(tag)}`, color: `${invert(getColor(tag), true)}` }}/>
+                          )}
+                        </For>
+                      </Grid>
                     </Grid>
-                    <Grid item xs={12} sm={10} lg={4}>
-                      <For each={thread.authors.split(/\s*[,|]\s*/)}>
-                        {(author) => (
-                          <Chip label={author}
-                            class="chip"
-                            style={{ 'background-color': `${getColor(author)}`, color: `${invert(getColor(author), true)}` }}/>
-                        )}
-                      </For>
-                    </Grid>
-                    <Grid item xs={12} sm={9} lg={5}>
-                      {thread.subject}
-                    </Grid>
-                    <Grid item xs={12} sm={2}>
-                      <For each={thread.tags.sort()}>
-                        {(tag) => (
-                          <Chip label={tag}
-                            class="chip"
-                            style={{ 'background-color': `${getColor(tag)}`, color: `${invert(getColor(tag), true)}` }}/>
-                        )}
-                      </For>
-                    </Grid>
-                    <Grid item xs={12}>
-                      <Divider/>
-                    </Grid>
-                    </>
                   )}
                 </For>
               </Grid>

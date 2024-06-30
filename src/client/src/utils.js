@@ -1,3 +1,5 @@
+import { createShortcut } from "@solid-primitives/keyboard";
+
 import { createTheme, ThemeProvider } from "@suid/material/styles";
 export const theme = createTheme({
   palette: {
@@ -101,5 +103,37 @@ export function formatFSz(size) {
   var i = Math.floor(Math.log(size) / Math.log(1024));
   return (size / Math.pow(1024, i)).toFixed(2) * 1 + ' ' + ['Bi', 'kiB', 'MiB', 'GiB', 'TiB'][i];
 };
+
+export function mkShortcut(keys, func, preventDefault = false) {
+  createShortcut(keys, (e) => { if(document.activeElement.tagName !== "INPUT") {
+    func();
+    if(preventDefault) e.preventDefault();
+  }}, { preventDefault: false });
+}
+
+// claude wrote this specifically to work with SolidJS createShortcut
+export function simulateKeyPress(key, ctrlKey = false, shiftKey = false, altKey = false) {
+  const event = new KeyboardEvent('keydown', {
+    key: key,
+    code: key.length === 1 ? `Key${key.toUpperCase()}` : key,
+    which: key.length === 1 ? key.charCodeAt(0) : 0,
+    keyCode: key.length === 1 ? key.charCodeAt(0) : 0,
+    bubbles: true,
+    cancelable: true,
+    ctrlKey: ctrlKey,
+    shiftKey: shiftKey,
+    altKey: altKey
+  });
+
+  // Override readonly properties
+  Object.defineProperties(event, {
+    key: { value: key },
+    code: { value: key.length === 1 ? `Key${key.toUpperCase()}` : key },
+    which: { value: key.length === 1 ? key.charCodeAt(0) : 0 },
+    keyCode: { value: key.length === 1 ? key.charCodeAt(0) : 0 }
+  });
+
+  document.dispatchEvent(event);
+}
 
 // vim: tabstop=2 shiftwidth=2 expandtab
