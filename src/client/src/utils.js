@@ -1,47 +1,15 @@
-import { createTheme } from '@mui/material/styles';
+import { createShortcut } from "@solid-primitives/keyboard";
 
+import { createTheme, ThemeProvider } from "@suid/material/styles";
 export const theme = createTheme({
   palette: {
-    mode: 'light',
     primary: {
       main: '#558b2f',
     },
     secondary: {
       main: '#ffecb3',
     },
-    background: {
-      default: '#fff8e1',
-      paper: '#f0f4c3',
-    }
   },
-  components: {
-    MuiTableRow: {
-      styleOverrides: {
-        root: {
-          "&.Mui-selected": {
-            backgroundColor: 'rgba(85, 139, 47, 0.3)'
-          },
-          "&.Mui-selected:hover": {
-            backgroundColor: 'rgba(85, 139, 47, 0.4) !important'
-          },
-          "&:hover": {
-            backgroundColor: 'rgba(85, 139, 47, 0.2) !important'
-          }
-        }
-      }
-    },
-    MuiCssBaseline: {
-      styleOverrides: {
-        body: {
-          backgroundImage: 'url("serpent.webp")',
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'bottom right',
-          backgroundAttachment: 'fixed',
-          backgroundSize: 'auto 25vh'
-        }
-      }
-    }
-  }
 });
 
 // https://stackoverflow.com/questions/36721830/convert-hsl-to-rgb-and-hex
@@ -117,12 +85,17 @@ export function formatDuration(from, to) {
   }
 }
 
+export function renderDateNum(thread) {
+    let res = formatDate(new Date(thread.newest_date * 1000));
+    if(thread.total_messages > 1) {
+      res += " (" + thread.total_messages + "/" +
+        formatDuration(new Date(thread.oldest_date * 1000), new Date(thread.newest_date * 1000)) + ")";
+    }
+    return res;
+}
+
 export function apiURL(suffix) {
-  if(process.env.NODE_ENV === "production") {
-    return "/" + suffix;
-  } else {
     return window.location.protocol + "//" + window.location.hostname + ":5000/" + suffix;
-  }
 }
 
 // https://stackoverflow.com/questions/10420352/converting-file-size-in-bytes-to-human-readable-string
@@ -130,5 +103,37 @@ export function formatFSz(size) {
   var i = Math.floor(Math.log(size) / Math.log(1024));
   return (size / Math.pow(1024, i)).toFixed(2) * 1 + ' ' + ['Bi', 'kiB', 'MiB', 'GiB', 'TiB'][i];
 };
+
+export function mkShortcut(keys, func, preventDefault = false) {
+  createShortcut(keys, (e) => { if(document.activeElement.tagName !== "INPUT") {
+    func();
+    if(preventDefault) e.preventDefault();
+  }}, { preventDefault: false });
+}
+
+// claude wrote this specifically to work with SolidJS createShortcut
+export function simulateKeyPress(key, ctrlKey = false, shiftKey = false, altKey = false) {
+  const event = new KeyboardEvent('keydown', {
+    key: key,
+    code: key.length === 1 ? `Key${key.toUpperCase()}` : key,
+    which: key.length === 1 ? key.charCodeAt(0) : 0,
+    keyCode: key.length === 1 ? key.charCodeAt(0) : 0,
+    bubbles: true,
+    cancelable: true,
+    ctrlKey: ctrlKey,
+    shiftKey: shiftKey,
+    altKey: altKey
+  });
+
+  // Override readonly properties
+  Object.defineProperties(event, {
+    key: { value: key },
+    code: { value: key.length === 1 ? `Key${key.toUpperCase()}` : key },
+    which: { value: key.length === 1 ? key.charCodeAt(0) : 0 },
+    keyCode: { value: key.length === 1 ? key.charCodeAt(0) : 0 }
+  });
+
+  document.dispatchEvent(event);
+}
 
 // vim: tabstop=2 shiftwidth=2 expandtab

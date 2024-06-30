@@ -654,6 +654,7 @@ def message_to_json(message):
                             found = True
                 if not found and 'gpg-keyserver' in current_app.config.custom:
                     current_app.logger.info("Key for " + fromAddr + " not found, attempting to download...")
+                    # TODO: handle case where server is unreachable
                     keys = gpg.search_keys(fromAddr, current_app.config.custom['gpg-keyserver'])
                     if(len(keys) > 0):
                         for key in keys:
