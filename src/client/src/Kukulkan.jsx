@@ -29,6 +29,12 @@ export function Kukulkan() {
         [activeThread, setActiveThread] = createSignal(0),
         [allTags] = createResource(fetchAllTags);
 
+  createEffect(() => {
+    activeThread();
+    if(document.getElementsByClassName("kukulkan-thread-active")[0])
+      document.getElementsByClassName("kukulkan-thread-active")[0].scrollIntoView({block: "nearest"});
+  });
+
   let opts = ["tag:unread", "tag:todo", "date:today"],
       qs = localStorage.getItem("queries");
   if(qs !== null) {
@@ -80,11 +86,11 @@ export function Kukulkan() {
   );
 
   mkShortcut(["t"],
-    () => document.getElementsByClassName("Mui-selected")[0].dispatchEvent(new CustomEvent('editTags'))
+    () => document.getElementsByClassName("kukulkan-thread-active")[0].dispatchEvent(new CustomEvent('editTags'))
   );
 
   mkShortcut(["Delete"],
-    () => document.getElementsByClassName("Mui-selected")[0].dispatchEvent(new CustomEvent('delete'))
+    () => document.getElementsByClassName("kukulkan-thread-active")[0].dispatchEvent(new CustomEvent('delete'))
   );
 
   return (
@@ -128,7 +134,7 @@ export function Kukulkan() {
               <Grid container width="95%" class="centered">
                 <For each={threads()}>
                   {(thread, index) => (
-                    <Grid item container padding={.3} class={index() === activeThread() ? "kukulkan-thread-selected" : "kukulkan-thread"}
+                    <Grid item container padding={.3} class={index() === activeThread() ? "kukulkan-thread-active" : "kukulkan-thread"}
                       onClick={(e) => {
                         setActiveThread(index());
                         simulateKeyPress('Enter');
