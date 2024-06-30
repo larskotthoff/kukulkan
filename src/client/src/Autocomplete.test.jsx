@@ -83,3 +83,5 @@ test("allows to complete (mouse)", async () => {
   await user.click(completions[1]);
   expect(input.getAttribute("value")).toEqual("foobar");
 })
+
+// vim: tabstop=2 shiftwidth=2 expandtab
