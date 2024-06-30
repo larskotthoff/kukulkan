@@ -61,12 +61,17 @@ export function Autocomplete(props) {
       <TextField
         ref={inputRef}
         value={props.text() || ""}
-        onChange={ (ev, value) => props.setText(value) }
+        onChange={(ev, value) => props.setText(value)}
         onKeyDown={handleKeydown}
         autoComplete="off"
+        data-testid="autocomplete-textinput"
         {...props}
       />
-      <Popover open={isVisible()} anchorEl={inputRef} anchorOrigin={{
+      <Popover
+        open={isVisible()}
+        data-testid="autocomplete-popover"
+        anchorEl={inputRef}
+        anchorOrigin={{
           vertical: "bottom",
           horizontal: "left",
         }}>
