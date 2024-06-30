@@ -11,14 +11,18 @@ export function Autocomplete(props) {
 
   let inputRef = undefined;
 
-  const compareToText = (a) => {
-    const pos = a.search(new RegExp(props.text(), "i"));
-    return pos === 0 ? pos : Math.abs(a.length - props.text().length);
+  const compareToText = (a, b) => {
+    const re = new RegExp(props.text(), "i"),
+          posa = a.search(re),
+          posb = b.search(re);
+    return posa === posb ?
+          Math.abs(a.length - props.text().length) - Math.abs(b.length - props.text().length) :
+          posa - posb;
   };
 
   const filteredOptions = () => {
     return props.getOptions(props.text()).filter(el => el.includes(props.text()))
-            .sort((a, b) => compareToText(a) - compareToText(b));
+            .sort(compareToText);
   };
 
   const isVisible = createMemo(() => {
@@ -64,12 +68,10 @@ export function Autocomplete(props) {
         onChange={(ev, value) => props.setText(value)}
         onKeyDown={handleKeydown}
         autoComplete="off"
-        data-testid="autocomplete-textinput"
         {...props}
       />
       <Popover
         open={isVisible()}
-        data-testid="autocomplete-popover"
         anchorEl={inputRef}
         anchorOrigin={{
           vertical: "bottom",
