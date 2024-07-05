@@ -35,17 +35,18 @@ from lxml_html_clean import Cleaner
 from tempfile import mkstemp
 from gnupg import GPG
 
-cleaner = Cleaner()
-cleaner.javascript = True
-cleaner.scripts = True
-cleaner.page_structure = True
-cleaner.meta = True
-cleaner.embedded = True
-cleaner.frames = True
-cleaner.forms = True
-cleaner.remove_unknown_tags = True
-cleaner.safe_attrs_only = False
-cleaner.add_nofollow = True
+cleaner = Cleaner(javascript=True,
+                  scripts=True,
+                  page_structure=True,
+                  processing_instructions=True,
+                  style=True,
+                  meta=True,
+                  embedded=True,
+                  frames=True,
+                  forms=True,
+                  remove_unknown_tags=True,
+                  safe_attrs_only=False,
+                  add_nofollow=True)
 
 
 def get_db():
