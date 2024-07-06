@@ -21,8 +21,7 @@ export function Autocomplete(props) {
   };
 
   const filteredOptions = () => {
-    return props.getOptions(props.text()).filter(el => el.includes(props.text()))
-            .sort(compareToText);
+    return props.getOptions(props.text()).sort(compareToText);
   };
 
   const isVisible = createMemo(() => {

@@ -32,12 +32,16 @@ body {
     background-color: #f0f4c3;
 }
 
-.kukulkan-thread-active {
-    background-color: rgba(85, 139, 47, 0.3);
+.kukulkan-thread.active {
+    background-color: rgba(85, 139, 47, 0.4) !important;
 }
 
-.kukulkan-thread-active:hover {
-    background-color: rgba(85, 139, 47, 0.4) !important;
+.kukulkan-thread.active:hover {
+    background-color: rgba(85, 139, 47, 0.5) !important;
+}
+
+.kukulkan-thread.selected {
+    background-color: rgba(85, 139, 47, 0.3);
 }
 
 .kukulkan-thread:hover {

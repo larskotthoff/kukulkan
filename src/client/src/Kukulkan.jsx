@@ -1,6 +1,6 @@
 import { createEffect, createSignal, createResource, ErrorBoundary, For, Show, Suspense, onMount, onCleanup } from "solid-js";
 
-import { Alert, Box, Chip, Divider, Grid, LinearProgress, Stack, Typography } from "@suid/material";
+import { Alert, Box, Chip, Divider, Grid, LinearProgress, Modal, Stack, Typography } from "@suid/material";
 import { Autocomplete } from "./Autocomplete.jsx";
 import { ThemeProvider } from "@suid/material/styles";
 import Create from "@suid/icons-material/Create";
@@ -25,14 +25,23 @@ export function Kukulkan() {
   const [searchParams] = createSignal(window.location.search),
         [query] = createSignal((new URLSearchParams(searchParams())).get("query")),
         [searchText, setSearchText] = createSignal(query()),
-        [threads] = createResource(query, fetchThreads),
+        [threads, { mutate }] = createResource(query, fetchThreads),
         [activeThread, setActiveThread] = createSignal(0),
+        [selectedThreads, setSelectedThreads] = createSignal([]),
+        [editingTags, setEditingTags] = createSignal(null),
+        [showEditingTagModal, setShowEditingTagModal] = createSignal(false),
         [allTags] = createResource(fetchAllTags);
 
   createEffect(() => {
     activeThread();
-    if(document.getElementsByClassName("kukulkan-thread-active")[0])
-      document.getElementsByClassName("kukulkan-thread-active")[0].scrollIntoView({block: "nearest"});
+    if(document.getElementsByClassName("kukulkan-thread active")[0])
+      document.getElementsByClassName("kukulkan-thread active")[0].scrollIntoView({block: "nearest"});
+  });
+
+  createEffect(() => {
+    if(showEditingTagModal()) {
+      document.getElementsByClassName("kukulkan-editTagBox")[0].getElementsByTagName("input")[0].focus();
+    }
   });
 
   let opts = ["tag:unread", "tag:todo", "date:today"],
@@ -76,6 +85,18 @@ export function Kukulkan() {
     () => { if(threads()[activeThread()]) window.open('/thread?id=' + threads()[activeThread()].thread_id, '_blank') }
   );
 
+  mkShortcut(["m"],
+    () => {
+      let curSelThreads = selectedThreads(),
+          idx = curSelThreads.indexOf(activeThread());
+      if(idx === -1) {
+        setSelectedThreads([...curSelThreads, activeThread()]);
+      } else {
+        setSelectedThreads(curSelThreads.filter((item, index) => index !== idx));
+      }
+    }
+  );
+
   mkShortcut(["c"],
     () => window.open('/write', '_blank')
   );
@@ -86,11 +107,12 @@ export function Kukulkan() {
   );
 
   mkShortcut(["t"],
-    () => document.getElementsByClassName("kukulkan-thread-active")[0].dispatchEvent(new CustomEvent('editTags'))
+    () => setShowEditingTagModal(!showEditingTagModal()),
+    true
   );
 
   mkShortcut(["Delete"],
-    () => document.getElementsByClassName("kukulkan-thread-active")[0].dispatchEvent(new CustomEvent('delete'))
+    () => document.getElementsByClassName("kukulkan-thread active")[0].dispatchEvent(new CustomEvent('delete'))
   );
 
   return (
@@ -116,7 +138,7 @@ export function Kukulkan() {
                     last = pts.pop();
                 if(pts.length > 0 && pts[pts.length - 1].endsWith("tag") && last.length > 0) {
                   // autocomplete possible tag
-                  return allTags().filter((t) => t.startsWith(last)).map((t) => pts.join(':') + ":" + t );
+                  return allTags().filter((t) => t.startsWith(last)).map((t) => [...pts, t].join(':'));
                 } else {
                   return opts;
                 }
@@ -128,13 +150,17 @@ export function Kukulkan() {
           </a>
         </Stack>
         <Suspense fallback={<LinearProgress/>}>
-          <ErrorBoundary fallback={<Alert severity="error">Error querying backend: {threads.error.message}</Alert>}>
+          <ErrorBoundary fallback={threads.error && <Alert severity="error">Error querying backend: {threads.error.message}</Alert>}>
             <Show when={threads()}>
               <Typography align="right">{threads().length}  threads.</Typography>
               <Grid container width="95%" class="centered">
                 <For each={threads()}>
                   {(thread, index) => (
-                    <Grid item container padding={.3} class={index() === activeThread() ? "kukulkan-thread-active" : "kukulkan-thread"}
+                    <Grid item container padding={.3} class={{
+                        'kukulkan-thread': true,
+                        'active': index() === activeThread(),
+                        'selected': selectedThreads().indexOf(index()) !== -1
+                      }}
                       onClick={(e) => {
                         setActiveThread(index());
                         simulateKeyPress('Enter');
@@ -168,6 +194,58 @@ export function Kukulkan() {
                   )}
                 </For>
               </Grid>
+              <Modal open={showEditingTagModal()} onClose={() => { setShowEditingTagModal(false); setEditingTags(""); }} BackdropProps={{timeout: 0}}>
+                <Autocomplete
+                  class="kukulkan-editTagBox"
+                  name="editTags"
+                  variant="outlined"
+                  fullWidth
+                  margin="normal"
+                  text={editingTags}
+                  setText={setEditingTags}
+                  getOptions={(text) => {
+                    // claude helped with this
+                    let pts = text.match(/([^ -]+)|[ -]/g),
+                        last = pts.pop();
+                    if(last.length > 0)
+                      return allTags().filter((t) => t.startsWith(last)).map((t) => [...pts, t].join(''));
+                    else
+                      return [];
+                  }}
+                  onKeyPress={(ev) => {
+                    if(ev.code === 'Enter') {
+                      setShowEditingTagModal(false);
+                      let affectedThreads = selectedThreads();
+                      if(affectedThreads.length === 0) affectedThreads = [activeThread()];
+                      affectedThreads.forEach(affectedThread => {
+                        let thread = JSON.parse(JSON.stringify(threads()[affectedThread]));
+                        editingTags().split(' ').forEach(edit => {
+                          let tags = thread.tags;
+                          if(edit[0] === '-') {
+                            fetch(apiURL(`api/tag/remove/thread/${thread.thread_id}/${edit.substring(1)}`))
+                              .catch((error) => console.warn(error));
+                              tags = tags.filter(t => t !== edit.substring(1));
+                          } else {
+                            fetch(apiURL(`api/tag/add/thread/${thread.thread_id}/${edit}`))
+                              .catch((error) => console.warn(error));
+                              tags.push(edit);
+                          }
+                          threads()[affectedThread].tags = tags;
+                        });
+                        mutate([...threads().slice(0, affectedThread), thread, ...threads().slice(affectedThread + 1)]);
+                      });
+                    }
+                  }}
+                  sx={{
+                    position: "absolute",
+                    top: "4%",
+                    left: "10%",
+                    width: "80%",
+                    bgcolor: "#fff8e1",
+                    border: "2px solid black",
+                  }}
+                />
+              </Modal>
             </Show>
           </ErrorBoundary>
         </Suspense>
