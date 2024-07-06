@@ -25,13 +25,22 @@ test("shows completions", async () => {
   expect(input.getAttribute("value")).toEqual("f");
   expect(screen.getByText("foo")).toBeInTheDocument();
   expect(screen.getByText("foobar")).toBeInTheDocument();
+})
+
+test("allows to filter completions", async () => {
+  const [testText, setTestText] = createSignal("");
+  render(() => <Autocomplete text={testText} setText={setTestText} getOptions={(text) => ["foo", "foobar"].filter(t => t.startsWith(text))}/>);
+  const input = document.querySelector("input");
+  await user.type(input, "f");
+  expect(input.getAttribute("value")).toEqual("f");
+  expect(screen.getByText("foo")).toBeInTheDocument();
+  expect(screen.getByText("foobar")).toBeInTheDocument();
 
   await user.type(input, "oob");
   expect(input.getAttribute("value")).toEqual("foob");
   expect(screen.queryByText("foo")).not.toBeInTheDocument();
   expect(screen.getByText("foobar")).toBeInTheDocument();
 })
-
 
 test("completions sorted correctly", async () => {
   const [testText, setTestText] = createSignal("");
