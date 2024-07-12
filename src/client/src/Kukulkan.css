@@ -40,6 +40,10 @@ body {
     background-color: rgba(85, 139, 47, 0.5) !important;
 }
 
+.kukulkan-thread.selected.active {
+    background-color: rgba(85, 139, 47, 0.45) !important;
+}
+
 .kukulkan-thread.selected {
     background-color: rgba(85, 139, 47, 0.3);
 }
