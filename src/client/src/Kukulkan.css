@@ -47,3 +47,12 @@ body {
 .kukulkan-thread:hover {
     background-color: rgba(85, 139, 47, 0.2) !important;
 }
+
+#kukulkan-editTagBox {
+    position: fixed !important;
+    top: 10%;
+    left: 10%;
+    width: 80% !important;
+    background-color: #fff8e1;
+    border: 2px solid black;
+}

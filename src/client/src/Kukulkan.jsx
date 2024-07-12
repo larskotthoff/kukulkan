@@ -40,7 +40,7 @@ export function Kukulkan() {
 
   createEffect(() => {
     if(showEditingTagModal()) {
-      document.getElementsByClassName("kukulkan-editTagBox")[0].getElementsByTagName("input")[0].focus();
+      document.getElementById("kukulkan-editTagBox").focus();
     }
   });
 
@@ -102,7 +102,7 @@ export function Kukulkan() {
   );
 
   mkShortcut(["/"],
-    () => document.getElementsByClassName("kukulkan-queryBox")[0].getElementsByTagName("input")[0].focus(),
+    () => document.getElementById("kukulkan-queryBox").focus(),
     true
   );
 
@@ -126,7 +126,7 @@ export function Kukulkan() {
             window.location.search = sp.toString();
           }}>
             <Autocomplete
-              class="kukulkan-queryBox"
+              id="kukulkan-queryBox"
               name="search"
               variant="outlined"
               fullWidth
@@ -140,7 +140,7 @@ export function Kukulkan() {
                   // autocomplete possible tag
                   return allTags().filter((t) => t.startsWith(last)).map((t) => [...pts, t].join(':'));
                 } else {
-                  return opts;
+                  return opts.filter((t) => t.includes(text));
                 }
               }}
             />
@@ -196,7 +196,7 @@ export function Kukulkan() {
               </Grid>
               <Modal open={showEditingTagModal()} onClose={() => { setShowEditingTagModal(false); setEditingTags(""); }} BackdropProps={{timeout: 0}}>
                 <Autocomplete
-                  class="kukulkan-editTagBox"
+                  id="kukulkan-editTagBox"
                   name="editTags"
                   variant="outlined"
                   fullWidth
@@ -235,14 +235,6 @@ export function Kukulkan() {
                         mutate([...threads().slice(0, affectedThread), thread, ...threads().slice(affectedThread + 1)]);
                       });
                     }
-                  }}
-                  sx={{
-                    position: "absolute",
-                    top: "4%",
-                    left: "10%",
-                    width: "80%",
-                    bgcolor: "#fff8e1",
-                    border: "2px solid black",
                   }}
                 />
               </Modal>
