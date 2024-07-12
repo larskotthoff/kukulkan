@@ -13,14 +13,14 @@ test("exports Autocomplete", () => {
 });
 
 test("sets text", () => {
-  render(() => <Autocomplete text={() => "foo"}/>);
-  expect(document.querySelector("input").getAttribute("value")).toEqual("foo");
+  const { container } = render(() => <Autocomplete text={() => "foo"}/>);
+  expect(container.querySelector("input").getAttribute("value")).toEqual("foo");
 })
 
 test("shows completions", async () => {
   const [testText, setTestText] = createSignal("");
-  render(() => <Autocomplete text={testText} setText={setTestText} getOptions={() => ["foo", "foobar"]}/>);
-  const input = document.querySelector("input");
+  const { container } = render(() => <Autocomplete text={testText} setText={setTestText} getOptions={() => ["foo", "foobar"]}/>);
+  const input = container.querySelector("input");
   await user.type(input, "f");
   expect(input.getAttribute("value")).toEqual("f");
   expect(screen.getByText("foo")).toBeInTheDocument();
@@ -29,8 +29,8 @@ test("shows completions", async () => {
 
 test("allows to filter completions", async () => {
   const [testText, setTestText] = createSignal("");
-  render(() => <Autocomplete text={testText} setText={setTestText} getOptions={(text) => ["foo", "foobar"].filter(t => t.startsWith(text))}/>);
-  const input = document.querySelector("input");
+  const { container } = render(() => <Autocomplete text={testText} setText={setTestText} getOptions={(text) => ["foo", "foobar"].filter(t => t.startsWith(text))}/>);
+  const input = container.querySelector("input");
   await user.type(input, "f");
   expect(input.getAttribute("value")).toEqual("f");
   expect(screen.getByText("foo")).toBeInTheDocument();
@@ -44,8 +44,8 @@ test("allows to filter completions", async () => {
 
 test("completions sorted correctly", async () => {
   const [testText, setTestText] = createSignal("");
-  render(() => <Autocomplete text={testText} setText={setTestText} getOptions={() => ["afoo", "foo"]}/>);
-  const input = document.querySelector("input");
+  const { container } = render(() => <Autocomplete text={testText} setText={setTestText} getOptions={() => ["afoo", "foo"]}/>);
+  const input = container.querySelector("input");
   await user.type(input, "f");
   expect(input.getAttribute("value")).toEqual("f");
 
@@ -56,8 +56,8 @@ test("completions sorted correctly", async () => {
 
 test("allows to complete (keyboard)", async () => {
   const [testText, setTestText] = createSignal("");
-  render(() => <Autocomplete text={testText} setText={setTestText} getOptions={() => ["foo", "foobar"]}/>);
-  const input = document.querySelector("input");
+  const { container } = render(() => <Autocomplete text={testText} setText={setTestText} getOptions={() => ["foo", "foobar"]}/>);
+  const input = container.querySelector("input");
   await user.type(input, "f");
   expect(input.getAttribute("value")).toEqual("f");
   await user.type(input, "{enter}");
@@ -73,8 +73,8 @@ test("allows to complete (keyboard)", async () => {
 
 test("allows to complete (mouse)", async () => {
   const [testText, setTestText] = createSignal("");
-  render(() => <Autocomplete text={testText} setText={setTestText} getOptions={() => ["foo", "foobar"]}/>);
-  const input = document.querySelector("input");
+  const { container } = render(() => <Autocomplete text={testText} setText={setTestText} getOptions={() => ["foo", "foobar"]}/>);
+  const input = container.querySelector("input");
   await user.type(input, "f");
   expect(input.getAttribute("value")).toEqual("f");
 

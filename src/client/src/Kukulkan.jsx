@@ -1,14 +1,13 @@
 import { createEffect, createSignal, createResource, ErrorBoundary, For, Show, Suspense, onMount, onCleanup } from "solid-js";
 
-import { Alert, Box, Chip, Divider, Grid, LinearProgress, Modal, Stack, Typography } from "@suid/material";
+import { Alert, Box, Divider, Grid, LinearProgress, Modal, Stack, Typography } from "@suid/material";
 import { Autocomplete } from "./Autocomplete.jsx";
+import { ColorChip } from "./ColorChip.jsx";
 import { ThemeProvider } from "@suid/material/styles";
 import Create from "@suid/icons-material/Create";
 
-import invert from 'invert-color';
-
 import "./Kukulkan.css";
-import { apiURL, getColor, mkShortcut, renderDateNum, simulateKeyPress, theme } from "./utils.js";
+import { apiURL, mkShortcut, renderDateNum, simulateKeyPress, theme } from "./utils.js";
 
 async function fetchThreads(query) {
   if(query === null) return [];
@@ -181,7 +180,7 @@ export function Kukulkan() {
         <Suspense fallback={<LinearProgress/>}>
           <ErrorBoundary fallback={threads.error && <Alert severity="error">Error querying backend: {threads.error.message}</Alert>}>
             <Show when={threads()}>
-              <Typography align="right">{threads().length}  threads.</Typography>
+              <Typography align="right">{threads().length} threads.</Typography>
               <Grid container width="95%" class="centered">
                 <For each={threads()}>
                   {(thread, index) => (
@@ -200,11 +199,7 @@ export function Kukulkan() {
                       </Grid>
                       <Grid item xs={12} sm={10} lg={4}>
                         <For each={thread.authors.split(/\s*[,|]\s*/)}>
-                          {(author) => (
-                            <Chip label={author}
-                              class="chip"
-                              style={{ 'background-color': `${getColor(author)}`, color: `${invert(getColor(author), true)}` }}/>
-                          )}
+                          {(author) => <ColorChip value={author}/>}
                         </For>
                       </Grid>
                       <Grid item xs={12} sm={9} lg={5}>
@@ -212,11 +207,7 @@ export function Kukulkan() {
                       </Grid>
                       <Grid item xs={12} sm={2}>
                         <For each={thread.tags.sort()}>
-                          {(tag) => (
-                            <Chip label={tag}
-                              class="chip"
-                              style={{ 'background-color': `${getColor(tag)}`, color: `${invert(getColor(tag), true)}` }}/>
-                          )}
+                          {(tag) => <ColorChip value={tag}/>}
                         </For>
                       </Grid>
                     </Grid>
