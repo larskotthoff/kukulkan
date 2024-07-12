@@ -59,6 +59,28 @@ export function Kukulkan() {
   
   document.title = query() || "Kukulkan";
 
+  const makeTagEdits = () => {
+    let affectedThreads = selectedThreads();
+    if(affectedThreads.length === 0) affectedThreads = [activeThread()];
+    affectedThreads.forEach(affectedThread => {
+      let thread = JSON.parse(JSON.stringify(threads()[affectedThread]));
+      editingTags().split(' ').forEach(edit => {
+        let tags = thread.tags;
+        if(edit[0] === '-') {
+          fetch(apiURL(`api/tag/remove/thread/${thread.thread_id}/${edit.substring(1)}`))
+            .catch((error) => console.warn(error));
+            thread.tags = tags.filter(t => t !== edit.substring(1));
+        } else {
+          fetch(apiURL(`api/tag/add/thread/${thread.thread_id}/${edit}`))
+            .catch((error) => console.warn(error));
+            tags.push(edit);
+        }
+        threads()[affectedThread].tags = tags;
+      });
+      mutate([...threads().slice(0, affectedThread), thread, ...threads().slice(affectedThread + 1)]);
+    });
+  };
+
   mkShortcut(["Home"],
     () => setActiveThread(0)
   );
@@ -114,7 +136,12 @@ export function Kukulkan() {
   );
 
   mkShortcut(["Delete"],
-    () => document.getElementsByClassName("kukulkan-thread active")[0].dispatchEvent(new CustomEvent('delete'))
+    () => {
+      setEditingTags("deleted -unread");
+      makeTagEdits();
+      setEditingTags("");
+    },
+    true
   );
 
   return (
@@ -217,25 +244,8 @@ export function Kukulkan() {
                   onKeyPress={(ev) => {
                     if(ev.code === 'Enter') {
                       setShowEditingTagModal(false);
-                      let affectedThreads = selectedThreads();
-                      if(affectedThreads.length === 0) affectedThreads = [activeThread()];
-                      affectedThreads.forEach(affectedThread => {
-                        let thread = JSON.parse(JSON.stringify(threads()[affectedThread]));
-                        editingTags().split(' ').forEach(edit => {
-                          let tags = thread.tags;
-                          if(edit[0] === '-') {
-                            fetch(apiURL(`api/tag/remove/thread/${thread.thread_id}/${edit.substring(1)}`))
-                              .catch((error) => console.warn(error));
-                              tags = tags.filter(t => t !== edit.substring(1));
-                          } else {
-                            fetch(apiURL(`api/tag/add/thread/${thread.thread_id}/${edit}`))
-                              .catch((error) => console.warn(error));
-                              tags.push(edit);
-                          }
-                          threads()[affectedThread].tags = tags;
-                        });
-                        mutate([...threads().slice(0, affectedThread), thread, ...threads().slice(affectedThread + 1)]);
-                      });
+                      // sad, but true
+                      makeTagEdits();
                     }
                   }}
                 />
