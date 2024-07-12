@@ -85,17 +85,19 @@ export function Kukulkan() {
     () => { if(threads()[activeThread()]) window.open('/thread?id=' + threads()[activeThread()].thread_id, '_blank') }
   );
 
-  mkShortcut(["m"],
-    () => {
+  document.addEventListener('keydown', function(event) {
+    if(event.code === 'Space') {
+      event.preventDefault();
+
       let curSelThreads = selectedThreads(),
-          idx = curSelThreads.indexOf(activeThread());
+        idx = curSelThreads.indexOf(activeThread());
       if(idx === -1) {
         setSelectedThreads([...curSelThreads, activeThread()]);
       } else {
         setSelectedThreads(curSelThreads.filter((item, index) => index !== idx));
       }
     }
-  );
+  });
 
   mkShortcut(["c"],
     () => window.open('/write', '_blank')
