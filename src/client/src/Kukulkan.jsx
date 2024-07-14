@@ -3,11 +3,10 @@ import { createEffect, createSignal, createResource, ErrorBoundary, For, Show, S
 import { Alert, Box, Divider, Grid, LinearProgress, Modal, Stack, Typography } from "@suid/material";
 import { Autocomplete } from "./Autocomplete.jsx";
 import { ColorChip } from "./ColorChip.jsx";
-import { ThemeProvider } from "@suid/material/styles";
 import Create from "@suid/icons-material/Create";
 
 import "./Kukulkan.css";
-import { apiURL, mkShortcut, renderDateNum, simulateKeyPress, theme } from "./utils.js";
+import { apiURL, mkShortcut, renderDateNum, simulateKeyPress } from "./utils.js";
 
 async function fetchThreads(query) {
   if(query === null) return [];
@@ -145,106 +144,104 @@ export function Kukulkan() {
 
   return (
     <>
-      <ThemeProvider theme={theme}>
-        <Stack direction="row" class="centered" width="80%" spacing={2}>
-          <Box component="form" width="100%" noValidate onSubmit={(e) => {
-            e.preventDefault();
-            const sp = new URLSearchParams(searchParams());
-            sp.set("query", searchText());
-            window.location.search = sp.toString();
-          }}>
-            <Autocomplete
-              id="kukulkan-queryBox"
-              name="search"
-              variant="outlined"
-              fullWidth
-              margin="normal"
-              text={searchText}
-              setText={setSearchText}
-              getOptions={(text) => {
-                let pts = text.split(':'),
-                    last = pts.pop();
-                if(pts.length > 0 && pts[pts.length - 1].endsWith("tag") && last.length > 0) {
-                  // autocomplete possible tag
-                  return allTags().filter((t) => t.startsWith(last)).map((t) => [...pts, t].join(':'));
-                } else {
-                  return opts.filter((t) => t.includes(text));
-                }
-              }}
-            />
-          </Box>
-          <a href="/write" target="_blank" rel="noreferrer">
-            <Create/>
-          </a>
-        </Stack>
-        <Suspense fallback={<LinearProgress/>}>
-          <ErrorBoundary fallback={threads.error && <Alert severity="error">Error querying backend: {threads.error.message}</Alert>}>
-            <Show when={threads()}>
-              <Typography align="right">{threads().length} threads.</Typography>
-              <Grid container width="95%" class="centered">
-                <For each={threads()}>
-                  {(thread, index) => (
-                    <Grid item container padding={.3} class={{
-                        'kukulkan-thread': true,
-                        'active': index() === activeThread(),
-                        'selected': selectedThreads().indexOf(index()) !== -1
-                      }}
-                      onClick={(e) => {
-                        setActiveThread(index());
-                        simulateKeyPress('Enter');
-                      }}
-                    >
-                      <Grid item xs={12} sm={2} lg={1}>
-                        {renderDateNum(thread)}
-                      </Grid>
-                      <Grid item xs={12} sm={10} lg={4}>
-                        <For each={thread.authors.split(/\s*[,|]\s*/)}>
-                          {(author) => <ColorChip value={author}/>}
-                        </For>
-                      </Grid>
-                      <Grid item xs={12} sm={9} lg={5}>
-                        {thread.subject}
-                      </Grid>
-                      <Grid item xs={12} sm={2}>
-                        <For each={thread.tags.sort()}>
-                          {(tag) => <ColorChip value={tag}/>}
-                        </For>
-                      </Grid>
+      <Stack direction="row" class="centered" width="80%" spacing={2}>
+        <Box component="form" width="100%" noValidate onSubmit={(e) => {
+          e.preventDefault();
+          const sp = new URLSearchParams(searchParams());
+          sp.set("query", searchText());
+          window.location.search = sp.toString();
+        }}>
+          <Autocomplete
+            id="kukulkan-queryBox"
+            name="search"
+            variant="outlined"
+            fullWidth
+            margin="normal"
+            text={searchText}
+            setText={setSearchText}
+            getOptions={(text) => {
+              let pts = text.split(':'),
+                  last = pts.pop();
+              if(pts.length > 0 && pts[pts.length - 1].endsWith("tag") && last.length > 0) {
+                // autocomplete possible tag
+                return allTags().filter((t) => t.startsWith(last)).map((t) => [...pts, t].join(':'));
+              } else {
+                return opts.filter((t) => t.includes(text));
+              }
+            }}
+          />
+        </Box>
+        <a href="/write" target="_blank" rel="noreferrer">
+          <Create/>
+        </a>
+      </Stack>
+      <Suspense fallback={<LinearProgress/>}>
+        <ErrorBoundary fallback={threads.error && <Alert severity="error">Error querying backend: {threads.error.message}</Alert>}>
+          <Show when={threads()}>
+            <Typography align="right">{threads().length} threads.</Typography>
+            <Grid container width="95%" class="centered">
+              <For each={threads()}>
+                {(thread, index) => (
+                  <Grid item container padding={.3} class={{
+                      'kukulkan-thread': true,
+                      'active': index() === activeThread(),
+                      'selected': selectedThreads().indexOf(index()) !== -1
+                    }}
+                    onClick={(e) => {
+                      setActiveThread(index());
+                      simulateKeyPress('Enter');
+                    }}
+                  >
+                    <Grid item xs={12} sm={2} lg={1}>
+                      {renderDateNum(thread)}
                     </Grid>
-                  )}
-                </For>
-              </Grid>
-              <Modal open={showEditingTagModal()} onClose={() => { setShowEditingTagModal(false); setEditingTags(""); }} BackdropProps={{timeout: 0}}>
-                <Autocomplete
-                  id="kukulkan-editTagBox"
-                  name="editTags"
-                  variant="outlined"
-                  fullWidth
-                  margin="normal"
-                  text={editingTags}
-                  setText={setEditingTags}
-                  getOptions={(text) => {
-                    // claude helped with this
-                    let pts = text.match(/([^ -]+)|[ -]/g),
-                        last = pts.pop();
-                    if(last.length > 0)
-                      return allTags().filter((t) => t.startsWith(last)).map((t) => [...pts, t].join(''));
-                    else
-                      return [];
-                  }}
-                  onKeyPress={(ev) => {
-                    if(ev.code === 'Enter') {
-                      setShowEditingTagModal(false);
-                      // sad, but true
-                      makeTagEdits();
-                    }
-                  }}
-                />
-              </Modal>
-            </Show>
-          </ErrorBoundary>
-        </Suspense>
-      </ThemeProvider>
+                    <Grid item xs={12} sm={10} lg={4}>
+                      <For each={thread.authors.split(/\s*[,|]\s*/)}>
+                        {(author) => <ColorChip value={author}/>}
+                      </For>
+                    </Grid>
+                    <Grid item xs={12} sm={9} lg={5}>
+                      {thread.subject}
+                    </Grid>
+                    <Grid item xs={12} sm={2}>
+                      <For each={thread.tags.sort()}>
+                        {(tag) => <ColorChip value={tag}/>}
+                      </For>
+                    </Grid>
+                  </Grid>
+                )}
+              </For>
+            </Grid>
+            <Modal open={showEditingTagModal()} onClose={() => { setShowEditingTagModal(false); setEditingTags(""); }} BackdropProps={{timeout: 0}}>
+              <Autocomplete
+                id="kukulkan-editTagBox"
+                name="editTags"
+                variant="outlined"
+                fullWidth
+                margin="normal"
+                text={editingTags}
+                setText={setEditingTags}
+                getOptions={(text) => {
+                  // claude helped with this
+                  let pts = text.match(/([^ -]+)|[ -]/g),
+                      last = pts.pop();
+                  if(last.length > 0)
+                    return allTags().filter((t) => t.startsWith(last)).map((t) => [...pts, t].join(''));
+                  else
+                    return [];
+                }}
+                onKeyPress={(ev) => {
+                  if(ev.code === 'Enter') {
+                    setShowEditingTagModal(false);
+                    // sad, but true
+                    makeTagEdits();
+                  }
+                }}
+              />
+            </Modal>
+          </Show>
+        </ErrorBoundary>
+      </Suspense>
     </>
   );
 }

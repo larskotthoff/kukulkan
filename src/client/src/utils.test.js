@@ -2,10 +2,6 @@ import { test, expect } from "vitest"
 
 import * as utils from "./utils.js";
 
-test("exports theme", () => {
-  expect(utils.theme).not.toBe(undefined);
-});
-
 test("getColor", () => {
   expect(utils.getColor("foo")).toBe("#c70579");
   expect(utils.getColor("bar")).toBe("#c705aa");
