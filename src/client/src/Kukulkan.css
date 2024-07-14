@@ -28,6 +28,10 @@ body {
     white-space: break-spaces !important;
 }
 
+.autocomplete-popup {
+    background-color: #f0f4c3;
+}
+
 .paper {
     background-color: #f0f4c3;
 }
@@ -59,4 +63,8 @@ body {
     width: 80% !important;
     background-color: #fff8e1;
     border: 2px solid black;
+}
+
+#kukulkan-editTagBox + .MuiOutlinedInput-notchedOutline {
+    border: none;
 }

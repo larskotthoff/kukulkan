@@ -11,11 +11,17 @@ import { apiURL, mkShortcut, renderDateNum, simulateKeyPress } from "./utils.js"
 async function fetchThreads(query) {
   if(query === null) return [];
   const response = await fetch(apiURL(`api/query/${query}`));
+  if(!response.ok) {
+    throw new Error(`${response.status}: ${response.statusText}`);
+  }
   return await response.json();
 }
 
 async function fetchAllTags() {
   const response = await fetch(apiURL(`api/tags/`));
+  if(!response.ok) {
+    throw new Error(`${response.status}: ${response.statusText}`);
+  }
   return await response.json();
 }
 
@@ -66,17 +72,26 @@ export function Kukulkan() {
         let tags = thread.tags;
         if(edit[0] === '-') {
           fetch(apiURL(`api/tag/remove/thread/${thread.thread_id}/${edit.substring(1)}`))
-            .catch((error) => console.warn(error));
-            thread.tags = tags.filter(t => t !== edit.substring(1));
+            .then((response) => {
+              if(!response.ok) {
+                throw new Error(`${response.status}: ${response.statusText}`);
+              }
+              thread.tags = tags.filter(t => t !== edit.substring(1));
+            });
         } else {
           fetch(apiURL(`api/tag/add/thread/${thread.thread_id}/${edit}`))
-            .catch((error) => console.warn(error));
-            tags.push(edit);
+            .then((response) => {
+              if(!response.ok) {
+                throw new Error(`${response.status}: ${response.statusText}`);
+              }
+              tags.push(edit);
+            });
         }
         threads()[affectedThread].tags = tags;
       });
       mutate([...threads().slice(0, affectedThread), thread, ...threads().slice(affectedThread + 1)]);
     });
+    setEditingTags("");
   };
 
   mkShortcut(["Home"],
@@ -144,6 +159,7 @@ export function Kukulkan() {
 
   return (
     <>
+    <ErrorBoundary fallback={(error) => <Alert severity="error">Error querying backend: {error}</Alert>}>
       <Stack direction="row" class="centered" width="80%" spacing={2}>
         <Box component="form" width="100%" noValidate onSubmit={(e) => {
           e.preventDefault();
@@ -176,72 +192,71 @@ export function Kukulkan() {
         </a>
       </Stack>
       <Suspense fallback={<LinearProgress/>}>
-        <ErrorBoundary fallback={threads.error && <Alert severity="error">Error querying backend: {threads.error.message}</Alert>}>
-          <Show when={threads()}>
-            <Typography align="right">{threads().length} threads.</Typography>
-            <Grid container width="95%" class="centered">
-              <For each={threads()}>
-                {(thread, index) => (
-                  <Grid item container padding={.3} class={{
-                      'kukulkan-thread': true,
-                      'active': index() === activeThread(),
-                      'selected': selectedThreads().indexOf(index()) !== -1
-                    }}
-                    onClick={(e) => {
-                      setActiveThread(index());
-                      simulateKeyPress('Enter');
-                    }}
-                  >
-                    <Grid item xs={12} sm={2} lg={1}>
-                      {renderDateNum(thread)}
-                    </Grid>
-                    <Grid item xs={12} sm={10} lg={4}>
-                      <For each={thread.authors.split(/\s*[,|]\s*/)}>
-                        {(author) => <ColorChip value={author}/>}
-                      </For>
-                    </Grid>
-                    <Grid item xs={12} sm={9} lg={5}>
-                      {thread.subject}
-                    </Grid>
-                    <Grid item xs={12} sm={2}>
-                      <For each={thread.tags.sort()}>
-                        {(tag) => <ColorChip value={tag}/>}
-                      </For>
-                    </Grid>
+        <Show when={threads()}>
+          <Typography align="right">{threads().length} threads.</Typography>
+          <Grid container width="95%" class="centered">
+            <For each={threads()}>
+              {(thread, index) => (
+                <Grid item container padding={.3} class={{
+                    'kukulkan-thread': true,
+                    'active': index() === activeThread(),
+                    'selected': selectedThreads().indexOf(index()) !== -1
+                  }}
+                  onClick={(e) => {
+                    setActiveThread(index());
+                    simulateKeyPress('Enter');
+                  }}
+                >
+                  <Grid item xs={12} sm={2} lg={1}>
+                    {renderDateNum(thread)}
                   </Grid>
-                )}
-              </For>
-            </Grid>
-            <Modal open={showEditingTagModal()} onClose={() => { setShowEditingTagModal(false); setEditingTags(""); }} BackdropProps={{timeout: 0}}>
-              <Autocomplete
-                id="kukulkan-editTagBox"
-                name="editTags"
-                variant="outlined"
-                fullWidth
-                margin="normal"
-                text={editingTags}
-                setText={setEditingTags}
-                getOptions={(text) => {
-                  // claude helped with this
-                  let pts = text.match(/([^ -]+)|[ -]/g),
-                      last = pts.pop();
-                  if(last.length > 0)
-                    return allTags().filter((t) => t.startsWith(last)).map((t) => [...pts, t].join(''));
-                  else
-                    return [];
-                }}
-                onKeyPress={(ev) => {
-                  if(ev.code === 'Enter') {
-                    setShowEditingTagModal(false);
-                    // sad, but true
-                    makeTagEdits();
-                  }
-                }}
-              />
-            </Modal>
-          </Show>
-        </ErrorBoundary>
+                  <Grid item xs={12} sm={10} lg={4}>
+                    <For each={thread.authors.split(/\s*[,|]\s*/)}>
+                      {(author) => <ColorChip value={author}/>}
+                    </For>
+                  </Grid>
+                  <Grid item xs={12} sm={9} lg={5}>
+                    {thread.subject}
+                  </Grid>
+                  <Grid item xs={12} sm={2}>
+                    <For each={thread.tags.sort()}>
+                      {(tag) => <ColorChip value={tag}/>}
+                    </For>
+                  </Grid>
+                </Grid>
+              )}
+            </For>
+          </Grid>
+          <Modal open={showEditingTagModal()} onClose={() => { setShowEditingTagModal(false); setEditingTags(""); }} BackdropProps={{timeout: 0}}>
+            <Autocomplete
+              id="kukulkan-editTagBox"
+              name="editTags"
+              variant="outlined"
+              fullWidth
+              margin="normal"
+              text={editingTags}
+              setText={setEditingTags}
+              getOptions={(text) => {
+                // claude helped with this
+                let pts = text.match(/([^ -]+)|[ -]/g),
+                    last = pts.pop();
+                if(last.length > 0)
+                  return allTags().filter((t) => t.startsWith(last)).map((t) => [...pts, t].join(''));
+                else
+                  return [];
+              }}
+              onKeyPress={(ev) => {
+                if(ev.code === 'Enter') {
+                  setShowEditingTagModal(false);
+                  // sad, but true
+                  makeTagEdits();
+                }
+              }}
+            />
+          </Modal>
+        </Show>
       </Suspense>
+    </ErrorBoundary>
     </>
   );
 }

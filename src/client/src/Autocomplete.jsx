@@ -1,23 +1,22 @@
 // based on https://stackoverflow.com/questions/75751029/how-to-create-an-autocomplete-element
 
 import { render } from 'solid-js/web';
-import { createEffect, createMemo, createSignal, Index, on } from 'solid-js';
+import { createEffect, createMemo, createSignal, Index, on, onMount } from 'solid-js';
 
 import { List, ListItemButton, ListItemText, Popover, TextField } from "@suid/material";
 
 export function Autocomplete(props) {
-  const [showPopover, setShowPopover] = createSignal(false);
-  const [selected, setSelected] = createSignal(0);
-
-  let inputRef = undefined;
+  const [showPopover, setShowPopover] = createSignal(false),
+        [selected, setSelected] = createSignal(0),
+        [inputRef, setInputRef] = createSignal();
 
   const compareToText = (a, b) => {
     const re = new RegExp(props.text(), "i"),
           posa = a.search(re),
           posb = b.search(re);
     return posa === posb ?
-          Math.abs(a.length - props.text().length) - Math.abs(b.length - props.text().length) :
-          posa - posb;
+           Math.abs(a.length - props.text().length) - Math.abs(b.length - props.text().length) :
+           posa - posb;
   };
 
   const filteredOptions = () => {
@@ -26,8 +25,8 @@ export function Autocomplete(props) {
 
   const isVisible = createMemo(() => {
     return showPopover() &&
-          props.text() &&
-          filteredOptions().length > 0;
+           props.text() &&
+           filteredOptions().length > 0;
   });
 
   createEffect(on(props.text, () => {
@@ -43,7 +42,7 @@ export function Autocomplete(props) {
       select();
     } else if (event.code === 'Escape') {
       setShowPopover(false);
-      inputRef.querySelector("input").blur();
+      inputRef().blur();
     } else {
       setShowPopover(true);
     }
@@ -55,15 +54,15 @@ export function Autocomplete(props) {
       if(i) setSelected(i);
       props.setText(filteredOptions()[selected()]);
       setShowPopover(false);
-      inputRef.querySelector("input").focus();
-      inputRef.querySelector("input").setSelectionRange(props.text().length, props.text().length);
+      inputRef().focus();
+      inputRef().setSelectionRange(props.text().length, props.text().length);
     }
   };
 
   return (
-    <div style="width: 100%">
+    <>
       <TextField
-        ref={inputRef}
+        inputRef={setInputRef}
         value={props.text() || ""}
         onChange={(ev, value) => props.setText(value)}
         onKeyDown={handleKeydown}
@@ -72,12 +71,12 @@ export function Autocomplete(props) {
       />
       <Popover
         open={isVisible()}
-        anchorEl={inputRef}
+        anchorEl={inputRef()}
         anchorOrigin={{
           vertical: "bottom",
           horizontal: "left",
         }}>
-        <List>
+        <List class="autocomplete-popup">
           <Index each={filteredOptions()}>
             {(item, i) =>
               <ListItemButton
@@ -89,7 +88,7 @@ export function Autocomplete(props) {
           </Index>
         </List>
       </Popover>
-    </div>
+    </>
   );
 };
 
