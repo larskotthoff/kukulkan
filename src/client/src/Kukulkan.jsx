@@ -77,6 +77,7 @@ export function Kukulkan() {
                 throw new Error(`${response.status}: ${response.statusText}`);
               }
               thread.tags = tags.filter(t => t !== edit.substring(1));
+              mutate([...threads().slice(0, affectedThread), thread, ...threads().slice(affectedThread + 1)]);
             });
         } else {
           fetch(apiURL(`api/tag/add/thread/${thread.thread_id}/${edit}`))
@@ -85,11 +86,10 @@ export function Kukulkan() {
                 throw new Error(`${response.status}: ${response.statusText}`);
               }
               tags.push(edit);
+              mutate([...threads().slice(0, affectedThread), thread, ...threads().slice(affectedThread + 1)]);
             });
         }
-        threads()[affectedThread].tags = tags;
       });
-      mutate([...threads().slice(0, affectedThread), thread, ...threads().slice(affectedThread + 1)]);
     });
     setEditingTags("");
   };
