@@ -144,7 +144,7 @@ test("opens thread on enter and click", async () => {
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
 
   await vi.waitFor(() => {
-    expect(screen.getByText("1 threads.")).toBeInTheDocument();
+    expect(screen.getByText("1 thread.")).toBeInTheDocument();
   });
 
   await userEvent.type(document.body, "{enter}");
@@ -226,7 +226,7 @@ test("delete thread works", async () => {
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
 
   await vi.waitFor(() => {
-    expect(screen.getByText("1 threads.")).toBeInTheDocument();
+    expect(screen.getByText("1 thread.")).toBeInTheDocument();
   });
 
   await userEvent.type(document.body, "{delete}");
@@ -255,7 +255,7 @@ test("tag edits work", async () => {
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
 
   await vi.waitFor(() => {
-    expect(screen.getByText("1 threads.")).toBeInTheDocument();
+    expect(screen.getByText("1 thread.")).toBeInTheDocument();
   });
 
   await userEvent.type(document.body, "t");

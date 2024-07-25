@@ -73,7 +73,7 @@ export function formatDuration(from, to) {
   }
 }
 
-export function renderDateNum(thread) {
+export function renderDateNumThread(thread) {
     let res = formatDate(new Date(thread.newest_date * 1000));
     if(thread.total_messages > 1) {
       res += " (" + thread.total_messages + "/" +

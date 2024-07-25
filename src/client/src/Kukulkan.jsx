@@ -1,4 +1,4 @@
-import { createEffect, createSignal, createResource, ErrorBoundary, For, Show, Suspense, onMount, onCleanup } from "solid-js";
+import { createEffect, createSignal, createResource, ErrorBoundary, For, Show, onMount, onCleanup } from "solid-js";
 
 import { Alert, Box, Divider, Grid, LinearProgress, Modal, Stack, Typography } from "@suid/material";
 import { Autocomplete } from "./Autocomplete.jsx";
@@ -6,7 +6,7 @@ import { ColorChip } from "./ColorChip.jsx";
 import Create from "@suid/icons-material/Create";
 
 import "./Kukulkan.css";
-import { apiURL, mkShortcut, renderDateNum, simulateKeyPress } from "./utils.js";
+import { apiURL, mkShortcut, renderDateNumThread, simulateKeyPress } from "./utils.js";
 
 async function fetchThreads(query) {
   if(query === null) return [];
@@ -29,7 +29,7 @@ export function Kukulkan() {
   const [searchParams] = createSignal(window.location.search),
         [query] = createSignal((new URLSearchParams(searchParams())).get("query")),
         [searchText, setSearchText] = createSignal(query()),
-        [threads, { mutate }] = createResource(query, fetchThreads),
+        [threads, { mutate }] = createResource(query, fetchThreads, { initialValue: [] }),
         [activeThread, setActiveThread] = createSignal(0),
         [selectedThreads, setSelectedThreads] = createSignal([]),
         [editingTags, setEditingTags] = createSignal(null),
@@ -162,7 +162,7 @@ export function Kukulkan() {
         }}
       >
         <Grid item xs={12} sm={2} lg={1}>
-          {renderDateNum(props.thread)}
+          {renderDateNumThread(props.thread)}
         </Grid>
         <Grid item xs={12} sm={10} lg={4}>
           <For each={props.thread.authors.split(/\s*[,|]\s*/)}>
@@ -253,17 +253,15 @@ export function Kukulkan() {
           <Create/>
         </a>
       </Stack>
-      <Suspense fallback={<LinearProgress/>}>
-        <Show when={allTags.state === "ready" && threads.state === "ready"}>
-          <Typography align="right">{threads().length} threads.</Typography>
-          <Grid container width="95%" class="centered">
-            <For each={threads()}>
-              {(thread, index) => <Thread thread={thread} index={index}/>}
-            </For>
-          </Grid>
-          <TagEditingModal/>
-        </Show>
-      </Suspense>
+      <Show when={allTags.state === "ready" && threads.state === "ready"} fallback={<LinearProgress/>}>
+        <Typography align="right">{threads().length} thread{threads().length === 1 ? "" : "s"}.</Typography>
+        <Grid container width="95%" class="centered">
+          <For each={threads()}>
+            {(thread, index) => <Thread thread={thread} index={index}/>}
+          </For>
+        </Grid>
+        <TagEditingModal/>
+      </Show>
     </ErrorBoundary>
     </>
   );
