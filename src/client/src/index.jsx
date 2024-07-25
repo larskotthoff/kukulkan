@@ -1,11 +1,12 @@
 import { render } from "solid-js/web";
 import { Route, Router } from "@solidjs/router";
 
-import { Kukulkan } from "./Kukulkan";
+import { Kukulkan } from "./Kukulkan.jsx";
+import { IndexThread } from "./IndexThread.jsx";
 
 render(() => (
     <Router>
-      <Route path="/" component={Kukulkan}/>
+      <Route path="/" component={() => <Kukulkan Thread={IndexThread}/>}/>
     </Router>
   ), document.getElementById("root"));
 

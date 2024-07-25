@@ -8,7 +8,7 @@ import Create from "@suid/icons-material/Create";
 import "./Kukulkan.css";
 import { apiURL, mkShortcut, renderDateNumThread, simulateKeyPress } from "./utils.js";
 
-async function fetchThreads(query) {
+export async function fetchThreads(query) {
   if(query === null) return [];
   const response = await fetch(apiURL(`api/query/${query}`));
   if(!response.ok) {
@@ -17,7 +17,7 @@ async function fetchThreads(query) {
   return await response.json();
 }
 
-async function fetchAllTags() {
+export async function fetchAllTags() {
   const response = await fetch(apiURL(`api/tags/`));
   if(!response.ok) {
     throw new Error(`${response.status}: ${response.statusText}`);
@@ -25,7 +25,7 @@ async function fetchAllTags() {
   return await response.json();
 }
 
-export function Kukulkan() {
+export const Kukulkan = (props) => {
   const [searchParams] = createSignal(window.location.search),
         [query] = createSignal((new URLSearchParams(searchParams())).get("query")),
         [searchText, setSearchText] = createSignal(query()),
@@ -149,38 +149,6 @@ export function Kukulkan() {
     true
   );
 
-  const Thread = (props) => {
-    return (
-      <Grid item container padding={.3} class={{
-          'kukulkan-thread': true,
-          'active': props.index() === activeThread(),
-          'selected': selectedThreads().indexOf(props.index()) !== -1
-        }}
-        onClick={(e) => {
-          setActiveThread(props.index());
-          simulateKeyPress('Enter');
-        }}
-      >
-        <Grid item xs={12} sm={2} lg={1}>
-          {renderDateNumThread(props.thread)}
-        </Grid>
-        <Grid item xs={12} sm={10} lg={4}>
-          <For each={props.thread.authors.split(/\s*[,|]\s*/)}>
-            {(author) => <ColorChip value={author}/>}
-          </For>
-        </Grid>
-        <Grid item xs={12} sm={9} lg={5}>
-          {props.thread.subject}
-        </Grid>
-        <Grid item xs={12} sm={2}>
-          <For each={props.thread.tags.sort()}>
-            {(tag) => <ColorChip value={tag}/>}
-          </For>
-        </Grid>
-      </Grid>
-    );
-  };
-
   const QueryBox = () => {
     return (
       <Box component="form" width="100%" noValidate onSubmit={(e) => {
@@ -247,17 +215,20 @@ export function Kukulkan() {
   return (
     <>
     <ErrorBoundary fallback={(error) => <Alert severity="error">Error querying backend: {error}</Alert>}>
-      <Stack direction="row" class="centered" width="80%" spacing={2}>
-        <QueryBox/>
-        <a href="/write" target="_blank" rel="noreferrer">
-          <Create/>
-        </a>
-      </Stack>
+      <Show when={props.todo === undefined}>
+        <Stack direction="row" class="centered" width="80%" spacing={2}>
+          <QueryBox/>
+          <a href="/write" target="_blank" rel="noreferrer">
+            <Create/>
+          </a>
+        </Stack>
+      </Show>
       <Show when={allTags.state === "ready" && threads.state === "ready"} fallback={<LinearProgress/>}>
         <Typography align="right">{threads().length} thread{threads().length === 1 ? "" : "s"}.</Typography>
         <Grid container width="95%" class="centered">
           <For each={threads()}>
-            {(thread, index) => <Thread thread={thread} index={index}/>}
+            {(thread, index) => <props.Thread thread={thread} index={index} activeThread={activeThread}
+                                  setActiveThread={setActiveThread} selectedThreads={selectedThreads}/>}
           </For>
         </Grid>
         <TagEditingModal/>
@@ -265,6 +236,6 @@ export function Kukulkan() {
     </ErrorBoundary>
     </>
   );
-}
+};
 
 // vim: tabstop=2 shiftwidth=2 expandtab

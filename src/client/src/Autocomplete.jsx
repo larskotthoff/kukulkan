@@ -5,7 +5,7 @@ import { createEffect, createMemo, createSignal, Index, on, onMount } from 'soli
 
 import { List, ListItemButton, ListItemText, Popover, TextField } from "@suid/material";
 
-export function Autocomplete(props) {
+export const Autocomplete = (props) => {
   const [showPopover, setShowPopover] = createSignal(false),
         [selected, setSelected] = createSignal(0),
         [inputRef, setInputRef] = createSignal();
