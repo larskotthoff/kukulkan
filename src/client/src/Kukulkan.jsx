@@ -67,29 +67,21 @@ export function Kukulkan() {
     let affectedThreads = selectedThreads();
     if(affectedThreads.length === 0) affectedThreads = [activeThread()];
     affectedThreads.forEach(affectedThread => {
-      let thread = JSON.parse(JSON.stringify(threads()[affectedThread]));
-      editingTags().split(' ').forEach(edit => {
-        let tags = thread.tags;
-        if(edit[0] === '-') {
-          fetch(apiURL(`api/tag/remove/thread/${thread.thread_id}/${edit.substring(1)}`))
-            .then((response) => {
-              if(!response.ok) {
-                throw new Error(`${response.status}: ${response.statusText}`);
-              }
-              thread.tags = tags.filter(t => t !== edit.substring(1));
-              mutate([...threads().slice(0, affectedThread), thread, ...threads().slice(affectedThread + 1)]);
-            });
-        } else {
-          fetch(apiURL(`api/tag/add/thread/${thread.thread_id}/${edit}`))
-            .then((response) => {
-              if(!response.ok) {
-                throw new Error(`${response.status}: ${response.statusText}`);
-              }
-              tags.push(edit);
-              mutate([...threads().slice(0, affectedThread), thread, ...threads().slice(affectedThread + 1)]);
-            });
+      let thread = JSON.parse(JSON.stringify(threads()[affectedThread])),
+          urls = editingTags().split(' ').map((edit) => {
+            if(edit[0] === '-') {
+              thread.tags = thread.tags.filter(t => t !== edit.substring(1));
+              return apiURL(`api/tag/remove/thread/${thread.thread_id}/${edit.substring(1)}`);
+            } else {
+              if(thread.tags.indexOf(edit) === -1) thread.tags.push(edit);
+              return apiURL(`api/tag/add/thread/${thread.thread_id}/${edit}`);
+            }
+          });
+      Promise.all(urls.map((u) => fetch(u).then((response) => {
+        if(!response.ok) {
+          throw new Error(`${response.status}: ${response.statusText}`);
         }
-      });
+      }))).then(() => mutate([...threads().slice(0, affectedThread), thread, ...threads().slice(affectedThread + 1)]));
     });
     setEditingTags("");
   };
@@ -121,7 +113,7 @@ export function Kukulkan() {
   );
 
   document.addEventListener('keydown', function(event) {
-    if(event.code === 'Space') {
+    if(document.activeElement.tagName.toLowerCase() !== 'input' && event.code === 'Space') {
       event.preventDefault();
 
       let curSelThreads = selectedThreads(),
@@ -262,7 +254,7 @@ export function Kukulkan() {
         </a>
       </Stack>
       <Suspense fallback={<LinearProgress/>}>
-        <Show when={threads()}>
+        <Show when={allTags.state === "ready" && threads.state === "ready"}>
           <Typography align="right">{threads().length} threads.</Typography>
           <Grid container width="95%" class="centered">
             <For each={threads()}>
