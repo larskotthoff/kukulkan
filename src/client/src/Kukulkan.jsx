@@ -11,23 +11,19 @@ import { apiURL, mkShortcut, renderDateNumThread, simulateKeyPress } from "./uti
 export async function fetchThreads(query) {
   if(query === null) return [];
   const response = await fetch(apiURL(`api/query/${query}`));
-  if(!response.ok) {
-    throw new Error(`${response.status}: ${response.statusText}`);
-  }
+  if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
   return await response.json();
 }
 
 export async function fetchAllTags() {
   const response = await fetch(apiURL(`api/tags/`));
-  if(!response.ok) {
-    throw new Error(`${response.status}: ${response.statusText}`);
-  }
+  if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
   return await response.json();
 }
 
 export const Kukulkan = (props) => {
   const [searchParams] = createSignal(window.location.search),
-        [query] = createSignal((new URLSearchParams(searchParams())).get("query")),
+        [query] = createSignal(props.todo ? "tag:todo" : (new URLSearchParams(searchParams())).get("query")),
         [searchText, setSearchText] = createSignal(query()),
         [threads, { mutate }] = createResource(query, fetchThreads, { initialValue: [] }),
         [activeThread, setActiveThread] = createSignal(0),
@@ -38,14 +34,11 @@ export const Kukulkan = (props) => {
 
   createEffect(() => {
     activeThread();
-    if(document.getElementsByClassName("kukulkan-thread active")[0])
-      document.getElementsByClassName("kukulkan-thread active")[0].scrollIntoView({block: "nearest"});
+    document.getElementsByClassName("kukulkan-thread active")[0]?.scrollIntoView({block: "nearest"});
   });
 
   createEffect(() => {
-    if(showEditingTagModal()) {
-      document.getElementById("kukulkan-editTagBox").focus();
-    }
+    if(showEditingTagModal()) document.getElementById("kukulkan-editTagBox").focus();
   });
 
   let opts = ["tag:unread", "tag:todo", "date:today"],
@@ -78,9 +71,7 @@ export const Kukulkan = (props) => {
             }
           });
       Promise.all(urls.map((u) => fetch(u).then((response) => {
-        if(!response.ok) {
-          throw new Error(`${response.status}: ${response.statusText}`);
-        }
+        if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
       }))).then(() => mutate([...threads().slice(0, affectedThread), thread, ...threads().slice(affectedThread + 1)]));
     });
     setEditingTags("");
@@ -131,7 +122,7 @@ export const Kukulkan = (props) => {
   );
 
   mkShortcut(["/"],
-    () => document.getElementById("kukulkan-queryBox").focus(),
+    () => document.getElementById("kukulkan-queryBox")?.focus(),
     true
   );
 
@@ -143,6 +134,22 @@ export const Kukulkan = (props) => {
   mkShortcut(["Delete"],
     () => {
       setEditingTags("deleted -unread");
+      makeTagEdits();
+      setEditingTags("");
+    },
+    true
+  );
+
+  mkShortcut(["d"],
+    () => {
+      let affectedThreads = selectedThreads(),
+          edits = "-todo";
+      if(affectedThreads.length === 0) affectedThreads = [activeThread()];
+      affectedThreads.forEach(affectedThread => {
+        let due = threads()[affectedThread].tags.find((tag) => tag.startsWith("due:"));
+        if(due) edits += " -" + due;
+      });
+      setEditingTags(edits);
       makeTagEdits();
       setEditingTags("");
     },
@@ -226,7 +233,7 @@ export const Kukulkan = (props) => {
       <Show when={allTags.state === "ready" && threads.state === "ready"} fallback={<LinearProgress/>}>
         <Typography align="right">{threads().length} thread{threads().length === 1 ? "" : "s"}.</Typography>
         <Grid container width="95%" class="centered">
-          <For each={threads()}>
+          <For each={threads().sort(props.sort)}>
             {(thread, index) => <props.Thread thread={thread} index={index} activeThread={activeThread}
                                   setActiveThread={setActiveThread} selectedThreads={selectedThreads}/>}
           </For>

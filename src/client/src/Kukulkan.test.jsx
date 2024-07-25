@@ -238,6 +238,37 @@ test("delete thread works", async () => {
   expect(screen.getByText("deleted")).toBeInTheDocument();
 });
 
+test("mark thread done works", async () => {
+  vi.stubGlobal('location', {
+    ...window.location,
+    search: '?query=foo'
+  });
+  global.fetch
+        .mockResolvedValueOnce({ ok: true, json: () => [
+            {thread_id: "foo", authors: "test", subject: "foobar", tags: ["todo", "due:1970-01-01"], total_messages: 1, newest_date: 1000, oldest_date: 100}
+        ]})
+        .mockResolvedValueOnce({ ok: true, json: () => ["foo", "foobar"] })
+        .mockResolvedValueOnce({ ok: true })
+        .mockResolvedValueOnce({ ok: true });
+  const { container } = render(() => <Kukulkan Thread={IndexThread}/>);
+  expect(global.fetch).toHaveBeenCalledTimes(2);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/query/foo");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("1 thread.")).toBeInTheDocument();
+  });
+  expect(screen.getByText("todo")).toBeInTheDocument();
+  expect(screen.getByText("due:1970-01-01")).toBeInTheDocument();
+
+  await userEvent.type(document.body, "d");
+  expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/remove/thread/foo/todo");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/remove/thread/foo/due:1970-01-01");
+  expect(screen.queryByText("todo")).not.toBeInTheDocument();
+  expect(screen.queryByText("due:1970-01-01")).not.toBeInTheDocument();
+});
+
 test("tag edits work", async () => {
   vi.stubGlobal('location', {
     ...window.location,

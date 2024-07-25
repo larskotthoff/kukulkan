@@ -57,19 +57,20 @@ export function formatDate(date) {
 }
 
 export function formatDuration(from, to) {
-  let diff = to - from;
+  const diff = to - from,
+        hour = 60 * 60 * 1000;
   if(diff < (91 * 60 * 1000)) {
     return (Math.round(diff / (60 * 1000))) + "分";
-  } if(diff < (48 * 60 * 60 * 1000)) {
-    return (Math.round(diff / (60 * 60 * 1000))) + "時";
-  } if(diff < (14 * 24 * 60 * 60 * 1000)) {
-    return (Math.round(diff / (24 * 60 * 60 * 1000))) + "日";
-  } if(diff < (12 * 7 * 24 * 60 * 60 * 1000)) {
-    return (Math.round(diff / (7 * 24 * 60 * 60 * 1000))) + "週";
-  } if(diff < (500 * 24 * 60 * 60 * 1000)) {
-    return (Math.round(diff / (30 * 24 * 60 * 60 * 1000))) + "月";
+  } else if(diff < (48 * hour)) {
+    return (Math.round(diff / hour)) + "時";
+  } else if(diff < (14 * 24 * hour)) {
+    return (Math.round(diff / (24 * hour))) + "日";
+  } else if(diff < (12 * 7 * 24 * hour)) {
+    return (Math.round(diff / (7 * 24 * hour))) + "週";
+  } else if(diff < (500 * 24 * hour)) {
+    return (Math.round(diff / (30 * 24 * hour))) + "月";
   } else {
-    return (Math.round(diff / (365.25 * 24 * 60 * 60 * 1000))) + "年";
+    return (Math.round(diff / (365.25 * 24 * hour))) + "年";
   }
 }
 

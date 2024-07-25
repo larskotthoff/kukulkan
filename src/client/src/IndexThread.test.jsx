@@ -9,8 +9,8 @@ afterEach(() => {
   cleanup();
 });
 
-const thread = {thread_id: "foo", authors: "fooAuthor, barAuthor", subject: "test", tags: ["fooTag", "barTag"],
-  total_messages: 2, newest_date: 1000, oldest_date: 100};
+const thread = {authors: "fooAuthor, barAuthor", subject: "test", tags:
+  ["fooTag", "barTag"], total_messages: 2, newest_date: 1000, oldest_date: 100};
 
 test("exports IndexThread", () => {
   expect(IndexThread).not.toBe(undefined);
