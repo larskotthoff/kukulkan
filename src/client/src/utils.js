@@ -125,4 +125,10 @@ export function simulateKeyPress(key, ctrlKey = false, shiftKey = false, altKey 
   document.dispatchEvent(event);
 }
 
+export async function fetchAllTags() {
+  const response = await fetch(apiURL(`api/tags/`));
+  if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
+  return await response.json();
+}
+
 // vim: tabstop=2 shiftwidth=2 expandtab

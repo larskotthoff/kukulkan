@@ -16,6 +16,11 @@ body {
     align-items: center;
 }
 
+.margin {
+    margin-top: 10px !important;
+    margin-bottom: 10px !important;
+}
+
 .chip {
     height: auto !important;
     border-radius: 5px !important;
@@ -23,17 +28,32 @@ body {
 
     font-family: Fira Mono, Roboto !important;
 }
+
 .chip span {
     padding: 3px;
     white-space: break-spaces !important;
+}
+
+.message-text {
+    white-space: pre-line;
+}
+
+.text-preview {
+    overflow: hidden;
+    max-height: 3lh;
+    text-overflow: ellipsis;
+    white-space-collapse: collapse;
 }
 
 .autocomplete-popup {
     background-color: #f0f4c3;
 }
 
-.paper {
-    background-color: #f0f4c3;
+.kukulkan-message {
+    background-color: #f0f4c3 !important;
+    padding: 8px;
+    margin: 8px;
+    width: min(80em, 80vw);
 }
 
 .kukulkan-thread.active {

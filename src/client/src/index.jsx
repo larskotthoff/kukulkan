@@ -5,10 +5,13 @@ import { Kukulkan } from "./Kukulkan.jsx";
 import { IndexThread } from "./IndexThread.jsx";
 import { TodoThread, sortThreadsByDueDate } from "./TodoThread.jsx";
 
+import { SingleMessage } from "./Message.jsx";
+
 render(() => (
     <Router>
       <Route path="/" component={() => <Kukulkan Thread={IndexThread}/>}/>
       <Route path="/todo" component={() => <Kukulkan Thread={TodoThread} todo={true} sort={sortThreadsByDueDate}/>}/>
+      <Route path="/message" component={SingleMessage}/>
     </Router>
   ), document.getElementById("root"));
 

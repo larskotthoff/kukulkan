@@ -1,22 +1,16 @@
-import { createEffect, createSignal, createResource, ErrorBoundary, For, Show, onMount, onCleanup } from "solid-js";
+import { createEffect, createSignal, createResource, ErrorBoundary, For, Show } from "solid-js";
 
-import { Alert, Box, Divider, Grid, LinearProgress, Modal, Stack, Typography } from "@suid/material";
+import { Alert, Box, Grid, LinearProgress, Modal, Stack, Typography } from "@suid/material";
 import { Autocomplete } from "./Autocomplete.jsx";
 import { ColorChip } from "./ColorChip.jsx";
 import Create from "@suid/icons-material/Create";
 
 import "./Kukulkan.css";
-import { apiURL, mkShortcut, renderDateNumThread, simulateKeyPress } from "./utils.js";
+import { apiURL, fetchAllTags, mkShortcut, renderDateNumThread, simulateKeyPress } from "./utils.js";
 
-export async function fetchThreads(query) {
+async function fetchThreads(query) {
   if(query === null) return [];
   const response = await fetch(apiURL(`api/query/${query}`));
-  if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
-  return await response.json();
-}
-
-export async function fetchAllTags() {
-  const response = await fetch(apiURL(`api/tags/`));
   if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
   return await response.json();
 }
@@ -122,7 +116,10 @@ export const Kukulkan = (props) => {
   );
 
   mkShortcut(["/"],
-    () => document.getElementById("kukulkan-queryBox")?.focus(),
+    () => {
+      document.getElementById("kukulkan-queryBox")?.focus();
+      document.getElementById("kukulkan-queryBox")?.select();
+    },
     true
   );
 
