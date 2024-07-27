@@ -23,8 +23,8 @@ test("exports Kukulkan", () => {
 
 test("renders components", () => {
   const { container } = render(() => <Kukulkan Thread={IndexThread}/>);
-  expect(container.querySelector("input")).not.toBe(undefined);
-  expect(container.querySelector("a[href='/write']")).not.toBe(undefined);
+  expect(container.querySelector("input")).not.toBe(null);
+  expect(container.querySelector("a[href='/write']")).not.toBe(null);
 });
 
 test("sets query and title based on URL", () => {

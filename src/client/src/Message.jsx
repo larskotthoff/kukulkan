@@ -26,7 +26,7 @@ async function fetchMessage(id) {
   return await response.json();
 }
 
-const separateQuotedNonQuoted = (text) => {
+export const separateQuotedNonQuoted = (text) => {
   let lines = text.split('\n'),
       lastLine = lines.length;
   for(let index = 1; index < lines.length; index++) {
@@ -273,7 +273,7 @@ export const Message = (passedProps) => {
 
         <Grid container justifyContent="flex-end">
           <Show when={msg.body["text/html"]}>
-            <Button variant="outlined" class="kukulkan-content" onClick={() => setHtml(!html())}>{html() ? "Text" : "HTML"}</Button>
+            <Button variant="outlined" class="kukulkan-content" title={html() ? "Text" : "HTML"} onClick={() => setHtml(!html())}>{html() ? "Text" : "HTML"}</Button>
           </Show>
         </Grid>
         <Show when={html()}>
