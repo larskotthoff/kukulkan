@@ -1,6 +1,6 @@
 import { createEffect, createSignal, createResource, ErrorBoundary, For, mergeProps, onMount, Show } from "solid-js";
 
-import { Alert, Box, Button, Divider, Grid, LinearProgress, Modal, Paper, Stack, Typography } from "@suid/material";
+import { Alert, Box, Button, Divider, Grid, LinearProgress, Modal, Paper, Stack } from "@suid/material";
 import { Autocomplete } from "./Autocomplete.jsx";
 import { ColorChip } from "./ColorChip.jsx";
 
@@ -305,13 +305,13 @@ export const Message = (passedProps) => {
             }
           }}>
           <Grid container direction="row" justifyContent="space-between" wrap="nowrap">
-            <Grid item><Typography>{formatAddrs(msg.from)}</Typography></Grid>
+            <Grid item>{formatAddrs(msg.from)}</Grid>
             {msg.attachments.filter((a) => a.filename !== "smime.p7s").map((attachment, index2) => (
               <Grid item key={index2} xs={saw} style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                 {handleAttachment(msg, attachment, index2, true)}
               </Grid>
             ))}
-            <Grid item><Typography>{formatDate(new Date(msg.date))}</Typography></Grid>
+            <Grid item>{formatDate(new Date(msg.date))}</Grid>
           </Grid>
           <Box class={{
               'message-text': true,

@@ -1,6 +1,6 @@
 import { createEffect, createSignal, createResource, ErrorBoundary, For, Show } from "solid-js";
 
-import { Alert, Box, Grid, LinearProgress, Modal, Stack, Typography } from "@suid/material";
+import { Alert, Box, Grid, LinearProgress, Modal, Stack } from "@suid/material";
 import { Autocomplete } from "./Autocomplete.jsx";
 import { ColorChip } from "./ColorChip.jsx";
 import Create from "@suid/icons-material/Create";
@@ -228,7 +228,7 @@ export const Kukulkan = (props) => {
         </Stack>
       </Show>
       <Show when={allTags.state === "ready" && threads.state === "ready"} fallback={<LinearProgress/>}>
-        <Typography align="right">{threads().length} thread{threads().length === 1 ? "" : "s"}.</Typography>
+        <div align="right">{threads().length} thread{threads().length === 1 ? "" : "s"}.</div>
         <Grid container width="95%" class="centered">
           <For each={threads().sort(props.sort)}>
             {(thread, index) => <props.Thread thread={thread} index={index} activeThread={activeThread}
