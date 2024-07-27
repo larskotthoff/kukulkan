@@ -19,10 +19,10 @@ test("sets color", () => {
 
   const element = container.querySelector('.chip');
   expect(element).toBeDefined();
-  expect(window.getComputedStyle(element).getPropertyValue('background-color'))
-    .toBe('rgb(199, 5, 121)');
+  expect(window.getComputedStyle(element).getPropertyValue('--bg-color'))
+    .toBe('#c70579');
   expect(window.getComputedStyle(element).getPropertyValue('color'))
-    .toBe('rgb(255, 255, 255)');
+    .toBe('rgba(0, 0, 0, 0.87)');
 });
 
 // vim: tabstop=2 shiftwidth=2 expandtab

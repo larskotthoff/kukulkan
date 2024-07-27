@@ -1,6 +1,6 @@
-import { createEffect, createSignal, createResource, ErrorBoundary, For, Show } from "solid-js";
+import { createEffect, createSignal, createResource, For, Show } from "solid-js";
 
-import { Alert, Box, Grid, LinearProgress, Modal, Stack } from "@suid/material";
+import { Box, Grid, LinearProgress, Modal, Stack } from "@suid/material";
 import { Autocomplete } from "./Autocomplete.jsx";
 import { ColorChip } from "./ColorChip.jsx";
 import Create from "@suid/icons-material/Create";
@@ -218,7 +218,6 @@ export const Kukulkan = (props) => {
 
   return (
     <>
-    <ErrorBoundary fallback={(error) => <Alert severity="error">Error querying backend: {error}</Alert>}>
       <Show when={props.todo === undefined}>
         <Stack direction="row" class="centered" width="80%" spacing={2}>
           <QueryBox/>
@@ -237,7 +236,6 @@ export const Kukulkan = (props) => {
         </Grid>
         <TagEditingModal/>
       </Show>
-    </ErrorBoundary>
     </>
   );
 };

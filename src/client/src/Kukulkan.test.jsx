@@ -83,17 +83,6 @@ test("fetches tags and provides completions", async () => {
   expect(screen.getByText("tag:foobar")).toBeInTheDocument();
 });
 
-test("shows error when fetch fails", async () => {
-  global.fetch.mockRejectedValue(new Error("foo"));
-  const { container } = render(() => <Kukulkan Thread={IndexThread}/>);
-  expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-  const input = container.querySelector("input");
-  await userEvent.type(input, "tag:f");
-
-  expect(container.querySelector(".MuiAlert-message").textContent).toBe("Error querying backend: Error: foo");
-});
-
 test("shows threads", async () => {
   vi.stubGlobal('location', {
     ...window.location,

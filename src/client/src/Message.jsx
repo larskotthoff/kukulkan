@@ -1,4 +1,4 @@
-import { createEffect, createSignal, createResource, ErrorBoundary, For, mergeProps, onMount, Show } from "solid-js";
+import { createEffect, createSignal, createResource, For, mergeProps, onMount, Show } from "solid-js";
 
 import { Alert, Box, Button, Divider, Grid, LinearProgress, Modal, Paper, Stack } from "@suid/material";
 import { Autocomplete } from "./Autocomplete.jsx";
@@ -344,11 +344,9 @@ export const SingleMessage = () => {
 
   return (
     <>
-    <ErrorBoundary fallback={(error) => <Alert severity="error">Error querying backend: {error}</Alert>}>
       <Show when={allTags.state === "ready" && message.state === "ready"} fallback={<LinearProgress/>}>
         <Message msg={message()} allTags={allTags()} active={true} open={true}/>
       </Show>
-    </ErrorBoundary>
     </>
   );
 };

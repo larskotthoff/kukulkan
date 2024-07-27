@@ -35,18 +35,6 @@ test("exports SingleMessage and Message", () => {
   expect(Message).not.toBe(undefined);
 });
 
-// this should work, but doesn't
-//test("shows error when fetch fails", async () => {
-//  global.fetch.mockRejectedValue(new Error("foo"));
-//  const { container } = render(() => <SingleMessage/>);
-//  expect(global.fetch).toHaveBeenCalledTimes(1);
-//  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-//
-//  await vi.waitFor(() => {
-//    expect(screen.getByText("Error querying backend: Error: foo")).toBeInTheDocument();
-//  });
-//});
-
 test("fetches and renders message", async () => {
   vi.stubGlobal('location', {
     ...window.location,
