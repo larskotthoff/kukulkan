@@ -2,7 +2,6 @@ import { createEffect, createSignal, createResource, For, Show } from "solid-js"
 
 import { Box, Grid, LinearProgress, Modal, Stack } from "@suid/material";
 import { Autocomplete } from "./Autocomplete.jsx";
-import { ColorChip } from "./ColorChip.jsx";
 import Create from "@suid/icons-material/Create";
 
 import "./Kukulkan.css";
