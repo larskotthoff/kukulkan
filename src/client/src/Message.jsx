@@ -1,6 +1,6 @@
 import { createEffect, createSignal, createResource, For, mergeProps, onMount, Show } from "solid-js";
 
-import { Alert, Box, Button, Divider, Grid, LinearProgress, Modal, Paper, Stack } from "@suid/material";
+import { Alert, Box, Button, Divider, Grid, InputAdornment, LinearProgress, Modal, Paper, Stack } from "@suid/material";
 import { Autocomplete } from "./Autocomplete.jsx";
 import { ColorChip } from "./ColorChip.jsx";
 
@@ -177,6 +177,8 @@ export const Message = (passedProps) => {
         [html, setHtml] = createSignal(false),
         [open, setOpen] = createSignal(props.open),
         msg = props.msg,
+        [tags, setTags] = createSignal(msg.tags.sort()),
+        [addTag, setAddTag] = createSignal(),
         {mainPart, quotedPart} = separateQuotedNonQuoted(msg.body["text/plain"]);
   let elementTop;
 
@@ -228,9 +230,38 @@ export const Message = (passedProps) => {
         <Show when={!props.print}>
           <Grid container justifyContent="space-between" direction="row" style={{ minHeight: "3.5em" }}>
             <Grid item xs={11}>
-              <For each={msg.tags.sort()}>
-                {(tag) => <ColorChip value={tag}/>}
-              </For>
+              <Autocomplete
+                class="kukulkan-editTagBox"
+                name="editTags"
+                variant="outlined"
+                fullWidth
+                margin="normal"
+                text={addTag}
+                setText={setAddTag}
+                InputProps={{
+                  startAdornment: <InputAdornment>
+                    <For each={tags()}>
+                      {(tag) => <ColorChip test-label={tag} value={tag} onClick={async () => {
+                        const response = await fetch(apiURL(`api/tag/remove/message/${msg.notmuch_id}/${tag}`));
+                        if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
+                        setTags(tags().filter((t) => t !== tag));
+                      }}/>}
+                    </For>
+                  </InputAdornment>
+                }}
+                getOptions={(text) => {
+                  return props.allTags.filter((t) => t.startsWith(text));
+                }}
+                onKeyPress={async (ev) => {
+                  if(ev.code === 'Enter') {
+                    const response = await fetch(apiURL(`api/tag/add/message/${msg.notmuch_id}/${addTag()}`));
+                    if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
+                    const tmp = tags().concat(addTag());
+                    setTags(tmp.sort());
+                    setAddTag(null);
+                  }
+                }}
+              />
             </Grid>
             <Grid item key="reply">
               <a href={apiURL(`api/write?action=reply&mode=all&id=${msg.notmuch_id}`)} target="_blank" rel="noreferrer">
@@ -273,7 +304,7 @@ export const Message = (passedProps) => {
 
         <Grid container justifyContent="flex-end">
           <Show when={msg.body["text/html"]}>
-            <Button variant="outlined" class="kukulkan-content" title={html() ? "Text" : "HTML"} onClick={() => setHtml(!html())}>{html() ? "Text" : "HTML"}</Button>
+            <Button variant="outlined" class="kukulkan-content" test-label={html() ? "Text" : "HTML"} onClick={() => setHtml(!html())}>{html() ? "Text" : "HTML"}</Button>
           </Show>
         </Grid>
         <Show when={html()}>

@@ -163,13 +163,40 @@ test("allows to switch between text and HTML", async () => {
   const { container } = render(() => <Message msg={msg}/>);
   expect(screen.getByText("Test mail")).toBeInTheDocument();
 
-  await userEvent.click(container.querySelector("button[title='HTML']"));
+  await userEvent.click(container.querySelector("button[test-label='HTML']"));
   expect(sd.screen.getByShadowText("Test mail in HTML")).toBeInTheDocument();
   expect(screen.queryByText("Test mail")).not.toBeInTheDocument();
 
-  await userEvent.click(container.querySelector("button[title='Text']"));
+  await userEvent.click(container.querySelector("button[test-label='Text']"));
   expect(sd.screen.queryByShadowText("Test mail in HTML")).not.toBeInTheDocument();
   expect(screen.getByText("Test mail")).toBeInTheDocument();
+});
+
+test("allows to edit tags", async () => {
+  const { container } = render(() => <Message msg={msg} allTags={["foo", "bar"]}/>);
+  expect(screen.getByText("foo")).toBeInTheDocument();
+  expect(screen.getByText("bar")).toBeInTheDocument();
+  expect(screen.getByText("test")).toBeInTheDocument();
+
+  global.fetch.mockResolvedValue({ ok: true });
+
+  // remove tag
+  await userEvent.click(container.querySelector(".MuiChip-root[test-label='test']"));
+  expect(global.fetch).toHaveBeenCalledTimes(1);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/remove/message/foo/test");
+  expect(screen.getByText("foo")).toBeInTheDocument();
+  expect(screen.getByText("bar")).toBeInTheDocument();
+  expect(screen.queryByText("test")).not.toBeInTheDocument();
+
+  // add tag
+  const input = container.querySelector("input");
+  await userEvent.type(input, "testTag{enter}");
+  expect(global.fetch).toHaveBeenCalledTimes(2);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/remove/message/foo/test");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/add/message/foo/testTag");
+  expect(screen.getByText("foo")).toBeInTheDocument();
+  expect(screen.getByText("bar")).toBeInTheDocument();
+  expect(screen.getByText("testTag")).toBeInTheDocument();
 });
 
 test("segments into main and quoted correctly", () => {
