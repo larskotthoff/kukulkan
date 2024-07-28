@@ -3,7 +3,7 @@ import { cleanup, render, screen } from "@solidjs/testing-library";
 import sd from "shadow-dom-testing-library";
 import userEvent from "@testing-library/user-event";
 
-import { SingleMessage, Message, separateQuotedNonQuoted } from "./Message.jsx";
+import { FetchedMessage, Message, separateQuotedNonQuoted } from "./Message.jsx";
 
 let msg;
 
@@ -33,8 +33,8 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-test("exports SingleMessage and Message", () => {
-  expect(SingleMessage).not.toBe(undefined);
+test("exports FetchedMessage and Message", () => {
+  expect(FetchedMessage).not.toBe(undefined);
   expect(Message).not.toBe(undefined);
 });
 
@@ -46,7 +46,7 @@ test("fetches and renders message", async () => {
   global.fetch
         .mockResolvedValueOnce({ ok: true, json: () => msg })
         .mockResolvedValueOnce({ ok: true, json: () => ["foo", "foobar"] });
-  render(() => <SingleMessage/>);
+  render(() => <FetchedMessage/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(2);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");

@@ -1,6 +1,6 @@
 import { createEffect, createSignal, createResource, For, mergeProps, onMount, Show } from "solid-js";
 
-import { Alert, Box, Button, Divider, Grid, InputAdornment, LinearProgress, Modal, Paper, Stack } from "@suid/material";
+import { Alert, Box, Button, Divider, Grid, InputAdornment, LinearProgress, Paper, Stack } from "@suid/material";
 import { Autocomplete } from "./Autocomplete.jsx";
 import { ColorChip } from "./ColorChip.jsx";
 
@@ -209,9 +209,16 @@ export const Message = (passedProps) => {
 
   const saw = 6 / msg.attachments.length;
 
-  if(open() && props.active && msg.tags.includes("unread")) {
-    setTimeout(() => removeTag("unread"), 500);
-  }
+  onMount(() => {
+    if(open() && props.active && msg.tags.includes("unread")) {
+      setTimeout(() => removeTag("unread"), 500);
+    }
+
+    if(props.active) {
+      elementTop?.scrollIntoView({block: "nearest"});
+      document.title = msg.subject || "Kukulkan";
+    }
+  });
 
   return (
     <Paper elevation={props.active ? 20 : 3}
@@ -239,7 +246,7 @@ export const Message = (passedProps) => {
         </Box>
 
         <Show when={!props.print}>
-          <Grid container justifyContent="space-between" direction="row" style={{ minHeight: "3.5em" }}>
+          <Grid container justifyContent="space-between" direction="row" style={{ minHeight: "3.5em" }} class="centered">
             <Grid item xs={11}>
               <Autocomplete
                 class="kukulkan-editTagBox"
@@ -369,16 +376,11 @@ export const Message = (passedProps) => {
   );
 };
 
-export const SingleMessage = () => {
+export const FetchedMessage = () => {
   const [searchParams] = createSignal(window.location.search),
         [messageId] = createSignal((new URLSearchParams(searchParams())).get("id")),
         [message] = createResource(messageId, fetchMessage),
         [allTags] = createResource(fetchAllTags);
-
-  createEffect(() => {
-    message();
-    document.title = message()?.subject || "Kukulkan";
-  });
 
   return (
     <>

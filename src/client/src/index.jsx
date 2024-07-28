@@ -7,15 +7,16 @@ import { Alert } from "@suid/material";
 import { Kukulkan } from "./Kukulkan.jsx";
 import { IndexThread } from "./IndexThread.jsx";
 import { TodoThread, sortThreadsByDueDate } from "./TodoThread.jsx";
-
-import { SingleMessage } from "./Message.jsx";
+import { Thread } from "./Thread.jsx";
+import { FetchedMessage } from "./Message.jsx";
 
 render(() => (
   <ErrorBoundary fallback={(error) => <Alert severity="error">Error querying backend: {error}</Alert>}>
     <Router>
       <Route path="/" component={() => <Kukulkan Thread={IndexThread}/>}/>
       <Route path="/todo" component={() => <Kukulkan Thread={TodoThread} todo={true} sort={sortThreadsByDueDate}/>}/>
-      <Route path="/message" component={SingleMessage}/>
+      <Route path="/thread" component={Thread}/>
+      <Route path="/message" component={FetchedMessage}/>
     </Router>
   </ErrorBoundary>
   ), document.getElementById("root"));
