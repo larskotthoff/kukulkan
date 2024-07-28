@@ -9,7 +9,7 @@ import { apiURL, fetchAllTags, mkShortcut, renderDateNumThread, simulateKeyPress
 
 async function fetchThreads(query) {
   if(query === null) return [];
-  const response = await fetch(apiURL(`api/query/${query}`));
+  const response = await fetch(apiURL(`api/query/${encodeURIComponent(query)}`));
   if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
   return await response.json();
 }
@@ -57,10 +57,10 @@ export const Kukulkan = (props) => {
           urls = editingTags().split(' ').map((edit) => {
             if(edit[0] === '-') {
               thread.tags = thread.tags.filter(t => t !== edit.substring(1));
-              return apiURL(`api/tag/remove/thread/${thread.thread_id}/${edit.substring(1)}`);
+              return apiURL(`api/tag/remove/thread/${encodeURIComponent(thread.thread_id)}/${encodeURIComponent(edit.substring(1))}`);
             } else {
               if(thread.tags.indexOf(edit) === -1) thread.tags.push(edit);
-              return apiURL(`api/tag/add/thread/${thread.thread_id}/${edit}`);
+              return apiURL(`api/tag/add/thread/${encodeURIComponent(thread.thread_id)}/${encodeURIComponent(edit)}`);
             }
           });
       Promise.all(urls.map((u) => fetch(u).then((response) => {
@@ -93,7 +93,7 @@ export const Kukulkan = (props) => {
   );
 
   mkShortcut(["Enter"],
-    () => { if(threads()[activeThread()]) window.open('/thread?id=' + threads()[activeThread()].thread_id, '_blank') }
+    () => { if(threads()[activeThread()]) window.open(`/thread?id=${encodeURIComponent(threads()[activeThread()].thread_id)}`, '_blank') }
   );
 
   document.addEventListener('keydown', function(event) {

@@ -18,7 +18,7 @@ beforeEach(() => {
     subject: "Test.",
     date: "Thu, 01 Jan 1970 00:00:00 -0000",
     tags: [ "foo", "bar", "test" ],
-    notmuch_id: "foo",
+    notmuch_id: "fo@o",
     attachments: [],
     body: {
       "text/html": "Test mail in HTML",
@@ -77,10 +77,10 @@ test("renders message components", () => {
   expect(screen.getByText("bar")).toBeInTheDocument();
   expect(screen.getByText("test")).toBeInTheDocument();
 
-  expect(container.querySelector("a[href='http://localhost:5000/api/write?action=reply&mode=all&id=foo']")).not.toBe(null);
-  expect(container.querySelector("a[href='http://localhost:5000/api/write?action=forward&id=foo']")).not.toBe(null);
-  expect(container.querySelector("a[href='http://localhost:5000/api/message?id=foo']")).not.toBe(null);
-  expect(container.querySelector("a[href='http://localhost:5000/api/auth_message/foo']")).not.toBe(null);
+  expect(container.querySelector("a[href='http://localhost:5000/api/write?action=reply&mode=all&id=fo%40o']")).not.toBe(null);
+  expect(container.querySelector("a[href='http://localhost:5000/api/write?action=forward&id=fo%40o']")).not.toBe(null);
+  expect(container.querySelector("a[href='http://localhost:5000/api/message?id=fo%40o']")).not.toBe(null);
+  expect(container.querySelector("a[href='http://localhost:5000/api/auth_message/fo%40o']")).not.toBe(null);
 });
 
 test("renders additional message components", () => {
@@ -117,15 +117,15 @@ test("renders message attachments", () => {
   // image
   msg.attachments = [ { content_type: "image", filename: "foo.jpg" } ];
   let { container } = render(() => <Message msg={msg}/>);
-  expect(container.querySelector("a[href='http://localhost:5000/api/attachment/foo/0']")).not.toBe(null);
-  expect(container.querySelector("img[src='http://localhost:5000/api/attachment/foo/0'][alt='foo.jpg']")).not.toBe(null);
+  expect(container.querySelector("a[href='http://localhost:5000/api/attachment/fo%40o/0']")).not.toBe(null);
+  expect(container.querySelector("img[src='http://localhost:5000/api/attachment/fo%40o/0'][alt='foo.jpg']")).not.toBe(null);
   cleanup();
 
   // calendar
   msg.attachments = [ { content_type: "calendar", content_size: 100, filename: "foo.txt",
     preview: { summary: "foo", location: "bar", start: "start", end: "end", attendees: "attend", recur: "recur" }}];
   container = render(() => <Message msg={msg}/>).container;
-  expect(container.querySelector("a[href='http://localhost:5000/api/attachment/foo/0']")).not.toBe(null);
+  expect(container.querySelector("a[href='http://localhost:5000/api/attachment/fo%40o/0']")).not.toBe(null);
   expect(container.querySelector("a[href='https://www.google.com/calendar/render?action=TEMPLATE&text=foo&dates=undefined/undefined&location=bar&ctz=undefined&recur=RRULE:undefined&sf=true&output=xml']")).not.toBe(null);
   expect(screen.getByText("foo.txt (100 Bi, calendar)")).toBeInTheDocument();
   expect(screen.getByText("foo (bar) start — end attend recur")).toBeInTheDocument();
@@ -134,7 +134,7 @@ test("renders message attachments", () => {
   // other
   msg.attachments = [ { content_type: "text", content_size: 100, filename: "foo.txt" } ];
   container = render(() => <Message msg={msg}/>).container;
-  expect(container.querySelector("a[href='http://localhost:5000/api/attachment/foo/0']")).not.toBe(null);
+  expect(container.querySelector("a[href='http://localhost:5000/api/attachment/fo%40o/0']")).not.toBe(null);
   expect(screen.getByText("foo.txt (100 Bi, text)")).toBeInTheDocument();
   cleanup();
 
@@ -142,9 +142,9 @@ test("renders message attachments", () => {
   msg.attachments = [ { content_type: "text", content_size: 100, filename: "foo.txt" },
     { content_type: "text", content_size: 10000, filename: "bar.txt" } ];
   container = render(() => <Message msg={msg}/>).container;
-  expect(container.querySelector("a[href='http://localhost:5000/api/attachment/foo/0']")).not.toBe(null);
+  expect(container.querySelector("a[href='http://localhost:5000/api/attachment/fo%40o/0']")).not.toBe(null);
   expect(screen.getByText("foo.txt (100 Bi, text)")).toBeInTheDocument();
-  expect(container.querySelector("a[href='http://localhost:5000/api/attachment/foo/1']")).not.toBe(null);
+  expect(container.querySelector("a[href='http://localhost:5000/api/attachment/fo%40o/1']")).not.toBe(null);
   expect(screen.getByText("bar.txt (9.77 kiB, text)")).toBeInTheDocument();
 });
 
@@ -183,7 +183,7 @@ test("allows to edit tags", async () => {
   // remove tag
   await userEvent.click(container.querySelector(".MuiChip-root[test-label='test']"));
   expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/remove/message/foo/test");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/remove/message/fo%40o/test");
   expect(screen.getByText("foo")).toBeInTheDocument();
   expect(screen.getByText("bar")).toBeInTheDocument();
   expect(screen.queryByText("test")).not.toBeInTheDocument();
@@ -192,8 +192,8 @@ test("allows to edit tags", async () => {
   const input = container.querySelector("input");
   await userEvent.type(input, "testTag{enter}");
   expect(global.fetch).toHaveBeenCalledTimes(2);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/remove/message/foo/test");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/add/message/foo/testTag");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/remove/message/fo%40o/test");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/add/message/fo%40o/testTag");
   expect(screen.getByText("foo")).toBeInTheDocument();
   expect(screen.getByText("bar")).toBeInTheDocument();
   expect(screen.getByText("testTag")).toBeInTheDocument();

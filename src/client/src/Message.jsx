@@ -21,7 +21,7 @@ import { apiURL, fetchAllTags, formatFSz, strip, formatDate } from "./utils.js";
 
 async function fetchMessage(id) {
   if(id === null) return null;
-  const response = await fetch(apiURL(`api/message/${id}`));
+  const response = await fetch(apiURL(`api/message/${encodeURIComponent(id)}`));
   if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
   return await response.json();
 }
@@ -87,7 +87,7 @@ const formatAddrs = (addrs) => {
 };
 
 const calUrl = (id, action, index) => {
-  return apiURL(`/write?action=reply-cal-${action}&id=${id}&index=${index}`);
+  return apiURL(`/write?action=reply-cal-${action}&id=${encodeURIComponent(id)}&index=${index}`);
 };
 
 const calendarAction = (msg, attachment, index) => {
@@ -116,11 +116,11 @@ const handleAttachment = (msg, attachment, index, summary) => {
   if(attachment.content_type.includes("image")) {
     let mw = summary ? "3em" : "30em",
         mh = summary ? "2em" : "20em";
-    return (<a href={apiURL(`api/attachment/${msg.notmuch_id}/${index}`)} target="_blank" rel="noreferrer">
-        <img src={apiURL(`api/attachment/${msg.notmuch_id}/${index}`)} alt={attachment.filename} style={{ maxWidth: mw, maxHeight: mh }}/>
+    return (<a href={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}`)} target="_blank" rel="noreferrer">
+        <img src={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}`)} alt={attachment.filename} style={{ maxWidth: mw, maxHeight: mh }}/>
       </a>);
   } else if(attachment.content_type.includes("calendar") && attachment.preview !== null && summary === false) {
-    return (<div><a href={apiURL(`api/attachment/${msg.notmuch_id}/${index}`)} target="_blank" rel="noreferrer">
+    return (<div><a href={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}`)} target="_blank" rel="noreferrer">
         <AttachFile/>{attachment.filename}
         {" (" + formatFSz(attachment.content_size) + ", " + attachment.content_type + ")"}
       </a>
@@ -140,7 +140,7 @@ const handleAttachment = (msg, attachment, index, summary) => {
       { calendarAction(msg, attachment, index) }
       </div>);
   } else {
-    return (<a href={apiURL(`api/attachment/${msg.notmuch_id}/${index}`)} target="_blank" rel="noreferrer"><AttachFile/>{attachment.filename}
+    return (<a href={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}`)} target="_blank" rel="noreferrer"><AttachFile/>{attachment.filename}
       {summary ? "" : " (" + formatFSz(attachment.content_size) + ", " + attachment.content_type + ")"}
       </a>);
   }
@@ -242,7 +242,7 @@ export const Message = (passedProps) => {
                   startAdornment: <InputAdornment>
                     <For each={tags()}>
                       {(tag) => <ColorChip test-label={tag} value={tag} onClick={async () => {
-                        const response = await fetch(apiURL(`api/tag/remove/message/${msg.notmuch_id}/${tag}`));
+                        const response = await fetch(apiURL(`api/tag/remove/message/${encodeURIComponent(msg.notmuch_id)}/${encodeURIComponent(tag)}`));
                         if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
                         setTags(tags().filter((t) => t !== tag));
                       }}/>}
@@ -254,7 +254,7 @@ export const Message = (passedProps) => {
                 }}
                 onKeyPress={async (ev) => {
                   if(ev.code === 'Enter') {
-                    const response = await fetch(apiURL(`api/tag/add/message/${msg.notmuch_id}/${addTag()}`));
+                    const response = await fetch(apiURL(`api/tag/add/message/${encodeURIComponent(msg.notmuch_id)}/${encodeURIComponent(addTag())}`));
                     if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
                     const tmp = tags().concat(addTag());
                     setTags(tmp.sort());
@@ -264,22 +264,22 @@ export const Message = (passedProps) => {
               />
             </Grid>
             <Grid item key="reply">
-              <a href={apiURL(`api/write?action=reply&mode=all&id=${msg.notmuch_id}`)} target="_blank" rel="noreferrer">
+              <a href={apiURL(`api/write?action=reply&mode=all&id=${encodeURIComponent(msg.notmuch_id)}`)} target="_blank" rel="noreferrer">
                 <Reply/>
               </a>
             </Grid>
             <Grid item key="forward">
-              <a href={apiURL(`api/write?action=forward&id=${msg.notmuch_id}`)} target="_blank" rel="noreferrer">
+              <a href={apiURL(`api/write?action=forward&id=${encodeURIComponent(msg.notmuch_id)}`)} target="_blank" rel="noreferrer">
                 <Forward/>
               </a>
             </Grid>
             <Grid item key="print">
-              <a href={apiURL(`api/message?id=${msg.notmuch_id}`)} target="_blank" rel="noreferrer">
+              <a href={apiURL(`api/message?id=${encodeURIComponent(msg.notmuch_id)}`)} target="_blank" rel="noreferrer">
                 <Print/>
               </a>
             </Grid>
             <Grid item key="security">
-              <a href={apiURL(`api/auth_message/${msg.notmuch_id}`)} target="_blank" rel="noreferrer">
+              <a href={apiURL(`api/auth_message/${encodeURIComponent(msg.notmuch_id)}`)} target="_blank" rel="noreferrer">
                 <Security/>
               </a>
             </Grid>

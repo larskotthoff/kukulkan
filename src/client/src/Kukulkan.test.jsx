@@ -253,7 +253,7 @@ test("mark thread done works", async () => {
   await userEvent.type(document.body, "d");
   expect(global.fetch).toHaveBeenCalledTimes(4);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/remove/thread/foo/todo");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/remove/thread/foo/due:1970-01-01");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/remove/thread/foo/due%3A1970-01-01");
   expect(screen.queryByText("todo")).not.toBeInTheDocument();
   expect(screen.queryByText("due:1970-01-01")).not.toBeInTheDocument();
 });
