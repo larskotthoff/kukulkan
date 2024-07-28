@@ -68,47 +68,42 @@ test("shows due dates correctly", () => {
 
   t.tags = tags.concat("due:" + now.toISOString().split('T')[0]);
   render(() => <TodoThread thread={t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}/>);
-  expect(screen.getByText("today")).toBeInTheDocument();
+  expect(screen.getByText("今日")).toBeInTheDocument();
   cleanup();
 
   t.tags = tags.concat("due:" + (new Date(now.getTime() + 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
   render(() => <TodoThread thread={t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}/>);
-  expect(screen.getByText("tomorrow")).toBeInTheDocument();
+  expect(screen.getByText("明日")).toBeInTheDocument();
   cleanup();
 
   t.tags = tags.concat("due:" + (new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
   render(() => <TodoThread thread={t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}/>);
-  expect(screen.getByText("this week")).toBeInTheDocument();
-  cleanup();
-
-  t.tags = tags.concat("due:" + (new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
-  render(() => <TodoThread thread={t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}/>);
-  expect(screen.getByText("next week")).toBeInTheDocument();
+  expect(screen.getByText("2日")).toBeInTheDocument();
   cleanup();
 
   t.tags = tags.concat("due:" + (new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
   render(() => <TodoThread thread={t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}/>);
-  expect(screen.getByText("this month")).toBeInTheDocument();
+  expect(screen.getByText("2週")).toBeInTheDocument();
   cleanup();
 
   t.tags = tags.concat("due:" + (new Date(now.getTime() + 31 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
   render(() => <TodoThread thread={t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}/>);
-  expect(screen.getByText("next month")).toBeInTheDocument();
+  expect(screen.getByText("4週")).toBeInTheDocument();
   cleanup();
 
   t.tags = tags.concat("due:" + (new Date(now.getTime() + 100 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
   render(() => <TodoThread thread={t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}/>);
-  expect(screen.getByText("this year")).toBeInTheDocument();
+  expect(screen.getByText("3月")).toBeInTheDocument();
   cleanup();
 
   t.tags = tags.concat("due:" + (new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
   render(() => <TodoThread thread={t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}/>);
-  expect(screen.getByText("next year")).toBeInTheDocument();
+  expect(screen.getByText("12月")).toBeInTheDocument();
   cleanup();
 
   t.tags = tags.concat("due:" + (new Date(now.getTime() + 1000 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
   render(() => <TodoThread thread={t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}/>);
-  expect(screen.getByText("a long time")).toBeInTheDocument();
+  expect(screen.getByText("3年")).toBeInTheDocument();
 
   vi.useRealTimers();
 });

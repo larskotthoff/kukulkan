@@ -1,7 +1,7 @@
 import { Grid } from "@suid/material";
 import { ColorChip } from "./ColorChip.jsx";
 
-import { simulateKeyPress } from "./utils.js";
+import { formatDuration, simulateKeyPress } from "./utils.js";
 
 function dateFromDue(due) {
   const dateComponents = due.split(':')[1].split('-'),
@@ -29,28 +29,16 @@ export const sortThreadsByDueDate = (a, b) => {
 function renderDueDate(thread) {
   const due = thread.tags.find((tag) => tag.startsWith("due:"));
   if(due) {
-      const dueDate = dateFromDue(due);
-
+    const dueDate = dateFromDue(due);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
-    const nextWeekStart = new Date(today);
-    // week starts Monday
-    nextWeekStart.setDate(today.getDate() + (7 - today.getDay() + 1));
-    const nextMonthStart = new Date(today.getFullYear(), today.getMonth() + 1, 1);
-    const nextYearStart = new Date(today.getFullYear() + 1, 0, 1);
 
     if(dueDate < today) return "overdue!";
-    else if(dueDate.getTime() === today.getTime()) return "today";
-    else if(dueDate.getTime() === tomorrow.getTime()) return "tomorrow";
-    else if(dueDate < nextWeekStart) return "this week";
-    else if(dueDate < new Date(nextWeekStart.getTime() + 7 * 24 * 60 * 60 * 1000)) return "next week";
-    else if(dueDate < nextMonthStart) return "this month";
-    else if(dueDate < new Date(nextMonthStart.getFullYear(), nextMonthStart.getMonth() + 1, 1)) return "next month";
-    else if(dueDate < nextYearStart) return "this year";
-    else if(dueDate < new Date(nextYearStart.getFullYear() + 1, 0, 1)) return "next year";
-    else return "a long time";
+    else if(dueDate.getTime() === today.getTime()) return "今日";
+    else if(dueDate.getTime() === tomorrow.getTime()) return "明日";
+    else return formatDuration(today, dueDate);
   } else {
     return "";
   }
