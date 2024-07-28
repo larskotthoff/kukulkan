@@ -59,6 +59,11 @@ body {
     width: min(80em, 80vw);
 }
 
+.kukulkan-message.deleted {
+    border-color: red;
+    border-style: solid;
+}
+
 .kukulkan-thread.active {
     background-color: rgba(85, 139, 47, 0.4) !important;
 }

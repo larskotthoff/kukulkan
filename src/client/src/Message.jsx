@@ -207,7 +207,8 @@ export const Message = (passedProps) => {
     <Paper elevation={props.active ? 20 : 3}
       class={{
         'kukulkan-message': true,
-        'active': props.active
+        'active': props.active,
+        'deleted': msg.tags.includes("deleted")
       }}
       ref={elementTop}>
       <Show when={open()}>
