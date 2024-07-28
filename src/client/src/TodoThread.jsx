@@ -25,8 +25,7 @@ export const sortThreadsByDueDate = (a, b) => {
   return dueDateA - dueDateB;
 };
 
-// claude helped to implement this
-function renderDueDate(thread) {
+function processDueDate(thread) {
   const due = thread.tags.find((tag) => tag.startsWith("due:"));
   if(due) {
     const dueDate = dateFromDue(due);
@@ -35,21 +34,24 @@ function renderDueDate(thread) {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    if(dueDate < today) return "overdue!";
-    else if(dueDate.getTime() === today.getTime()) return "今日";
-    else if(dueDate.getTime() === tomorrow.getTime()) return "明日";
-    else return formatDuration(today, dueDate);
+    if(dueDate < today) return [ true, "overdue!" ];
+    else if(dueDate.getTime() === today.getTime()) return [ true, "今日" ];
+    else if(dueDate.getTime() === tomorrow.getTime()) return [ false, "明日" ];
+    else return [ false, formatDuration(today, dueDate) ];
   } else {
-    return "";
+    return [ false, "" ];
   }
 }
 
 export const TodoThread = (props) => {
+  const [ isDue, dueDuration ] = processDueDate(props.thread);
+
   return (
     <Grid item container padding={.3} class={{
         'kukulkan-thread': true,
         'active': props.index() === props.activeThread(),
-        'selected': props.selectedThreads().indexOf(props.index()) !== -1
+        'selected': props.selectedThreads().indexOf(props.index()) !== -1,
+        'due': isDue
       }}
       onClick={(e) => {
         props.setActiveThread(props.index());
@@ -70,7 +72,7 @@ export const TodoThread = (props) => {
         </For>
       </Grid>
       <Grid item xs={12} sm={2} lg={1}>
-        {renderDueDate(props.thread)}
+        {dueDuration}
       </Grid>
     </Grid>
   );

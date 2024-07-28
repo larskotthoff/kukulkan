@@ -84,6 +84,11 @@ body {
     background-color: rgba(85, 139, 47, 0.2) !important;
 }
 
+.kukulkan-thread.due {
+    border-color: red;
+    border-style: solid;
+}
+
 #kukulkan-editTagBox {
     position: fixed !important;
     top: 10%;
