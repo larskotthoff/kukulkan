@@ -199,6 +199,23 @@ test("allows to edit tags", async () => {
   expect(screen.getByText("testTag")).toBeInTheDocument();
 });
 
+test("automatically removes unread tag", async () => {
+  msg.tags = ["foo", "unread"];
+  render(() => <Message msg={msg} active={true}/>);
+  expect(screen.getByText("foo")).toBeInTheDocument();
+  expect(screen.getByText("unread")).toBeInTheDocument();
+
+  global.fetch.mockResolvedValue({ ok: true });
+  await vi.waitFor(() => {
+    expect(screen.queryByText("unread")).not.toBeInTheDocument();
+  });
+  expect(global.fetch).toHaveBeenCalledTimes(1);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/remove/message/fo%40o/unread");
+
+  expect(screen.getByText("foo")).toBeInTheDocument();
+  expect(screen.queryByText("unread")).not.toBeInTheDocument();
+});
+
 test("segments into main and quoted correctly", () => {
   let mp = "Test\n",
       qp = "> foo",

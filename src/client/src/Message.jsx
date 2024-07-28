@@ -182,6 +182,12 @@ export const Message = (passedProps) => {
         {mainPart, quotedPart} = separateQuotedNonQuoted(msg.body["text/plain"]);
   let elementTop;
 
+  async function removeTag(tag) {
+    const response = await fetch(apiURL(`api/tag/remove/message/${encodeURIComponent(msg.notmuch_id)}/${encodeURIComponent(tag)}`));
+    if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
+    setTags(tags().filter((t) => t !== tag));
+  }
+
   let sigMsg = "",
       sigSev = "warning";
 
@@ -202,6 +208,10 @@ export const Message = (passedProps) => {
   sigMsg += ".";
 
   const saw = 6 / msg.attachments.length;
+
+  if(open() && props.active && msg.tags.includes("unread")) {
+    setTimeout(() => removeTag("unread"), 500);
+  }
 
   return (
     <Paper elevation={props.active ? 20 : 3}
@@ -242,11 +252,7 @@ export const Message = (passedProps) => {
                 InputProps={{
                   startAdornment: <InputAdornment>
                     <For each={tags()}>
-                      {(tag) => <ColorChip test-label={tag} value={tag} onClick={async () => {
-                        const response = await fetch(apiURL(`api/tag/remove/message/${encodeURIComponent(msg.notmuch_id)}/${encodeURIComponent(tag)}`));
-                        if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
-                        setTags(tags().filter((t) => t !== tag));
-                      }}/>}
+                      {(tag) => <ColorChip test-label={tag} value={tag} onClick={() => removeTag(tag)}/>}
                     </For>
                   </InputAdornment>
                 }}
