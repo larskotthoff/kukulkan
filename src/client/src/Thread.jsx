@@ -21,7 +21,6 @@ export const Thread = () => {
         [activeMessage, setActiveMessage] = createSignal();
 
   createEffect(() => {
-    thread();
     setActiveMessage(thread()?.length - 1);
   });
 
