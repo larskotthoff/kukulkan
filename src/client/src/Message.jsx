@@ -209,14 +209,12 @@ export const Message = (passedProps) => {
 
   const saw = 6 / msg.attachments.length;
 
-  onMount(() => {
-    if(open() && props.active && msg.tags.includes("unread")) {
-      setTimeout(() => removeTag("unread"), 500);
-    }
-
+  createEffect(() => {
+    setOpen(props.open);
     if(props.active) {
       elementTop?.scrollIntoView({block: "nearest"});
       document.title = msg.subject || "Kukulkan";
+      if(msg.tags.includes("unread")) setTimeout(() => removeTag("unread"), 500);
     }
   });
 
