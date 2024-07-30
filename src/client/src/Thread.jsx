@@ -51,7 +51,7 @@ export const Thread = () => {
       <Show when={allTags.state === "ready" && activeMessage() > -1} fallback={<LinearProgress/>}>
         <Grid container direction="column" class="centered">
           <For each={thread()}>
-            {(m, i) => <Message msg={m} allTags={allTags()} active={i() === activeMessage()} open={i() === activeMessage()}/>}
+            {(m, i) => <Message msg={m} allTags={allTags()} active={i() === activeMessage()}/>}
           </For>
         </Grid>
       </Show>

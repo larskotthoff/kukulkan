@@ -1,4 +1,4 @@
-import { createEffect, createSignal, createResource, For, mergeProps, onMount, Show } from "solid-js";
+import { createEffect, createSignal, createResource, For, onMount, Show } from "solid-js";
 
 import { Alert, Box, Button, Divider, Grid, InputAdornment, LinearProgress, Paper, Stack } from "@suid/material";
 import { Autocomplete } from "./Autocomplete.jsx";
@@ -171,11 +171,10 @@ const HeaderLine = ({left, right}) => {
   );
 };
 
-export const Message = (passedProps) => {
-  const props = mergeProps({ open: true }, passedProps),
-        [showQuoted, setShowQuoted] = createSignal(false),
+export const Message = (props) => {
+  const [showQuoted, setShowQuoted] = createSignal(false),
         [html, setHtml] = createSignal(false),
-        [open, setOpen] = createSignal(props.open),
+        [open, setOpen] = createSignal(props.active),
         msg = props.msg,
         [tags, setTags] = createSignal(msg.tags.sort()),
         [addTag, setAddTag] = createSignal(),
@@ -210,8 +209,8 @@ export const Message = (passedProps) => {
   const saw = 6 / msg.attachments.length;
 
   createEffect(() => {
-    setOpen(props.open);
     if(props.active) {
+      setOpen(true);
       elementTop?.scrollIntoView({block: "nearest"});
       document.title = msg.subject || "Kukulkan";
       if(msg.tags.includes("unread")) setTimeout(() => removeTag("unread"), 500);
@@ -219,7 +218,13 @@ export const Message = (passedProps) => {
   });
 
   return (
-    <Paper elevation={props.active ? 20 : 3}
+    <Paper elevation={props.active ? 20 : 3} test-label="message" onClick={(e) => {
+        if(e.target.tagName.toLowerCase() !== 'a' &&
+            e.target.tagName.toLowerCase() !== 'input' &&
+            window.getSelection().toString().length === 0) {
+          setOpen(!open());
+        }
+      }}
       class={{
         'kukulkan-message': true,
         'active': props.active,
@@ -227,12 +232,7 @@ export const Message = (passedProps) => {
       }}
       ref={elementTop}>
       <Show when={open()}>
-        <Box onClick={(e) => {
-            // do not toggle open if we're clicking on a link or marking text for copying
-            if(e.target.tagName.toLowerCase() !== 'a' && window.getSelection().toString().length === 0) {
-              setOpen(false);
-            }
-          }}>
+        <Box>
           <Show when={msg.from}><HeaderLine left="From:" right={formatAddrs(msg.from)}/></Show>
           <Show when={msg.reply_to}><HeaderLine left="Reply-To:" right={formatAddrs(msg.reply_to)}/></Show>
           <Show when={msg.to}><HeaderLine left="To:" right={formatAddrs(msg.to)}/></Show>
@@ -257,7 +257,10 @@ export const Message = (passedProps) => {
                 InputProps={{
                   startAdornment: <InputAdornment>
                     <For each={tags()}>
-                      {(tag) => <ColorChip test-label={tag} value={tag} onClick={() => removeTag(tag)}/>}
+                      {(tag) => <ColorChip test-label={tag} value={tag} onClick={(e) => {
+                          removeTag(tag);
+                          e.stopPropagation();
+                        }}/>}
                     </For>
                   </InputAdornment>
                 }}
@@ -300,7 +303,7 @@ export const Message = (passedProps) => {
           <Show when={msg.attachments}>
             <Grid container spacing={1}>
               { msg.attachments.map((attachment, index2) => (
-                  <Grid item class="center" xs={4} key={index2} style={{ minHeight: "3em" }}>
+                  <Grid item xs={4} key={index2} style={{ minHeight: "3em" }}>
                     {handleAttachment(msg, attachment, index2, false)}
                   </Grid>
               )) }
@@ -316,7 +319,10 @@ export const Message = (passedProps) => {
 
         <Grid container justifyContent="flex-end">
           <Show when={msg.body["text/html"]}>
-            <Button variant="outlined" class="kukulkan-content" test-label={html() ? "Text" : "HTML"} onClick={() => setHtml(!html())}>{html() ? "Text" : "HTML"}</Button>
+            <Button variant="outlined" class="kukulkan-content" test-label={html() ? "Text" : "HTML"} onClick={(e) => {
+                setHtml(!html());
+                e.stopPropagation();
+              }}>{html() ? "Text" : "HTML"}</Button>
           </Show>
         </Grid>
         <Show when={html()}>
@@ -333,6 +339,7 @@ export const Message = (passedProps) => {
                 // do not toggle expand if we're clicking on a link or marking text for copying
                 if(e.target.tagName.toLowerCase() !== 'a' && window.getSelection().toString().length === 0) {
                   setShowQuoted(!showQuoted());
+                  e.stopPropagation();
                 }
               }}
               innerHTML={linkifyStr(quotedPart, linkifyOpts)}/>
@@ -341,12 +348,7 @@ export const Message = (passedProps) => {
       </Show>
 
       <Show when={!open()}>
-        <Grid container direction="column" onClick={(e) => {
-            // do not toggle open if we're clicking on a link or marking text for copying
-            if(e.target.tagName.toLowerCase() !== 'a' && window.getSelection().toString().length === 0) {
-              setOpen(true);
-            }
-          }}>
+        <Grid container direction="column">
           <Grid container direction="row" justifyContent="space-between" wrap="nowrap">
             <Grid item>{formatAddrs(msg.from)}</Grid>
             {msg.attachments.filter((a) => a.filename !== "smime.p7s").map((attachment, index2) => (
@@ -359,13 +361,6 @@ export const Message = (passedProps) => {
           <Box class={{
               'message-text': true,
               'text-preview': true
-            }}
-            onClick={(e) => {
-              // do not toggle expand if we're clicking on a link or marking
-              // text for copying
-              if(e.target.tagName.toLowerCase() !== 'a' && window.getSelection().toString().length === 0) {
-                setShowQuoted(!showQuoted());
-              }
             }}
             innerHTML={linkifyStr(mainPart, linkifyOpts)}/>
         </Grid>
@@ -383,7 +378,7 @@ export const FetchedMessage = () => {
   return (
     <>
       <Show when={allTags.state === "ready" && message.state === "ready"} fallback={<LinearProgress/>}>
-        <Message msg={message()} allTags={allTags()} active={true} open={true}/>
+        <Message msg={message()} allTags={allTags()} active={true}/>
       </Show>
     </>
   );

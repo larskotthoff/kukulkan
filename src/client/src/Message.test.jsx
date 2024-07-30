@@ -67,7 +67,7 @@ test("fetches and renders message", async () => {
 });
 
 test("renders message components", () => {
-  const { container } = render(() => <Message msg={msg}/>);
+  const { container } = render(() => <Message msg={msg} active={true}/>);
   expect(screen.getByText("Test.")).toBeInTheDocument();
   expect(screen.getByText("foo bar <foo@bar.com>")).toBeInTheDocument();
   expect(screen.getByText("bar foo <bar@foo.com>")).toBeInTheDocument();
@@ -88,7 +88,7 @@ test("renders additional message components", () => {
   msg.forwarded_to = "Forwarded to";
   msg.bcc = "BCC";
 
-  render(() => <Message msg={msg}/>);
+  render(() => <Message msg={msg} active={true}/>);
   expect(screen.getByText("Reply to")).toBeInTheDocument();
   expect(screen.getByText("Forwarded to")).toBeInTheDocument();
   expect(screen.getByText("BCC")).toBeInTheDocument();
@@ -96,19 +96,19 @@ test("renders additional message components", () => {
 
 test("renders message signature", () => {
   msg.signature = { valid: true, message: "" };
-  let { container } = render(() => <Message msg={msg}/>);
+  let { container } = render(() => <Message msg={msg} active={true}/>);
   expect(screen.getByText("Signature verified.")).toBeInTheDocument();
   expect(container.querySelector(".MuiAlert-standardSuccess")).not.toBe(null);
   cleanup();
 
   msg.signature = { valid: null, message: "unknown cert" };
-  container = render(() => <Message msg={msg}/>).container;
+  container = render(() => <Message msg={msg} active={true}/>).container;
   expect(screen.getByText("Signature could not be verified (unknown cert).")).toBeInTheDocument();
   expect(container.querySelector(".MuiAlert-standardWarning")).not.toBe(null);
   cleanup();
 
   msg.signature = { valid: false, message: "checksum failure" };
-  container = render(() => <Message msg={msg}/>).container;
+  container = render(() => <Message msg={msg} active={true}/>).container;
   expect(screen.getByText("Signature verification failed (checksum failure).")).toBeInTheDocument();
   expect(container.querySelector(".MuiAlert-standardError")).not.toBe(null);
 });
@@ -116,7 +116,7 @@ test("renders message signature", () => {
 test("renders message attachments", () => {
   // image
   msg.attachments = [ { content_type: "image", filename: "foo.jpg" } ];
-  let { container } = render(() => <Message msg={msg}/>);
+  let { container } = render(() => <Message msg={msg} active={true}/>);
   expect(container.querySelector("a[href='http://localhost:5000/api/attachment/fo%40o/0']")).not.toBe(null);
   expect(container.querySelector("img[src='http://localhost:5000/api/attachment/fo%40o/0'][alt='foo.jpg']")).not.toBe(null);
   cleanup();
@@ -124,7 +124,7 @@ test("renders message attachments", () => {
   // calendar
   msg.attachments = [ { content_type: "calendar", content_size: 100, filename: "foo.txt",
     preview: { summary: "foo", location: "bar", start: "start", end: "end", attendees: "attend", recur: "recur" }}];
-  container = render(() => <Message msg={msg}/>).container;
+  container = render(() => <Message msg={msg} active={true}/>).container;
   expect(container.querySelector("a[href='http://localhost:5000/api/attachment/fo%40o/0']")).not.toBe(null);
   expect(container.querySelector("a[href='https://www.google.com/calendar/render?action=TEMPLATE&text=foo&dates=undefined/undefined&location=bar&ctz=undefined&recur=RRULE:undefined&sf=true&output=xml']")).not.toBe(null);
   expect(screen.getByText("foo.txt (100 Bi, calendar)")).toBeInTheDocument();
@@ -133,7 +133,7 @@ test("renders message attachments", () => {
 
   // other
   msg.attachments = [ { content_type: "text", content_size: 100, filename: "foo.txt" } ];
-  container = render(() => <Message msg={msg}/>).container;
+  container = render(() => <Message msg={msg} active={true}/>).container;
   expect(container.querySelector("a[href='http://localhost:5000/api/attachment/fo%40o/0']")).not.toBe(null);
   expect(screen.getByText("foo.txt (100 Bi, text)")).toBeInTheDocument();
   cleanup();
@@ -141,7 +141,7 @@ test("renders message attachments", () => {
   // multiple
   msg.attachments = [ { content_type: "text", content_size: 100, filename: "foo.txt" },
     { content_type: "text", content_size: 10000, filename: "bar.txt" } ];
-  container = render(() => <Message msg={msg}/>).container;
+  container = render(() => <Message msg={msg} active={true}/>).container;
   expect(container.querySelector("a[href='http://localhost:5000/api/attachment/fo%40o/0']")).not.toBe(null);
   expect(screen.getByText("foo.txt (100 Bi, text)")).toBeInTheDocument();
   expect(container.querySelector("a[href='http://localhost:5000/api/attachment/fo%40o/1']")).not.toBe(null);
@@ -154,14 +154,15 @@ test("links are linikified in text", () => {
     "text/plain": "http://www.foobar.com"
   };
 
-  const { container } = render(() => <Message msg={msg}/>);
+  const { container } = render(() => <Message msg={msg} active={true}/>);
   expect(container.querySelector("a[href='http://www.foobar.com']")).not.toBe(null);
   expect(screen.getByText("http://www.foobar.com")).toBeInTheDocument();
 });
 
 test("allows to switch between text and HTML", async () => {
-  const { container } = render(() => <Message msg={msg}/>);
+  const { container } = render(() => <Message msg={msg} active={true}/>);
   expect(screen.getByText("Test mail")).toBeInTheDocument();
+  expect(screen.getByText("bar foo <bar@foo.com>")).toBeInTheDocument();
 
   await userEvent.click(container.querySelector("button[test-label='HTML']"));
   expect(sd.screen.getByShadowText("Test mail in HTML")).toBeInTheDocument();
@@ -173,7 +174,7 @@ test("allows to switch between text and HTML", async () => {
 });
 
 test("allows to edit tags", async () => {
-  const { container } = render(() => <Message msg={msg} allTags={["foo", "bar"]}/>);
+  const { container } = render(() => <Message msg={msg} allTags={["foo", "bar"]} active={true}/>);
   expect(screen.getByText("foo")).toBeInTheDocument();
   expect(screen.getByText("bar")).toBeInTheDocument();
   expect(screen.getByText("test")).toBeInTheDocument();
@@ -214,6 +215,44 @@ test("automatically removes unread tag", async () => {
 
   expect(screen.getByText("foo")).toBeInTheDocument();
   expect(screen.queryByText("unread")).not.toBeInTheDocument();
+});
+
+test("click expands and collapses mail", async () => {
+  msg.body = {
+    "text/html": "Test mail in HTML",
+    "text/plain": "Test mail\n\n> quoted text bla bla bla"
+  }
+  const { container } = render(() => <Message msg={msg} active={true}/>);
+
+  expect(screen.getByText("foo bar <foo@bar.com>")).toBeInTheDocument();
+  expect(screen.getByText("bar foo <bar@foo.com>")).toBeInTheDocument();
+  expect(screen.getByText("> quoted text bla bla bla")).toBeInTheDocument();
+
+  expect(container.querySelector("div[test-label='message']")).not.toBe(null);
+  await userEvent.click(container.querySelector("div[test-label='message']"));
+  expect(screen.getByText("foo bar <foo@bar.com>")).toBeInTheDocument();
+  expect(screen.queryByText("bar foo <bar@foo.com>")).not.toBeInTheDocument();
+  expect(screen.queryByText("> quoted text bla bla bla")).not.toBeInTheDocument();
+
+  await userEvent.click(container.querySelector("div[test-label='message']"));
+  await vi.waitFor(() => {
+    expect(screen.getByText("bar foo <bar@foo.com>")).toBeInTheDocument();
+  });
+});
+
+test("click expands and collapses quoted text", async () => {
+  msg.body = {
+    "text/html": "Test mail in HTML",
+    "text/plain": "Test mail\n\n> quoted text bla bla bla"
+  }
+  const { container } = render(() => <Message msg={msg} active={true}/>);
+  expect(screen.getByText("Test mail")).toBeInTheDocument();
+  expect(screen.getByText("> quoted text bla bla bla")).toBeInTheDocument();
+  expect(container.querySelector(".text-preview")).not.toBe(null);
+
+  await userEvent.click(container.querySelector(".text-preview"));
+  expect(screen.getByText("Test mail")).toBeInTheDocument();
+  expect(screen.getByText("> quoted text bla bla bla")).toBeInTheDocument();
 });
 
 test("segments into main and quoted correctly", () => {
