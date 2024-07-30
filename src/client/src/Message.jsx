@@ -133,9 +133,11 @@ const handleAttachment = (msg, attachment, index, summary) => {
           "&ctz=" + encodeURIComponent(attachment.preview.tz) +
           (attachment.preview.rrule !== null ? ("&recur=RRULE:" + encodeURIComponent(attachment.preview.rrule)) : "") +
           "&sf=true&output=xml"}>
-        { attachment.preview.summary + " (" + attachment.preview.location + ")\n" +
-          attachment.preview.start + " — " + attachment.preview.end + "\n" +
-          attachment.preview.attendees + "\n" + attachment.preview.recur }
+        <Paper elevation={3} class="cal-preview">
+          { attachment.preview.summary + " (" + attachment.preview.location + ")\n" +
+            attachment.preview.start + " — " + attachment.preview.end + "\n" +
+            attachment.preview.attendees + "\n" + attachment.preview.recur }
+        </Paper>
       </a>
       { calendarAction(msg, attachment, index) }
       </div>);
@@ -241,7 +243,7 @@ export const Message = (props) => {
           <Grid container justifyContent="space-between" direction="row" style={{ minHeight: "3.5em" }} class="centered">
             <Grid item xs={11}>
               <Autocomplete
-                class="kukulkan-editTagBox"
+                class="editTagBox"
                 name="editTags"
                 variant="outlined"
                 fullWidth

@@ -48,6 +48,13 @@ body {
     white-space-collapse: collapse;
 }
 
+.cal-preview {
+    background-color: #f0f4c3 !important;
+    white-space: pre-line;
+    text-align: center;
+    padding: 8px;
+}
+
 .autocomplete-popup {
     background-color: #f0f4c3;
 }
@@ -87,6 +94,11 @@ body {
 .kukulkan-thread.due {
     border-color: red;
     border-style: solid;
+}
+
+.editTagBox input {
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
 }
 
 #kukulkan-editTagBox {
