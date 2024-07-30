@@ -217,29 +217,6 @@ test("automatically removes unread tag", async () => {
   expect(screen.queryByText("unread")).not.toBeInTheDocument();
 });
 
-test("click expands and collapses mail", async () => {
-  msg.body = {
-    "text/html": "Test mail in HTML",
-    "text/plain": "Test mail\n\n> quoted text bla bla bla"
-  }
-  const { container } = render(() => <Message msg={msg} active={true}/>);
-
-  expect(screen.getByText("foo bar <foo@bar.com>")).toBeInTheDocument();
-  expect(screen.getByText("bar foo <bar@foo.com>")).toBeInTheDocument();
-  expect(screen.getByText("> quoted text bla bla bla")).toBeInTheDocument();
-
-  expect(container.querySelector("div[test-label='message']")).not.toBe(null);
-  await userEvent.click(container.querySelector("div[test-label='message']"));
-  expect(screen.getByText("foo bar <foo@bar.com>")).toBeInTheDocument();
-  expect(screen.queryByText("bar foo <bar@foo.com>")).not.toBeInTheDocument();
-  expect(screen.queryByText("> quoted text bla bla bla")).not.toBeInTheDocument();
-
-  await userEvent.click(container.querySelector("div[test-label='message']"));
-  await vi.waitFor(() => {
-    expect(screen.getByText("bar foo <bar@foo.com>")).toBeInTheDocument();
-  });
-});
-
 test("click expands and collapses quoted text", async () => {
   msg.body = {
     "text/html": "Test mail in HTML",

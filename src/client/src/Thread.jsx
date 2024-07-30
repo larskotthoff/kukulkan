@@ -51,7 +51,15 @@ export const Thread = () => {
       <Show when={allTags.state === "ready" && activeMessage() > -1} fallback={<LinearProgress/>}>
         <Grid container direction="column" class="centered">
           <For each={thread()}>
-            {(m, i) => <Message msg={m} allTags={allTags()} active={i() === activeMessage()}/>}
+            {(m, i) => <Message msg={m} allTags={allTags()} active={i() === activeMessage()}
+              onClick={(e) => {
+                  if(e.target.tagName.toLowerCase() !== 'a' &&
+                      e.target.tagName.toLowerCase() !== 'input' &&
+                      window.getSelection().toString().length === 0) {
+                    setActiveMessage(i());
+                  }
+                }}
+              />}
           </For>
         </Grid>
       </Show>

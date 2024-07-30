@@ -209,8 +209,8 @@ export const Message = (props) => {
   const saw = 6 / msg.attachments.length;
 
   createEffect(() => {
+    setOpen(props.active);
     if(props.active) {
-      setOpen(true);
       elementTop?.scrollIntoView({block: "nearest"});
       document.title = msg.subject || "Kukulkan";
       if(msg.tags.includes("unread")) setTimeout(() => removeTag("unread"), 500);
@@ -218,13 +218,7 @@ export const Message = (props) => {
   });
 
   return (
-    <Paper elevation={props.active ? 20 : 3} test-label="message" onClick={(e) => {
-        if(e.target.tagName.toLowerCase() !== 'a' &&
-            e.target.tagName.toLowerCase() !== 'input' &&
-            window.getSelection().toString().length === 0) {
-          setOpen(!open());
-        }
-      }}
+    <Paper elevation={props.active ? 20 : 3} onClick={props.onClick}
       class={{
         'kukulkan-message': true,
         'active': props.active,
