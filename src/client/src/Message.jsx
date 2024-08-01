@@ -17,7 +17,7 @@ import linkifyStr from 'linkify-string';
 const linkifyOpts = { target: "_blank", rel: "nofollow" };
 
 import "./Kukulkan.css";
-import { apiURL, fetchAllTags, formatFSz, strip, formatDate } from "./utils.js";
+import { apiURL, fetchAllTags, formatDate, formatFSz, mkShortcut, strip } from "./utils.js";
 
 async function fetchMessage(id) {
   if(id === null) return null;
@@ -85,6 +85,22 @@ const formatAddrs = (addrs) => {
     <ColorChip value={addr}/>
   ));
 };
+
+function printUrl(id) {
+  return `/message?id=${encodeURIComponent(id)}`;
+}
+
+function replyUrl(id, mode = "all") {
+  return `/write?action=reply&id=${encodeURIComponent(id)}&mode=${mode}`;
+}
+
+function fwdUrl(id) {
+  return `/write?action=forward&id=${encodeURIComponent(id)}`;
+}
+
+function secUrl(id) {
+  return apiURL(`api/auth_message/${encodeURIComponent(id)}`);
+}
 
 const calUrl = (id, action, index) => {
   return apiURL(`/write?action=reply-cal-${action}&id=${encodeURIComponent(id)}&index=${index}`);
@@ -219,6 +235,39 @@ export const Message = (props) => {
     }
   });
 
+  mkShortcut(["r"],
+    () => { if(props.active) document.querySelector("a[key='reply']")?.click(); }
+  );
+
+  mkShortcut(["Shift", "r"],
+    () => { if(props.active) window.open(replyUrl(msg.notmuch_id, "one"), "_blank"); }
+  );
+
+  mkShortcut(["f"],
+    () => { if(props.active) document.querySelector("a[key='forward']")?.click(); }
+  );
+
+  mkShortcut(["p"],
+    () => { if(props.active) document.querySelector("a[key='print']")?.click(); }
+  );
+
+  mkShortcut(["s"],
+    () => { if(props.active) document.querySelector("a[key='security']")?.click(); }
+  );
+
+  mkShortcut(["w"],
+    () => { if(props.active) window.open(apiURL(`api/raw_message/${encodeURIComponent(msg.notmuch_id)}`), "_blank"); }
+  );
+
+  mkShortcut(["t"],
+    () => { if(props.active) document.getElementById("kukulkan-editTags")?.focus(); },
+    true
+  );
+
+  mkShortcut(["c"],
+    () => { if(props.active) document.querySelector("button.kukulkan-content")?.click(); }
+  );
+
   return (
     <Paper elevation={props.active ? 20 : 3} onClick={props.onClick}
       class={{
@@ -244,7 +293,7 @@ export const Message = (props) => {
             <Grid item xs={11}>
               <Autocomplete
                 class="editTagBox"
-                name="editTags"
+                id="kukulkan-editTags"
                 variant="outlined"
                 fullWidth
                 margin="normal"
@@ -279,23 +328,23 @@ export const Message = (props) => {
                 }}
               />
             </Grid>
-            <Grid item key="reply">
-              <a href={apiURL(`api/write?action=reply&mode=all&id=${encodeURIComponent(msg.notmuch_id)}`)} target="_blank" rel="noreferrer">
+            <Grid item>
+              <a key="reply" href={replyUrl(msg.notmuch_id)} target="_blank" rel="noreferrer">
                 <Reply/>
               </a>
             </Grid>
-            <Grid item key="forward">
-              <a href={apiURL(`api/write?action=forward&id=${encodeURIComponent(msg.notmuch_id)}`)} target="_blank" rel="noreferrer">
+            <Grid item>
+              <a key="forward" href={fwdUrl(msg.notmuch_id)} target="_blank" rel="noreferrer">
                 <Forward/>
               </a>
             </Grid>
-            <Grid item key="print">
-              <a href={apiURL(`api/message?id=${encodeURIComponent(msg.notmuch_id)}`)} target="_blank" rel="noreferrer">
+            <Grid item>
+              <a key="print" href={printUrl(msg.notmuch_id)} target="_blank" rel="noreferrer">
                 <Print/>
               </a>
             </Grid>
-            <Grid item key="security">
-              <a href={apiURL(`api/auth_message/${encodeURIComponent(msg.notmuch_id)}`)} target="_blank" rel="noreferrer">
+            <Grid item>
+              <a key="security" href={secUrl(msg.notmuch_id)} target="_blank" rel="noreferrer">
                 <Security/>
               </a>
             </Grid>
