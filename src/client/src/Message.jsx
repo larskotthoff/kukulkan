@@ -120,7 +120,7 @@ const handleAttachment = (msg, attachment, index, summary) => {
         <img src={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}`)} alt={attachment.filename} style={{ maxWidth: mw, maxHeight: mh }}/>
       </a>);
   } else if(attachment.content_type.includes("calendar") && attachment.preview !== null && summary === false) {
-    return (<div><a href={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}`)} target="_blank" rel="noreferrer">
+    return (<div style="text-align: center"><a href={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}`)} target="_blank" rel="noreferrer">
         <AttachFile/>{attachment.filename}
         {" (" + formatFSz(attachment.content_size) + ", " + attachment.content_type + ")"}
       </a>
