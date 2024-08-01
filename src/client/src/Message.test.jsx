@@ -77,9 +77,9 @@ test("renders message components", () => {
   expect(screen.getByText("bar")).toBeInTheDocument();
   expect(screen.getByText("test")).toBeInTheDocument();
 
-  expect(container.querySelector("a[href='http://localhost:5000/api/write?action=reply&mode=all&id=fo%40o']")).not.toBe(null);
-  expect(container.querySelector("a[href='http://localhost:5000/api/write?action=forward&id=fo%40o']")).not.toBe(null);
-  expect(container.querySelector("a[href='http://localhost:5000/api/message?id=fo%40o']")).not.toBe(null);
+  expect(container.querySelector("a[href='/write?action=reply&id=fo%40o&mode=all']")).not.toBe(null);
+  expect(container.querySelector("a[href='/write?action=forward&id=fo%40o']")).not.toBe(null);
+  expect(container.querySelector("a[href='/message?id=fo%40o']")).not.toBe(null);
   expect(container.querySelector("a[href='http://localhost:5000/api/auth_message/fo%40o']")).not.toBe(null);
 });
 
