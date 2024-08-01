@@ -1,0 +1,115 @@
+body {
+    background-image: url("assets/serpent.webp");
+    background-repeat: no-repeat;
+    background-position: bottom right;
+    background-attachment: fixed;
+    background-size: auto 25vh;
+    background-color: #fff8e1;
+
+    font-family: Roboto;
+}
+
+.centered {
+    margin-left: auto !important;
+    margin-right: auto !important;
+
+    align-items: center;
+}
+
+.margin {
+    margin-top: 10px !important;
+    margin-bottom: 10px !important;
+}
+
+.chip {
+    height: auto !important;
+    border-radius: 5px !important;
+    margin-right: 3px !important;
+
+    font-family: Fira Mono, Roboto !important;
+
+    background-color: var(--bg-color) !important;
+    color: oklch(from var(--bg-color) calc(1 - round(l - 0.1)) 0 0) !important;
+}
+
+.chip span {
+    padding: 3px;
+    white-space: break-spaces !important;
+}
+
+.message-text {
+    white-space: pre-line;
+}
+
+.text-preview {
+    overflow: hidden;
+    max-height: 3lh;
+    text-overflow: ellipsis;
+    white-space-collapse: collapse;
+}
+
+.cal-preview {
+    background-color: #f0f4c3 !important;
+    white-space: pre-line;
+    text-align: center;
+    padding: 8px;
+}
+
+.autocomplete-popup {
+    background-color: #f0f4c3;
+}
+
+.kukulkan-message {
+    background-color: #f0f4c3 !important;
+    padding: 8px;
+    margin: 8px;
+    width: min(80em, 80vw);
+}
+
+.kukulkan-message.deleted {
+    border-color: red;
+    border-style: solid;
+}
+
+.kukulkan-thread.active {
+    background-color: rgba(85, 139, 47, 0.4) !important;
+}
+
+.kukulkan-thread.active:hover {
+    background-color: rgba(85, 139, 47, 0.5) !important;
+}
+
+.kukulkan-thread.selected.active {
+    background-color: rgba(85, 139, 47, 0.45) !important;
+}
+
+.kukulkan-thread.selected {
+    background-color: rgba(85, 139, 47, 0.3);
+}
+
+.kukulkan-thread:hover {
+    background-color: rgba(85, 139, 47, 0.2) !important;
+}
+
+.kukulkan-thread.due {
+    border-color: red;
+    border-style: solid;
+}
+
+.editTagBox input {
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+}
+
+#kukulkan-editTagBox {
+    position: fixed !important;
+    top: 10%;
+    left: 10%;
+    width: 80% !important;
+    background-color: #fff8e1;
+    border: 2px solid black;
+}
+
+#kukulkan-editTagBox + .MuiOutlinedInput-notchedOutline {
+    border: none;
+}
