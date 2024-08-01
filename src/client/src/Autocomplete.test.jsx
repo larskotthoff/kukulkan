@@ -92,4 +92,15 @@ test("allows to complete (mouse)", async () => {
   expect(input.getAttribute("value")).toEqual("foobar");
 });
 
+test("allows to set custom key handler", async () => {
+  const [testText, setTestText] = createSignal("");
+  let foo = "foo";
+  expect(foo).toBe("foo");
+
+  const { container } = render(() => <Autocomplete handleKey={() => foo = "bar"} text={testText} setText={setTestText} getOptions={() => ["foo", "foobar"]}/>);
+  const input = container.querySelector("input");
+  await userEvent.type(input, "f");
+  expect(foo).toBe("bar");
+});
+
 // vim: tabstop=2 shiftwidth=2 expandtab

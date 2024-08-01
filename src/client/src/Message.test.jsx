@@ -198,6 +198,16 @@ test("allows to edit tags", async () => {
   expect(screen.getByText("foo")).toBeInTheDocument();
   expect(screen.getByText("bar")).toBeInTheDocument();
   expect(screen.getByText("testTag")).toBeInTheDocument();
+
+  // remove tag
+  await userEvent.type(input, "{backspace}");
+  expect(global.fetch).toHaveBeenCalledTimes(3);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/remove/message/fo%40o/test");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/add/message/fo%40o/testTag");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/remove/message/fo%40o/testTag");
+  expect(screen.getByText("foo")).toBeInTheDocument();
+  expect(screen.getByText("bar")).toBeInTheDocument();
+  expect(screen.queryByText("testTag")).not.toBeInTheDocument();
 });
 
 test("automatically removes unread tag", async () => {

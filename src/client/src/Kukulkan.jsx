@@ -203,7 +203,7 @@ export const Kukulkan = (props) => {
             else
               return [];
           }}
-          onKeyPress={(ev) => {
+          handleKey={(ev) => {
             if(ev.code === 'Enter') {
               setShowEditingTagModal(false);
               // sad, but true

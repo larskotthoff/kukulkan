@@ -33,24 +33,25 @@ export const Autocomplete = (props) => {
     setSelected(0);
   }));
 
-  const handleKeydown = (event) => {
-    if (event.code === 'ArrowUp') {
+  const handleKeydown = (ev) => {
+    if (ev.code === 'ArrowUp') {
       setSelected(prev => prev === 0 ? (filteredOptions().length - 1) : prev - 1);
-    } else if (event.code === 'ArrowDown') {
+    } else if (ev.code === 'ArrowDown') {
       setSelected(prev => prev + 1 === filteredOptions().length ? 0 : prev + 1);
-    } else if (event.code === 'Enter') {
+    } else if (ev.code === 'Enter') {
       select();
-    } else if (event.code === 'Escape') {
+    } else if (ev.code === 'Escape') {
       setShowPopover(false);
       inputRef().blur();
     } else {
       setShowPopover(true);
     }
+
+    if(props.handleKey) props.handleKey(ev);
   };
 
   const select = (i) => {
     if(isVisible()) {
-      event.preventDefault();
       if(i) setSelected(i);
       props.setText(filteredOptions()[selected()]);
       setShowPopover(false);

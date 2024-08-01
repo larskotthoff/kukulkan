@@ -263,13 +263,18 @@ export const Message = (props) => {
                 getOptions={(text) => {
                   return props.allTags.filter((t) => t.startsWith(text));
                 }}
-                onKeyPress={async (ev) => {
+                handleKey={async (ev) => {
                   if(ev.code === 'Enter') {
                     const response = await fetch(apiURL(`api/tag/add/message/${encodeURIComponent(msg.notmuch_id)}/${encodeURIComponent(addTag())}`));
                     if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
                     const tmp = tags().concat(addTag());
                     setTags(tmp.sort());
                     setAddTag(null);
+                  } else if(ev.code === 'Backspace' && !addTag()) {
+                    const tmp = JSON.parse(JSON.stringify(tags())),
+                          tag = tmp.pop();
+                    removeTag(tag);
+                    setTags(tmp);
                   }
                 }}
               />
