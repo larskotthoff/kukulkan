@@ -227,6 +227,21 @@ test("automatically removes unread tag", async () => {
   expect(screen.queryByText("unread")).not.toBeInTheDocument();
 });
 
+test("delete shortcut works", async () => {
+  msg.tags = ["foo", "unread"];
+  render(() => <Message msg={msg} active={true}/>);
+  expect(screen.getByText("foo")).toBeInTheDocument();
+  expect(screen.getByText("unread")).toBeInTheDocument();
+
+  global.fetch.mockResolvedValue({ ok: true });
+  await userEvent.type(document.body, "{delete}");
+  expect(global.fetch).toHaveBeenCalledTimes(2);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/remove/message/fo%40o/unread");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/add/message/fo%40o/deleted");
+  expect(screen.queryByText("unread")).not.toBeInTheDocument();
+  expect(screen.getByText("deleted")).toBeInTheDocument();
+});
+
 test("click expands and collapses quoted text", async () => {
   msg.body = {
     "text/html": "Test mail in HTML",

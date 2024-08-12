@@ -195,7 +195,7 @@ export const Message = (props) => {
         [open, setOpen] = createSignal(props.active),
         msg = props.msg,
         [tags, setTags] = createSignal(msg.tags.sort()),
-        [addTag, setAddTag] = createSignal(),
+        [tagToAdd, setTagToAdd] = createSignal(),
         {mainPart, quotedPart} = separateQuotedNonQuoted(msg.body["text/plain"]);
   let elementTop;
 
@@ -203,6 +203,13 @@ export const Message = (props) => {
     const response = await fetch(apiURL(`api/tag/remove/message/${encodeURIComponent(msg.notmuch_id)}/${encodeURIComponent(tag)}`));
     if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
     setTags(tags().filter((t) => t !== tag));
+  }
+
+  async function addTag(tag) {
+    const response = await fetch(apiURL(`api/tag/add/message/${encodeURIComponent(msg.notmuch_id)}/${encodeURIComponent(tag)}`));
+    if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
+    const tmp = tags().concat(tag);
+    setTags(tmp.sort());
   }
 
   let sigMsg = "",
@@ -268,6 +275,16 @@ export const Message = (props) => {
     () => { if(props.active) document.querySelector("button.kukulkan-content")?.click(); }
   );
 
+  mkShortcut(["Delete"],
+    () => {
+      if(props.active) {
+        removeTag("unread");
+        addTag("deleted");
+      }
+    },
+    true
+  );
+
   return (
     <Paper elevation={props.active ? 20 : 3} onClick={props.onClick}
       class={{
@@ -297,8 +314,8 @@ export const Message = (props) => {
                 variant="outlined"
                 fullWidth
                 margin="normal"
-                text={addTag}
-                setText={setAddTag}
+                text={tagToAdd}
+                setText={setTagToAdd}
                 InputProps={{
                   startAdornment: <InputAdornment>
                     <For each={tags()}>
@@ -314,16 +331,12 @@ export const Message = (props) => {
                 }}
                 handleKey={async (ev) => {
                   if(ev.code === 'Enter') {
-                    const response = await fetch(apiURL(`api/tag/add/message/${encodeURIComponent(msg.notmuch_id)}/${encodeURIComponent(addTag())}`));
-                    if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
-                    const tmp = tags().concat(addTag());
-                    setTags(tmp.sort());
-                    setAddTag(null);
-                  } else if(ev.code === 'Backspace' && !addTag()) {
+                    addTag(tagToAdd());
+                    setTagToAdd(null);
+                  } else if(ev.code === 'Backspace' && !tagToAdd()) {
                     const tmp = JSON.parse(JSON.stringify(tags())),
                           tag = tmp.pop();
                     removeTag(tag);
-                    setTags(tmp);
                   }
                 }}
               />
@@ -402,7 +415,7 @@ export const Message = (props) => {
           <Grid container direction="row" justifyContent="space-between" wrap="nowrap">
             <Grid item>{formatAddrs(msg.from)}</Grid>
             {msg.attachments.filter((a) => a.filename !== "smime.p7s").map((attachment, index2) => (
-              <Grid item key={index2} xs={saw} style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              <Grid item key={index2} xs={saw} class="text-preview">
                 {handleAttachment(msg, attachment, index2, true)}
               </Grid>
             ))}
