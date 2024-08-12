@@ -43,9 +43,10 @@ body {
 
 .text-preview {
     overflow: hidden;
-    max-height: 3lh;
-    text-overflow: ellipsis;
-    white-space-collapse: collapse;
+    white-space: collapse;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
 }
 
 .cal-preview {
