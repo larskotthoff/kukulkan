@@ -114,3 +114,10 @@ body {
 #kukulkan-editTagBox + .MuiOutlinedInput-notchedOutline {
     border: none;
 }
+
+.threadnav-box {
+    position: relative;
+    width: 1em;
+    height: 1em;
+    border: .05em solid white;
+}
