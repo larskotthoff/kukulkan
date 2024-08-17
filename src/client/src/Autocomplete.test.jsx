@@ -1,10 +1,10 @@
-import { afterEach, test, expect } from "vitest";
+import { afterEach, test, expect, vi } from "vitest";
 import { cleanup, render, screen } from "@solidjs/testing-library";
 import userEvent from "@testing-library/user-event";
 
 afterEach(cleanup);
 
-import { createSignal } from "solid-js";
+import { createResource, createSignal } from "solid-js";
 import { Autocomplete } from "./Autocomplete.jsx";
 
 test("exports Autocomplete", () => {
@@ -24,6 +24,34 @@ test("shows completions", async () => {
   expect(input.getAttribute("value")).toEqual("f");
   expect(screen.getByText("foo")).toBeInTheDocument();
   expect(screen.getByText("foobar")).toBeInTheDocument();
+});
+
+test("shows completions with async completion function", async () => {
+  global.fetch = vi.fn();
+  global.fetch.mockResolvedValueOnce({ ok: true, json: () => ["foo", "foobar"] });
+  async function fetchSomething() {
+    const response = await fetch(`blarg`);
+    if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
+    return await response.json();
+  }
+  const [testText, setTestText] = createSignal(""),
+        [getCompletions] = createResource(fetchSomething);
+
+  const { container } = render(() => <Autocomplete text={testText} setText={setTestText} getOptions={getCompletions}/>);
+
+  const input = container.querySelector("input");
+  await userEvent.type(input, "f");
+  expect(input.getAttribute("value")).toEqual("f");
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("foo")).toBeInTheDocument();
+  });
+  expect(screen.getByText("foobar")).toBeInTheDocument();
+
+  expect(global.fetch).toHaveBeenCalledTimes(1);
+  expect(global.fetch).toHaveBeenCalledWith("blarg");
+
+  vi.unstubAllGlobals();
 });
 
 test("allows to filter completions", async () => {
@@ -51,6 +79,18 @@ test("completions sorted correctly", async () => {
   const completions = document.querySelector(".MuiList-root").children;
   expect(completions[0]).toHaveTextContent('foo');
   expect(completions[1]).toHaveTextContent('afoo');
+});
+
+test("completions sorted correctly with values that don't contain text", async () => {
+  const [testText, setTestText] = createSignal("");
+  const { container } = render(() => <Autocomplete text={testText} setText={setTestText} getOptions={() => ["bar", "foo"]}/>);
+  const input = container.querySelector("input");
+  await userEvent.type(input, "foo");
+  expect(input.getAttribute("value")).toEqual("foo");
+
+  const completions = document.querySelector(".MuiList-root").children;
+  expect(completions[0]).toHaveTextContent('foo');
+  expect(completions[1]).toHaveTextContent('bar');
 });
 
 test("allows to complete (keyboard)", async () => {

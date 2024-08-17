@@ -8,25 +8,29 @@ import { List, ListItemButton, ListItemText, Popover, TextField } from "@suid/ma
 export const Autocomplete = (props) => {
   const [showPopover, setShowPopover] = createSignal(false),
         [selected, setSelected] = createSignal(0),
-        [inputRef, setInputRef] = createSignal();
+        [inputRef, setInputRef] = createSignal(),
+        [sortedOptions, setSortedOptions] = createSignal([]);
 
   const compareToText = (a, b) => {
-    const re = new RegExp(props.text(), "i"),
-          posa = a.search(re),
-          posb = b.search(re);
+    let re = new RegExp(props.text(), "i"),
+        posa = a.search(re),
+        posb = b.search(re);
+    if(posa === -1) posa = 999;
+    if(posb === -1) posb = 999;
     return posa === posb ?
            Math.abs(a.length - props.text().length) - Math.abs(b.length - props.text().length) :
            posa - posb;
   };
 
-  const filteredOptions = () => {
-    return props.getOptions(props.text()).sort(compareToText);
-  };
+  async function getSortedOptions() {
+    const options = await props.getOptions(props.text());
+    setSortedOptions(options.sort(compareToText));
+  }
 
   const isVisible = createMemo(() => {
     return showPopover() &&
            props.text() &&
-           filteredOptions().length > 0;
+           sortedOptions().length > 0;
   });
 
   createEffect(on(props.text, () => {
@@ -35,9 +39,9 @@ export const Autocomplete = (props) => {
 
   const handleKeydown = (ev) => {
     if (ev.code === 'ArrowUp') {
-      setSelected(prev => prev === 0 ? (filteredOptions().length - 1) : prev - 1);
+      setSelected(prev => prev === 0 ? (sortedOptions().length - 1) : prev - 1);
     } else if (ev.code === 'ArrowDown') {
-      setSelected(prev => prev + 1 === filteredOptions().length ? 0 : prev + 1);
+      setSelected(prev => prev + 1 === sortedOptions().length ? 0 : prev + 1);
     } else if (ev.code === 'Enter') {
       select();
     } else if (ev.code === 'Escape') {
@@ -53,7 +57,7 @@ export const Autocomplete = (props) => {
   const select = (i) => {
     if(isVisible()) {
       if(i) setSelected(i);
-      props.setText(filteredOptions()[selected()]);
+      props.setText(sortedOptions()[selected()]);
       setShowPopover(false);
       inputRef().focus();
       inputRef().setSelectionRange(props.text().length, props.text().length);
@@ -65,7 +69,10 @@ export const Autocomplete = (props) => {
       <TextField
         inputRef={setInputRef}
         value={props.text() || ""}
-        onChange={(ev, value) => props.setText(value)}
+        onChange={(ev, value) => {
+          props.setText(value);
+          getSortedOptions();
+        }}
         onKeyDown={handleKeydown}
         autoComplete="off"
         {...props}
@@ -78,7 +85,7 @@ export const Autocomplete = (props) => {
           horizontal: "left",
         }}>
         <List class="autocomplete-popup">
-          <Index each={filteredOptions()}>
+          <Index each={sortedOptions()}>
             {(item, i) =>
               <ListItemButton
                   selected={selected() === i}
