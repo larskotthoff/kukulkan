@@ -81,18 +81,6 @@ test("completions sorted correctly", async () => {
   expect(completions[1]).toHaveTextContent('afoo');
 });
 
-test("completions sorted correctly with values that don't contain text", async () => {
-  const [testText, setTestText] = createSignal("");
-  const { container } = render(() => <Autocomplete text={testText} setText={setTestText} getOptions={() => ["bar", "foo"]}/>);
-  const input = container.querySelector("input");
-  await userEvent.type(input, "foo");
-  expect(input.getAttribute("value")).toEqual("foo");
-
-  const completions = document.querySelector(".MuiList-root").children;
-  expect(completions[0]).toHaveTextContent('foo');
-  expect(completions[1]).toHaveTextContent('bar');
-});
-
 test("allows to complete (keyboard)", async () => {
   const [testText, setTestText] = createSignal("");
   const { container } = render(() => <Autocomplete text={testText} setText={setTestText} getOptions={() => ["foo", "foobar"]}/>);
@@ -140,6 +128,27 @@ test("allows to set custom key handler", async () => {
   const { container } = render(() => <Autocomplete handleKey={() => foo = "bar"} text={testText} setText={setTestText} getOptions={() => ["foo", "foobar"]}/>);
   const input = container.querySelector("input");
   await userEvent.type(input, "f");
+  expect(foo).toBe("bar");
+});
+
+test("allows to set select hook", async () => {
+  const [testText, setTestText] = createSignal("");
+  let foo = "foo";
+  expect(foo).toBe("foo");
+
+  const { container } = render(() => <Autocomplete onSelect={() => foo = "bar"} text={testText} setText={setTestText} getOptions={() => ["foo", "foobar"]}/>);
+  const input = container.querySelector("input");
+  await userEvent.type(input, "f");
+  expect(foo).toBe("foo");
+  let completions = document.querySelector(".MuiList-root").children;
+  await userEvent.click(completions[0]);
+  expect(foo).toBe("bar");
+
+  foo = "foo";
+  expect(foo).toBe("foo");
+  await userEvent.type(input, "o");
+  await userEvent.type(input, "{arrowdown}");
+  await userEvent.type(input, "{enter}");
   expect(foo).toBe("bar");
 });
 

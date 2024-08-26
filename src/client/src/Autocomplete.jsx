@@ -15,8 +15,6 @@ export const Autocomplete = (props) => {
     let re = new RegExp(props.text(), "i"),
         posa = a.search(re),
         posb = b.search(re);
-    if(posa === -1) posa = 999;
-    if(posb === -1) posb = 999;
     return posa === posb ?
            Math.abs(a.length - props.text().length) - Math.abs(b.length - props.text().length) :
            posa - posb;
@@ -61,6 +59,7 @@ export const Autocomplete = (props) => {
       setShowPopover(false);
       inputRef().focus();
       inputRef().setSelectionRange(props.text().length, props.text().length);
+      if(props.onSelect) props.onSelect();
     }
   };
 
