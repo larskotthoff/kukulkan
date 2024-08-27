@@ -225,7 +225,7 @@ export const Kukulkan = (props) => {
           </a>
         </Stack>
       </Show>
-      <Show when={allTags.state === "ready" && threads.state === "ready"} fallback={<LinearProgress/>}>
+      <Show when={!allTags.loading && !threads.loading} fallback={<LinearProgress/>}>
         <div align="right">{threads().length} thread{threads().length === 1 ? "" : "s"}.</div>
         <Grid container width="95%" class="centered">
           <For each={threads().sort(props.sort)}>

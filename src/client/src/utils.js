@@ -131,4 +131,11 @@ export async function fetchAllTags() {
   return await response.json();
 }
 
+export async function fetchMessage(id) {
+  if(id === null) return null;
+  const response = await fetch(apiURL(`api/message/${encodeURIComponent(id)}`));
+  if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
+  return response.json();
+}
+
 // vim: tabstop=2 shiftwidth=2 expandtab

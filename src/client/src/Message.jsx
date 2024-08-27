@@ -17,14 +17,7 @@ import linkifyStr from 'linkify-string';
 const linkifyOpts = { target: "_blank", rel: "nofollow" };
 
 import "./Kukulkan.css";
-import { apiURL, fetchAllTags, formatDate, formatFSz, mkShortcut, strip } from "./utils.js";
-
-async function fetchMessage(id) {
-  if(id === null) return null;
-  const response = await fetch(apiURL(`api/message/${encodeURIComponent(id)}`));
-  if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
-  return await response.json();
-}
+import { apiURL, fetchAllTags, formatDate, formatFSz, mkShortcut, strip, fetchMessage } from "./utils.js";
 
 export const separateQuotedNonQuoted = (text) => {
   let lines = text.split('\n'),
@@ -108,7 +101,7 @@ const calUrl = (id, action, index) => {
 
 const calendarAction = (msg, attachment, index) => {
   if(attachment.preview.method === "REQUEST" && attachment.preview.status === "NEEDS-ACTION") {
-    return(<Grid container direction="row" justifyContent="space-around" m={1}>
+    return (<Grid container direction="row" justifyContent="space-around" m={1}>
       <a href={calUrl(msg.notmuch_id, 'accept', index)} target="_blank" rel="noreferrer">
         <CheckCircle fontSize="large"/>
       </a>
@@ -118,13 +111,13 @@ const calendarAction = (msg, attachment, index) => {
       <a href={calUrl(msg.notmuch_id, 'tentative', index)} target="_blank" rel="noreferrer">
         <Help fontSize="large"/>
       </a>
-      </Grid>)
+      </Grid>);
   } else if(attachment.preview.status === "ACCEPTED") {
-      return(<CheckCircle fontSize="large" style={{ margin: 8 }}/>)
+      return (<CheckCircle fontSize="large" style={{ margin: 8 }}/>);
   } else if(attachment.preview.status === "DECLINED") {
-      return(<Cancel fontSize="large" style={{ margin: 8 }}/>)
+      return (<Cancel fontSize="large" style={{ margin: 8 }}/>);
   } else if(attachment.preview.status === "TENTATIVE") {
-      return(<Help fontSize="large" style={{ margin: 8 }}/>)
+      return (<Help fontSize="large" style={{ margin: 8 }}/>);
   }
 };
 
@@ -184,7 +177,7 @@ const ShadowRoot = (props) => {
 };
 
 const HeaderLine = ({left, right}) => {
-  return(
+  return (
     <Stack direction="row" spacing={.5}><span>{left}</span><span>{right}</span></Stack>
   );
 };
@@ -309,7 +302,7 @@ export const Message = (props) => {
           <Grid container justifyContent="space-between" direction="row" style={{ minHeight: "3.5em" }} class="centered">
             <Grid item xs={11}>
               <Autocomplete
-                class="editTagBox"
+                class="editAutoCompleteBox"
                 id="kukulkan-editTags"
                 variant="outlined"
                 fullWidth
@@ -330,7 +323,7 @@ export const Message = (props) => {
                   return props.allTags.filter((t) => t.startsWith(text));
                 }}
                 handleKey={async (ev) => {
-                  if(ev.code === 'Enter') {
+                  if(ev.code === 'Enter' && tagToAdd()) {
                     addTag(tagToAdd());
                     setTagToAdd(null);
                   } else if(ev.code === 'Backspace' && !tagToAdd()) {
@@ -440,7 +433,7 @@ export const FetchedMessage = () => {
 
   return (
     <>
-      <Show when={allTags.state === "ready" && message.state === "ready"} fallback={<LinearProgress/>}>
+      <Show when={!allTags.loading && !message.loading} fallback={<LinearProgress/>}>
         <Message msg={message()} allTags={allTags()} active={true}/>
       </Show>
     </>

@@ -35,6 +35,7 @@ test("sets query and title based on URL", () => {
     ...window.location,
     search: '?query=foo'
   });
+  global.fetch.mockResolvedValue({ ok: true });
   container = render(() => <Kukulkan Thread={IndexThread}/>).container;
   expect(container.querySelector("input").getAttribute("value")).toEqual("foo");
 

@@ -35,6 +35,7 @@ body {
 .chip span {
     padding: 3px;
     white-space: break-spaces !important;
+    width: max-content;
 }
 
 .message-text {
@@ -97,9 +98,13 @@ body {
     border-style: solid;
 }
 
-.editTagBox input {
-    padding-top: 10px !important;
-    padding-bottom: 10px !important;
+.editAutoCompleteBox div {
+    padding-left: 3px !important;
+}
+
+.editAutoCompleteBox input {
+    padding-top: 7px !important;
+    padding-bottom: 7px !important;
 }
 
 #kukulkan-editTagBox {
@@ -120,4 +125,19 @@ body {
     width: 1em;
     height: 1em;
     border: .05em solid white;
+}
+
+.selectMargin div {
+    padding: 10px;
+}
+
+.inputMargin input {
+    padding: 5px;
+}
+
+.inputFieldSet {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    margin-top: -15px !important;
 }

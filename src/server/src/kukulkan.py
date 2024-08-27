@@ -157,8 +157,10 @@ def create_app():
     class Address(Resource):
         def get(self, query_string):
             # not supported by API...
-            addrs = os.popen("notmuch address " + query_string).read()
-            return [addr for addr in addrs.split('\n') if addr]
+            addrs = os.popen("notmuch address --output=sender --output=recipients " + query_string).read()
+            return [a for a in
+                    filter(lambda a: re.search(query_string, a, re.IGNORECASE),
+                           addrs.split('\n'))][:10]
 
     class Thread(Resource):
         def get(self, thread_id):

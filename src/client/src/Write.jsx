@@ -1,0 +1,408 @@
+import { createEffect, createSignal, createResource, For, onMount, Show } from "solid-js";
+import { createStore } from "solid-js/store";
+
+import { Alert, Box, Button, Divider, Grid, InputAdornment, LinearProgress, MenuItem, Paper, Select, TextField } from "@suid/material";
+import { Autocomplete } from "./Autocomplete.jsx";
+import { ColorChip } from "./ColorChip.jsx";
+
+import AttachFile from "@suid/icons-material/AttachFile";
+import Send from "@suid/icons-material/Send";
+
+import "./Kukulkan.css";
+import { apiURL, fetchAllTags, fetchMessage, formatFSz, mkShortcut } from "./utils.js";
+
+const Templates = (props) => {
+  return (
+    <Grid container spacing={1} class="centered" sx={{ justifyContent: 'center' }}>
+      <For each={props.templates()}>
+        {(template) => {
+          mkShortcut([template.shortcut],
+            () => document.getElementById(`template-${template.shortcut}`).click()
+          );
+          return (<Grid item key={template.shortcut}>
+            <Button id={`template-${template.shortcut}`} variant="outlined" onClick={() => props.setTemplate(template.template) }>{template.description} ({template.shortcut})</Button>
+          </Grid>);
+        }}
+      </For>
+    </Grid>
+  );
+};
+
+const AddrComplete = (props) => {
+  const [addrToAdd, setAddrToAdd] = createSignal();
+
+  let controller = null;
+
+  return (
+    <Autocomplete
+      class="editAutoCompleteBox"
+      variant="outlined"
+      fullWidth
+      margin="normal"
+      text={addrToAdd}
+      setText={setAddrToAdd}
+      InputProps={{
+        startAdornment: <InputAdornment>
+          <For each={props.message[props.addrAttr]}>
+            {(addr) => addr && <ColorChip value={addr} onClick={(e) => {
+              props.setMessage(props.addrAttr, a => a !== addr);
+              localStorage.setItem(`draft-${props.draftKey}-${props.addrAttr}`, props.message[props.addrAttr].join("\n"));
+              e.stopPropagation();
+            }}/>}
+          </For>
+        </InputAdornment>
+      }}
+      getOptions={async (text) => {
+        if(text.length > 2) {
+          try {
+            controller?.abort();
+            controller = new AbortController();
+            const response = await fetch(apiURL(`api/address/${encodeURIComponent(text)}`), { signal: controller.signal });
+            if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
+            return await response.json();
+          } catch(_) {
+            // this is fine, previous aborted completion request
+          }
+        }
+        return [];
+      }}
+      onSelect={() => {
+        if(addrToAdd()) {
+          props.setMessage(props.addrAttr, props.message[props.addrAttr].length, addrToAdd());
+          setAddrToAdd(null);
+          localStorage.setItem(`draft-${props.draftKey}-${props.addrAttr}`, props.message[props.addrAttr].join("\n"));
+        }
+      }}
+      handleKey={async (ev) => {
+        if(ev.code === 'Backspace' && !addrToAdd()) {
+          const tmp = JSON.parse(JSON.stringify(props.message[props.addrAttr])),
+                addr = tmp.pop();
+          props.setMessage(props.addrAttr, a => a !== addr);
+          localStorage.setItem(`draft-${props.draftKey}-${props.addrAttr}`, props.message[props.addrAttr].join("\n"));
+        }
+      }}
+    />
+  );
+};
+
+async function fetchAccounts() {
+  const response = await fetch(apiURL(`api/accounts/`));
+  if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
+  return await response.json();
+}
+
+async function fetchTemplates() {
+  const response = await fetch(apiURL(`api/templates/`));
+  if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
+  return await response.json();
+}
+
+const makeToCc = (msg, action, accounts, mode) => {
+  if(!msg || !action || !accounts) return [ [], [] ];
+
+  let tmpTo = [], tmpCc = [];
+  if(action === "reply" || action.startsWith("reply-cal-")) {
+    if(msg.reply_to) {
+      tmpTo = [ msg.reply_to ];
+    } else {
+      tmpTo = [ msg.from ];
+    }
+    if(mode !== "one" && !action.startsWith("reply-cal-")) {
+      tmpTo = tmpTo.concat(msg.to.split(/(?<=>),\s*|(?<=@[^, ]+),\s*/));
+      tmpTo = tmpTo.filter(a => {
+        return a.length > 0 && accounts.reduce((cum, acct) => {
+          if(cum === false) return false;
+
+          if(a.includes(acct.email)) {
+            return false;
+          }
+          return true;
+        }, true);
+      });
+
+      if(msg.cc.length > 0) {
+        tmpCc = msg.cc.split(/(?<=>),\s*|(?<=@[^, ]+),\s*/);
+        tmpCc = tmpCc.filter(a => {
+          return a.length > 0 && !tmpTo.includes(a) && accounts.reduce((cum, acct) => {
+            if(cum === false) return false;
+
+            if(a.includes(acct.email)) {
+              return false;
+            }
+            return true;
+          }, true);
+        });
+      }
+    }
+  }
+  return [ tmpTo, tmpCc ];
+};
+
+export const Write = () => {
+  const [sp] = createSignal(window.location.search),
+        searchParams = new URLSearchParams(sp()),
+        baseMessageId = searchParams.get("id"),
+        action = searchParams.get("action") || "compose",
+        mode = searchParams.get("mode"),
+        [baseMessage] = createResource(baseMessageId, fetchMessage),
+        [allTags] = createResource(fetchAllTags),
+        [accounts] = createResource(fetchAccounts),
+        [templates] = createResource(fetchTemplates),
+        [useTemplate, setUseTemplate] = createSignal(null),
+        [bodyRef, setBodyRef] = createSignal(),
+        [statusMsg, setStatusMsg] = createSignal(),
+        [tagToAdd, setTagToAdd] = createSignal(),
+        [message, setMessage] = createStore({});
+  let draftKey = action,
+      defTo = [],
+      defCc = [];
+
+  createEffect(() => {
+    document.title = "Compose: New Message";
+    if(localStorage.getItem(`draft-${draftKey}-from`)) {
+      setMessage("from", localStorage.getItem(`draft-${draftKey}-from`));
+    }
+
+    let acct = accounts()?.find(a => a.default);
+
+    setMessage("files", localStorage.getItem(`draft-${draftKey}-files`)?.split('\n').map(JSON.parse) || []);
+    if(baseMessage()) {
+      draftKey += `-${baseMessage().message_id}`;
+      if(action === "forward" && baseMessage().attachments) {
+        // attach files attached to previous email
+        const newFiles = baseMessage().attachments.map(a => { return { dummy: true, name: a.filename }; });
+        setMessage("files", (prevFiles) => [...prevFiles, ...newFiles ]);
+      }
+      if(action.startsWith("reply-cal-")) {
+        const idx = searchParams.get("index"),
+              calFile = { dummy: true, name: baseMessage().attachments[idx].filename };
+        setMessage("files", (prevFiles) => [...prevFiles, calFile]);
+      }
+
+      if(localStorage.getItem(`draft-${draftKey}-from`)) {
+        setMessage("from", localStorage.getItem(`draft-${draftKey}-from`));
+      } else {
+        acct = accounts().find(a => baseMessage().to.includes(a.email));
+        if(!acct) {
+          acct = accounts().find(a => baseMessage().from.includes(a.email));
+        }
+        if(!acct && baseMessage().cc) {
+          acct = accounts().find(a => baseMessage().cc.includes(a.email));
+        }
+        if(!acct && baseMessage().bcc) {
+          acct = accounts().find(a => baseMessage().bcc.includes(a.email));
+        }
+        if(!acct && baseMessage().delivered_to) {
+          acct = accounts().find(a => baseMessage().delivered_to.includes(a.email));
+        }
+        if(!acct && baseMessage().forwarded_to) {
+          acct = accounts().find(a => baseMessage().forwarded_to.includes(a.email));
+        }
+      }
+      document.title = `Compose: ${prefix(baseMessage().subject)}`;
+
+      [defTo, defCc] = makeToCc(baseMessage(), action, accounts, mode);
+    } else {
+      setMessage("subject", "");
+    }
+
+    setMessage("from", acct?.id);
+    setMessage("to", localStorage.getItem(`draft-${draftKey}-to`)?.split('\n') || defTo);
+    setMessage("cc", localStorage.getItem(`draft-${draftKey}-cc`)?.split('\n') || defCc);
+    setMessage("bcc", localStorage.getItem(`draft-${draftKey}-bcc`)?.split('\n') || "");
+
+    setMessage("bodyDefaultValue", localStorage.getItem(`draft-${draftKey}-body`) || quote(baseMessage()?.body["text/plain"]) || "");
+    setMessage("tags", localStorage.getItem(`draft-${draftKey}-tags`)?.split('\n') || baseMessage()?.tags || []);
+  });
+
+  createEffect(() => {
+    if(useTemplate()) {
+      bodyRef().value = useTemplate() + message.bodyDefaultValue;
+    }
+  });
+
+  const quote = (text) => {
+    if(text && baseMessage()) {
+      return `\n\n\nOn ${baseMessage().date}, ${baseMessage().from} wrote:\n> ${text.replace(/&gt;/g, ">").replace(/&lt;/g, "<").split('\n').join("\n> ")}`;
+    }
+  };
+
+  const prefix = (text) => {
+    let pre = "";
+    if(action === "reply" && !text.toLowerCase().startsWith("re:")) {
+      pre = "Re: ";
+    }
+    if(action === "forward") {
+      pre = "Fw: ";
+    }
+    if(action.startsWith("reply-cal-")) {
+      let act = action.split('-')[2];
+      pre = act[0].toUpperCase() + act.slice(1) + ": ";
+    }
+    return pre + text;
+  };
+
+  mkShortcut(["a"],
+    () => document.getElementById("attach").click()
+  );
+
+  return (
+    <>
+      <Show when={!allTags.loading && !accounts.loading && !templates.loading && !baseMessage.loading} fallback={<LinearProgress/>}>
+        <Box width="95%" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <Show when={statusMsg()}>
+          <Alert severity="success">{statusMsg()}</Alert>
+        </Show>
+        <Show when={templates()}>
+          <Templates templates={templates} setTemplate={setUseTemplate}/>
+        </Show>
+        <Paper elevation={3} class="kukulkan-message">
+          <Grid container spacing={1} class="inputFieldSet">
+            <Grid item>From:</Grid>
+            <Grid item>
+              <Select
+                class="selectMargin"
+                value={message.from}
+                onChange={(ev) => {
+                  setMessage("from", ev.target.value);
+                  localStorage.setItem(`draft-${draftKey}-from`, ev.target.value);
+                }}>
+                  <For each={accounts()}>
+                    {(acct) =>
+                      <MenuItem value={acct.id}>
+                        {`${acct.name} <${acct.email}>`}
+                      </MenuItem>
+                    }
+                  </For>
+              </Select>
+            </Grid>
+          </Grid>
+          <Grid container spacing={1} class="inputFieldSet">
+            <Grid item>To:</Grid>
+            <Grid item xs>
+              <AddrComplete addrAttr="to" message={message} setMessage={setMessage} draftKey={draftKey}/>
+            </Grid>
+          </Grid>
+          <Grid container spacing={1} class="inputFieldSet">
+            <Grid item>CC:</Grid>
+            <Grid item xs>
+              <AddrComplete addrAttr="cc" message={message} setMessage={setMessage}
+                draftKey={draftKey}
+                defVal={localStorage.getItem(`draft-${draftKey}-cc`)?.split('\n') || defCc}/>
+            </Grid>
+          </Grid>
+          <Grid container spacing={1} class="inputFieldSet">
+            <Grid item>BCC:</Grid>
+            <Grid item xs>
+              <AddrComplete addrAttr="bcc" message={message} setMessage={setMessage}
+                draftKey={draftKey}
+                defVal={localStorage.getItem(`draft-${draftKey}-bcc`)?.split('\n') || []}/>
+            </Grid>
+          </Grid>
+          <Grid container spacing={1}>
+            <Grid item>Subject:</Grid>
+            <Grid item xs><TextField
+              variant="outlined"
+              class="inputMargin"
+              defaultValue={localStorage.getItem(`draft-${draftKey}-subject`) || prefix(baseMessage() ? baseMessage().subject : "")}
+              onChange={(ev) => {
+                setMessage("subject", ev.target.value);
+                localStorage.setItem(`draft-${draftKey}-subject`, message.subject);
+                document.title = `Compose: ${message.subject}`;
+              }}
+              fullWidth/>
+            </Grid>
+          </Grid>
+
+          <Grid container spacing={1} class="inputFieldSet">
+            <Grid item>Tags:</Grid>
+            <Grid item xs>
+             <Autocomplete
+                class="editAutoCompleteBox"
+                variant="outlined"
+                fullWidth
+                margin="normal"
+                text={tagToAdd}
+                setText={setTagToAdd}
+                InputProps={{
+                  startAdornment: <InputAdornment>
+                    <For each={message.tags}>
+                      {(tag) => tag && <ColorChip test-label={tag} value={tag} onClick={(e) => {
+                        setMessage("tags", message.tags.filter(t => t !== tag));
+                        localStorage.setItem(`draft-${draftKey}-tags`, message.tags.join("\n"));
+                        e.stopPropagation();
+                      }}/>}
+                    </For>
+                  </InputAdornment>
+                }}
+                getOptions={(text) => {
+                  return allTags().filter((t) => t.startsWith(text));
+                }}
+                onSelect={() => {
+                  if(tagToAdd()) {
+                    setMessage("tags", message.tags.length, tagToAdd());
+                    setTagToAdd(null);
+                    localStorage.setItem(`draft-${draftKey}-tags`, message.tags.join("\n"));
+                  }
+                }}
+                handleKey={async (ev) => {
+                  if(ev.code === 'Backspace' && !tagToAdd()) {
+                    const tmp = JSON.parse(JSON.stringify(message.tags)),
+                          tag = tmp.pop();
+                    setMessage("tags", message.tags.filter(t => t !== tag));
+                  }
+                  localStorage.setItem(`draft-${draftKey}-tags`, message.tags.join("\n"));
+                }}
+              />
+            </Grid>
+          </Grid>
+
+          <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
+
+          <TextField
+            multiline
+            minRows={10}
+            maxRows={window.innerHeight / parseFloat(window.getComputedStyle(document.getElementsByTagName("body")[0]).getPropertyValue("line-height")) - 18}
+            fullWidth
+            defaultValue={message.bodyDefaultValue}
+            inputRef={setBodyRef}
+            style={{ marginBottom: ".5em" }}
+            onChange={(ev) => {
+              localStorage.setItem(`draft-${draftKey}-body`, ev.target.value);
+              setMessage("body", ev.target.value);
+            }}/>
+          <For each={message.files}>
+            {(f) => <ColorChip value={`${f.name} (${formatFSz(f.size)})`} onClick={(e) => {
+                setMessage("files", message.files.filter(fi => fi !== f));
+                if(message.files.length > 0) {
+                  localStorage.setItem(`draft-${draftKey}-files`, message.files.map(JSON.stringify).join("\n"));
+                } else {
+                  localStorage.removeItem(`draft-${draftKey}-files`);
+                }
+                e.stopPropagation();
+              }}/>
+            }
+          </For>
+          <Grid container sx={{ marginTop: ".5em" }}>
+            <Grid item xs>
+              <Button id="attach" startIcon={<AttachFile/>} variant="outlined" component="label">
+                Attach
+                <input type="file" multiple hidden onChange={(ev) => {
+                  const newFiles = Array.from(ev.target.files).map(f => { return { name: f.name, size: f.size }; });
+                  setMessage("files", (prevFiles) => [...prevFiles, ...newFiles]);
+                  localStorage.setItem(`draft-${draftKey}-files`, message.files.map(JSON.stringify).join("\n"));
+                }}/>
+              </Button>
+            </Grid>
+            <Grid item>
+              <Button key="send" startIcon={<Send/>} variant="outlined">Send</Button>
+            </Grid>
+          </Grid>
+        </Paper>
+        </Box>
+      </Show>
+    </>
+  );
+};
+
+// vim: tabstop=2 shiftwidth=2 expandtab

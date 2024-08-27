@@ -170,7 +170,7 @@ export const Thread = () => {
 
   return (
     <>
-      <Show when={allTags.state === "ready" && activeMessage() > -1} fallback={<LinearProgress/>}>
+      <Show when={!allTags.loading && activeMessage() > -1} fallback={<LinearProgress/>}>
         <Grid container direction="row" alignItems="flex-start">
           <Grid item xs="auto" style={{height: '100vh'}}>
             <ThreadNav/>
