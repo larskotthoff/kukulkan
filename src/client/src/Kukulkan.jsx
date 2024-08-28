@@ -163,9 +163,8 @@ export const Kukulkan = (props) => {
         <Autocomplete
           id="kukulkan-queryBox"
           name="search"
-          variant="outlined"
+          variant="standard"
           fullWidth
-          margin="normal"
           text={searchText}
           setText={setSearchText}
           getOptions={(text) => {
@@ -189,9 +188,8 @@ export const Kukulkan = (props) => {
         <Autocomplete
           id="kukulkan-editTagBox"
           name="editTags"
-          variant="outlined"
+          variant="standard"
           fullWidth
-          margin="normal"
           text={editingTags}
           setText={setEditingTags}
           getOptions={(text) => {

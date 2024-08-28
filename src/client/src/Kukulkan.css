@@ -107,6 +107,10 @@ body {
     padding-bottom: 7px !important;
 }
 
+#kukulkan-queryBox {
+    margin-top: 10px;
+}
+
 #kukulkan-editTagBox {
     position: fixed !important;
     top: 10%;

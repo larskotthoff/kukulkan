@@ -304,9 +304,8 @@ export const Message = (props) => {
               <Autocomplete
                 class="editAutoCompleteBox"
                 id="kukulkan-editTags"
-                variant="outlined"
+                variant="standard"
                 fullWidth
-                margin="normal"
                 text={tagToAdd}
                 setText={setTagToAdd}
                 InputProps={{
