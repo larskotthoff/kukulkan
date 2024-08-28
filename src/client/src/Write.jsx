@@ -36,9 +36,8 @@ const AddrComplete = (props) => {
   return (
     <Autocomplete
       class="editAutoCompleteBox"
-      variant="outlined"
+      variant="standard"
       fullWidth
-      margin="normal"
       text={addrToAdd}
       setText={setAddrToAdd}
       InputProps={{
@@ -299,11 +298,10 @@ export const Write = () => {
                 defVal={localStorage.getItem(`draft-${draftKey}-bcc`)?.split('\n') || []}/>
             </Grid>
           </Grid>
-          <Grid container spacing={1}>
+          <Grid container spacing={1} class="inputFieldSet">
             <Grid item>Subject:</Grid>
             <Grid item xs><TextField
-              variant="outlined"
-              class="inputMargin"
+              variant="standard"
               defaultValue={localStorage.getItem(`draft-${draftKey}-subject`) || prefix(baseMessage() ? baseMessage().subject : "")}
               onChange={(ev) => {
                 setMessage("subject", ev.target.value);
@@ -319,9 +317,8 @@ export const Write = () => {
             <Grid item xs>
              <Autocomplete
                 class="editAutoCompleteBox"
-                variant="outlined"
+                variant="standard"
                 fullWidth
-                margin="normal"
                 text={tagToAdd}
                 setText={setTagToAdd}
                 InputProps={{
@@ -357,8 +354,6 @@ export const Write = () => {
             </Grid>
           </Grid>
 
-          <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
-
           <TextField
             multiline
             minRows={10}
@@ -366,7 +361,7 @@ export const Write = () => {
             fullWidth
             defaultValue={message.bodyDefaultValue}
             inputRef={setBodyRef}
-            style={{ marginBottom: ".5em" }}
+            sx={{ marginBottom: ".5em", marginTop: "1em" }}
             onChange={(ev) => {
               localStorage.setItem(`draft-${draftKey}-body`, ev.target.value);
               setMessage("body", ev.target.value);

@@ -139,5 +139,14 @@ body {
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
-    margin-top: -15px !important;
+}
+
+button {
+    color: rgb(85, 139, 47) !important;
+    border-color: rgb(85, 139, 47) !important;
+}
+
+label {
+    color: rgb(85, 139, 47) !important;
+    border-color: rgb(85, 139, 47) !important;
 }
