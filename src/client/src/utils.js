@@ -125,10 +125,13 @@ export function simulateKeyPress(key, ctrlKey = false, shiftKey = false, altKey 
   document.dispatchEvent(event);
 }
 
+export const adminTags = [ "attachment", "passed", "replied", "sent", "signed" ];
+
 export async function fetchAllTags() {
   const response = await fetch(apiURL(`api/tags/`));
   if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
-  return await response.json();
+  const retval = await response.json();
+  return retval.filter(t => !adminTags.includes(t));
 }
 
 export async function fetchMessage(id) {

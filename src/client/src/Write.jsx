@@ -9,7 +9,7 @@ import AttachFile from "@suid/icons-material/AttachFile";
 import Send from "@suid/icons-material/Send";
 
 import "./Kukulkan.css";
-import { apiURL, fetchAllTags, fetchMessage, formatFSz, mkShortcut } from "./utils.js";
+import { adminTags, apiURL, fetchAllTags, fetchMessage, formatFSz, mkShortcut } from "./utils.js";
 
 const Templates = (props) => {
   return (
@@ -40,11 +40,12 @@ const AddrComplete = (props) => {
       fullWidth
       text={addrToAdd}
       setText={setAddrToAdd}
+      data-testid={props['data-testid']}
       InputProps={{
         startAdornment: <InputAdornment>
           <For each={props.message[props.addrAttr]}>
             {(addr) => addr && <ColorChip value={addr} onClick={(e) => {
-              props.setMessage(props.addrAttr, a => a !== addr);
+              props.setMessage(props.addrAttr, props.message[props.addrAttr].filter(a => a !== addr));
               localStorage.setItem(`draft-${props.draftKey}-${props.addrAttr}`, props.message[props.addrAttr].join("\n"));
               e.stopPropagation();
             }}/>}
@@ -65,18 +66,15 @@ const AddrComplete = (props) => {
         }
         return [];
       }}
-      onSelect={() => {
-        if(addrToAdd()) {
+      handleKey={(ev) => {
+        if(ev.code === "Enter" && addrToAdd()) {
           props.setMessage(props.addrAttr, props.message[props.addrAttr].length, addrToAdd());
           setAddrToAdd(null);
           localStorage.setItem(`draft-${props.draftKey}-${props.addrAttr}`, props.message[props.addrAttr].join("\n"));
-        }
-      }}
-      handleKey={async (ev) => {
-        if(ev.code === 'Backspace' && !addrToAdd()) {
+        } else if(ev.code === 'Backspace' && !addrToAdd()) {
           const tmp = JSON.parse(JSON.stringify(props.message[props.addrAttr])),
                 addr = tmp.pop();
-          props.setMessage(props.addrAttr, a => a !== addr);
+          props.setMessage(props.addrAttr, props.message[props.addrAttr].filter(a => a !== addr));
           localStorage.setItem(`draft-${props.draftKey}-${props.addrAttr}`, props.message[props.addrAttr].join("\n"));
         }
       }}
@@ -108,16 +106,6 @@ const makeToCc = (msg, action, accounts, mode) => {
     }
     if(mode !== "one" && !action.startsWith("reply-cal-")) {
       tmpTo = tmpTo.concat(msg.to.split(/(?<=>),\s*|(?<=@[^, ]+),\s*/));
-      tmpTo = tmpTo.filter(a => {
-        return a.length > 0 && accounts.reduce((cum, acct) => {
-          if(cum === false) return false;
-
-          if(a.includes(acct.email)) {
-            return false;
-          }
-          return true;
-        }, true);
-      });
 
       if(msg.cc.length > 0) {
         tmpCc = msg.cc.split(/(?<=>),\s*|(?<=@[^, ]+),\s*/);
@@ -133,6 +121,17 @@ const makeToCc = (msg, action, accounts, mode) => {
         });
       }
     }
+
+    tmpTo = tmpTo.filter(a => {
+      return a.length > 0 && accounts.reduce((cum, acct) => {
+        if(cum === false) return false;
+
+        if(a.includes(acct.email)) {
+          return false;
+        }
+        return true;
+      }, true);
+    });
   }
   return [ tmpTo, tmpCc ];
 };
@@ -181,26 +180,26 @@ export const Write = () => {
       if(localStorage.getItem(`draft-${draftKey}-from`)) {
         setMessage("from", localStorage.getItem(`draft-${draftKey}-from`));
       } else {
-        acct = accounts().find(a => baseMessage().to.includes(a.email));
+        acct = accounts()?.find(a => baseMessage().to.includes(a.email));
         if(!acct) {
-          acct = accounts().find(a => baseMessage().from.includes(a.email));
+          acct = accounts()?.find(a => baseMessage().from.includes(a.email));
         }
         if(!acct && baseMessage().cc) {
-          acct = accounts().find(a => baseMessage().cc.includes(a.email));
+          acct = accounts()?.find(a => baseMessage().cc.includes(a.email));
         }
         if(!acct && baseMessage().bcc) {
-          acct = accounts().find(a => baseMessage().bcc.includes(a.email));
+          acct = accounts()?.find(a => baseMessage().bcc.includes(a.email));
         }
         if(!acct && baseMessage().delivered_to) {
-          acct = accounts().find(a => baseMessage().delivered_to.includes(a.email));
+          acct = accounts()?.find(a => baseMessage().delivered_to.includes(a.email));
         }
         if(!acct && baseMessage().forwarded_to) {
-          acct = accounts().find(a => baseMessage().forwarded_to.includes(a.email));
+          acct = accounts()?.find(a => baseMessage().forwarded_to.includes(a.email));
         }
       }
-      document.title = `Compose: ${prefix(baseMessage().subject)}`;
+      document.title = `Compose: ${prefix(baseMessage()?.subject)}`;
 
-      [defTo, defCc] = makeToCc(baseMessage(), action, accounts, mode);
+      [defTo, defCc] = makeToCc(baseMessage(), action, accounts(), mode);
     } else {
       setMessage("subject", "");
     }
@@ -209,9 +208,8 @@ export const Write = () => {
     setMessage("to", localStorage.getItem(`draft-${draftKey}-to`)?.split('\n') || defTo);
     setMessage("cc", localStorage.getItem(`draft-${draftKey}-cc`)?.split('\n') || defCc);
     setMessage("bcc", localStorage.getItem(`draft-${draftKey}-bcc`)?.split('\n') || "");
-
+    setMessage("tags", localStorage.getItem(`draft-${draftKey}-tags`)?.split('\n') || baseMessage()?.tags.filter(t => !adminTags.includes(t)) || []);
     setMessage("bodyDefaultValue", localStorage.getItem(`draft-${draftKey}-body`) || quote(baseMessage()?.body["text/plain"]) || "");
-    setMessage("tags", localStorage.getItem(`draft-${draftKey}-tags`)?.split('\n') || baseMessage()?.tags || []);
   });
 
   createEffect(() => {
@@ -221,12 +219,13 @@ export const Write = () => {
   });
 
   const quote = (text) => {
-    if(text && baseMessage()) {
+    if(text) {
       return `\n\n\nOn ${baseMessage().date}, ${baseMessage().from} wrote:\n> ${text.replace(/&gt;/g, ">").replace(/&lt;/g, "<").split('\n').join("\n> ")}`;
     }
   };
 
   const prefix = (text) => {
+    if(!text) return "";
     let pre = "";
     if(action === "reply" && !text.toLowerCase().startsWith("re:")) {
       pre = "Re: ";
@@ -279,7 +278,7 @@ export const Write = () => {
           <Grid container spacing={1} class="inputFieldSet">
             <Grid item>To:</Grid>
             <Grid item xs>
-              <AddrComplete addrAttr="to" message={message} setMessage={setMessage} draftKey={draftKey}/>
+              <AddrComplete addrAttr="to" message={message} setMessage={setMessage} draftKey={draftKey} data-testid="to"/>
             </Grid>
           </Grid>
           <Grid container spacing={1} class="inputFieldSet">
@@ -302,7 +301,8 @@ export const Write = () => {
             <Grid item>Subject:</Grid>
             <Grid item xs><TextField
               variant="standard"
-              defaultValue={localStorage.getItem(`draft-${draftKey}-subject`) || prefix(baseMessage() ? baseMessage().subject : "")}
+              defaultValue={localStorage.getItem(`draft-${draftKey}-subject`) || prefix(baseMessage()?.subject)}
+              data-testid="subject"
               onChange={(ev) => {
                 setMessage("subject", ev.target.value);
                 localStorage.setItem(`draft-${draftKey}-subject`, message.subject);
@@ -321,10 +321,11 @@ export const Write = () => {
                 fullWidth
                 text={tagToAdd}
                 setText={setTagToAdd}
+                data-testid="tagedit"
                 InputProps={{
                   startAdornment: <InputAdornment>
                     <For each={message.tags}>
-                      {(tag) => tag && <ColorChip test-label={tag} value={tag} onClick={(e) => {
+                      {(tag) => tag && <ColorChip data-testid={tag} value={tag} onClick={(e) => {
                         setMessage("tags", message.tags.filter(t => t !== tag));
                         localStorage.setItem(`draft-${draftKey}-tags`, message.tags.join("\n"));
                         e.stopPropagation();
@@ -335,15 +336,12 @@ export const Write = () => {
                 getOptions={(text) => {
                   return allTags().filter((t) => t.startsWith(text));
                 }}
-                onSelect={() => {
-                  if(tagToAdd()) {
+                handleKey={(ev) => {
+                  if(ev.code === 'Enter' && tagToAdd()) {
                     setMessage("tags", message.tags.length, tagToAdd());
                     setTagToAdd(null);
                     localStorage.setItem(`draft-${draftKey}-tags`, message.tags.join("\n"));
-                  }
-                }}
-                handleKey={async (ev) => {
-                  if(ev.code === 'Backspace' && !tagToAdd()) {
+                  } else if(ev.code === 'Backspace' && !tagToAdd()) {
                     const tmp = JSON.parse(JSON.stringify(message.tags)),
                           tag = tmp.pop();
                     setMessage("tags", message.tags.filter(t => t !== tag));
@@ -361,6 +359,7 @@ export const Write = () => {
             fullWidth
             defaultValue={message.bodyDefaultValue}
             inputRef={setBodyRef}
+            data-testid="body"
             sx={{ marginBottom: ".5em", marginTop: "1em" }}
             onChange={(ev) => {
               localStorage.setItem(`draft-${draftKey}-body`, ev.target.value);

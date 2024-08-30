@@ -59,7 +59,6 @@ export const Autocomplete = (props) => {
       setShowPopover(false);
       inputRef().focus();
       inputRef().setSelectionRange(props.text().length, props.text().length);
-      if(props.onSelect) props.onSelect();
     }
   };
 

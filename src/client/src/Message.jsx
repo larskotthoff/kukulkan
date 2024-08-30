@@ -311,7 +311,7 @@ export const Message = (props) => {
                 InputProps={{
                   startAdornment: <InputAdornment>
                     <For each={tags()}>
-                      {(tag) => <ColorChip test-label={tag} value={tag} onClick={(e) => {
+                      {(tag) => <ColorChip data-testid={tag} value={tag} onClick={(e) => {
                           removeTag(tag);
                           e.stopPropagation();
                         }}/>}
@@ -374,7 +374,7 @@ export const Message = (props) => {
 
         <Grid container justifyContent="flex-end">
           <Show when={msg.body["text/html"]}>
-            <Button variant="outlined" class="kukulkan-content" test-label={html() ? "Text" : "HTML"} onClick={(e) => {
+            <Button variant="outlined" class="kukulkan-content" data-testid={html() ? "Text" : "HTML"} onClick={(e) => {
                 setHtml(!html());
                 e.stopPropagation();
               }}>{html() ? "Text" : "HTML"}</Button>

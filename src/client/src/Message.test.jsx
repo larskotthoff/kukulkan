@@ -160,21 +160,21 @@ test("links are linikified in text", () => {
 });
 
 test("allows to switch between text and HTML", async () => {
-  const { container } = render(() => <Message msg={msg} active={true}/>);
+  const { container, getByTestId } = render(() => <Message msg={msg} active={true}/>);
   expect(screen.getByText("Test mail")).toBeInTheDocument();
   expect(screen.getByText("bar foo <bar@foo.com>")).toBeInTheDocument();
 
-  await userEvent.click(container.querySelector("button[test-label='HTML']"));
+  await userEvent.click(getByTestId("HTML"));
   expect(sd.screen.getByShadowText("Test mail in HTML")).toBeInTheDocument();
   expect(screen.queryByText("Test mail")).not.toBeInTheDocument();
 
-  await userEvent.click(container.querySelector("button[test-label='Text']"));
+  await userEvent.click(getByTestId("Text"));
   expect(sd.screen.queryByShadowText("Test mail in HTML")).not.toBeInTheDocument();
   expect(screen.getByText("Test mail")).toBeInTheDocument();
 });
 
 test("allows to edit tags", async () => {
-  const { container } = render(() => <Message msg={msg} allTags={["foo", "bar"]} active={true}/>);
+  const { container, getByTestId } = render(() => <Message msg={msg} allTags={["foo", "bar"]} active={true}/>);
   expect(screen.getByText("foo")).toBeInTheDocument();
   expect(screen.getByText("bar")).toBeInTheDocument();
   expect(screen.getByText("test")).toBeInTheDocument();
@@ -182,7 +182,7 @@ test("allows to edit tags", async () => {
   global.fetch.mockResolvedValue({ ok: true });
 
   // remove tag
-  await userEvent.click(container.querySelector(".MuiChip-root[test-label='test']"));
+  await userEvent.click(getByTestId("test"));
   expect(global.fetch).toHaveBeenCalledTimes(1);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/remove/message/fo%40o/test");
   expect(screen.getByText("foo")).toBeInTheDocument();
