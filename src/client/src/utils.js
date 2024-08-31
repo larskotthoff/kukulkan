@@ -44,15 +44,15 @@ function padZ(number) {
 
 export function formatDate(date) {
   let now = new Date(),
-      time = padZ(date.getHours()) + ":" + padZ(date.getMinutes());
+      time = `${padZ(date.getHours())}:${padZ(date.getMinutes())}`;
   if(date.setHours(0, 0, 0, 0) === now.setHours(0, 0, 0, 0)) { // today
     return time;
   } else if((now - date) / (7 * 24 * 60 * 60 * 1000) < 1) { // less than one week ago
     return date.toLocaleDateString([], { weekday: 'short' }) + " " + time;
   } else if(date.getFullYear() === now.getFullYear()) { // this year
-    return padZ(date.getDate()) + "/" + padZ(date.getMonth() + 1) + " " + time;
+    return `${padZ(date.getDate())}/${padZ(date.getMonth() + 1)} ${time}`;
   } else {
-    return date.toLocaleDateString() + " " + time;
+    return `${date.toLocaleDateString()} ${time}`;
   }
 }
 
@@ -77,14 +77,17 @@ export function formatDuration(from, to) {
 export function renderDateNumThread(thread) {
     let res = formatDate(new Date(thread.newest_date * 1000));
     if(thread.total_messages > 1) {
-      res += " (" + thread.total_messages + "/" +
-        formatDuration(new Date(thread.oldest_date * 1000), new Date(thread.newest_date * 1000)) + ")";
+      res += ` (${thread.total_messages}/${formatDuration(new Date(thread.oldest_date * 1000), new Date(thread.newest_date * 1000))})`;
     }
     return res;
 }
 
 export function apiURL(suffix) {
-    return window.location.protocol + "//" + window.location.hostname + ":5000/" + suffix;
+  if(process.env.NODE_ENV === "production") {
+    return `/${suffix}`;
+  } else {
+    return `${window.location.protocol}//${window.location.hostname}:5000/${suffix}`;
+  }
 }
 
 // https://stackoverflow.com/questions/10420352/converting-file-size-in-bytes-to-human-readable-string

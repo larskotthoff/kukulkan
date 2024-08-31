@@ -62,12 +62,12 @@ test("formatDuration", () => {
     .toBe("2年");
 });
 
-//test("apiURL", () => {
-//  expect(utils.apiURL("foo")).toBe("http://localhost:5000/foo");
-//
-//  process.env.NODE_ENV = "production";
-//  expect(utils.apiURL("foo")).toBe("/foo");
-//});
+test("apiURL", () => {
+  expect(utils.apiURL("foo")).toBe("http://localhost:5000/foo");
+
+  process.env.NODE_ENV = "production";
+  expect(utils.apiURL("foo")).toBe("/foo");
+});
 
 test("formatFSz", () => {
   expect(utils.formatFSz(1000)).toBe("1000 Bi");
