@@ -204,7 +204,7 @@ def create_app():
         else:
             f = io.BytesIO(bytes(d["content"]))
         return send_file(f, mimetype=d["content_type"], as_attachment=False,
-                         download_name=d["filename"])
+                         download_name=d["filename"].replace('\n', ''))
 
     @app.route("/api/message/<path:message_id>")
     def download_message(message_id):
