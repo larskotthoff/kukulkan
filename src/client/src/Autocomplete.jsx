@@ -3,7 +3,8 @@
 import { render } from 'solid-js/web';
 import { createEffect, createMemo, createSignal, Index, on, onMount } from 'solid-js';
 
-import { List, ListItemButton, ListItemText, Popover, TextField } from "@suid/material";
+import { InputAdornment, List, ListItemButton, ListItemText, Popover, TextField } from "@suid/material";
+import { ColorChip } from "./ColorChip.jsx";
 
 export const Autocomplete = (props) => {
   const [showPopover, setShowPopover] = createSignal(false),
@@ -95,6 +96,55 @@ export const Autocomplete = (props) => {
         </List>
       </Popover>
     </>
+  );
+};
+
+export const ChipComplete = (props) => {
+  const [toAdd, setToAdd] = createSignal();
+
+  return (
+    <Autocomplete
+      class="editAutoCompleteBox"
+      variant="standard"
+      fullWidth
+      text={toAdd}
+      setText={setToAdd}
+      InputProps={{
+        startAdornment: <InputAdornment>
+          <For each={props.chips}>
+            {(chip) => <ColorChip data-testid={chip} value={chip} onClick={(e) => {
+                props.removeChip(chip);
+                e.stopPropagation();
+              }}/>}
+          </For>
+        </InputAdornment>
+      }}
+      handleKey={async (ev) => {
+        if(ev.code === 'Enter' && toAdd()) {
+          props.addChip(toAdd());
+          setToAdd(null);
+        } else if(ev.code === 'Backspace' && !toAdd()) {
+          const tmp = JSON.parse(JSON.stringify(props.chips)),
+                chip = tmp.pop();
+          props.removeChip(chip);
+        }
+      }}
+      {...props}
+    />
+  );
+};
+
+export const TagComplete = (props) => {
+  return (
+    <ChipComplete
+      chips={props.tags}
+      addChip={props.addTag}
+      removeChip={props.removeTag}
+      getOptions={(text) => {
+        return props.allTags.filter((t) => t.startsWith(text));
+      }}
+      {...props}
+    />
   );
 };
 

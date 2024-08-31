@@ -1,7 +1,7 @@
 import { createEffect, createSignal, createResource, For, onMount, Show } from "solid-js";
 
-import { Alert, Box, Button, Divider, Grid, InputAdornment, Paper, Stack } from "@suid/material";
-import { Autocomplete } from "./Autocomplete.jsx";
+import { Alert, Box, Button, Divider, Grid, Paper, Stack } from "@suid/material";
+import { Autocomplete, TagComplete } from "./Autocomplete.jsx";
 import { ColorChip } from "./ColorChip.jsx";
 
 import AttachFile from "@suid/icons-material/AttachFile";
@@ -188,7 +188,6 @@ export const Message = (props) => {
         [open, setOpen] = createSignal(props.active),
         msg = props.msg,
         [tags, setTags] = createSignal(msg.tags.sort()),
-        [tagToAdd, setTagToAdd] = createSignal(),
         {mainPart, quotedPart} = separateQuotedNonQuoted(msg.body["text/plain"]);
   let elementTop;
 
@@ -309,35 +308,15 @@ export const Message = (props) => {
         <Show when={!props.print}>
           <Grid container justifyContent="space-between" direction="row" style={{ minHeight: "3.5em" }} class="centered">
             <Grid item xs={11}>
-              <Autocomplete
-                class="editAutoCompleteBox"
+              <TagComplete
                 id="kukulkan-editTags"
-                variant="standard"
-                fullWidth
-                text={tagToAdd}
-                setText={setTagToAdd}
-                InputProps={{
-                  startAdornment: <InputAdornment>
-                    <For each={tags()}>
-                      {(tag) => <ColorChip data-testid={tag} value={tag} onClick={(e) => {
-                          removeTag(tag);
-                          e.stopPropagation();
-                        }}/>}
-                    </For>
-                  </InputAdornment>
+                tags={tags()}
+                allTags={props.allTags}
+                addTag={(tagToAdd) => {
+                  addTag(tagToAdd);
                 }}
-                getOptions={(text) => {
-                  return props.allTags.filter((t) => t.startsWith(text));
-                }}
-                handleKey={async (ev) => {
-                  if(ev.code === 'Enter' && tagToAdd()) {
-                    addTag(tagToAdd());
-                    setTagToAdd(null);
-                  } else if(ev.code === 'Backspace' && !tagToAdd()) {
-                    const tmp = JSON.parse(JSON.stringify(tags())),
-                          tag = tmp.pop();
-                    removeTag(tag);
-                  }
+                removeTag={(tagToRemove) => {
+                  removeTag(tagToRemove);
                 }}
               />
             </Grid>

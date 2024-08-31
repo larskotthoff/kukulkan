@@ -2,7 +2,7 @@ import { createEffect, createSignal, createResource, For, onMount, Show } from "
 import { createStore } from "solid-js/store";
 
 import { Alert, Box, Button, Divider, Grid, InputAdornment, MenuItem, Paper, Select, TextField } from "@suid/material";
-import { Autocomplete } from "./Autocomplete.jsx";
+import { Autocomplete, ChipComplete, TagComplete } from "./Autocomplete.jsx";
 import { ColorChip } from "./ColorChip.jsx";
 
 import AttachFile from "@suid/icons-material/AttachFile";
@@ -30,28 +30,18 @@ const Templates = (props) => {
 };
 
 const AddrComplete = (props) => {
-  const [addrToAdd, setAddrToAdd] = createSignal();
-
   let controller = null;
 
   return (
-    <Autocomplete
-      class="editAutoCompleteBox"
-      variant="standard"
-      fullWidth
-      text={addrToAdd}
-      setText={setAddrToAdd}
-      data-testid={props['data-testid']}
-      InputProps={{
-        startAdornment: <InputAdornment>
-          <For each={props.message[props.addrAttr]}>
-            {(addr) => addr && <ColorChip value={addr} onClick={(e) => {
-              props.setMessage(props.addrAttr, props.message[props.addrAttr].filter(a => a !== addr));
-              localStorage.setItem(`draft-${props.draftKey}-${props.addrAttr}`, props.message[props.addrAttr].join("\n"));
-              e.stopPropagation();
-            }}/>}
-          </For>
-        </InputAdornment>
+    <ChipComplete
+      chips={props.message[props.addrAttr]}
+      addChip={(addr) => {
+        props.setMessage(props.addrAttr, props.message[props.addrAttr].length, addr);
+        localStorage.setItem(`draft-${props.draftKey}-${props.addrAttr}`, props.message[props.addrAttr].join("\n"));
+      }}
+      removeChip={(addr) => {
+        props.setMessage(props.addrAttr, props.message[props.addrAttr].filter(a => a !== addr));
+        localStorage.setItem(`draft-${props.draftKey}-${props.addrAttr}`, props.message[props.addrAttr].join("\n"));
       }}
       getOptions={async (text) => {
         if(text.length > 2) {
@@ -67,18 +57,7 @@ const AddrComplete = (props) => {
         }
         return [];
       }}
-      handleKey={(ev) => {
-        if(ev.code === "Enter" && addrToAdd()) {
-          props.setMessage(props.addrAttr, props.message[props.addrAttr].length, addrToAdd());
-          setAddrToAdd(null);
-          localStorage.setItem(`draft-${props.draftKey}-${props.addrAttr}`, props.message[props.addrAttr].join("\n"));
-        } else if(ev.code === 'Backspace' && !addrToAdd()) {
-          const tmp = JSON.parse(JSON.stringify(props.message[props.addrAttr])),
-                addr = tmp.pop();
-          props.setMessage(props.addrAttr, props.message[props.addrAttr].filter(a => a !== addr));
-          localStorage.setItem(`draft-${props.draftKey}-${props.addrAttr}`, props.message[props.addrAttr].join("\n"));
-        }
-      }}
+      {...props}
     />
   );
 };
@@ -150,7 +129,6 @@ export const Write = (props) => {
         [useTemplate, setUseTemplate] = createSignal(null),
         [bodyRef, setBodyRef] = createSignal(),
         [statusMsg, setStatusMsg] = createSignal(),
-        [tagToAdd, setTagToAdd] = createSignal(),
         [message, setMessage] = createStore({});
   let draftKey = action,
       defTo = [],
@@ -377,39 +355,18 @@ export const Write = (props) => {
           <Grid container spacing={1} class="inputFieldSet">
             <Grid item>Tags:</Grid>
             <Grid item xs>
-             <Autocomplete
-                class="editAutoCompleteBox"
-                variant="standard"
-                fullWidth
-                text={tagToAdd}
-                setText={setTagToAdd}
-                data-testid="tagedit"
-                InputProps={{
-                  startAdornment: <InputAdornment>
-                    <For each={message.tags}>
-                      {(tag) => tag && <ColorChip data-testid={tag} value={tag} onClick={(e) => {
-                        setMessage("tags", message.tags.filter(t => t !== tag));
-                        localStorage.setItem(`draft-${draftKey}-tags`, message.tags.join("\n"));
-                        e.stopPropagation();
-                      }}/>}
-                    </For>
-                  </InputAdornment>
-                }}
-                getOptions={(text) => {
-                  return allTags().filter((t) => t.startsWith(text));
-                }}
-                handleKey={(ev) => {
-                  if(ev.code === 'Enter' && tagToAdd()) {
-                    setMessage("tags", message.tags.length, tagToAdd());
-                    setTagToAdd(null);
-                    localStorage.setItem(`draft-${draftKey}-tags`, message.tags.join("\n"));
-                  } else if(ev.code === 'Backspace' && !tagToAdd()) {
-                    const tmp = JSON.parse(JSON.stringify(message.tags)),
-                          tag = tmp.pop();
-                    setMessage("tags", message.tags.filter(t => t !== tag));
-                  }
+              <TagComplete
+                tags={message.tags}
+                allTags={allTags()}
+                addTag={(tagToAdd) => {
+                  setMessage("tags", message.tags.length, tagToAdd);
                   localStorage.setItem(`draft-${draftKey}-tags`, message.tags.join("\n"));
                 }}
+                removeTag={(tagToRemove) => {
+                  setMessage("tags", message.tags.filter(t => t !== tagToRemove));
+                  localStorage.setItem(`draft-${draftKey}-tags`, message.tags.join("\n"));
+                }}
+                data-testid="tagedit"
               />
             </Grid>
           </Grid>

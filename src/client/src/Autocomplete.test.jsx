@@ -5,10 +5,12 @@ import userEvent from "@testing-library/user-event";
 afterEach(cleanup);
 
 import { createResource, createSignal } from "solid-js";
-import { Autocomplete } from "./Autocomplete.jsx";
+import { Autocomplete, ChipComplete, TagComplete } from "./Autocomplete.jsx";
 
-test("exports Autocomplete", () => {
+test("exports Autocomplete, ChipComplete, TagComplete", () => {
   expect(Autocomplete).not.toBe(undefined);
+  expect(TagComplete).not.toBe(undefined);
+  expect(ChipComplete).not.toBe(undefined);
 });
 
 test("sets text", () => {
@@ -129,6 +131,59 @@ test("allows to set custom key handler", async () => {
   const input = container.querySelector("input");
   await userEvent.type(input, "f");
   expect(foo).toBe("bar");
+});
+
+test("ChipComplete works", async () => {
+  let chips = ["foo", "test"],
+      add = "", remove = "";
+  const { container } = render(() =>
+    <ChipComplete chips={chips} getOptions={() => ["foobar"]}
+      addChip={(t) => add = t} removeChip={(t) => remove = t}/>);
+
+  expect(screen.getByText("foo")).toBeInTheDocument();
+  expect(screen.getByText("test")).toBeInTheDocument();
+
+  expect(remove).toBe("");
+  await userEvent.click(screen.getByText("foo"));
+  expect(remove).toBe("foo");
+
+  const input = container.querySelector("input");
+  await userEvent.type(input, "f");
+  expect(input.getAttribute("value")).toEqual("f");
+  const completions = document.querySelector(".MuiList-root").children;
+  expect(completions[0]).toHaveTextContent('foobar');
+
+  expect(add).toBe("");
+  await userEvent.type(input, "{arrowdown}");
+  await userEvent.type(input, "{enter}");
+  expect(add).toBe("foobar");
+});
+
+test("TagComplete works", async () => {
+  let tags = ["foo", "test"],
+      add = "", remove = "";
+  const { container } = render(() =>
+    <TagComplete tags={tags} allTags={tags.concat("foobar")}
+      addTag={(t) => add = t} removeTag={(t) => remove = t}/>);
+
+  expect(screen.getByText("foo")).toBeInTheDocument();
+  expect(screen.getByText("test")).toBeInTheDocument();
+
+  expect(remove).toBe("");
+  await userEvent.click(screen.getByText("foo"));
+  expect(remove).toBe("foo");
+
+  const input = container.querySelector("input");
+  await userEvent.type(input, "f");
+  expect(input.getAttribute("value")).toEqual("f");
+  const completions = document.querySelector(".MuiList-root").children;
+  expect(completions[0]).toHaveTextContent('foo');
+  expect(completions[1]).toHaveTextContent('foobar');
+
+  expect(add).toBe("");
+  await userEvent.type(input, "{arrowdown}");
+  await userEvent.type(input, "{enter}");
+  expect(add).toBe("foobar");
 });
 
 // vim: tabstop=2 shiftwidth=2 expandtab
