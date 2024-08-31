@@ -9,6 +9,7 @@ import AttachFile from "@suid/icons-material/AttachFile";
 import Send from "@suid/icons-material/Send";
 
 import "./Kukulkan.css";
+import { separateQuotedNonQuoted } from "./Message.jsx";
 import { adminTags, apiURL, fetchAllTags, fetchMessage, formatFSz, mkShortcut } from "./utils.js";
 
 const Templates = (props) => {
@@ -220,7 +221,11 @@ export const Write = () => {
 
   const quote = (text) => {
     if(text) {
-      return `\n\n\nOn ${baseMessage().date}, ${baseMessage().from} wrote:\n> ${text.replace(/&gt;/g, ">").replace(/&lt;/g, "<").split('\n').join("\n> ")}`;
+      let {mainPart, quotedPart} = separateQuotedNonQuoted(text);
+      if(quotedPart) {
+        mainPart += "[...]";
+      }
+      return `\n\n\nOn ${baseMessage().date}, ${baseMessage().from} wrote:\n> ${mainPart.replace(/&gt;/g, ">").replace(/&lt;/g, "<").split('\n').join("\n> ")}`;
     }
   };
 
