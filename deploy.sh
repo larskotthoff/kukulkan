@@ -2,6 +2,7 @@
 
 set -e
 
+mkdir prod
 rm -rf prod/*
 cd src/client
 npm run build --omit=dev
