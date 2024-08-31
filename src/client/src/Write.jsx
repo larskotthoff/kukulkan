@@ -166,7 +166,9 @@ export const Write = () => {
 
     setMessage("files", localStorage.getItem(`draft-${draftKey}-files`)?.split('\n').map(JSON.parse) || []);
     if(baseMessage()) {
-      draftKey += `-${baseMessage().message_id}`;
+      if(!draftKey.endsWith(baseMessage().message_id)) {
+        draftKey += `-${baseMessage().message_id}`;
+      }
       if(action === "forward" && baseMessage().attachments) {
         // attach files attached to previous email
         const newFiles = baseMessage().attachments.map(a => { return { dummy: true, name: a.filename }; });
@@ -208,7 +210,7 @@ export const Write = () => {
     setMessage("from", acct?.id);
     setMessage("to", localStorage.getItem(`draft-${draftKey}-to`)?.split('\n') || defTo);
     setMessage("cc", localStorage.getItem(`draft-${draftKey}-cc`)?.split('\n') || defCc);
-    setMessage("bcc", localStorage.getItem(`draft-${draftKey}-bcc`)?.split('\n') || "");
+    setMessage("bcc", localStorage.getItem(`draft-${draftKey}-bcc`)?.split('\n') || []);
     setMessage("tags", localStorage.getItem(`draft-${draftKey}-tags`)?.split('\n') || baseMessage()?.tags.filter(t => !adminTags.includes(t)) || []);
     setMessage("bodyDefaultValue", localStorage.getItem(`draft-${draftKey}-body`) || quote(baseMessage()?.body["text/plain"]) || "");
   });
@@ -291,6 +293,7 @@ export const Write = () => {
             <Grid item xs>
               <AddrComplete addrAttr="cc" message={message} setMessage={setMessage}
                 draftKey={draftKey}
+                data-testid="cc"
                 defVal={localStorage.getItem(`draft-${draftKey}-cc`)?.split('\n') || defCc}/>
             </Grid>
           </Grid>
@@ -299,6 +302,7 @@ export const Write = () => {
             <Grid item xs>
               <AddrComplete addrAttr="bcc" message={message} setMessage={setMessage}
                 draftKey={draftKey}
+                data-testid="bcc"
                 defVal={localStorage.getItem(`draft-${draftKey}-bcc`)?.split('\n') || []}/>
             </Grid>
           </Grid>
@@ -371,7 +375,7 @@ export const Write = () => {
               setMessage("body", ev.target.value);
             }}/>
           <For each={message.files}>
-            {(f) => <ColorChip value={`${f.name} (${formatFSz(f.size)})`} onClick={(e) => {
+            {(f) => <ColorChip value={`${f.name}` + (f.size ? ` (${formatFSz(f.size)})` : ``)} onClick={(e) => {
                 setMessage("files", message.files.filter(fi => fi !== f));
                 if(message.files.length > 0) {
                   localStorage.setItem(`draft-${draftKey}-files`, message.files.map(JSON.stringify).join("\n"));

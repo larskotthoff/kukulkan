@@ -1,17 +1,19 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
-import { cleanup, render, screen } from "@solidjs/testing-library";
+import { cleanup, fireEvent, render, screen } from "@solidjs/testing-library";
 import userEvent from "@testing-library/user-event";
 
 import { Write } from "./Write.jsx";
 
 beforeEach(() => {
   global.fetch = vi.fn();
+  localStorage.clear();
 });
 
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
+  localStorage.clear();
 });
 
 test("exports Write", () => {
@@ -29,6 +31,7 @@ const msg = {
   date: "Thu, 01 Jan 1970 00:00:00 -0000",
   tags: [ "foo", "bar", "test" ],
   notmuch_id: "fo@o",
+  message_id: "foo",
   attachments: [],
   body: {
     "text/html": "Test mail in HTML",
@@ -52,6 +55,7 @@ test("renders", async () => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
 
+  // default from
   expect(screen.getByText("blurg <blurg@foo.com>")).toBeInTheDocument();
   expect(screen.getByText("Attach")).toBeInTheDocument();
   expect(getByTestId("subject").querySelector("input").value).toBe("");
@@ -93,7 +97,7 @@ test("base message reply all", async () => {
         .mockResolvedValueOnce({ ok: true, json: () => msg })
         .mockResolvedValueOnce({ ok: true, json: () => allTags })
         .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] });// templates
+        .mockResolvedValueOnce({ ok: true, json: () => [] }); // templates
   const { getByTestId } = render(() => <Write/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(4);
@@ -125,7 +129,7 @@ test("base message reply one", async () => {
         .mockResolvedValueOnce({ ok: true, json: () => msg })
         .mockResolvedValueOnce({ ok: true, json: () => allTags })
         .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] });// templates
+        .mockResolvedValueOnce({ ok: true, json: () => [] }); // templates
   const { getByTestId } = render(() => <Write/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(4);
@@ -159,7 +163,7 @@ test("reply includes only main part of base message quoted", async () => {
         .mockResolvedValueOnce({ ok: true, json: () => msg1 })
         .mockResolvedValueOnce({ ok: true, json: () => allTags })
         .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] });// templates
+        .mockResolvedValueOnce({ ok: true, json: () => [] }); // templates
   const { getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
@@ -177,7 +181,7 @@ test("base message forward", async () => {
         .mockResolvedValueOnce({ ok: true, json: () => msg })
         .mockResolvedValueOnce({ ok: true, json: () => allTags })
         .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] });// templates
+        .mockResolvedValueOnce({ ok: true, json: () => [] }); // templates
   const { getByTestId } = render(() => <Write/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(4);
@@ -211,7 +215,7 @@ test("base message reply filters admin tags", async () => {
         .mockResolvedValueOnce({ ok: true, json: () => msg1 })
         .mockResolvedValueOnce({ ok: true, json: () => allTags })
         .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] });// templates
+        .mockResolvedValueOnce({ ok: true, json: () => [] }); // templates
   const { getByTestId } = render(() => <Write/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(4);
@@ -402,12 +406,112 @@ test("addresses editable and complete", async () => {
 });
 
 test("files attachable and editable", async () => {
+  vi.stubGlobal('location', {
+    ...window.location,
+    search: '?id=foo&action=forward'
+  });
+  const msg1 = JSON.parse(JSON.stringify(msg))
+  msg1.attachments = [{"filename": "foofile"}, {"filename": "barfile"}];
+  global.fetch
+        .mockResolvedValueOnce({ ok: true, json: () => msg1 })
+        .mockResolvedValueOnce({ ok: true, json: () => allTags })
+        .mockResolvedValueOnce({ ok: true, json: () => accounts })
+        .mockResolvedValueOnce({ ok: true, json: () => [] }); // templates
+  const { container } = render(() => <Write/>);
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("Send")).toBeInTheDocument();
+  });
+
+  // forwarded attachments present
+  expect(screen.getByText("foofile")).toBeInTheDocument();
+  expect(screen.getByText("barfile")).toBeInTheDocument();
+
+  // remove attachment
+  await userEvent.click(screen.getByText("foofile"));
+  expect(screen.queryByText("foofile")).not.toBeInTheDocument();
+  expect(screen.getByText("barfile")).toBeInTheDocument();
+
+  const file = new File(['test content'], 'test.txt', { type: 'text/plain' });
+
+  // add attachment -- click
+  await fireEvent.change(container.querySelector("input[type=file]"), { target: { files: [file] } });
+  expect(screen.getByText("test.txt (12 Bi)")).toBeInTheDocument();
 });
 
-test("localStorage stores", async () => {
+test("localStorage stores for new email", async () => {
+  global.fetch
+        .mockResolvedValueOnce({ ok: true, json: () => [] })
+        .mockResolvedValueOnce({ ok: true, json: () => accounts })
+        .mockResolvedValueOnce({ ok: true, json: () => [] }); // templates
+  const { container, getByTestId } = render(() => <Write/>);
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("Send")).toBeInTheDocument();
+  });
+
+  global.fetch.mockResolvedValue({ ok: true, json: () => [] });
+
+  await userEvent.click(container.querySelector("div[role='button']"));
+  await userEvent.click(screen.getByText("foo bar <foo@bar.com>"));
+
+  await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}otherto@test.com{enter}");
+  await userEvent.type(getByTestId("cc").querySelector("input"), "cc@test.com{enter}");
+  await userEvent.type(getByTestId("bcc").querySelector("input"), "bcc@test.com{enter}");
+  await userEvent.type(getByTestId("tagedit").querySelector("input"), "foobar{enter}");
+  await userEvent.type(getByTestId("subject").querySelector("input"), "testsubject");
+  await userEvent.type(getByTestId("body").querySelector("textarea"), "testbody");
+
+  const file = new File(['test content'], 'test.txt', { type: 'text/plain' });
+  await fireEvent.change(container.querySelector("input[type=file]"), { target: { files: [file] } });
+
+  expect(localStorage.getItem("draft-compose-from")).toBe("foo");
+  expect(localStorage.getItem("draft-compose-to")).toBe("to@test.com\notherto@test.com");
+  expect(localStorage.getItem("draft-compose-cc")).toBe("cc@test.com");
+  expect(localStorage.getItem("draft-compose-bcc")).toBe("bcc@test.com");
+  expect(localStorage.getItem("draft-compose-tags")).toBe("foobar");
+  expect(localStorage.getItem("draft-compose-subject")).toBe("testsubject");
+  expect(localStorage.getItem("draft-compose-body")).toBe("testbody");
+  expect(localStorage.getItem("draft-compose-files")).toBe('{"name":"test.txt","size":12}');
 });
 
-test("data assembled correctly for send", async () => {
+test("localStorage stores for reply", async () => {
+  vi.stubGlobal('location', {
+    ...window.location,
+    search: '?id=foo&action=reply&mode=all'
+  });
+  global.fetch
+        .mockResolvedValueOnce({ ok: true, json: () => msg })
+        .mockResolvedValueOnce({ ok: true, json: () => [] })
+        .mockResolvedValueOnce({ ok: true, json: () => accounts })
+        .mockResolvedValueOnce({ ok: true, json: () => [] }); // templates
+  const { getByTestId } = render(() => <Write/>);
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("Send")).toBeInTheDocument();
+  });
+
+  global.fetch.mockResolvedValue({ ok: true, json: () => [] });
+
+  await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}otherto@test.com{enter}");
+  await userEvent.type(getByTestId("cc").querySelector("input"), "cc@test.com{enter}");
+  await userEvent.type(getByTestId("bcc").querySelector("input"), "bcc@test.com{enter}");
+  await userEvent.type(getByTestId("tagedit").querySelector("input"), "foobar{enter}");
+  await userEvent.type(getByTestId("subject").querySelector("input"), " testsubject");
+  await userEvent.type(getByTestId("body").querySelector("textarea"), "testbody");
+
+  expect(localStorage.getItem("draft-reply-foo-to")).toBe("bar foo <bar@foo.com>\nto@test.com\notherto@test.com");
+  expect(localStorage.getItem("draft-reply-foo-cc")).toBe("test@test.com\ncc@test.com");
+  expect(localStorage.getItem("draft-reply-foo-bcc")).toBe("bcc@test.com");
+  expect(localStorage.getItem("draft-reply-foo-tags")).toBe("foo\nbar\ntest\nfoobar");
+  expect(localStorage.getItem("draft-reply-foo-subject")).toBe("Re: Test. testsubject");
+  expect(localStorage.getItem("draft-reply-foo-body")).toBe("\n\n\nOn Thu, 01 Jan 1970 00:00:00 -0000, bar foo <bar@foo.com> wrote:\n> Test mailtestbody");
+});
+
+test("data assembled correctly for sending new email", async () => {
+});
+
+test("data assembled correctly for sending reply", async () => {
 });
 
 // vim: tabstop=2 shiftwidth=2 expandtab
