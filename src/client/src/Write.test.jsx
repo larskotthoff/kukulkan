@@ -508,6 +508,46 @@ test("localStorage stores for reply", async () => {
   expect(localStorage.getItem("draft-reply-foo-body")).toBe("\n\n\nOn Thu, 01 Jan 1970 00:00:00 -0000, bar foo <bar@foo.com> wrote:\n> Test mailtestbody");
 });
 
+test("localStorage deletes upon successful send", async () => {
+  global.fetch
+        .mockResolvedValueOnce({ ok: true, json: () => [] })
+        .mockResolvedValueOnce({ ok: true, json: () => accounts })
+        .mockResolvedValueOnce({ ok: true, json: () => [] }); // templates
+  const { container, getByTestId } = render(() => <Write/>);
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("Send")).toBeInTheDocument();
+  });
+
+  global.fetch.mockResolvedValue({ ok: true, json: () => [] });
+
+  await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}otherto@test.com{enter}");
+  await userEvent.type(getByTestId("cc").querySelector("input"), "cc@test.com{enter}");
+  await userEvent.type(getByTestId("bcc").querySelector("input"), "bcc@test.com{enter}");
+  await userEvent.type(getByTestId("tagedit").querySelector("input"), "foobar{enter}");
+  await userEvent.type(getByTestId("subject").querySelector("input"), "testsubject");
+  await userEvent.type(getByTestId("body").querySelector("textarea"), "testbody");
+
+  expect(localStorage.getItem("draft-compose-to")).toBe("to@test.com\notherto@test.com");
+  expect(localStorage.getItem("draft-compose-cc")).toBe("cc@test.com");
+  expect(localStorage.getItem("draft-compose-bcc")).toBe("bcc@test.com");
+  expect(localStorage.getItem("draft-compose-tags")).toBe("foobar");
+  expect(localStorage.getItem("draft-compose-subject")).toBe("testsubject");
+  expect(localStorage.getItem("draft-compose-body")).toBe("testbody");
+
+  global.fetch.mockResolvedValue({ ok: true, json: () => Promise.resolve({sendStatus: 0, sendOutput: ""}) });
+  await userEvent.click(screen.getByText("Send"));
+
+  expect(screen.getByText("Message sent.")).toBeInTheDocument();
+
+  expect(localStorage.getItem("draft-reply-foo-to")).toBe(null);
+  expect(localStorage.getItem("draft-reply-foo-cc")).toBe(null);
+  expect(localStorage.getItem("draft-reply-foo-bcc")).toBe(null);
+  expect(localStorage.getItem("draft-reply-foo-tags")).toBe(null);
+  expect(localStorage.getItem("draft-reply-foo-subject")).toBe(null);
+  expect(localStorage.getItem("draft-reply-foo-body")).toBe(null);
+});
+
 test("warns when attempting to send incomplete mail", async () => {
   global.fetch
         .mockResolvedValueOnce({ ok: true, json: () => [] })
@@ -561,7 +601,7 @@ test("data assembled correctly for sending new email", async () => {
   await fireEvent.change(container.querySelector("input[type=file]"), { target: { files: [file] } });
 
   const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
-      json: () => Promise.resolve({sendStatus: 0, sendOutput: ""}),
+      json: () => Promise.resolve({sendStatus: 0, sendOutput: ""})
     });
   await userEvent.click(screen.getByText("Send"));
 
@@ -612,7 +652,7 @@ test("data assembled correctly for sending reply", async () => {
   await userEvent.type(getByTestId("body").querySelector("textarea"), "testbody");
 
   const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
-      json: () => Promise.resolve({sendStatus: 0, sendOutput: ""}),
+      json: () => Promise.resolve({sendStatus: 0, sendOutput: ""})
     });
   await userEvent.click(screen.getByText("Send"));
 
@@ -653,7 +693,7 @@ test("error when mail cannot be sent", async () => {
   await userEvent.type(getByTestId("subject").querySelector("input"), "testsubject");
 
   const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
-      json: () => Promise.resolve({sendStatus: 1, sendOutput: "foo"}),
+      json: () => Promise.resolve({sendStatus: 1, sendOutput: "foo"})
     });
   await userEvent.click(screen.getByText("Send"));
 

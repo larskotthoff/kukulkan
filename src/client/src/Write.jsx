@@ -257,14 +257,9 @@ export const Write = (props) => {
       .then((result) => {
         if(result.sendStatus === 0) {
           setStatusMsg("Message sent.");
-          localStorage.removeItem(`draft-${draftKey}-from`);
-          localStorage.removeItem(`draft-${draftKey}-to`);
-          localStorage.removeItem(`draft-${draftKey}-cc`);
-          localStorage.removeItem(`draft-${draftKey}-bcc`);
-          localStorage.removeItem(`draft-${draftKey}-subject`);
-          localStorage.removeItem(`draft-${draftKey}-tags`);
-          localStorage.removeItem(`draft-${draftKey}-body`);
-          localStorage.removeItem(`draft-${draftKey}-files`);
+          for(let key in Object.keys(localStorage).filter(k => k.startsWith(`draft-${draftKey}`))) {
+            localStorage.removeItem(key);
+          }
         } else {
           setStatusMsg(`Error sending message: ${result.sendOutput}`);
         }
