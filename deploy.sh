@@ -1,8 +1,8 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 
-mkdir prod
+[ -d prod ] || mkdir prod
 rm -rf prod/*
 cd src/client
 npm run build --omit=dev
