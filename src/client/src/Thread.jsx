@@ -1,5 +1,5 @@
 import { createEffect, createSignal, createResource, For, Show } from "solid-js";
-import { Box, Grid, LinearProgress } from "@suid/material";
+import { Box, Grid } from "@suid/material";
 
 import { Message } from "./Message.jsx";
 
@@ -48,7 +48,7 @@ const filterThread = (msg, thread) => {
   return [res, activeIdx];
 };
 
-export const Thread = () => {
+export const Thread = (props) => {
   const [searchParams] = createSignal(window.location.search),
         [threadId] = createSignal((new URLSearchParams(searchParams())).get("id")),
         [thread] = createResource(threadId(), fetchThread),
@@ -75,6 +75,10 @@ export const Thread = () => {
       setFilteredThread(ft);
       setActiveMessage(activeIdx);
     }
+  });
+
+  createEffect(() => {
+    props.sl?.(allTags.loading || thread.loading);
   });
 
   mkShortcut(["Home"],
@@ -170,7 +174,7 @@ export const Thread = () => {
 
   return (
     <>
-      <Show when={!allTags.loading && activeMessage() > -1} fallback={<LinearProgress/>}>
+      <Show when={!allTags.loading && activeMessage() > -1}>
         <Grid container direction="row" alignItems="flex-start">
           <Grid item xs="auto" style={{height: '100vh'}}>
             <ThreadNav/>

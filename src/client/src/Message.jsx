@@ -1,6 +1,6 @@
 import { createEffect, createSignal, createResource, For, onMount, Show } from "solid-js";
 
-import { Alert, Box, Button, Divider, Grid, InputAdornment, LinearProgress, Paper, Stack } from "@suid/material";
+import { Alert, Box, Button, Divider, Grid, InputAdornment, Paper, Stack } from "@suid/material";
 import { Autocomplete } from "./Autocomplete.jsx";
 import { ColorChip } from "./ColorChip.jsx";
 
@@ -193,13 +193,17 @@ export const Message = (props) => {
   let elementTop;
 
   async function removeTag(tag) {
+    props.sl?.(true);
     const response = await fetch(apiURL(`api/tag/remove/message/${encodeURIComponent(msg.notmuch_id)}/${encodeURIComponent(tag)}`));
+    props.sl?.(false);
     if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
     setTags(tags().filter((t) => t !== tag));
   }
 
   async function addTag(tag) {
+    props.sl?.(true);
     const response = await fetch(apiURL(`api/tag/add/message/${encodeURIComponent(msg.notmuch_id)}/${encodeURIComponent(tag)}`));
+    props.sl?.(false);
     if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
     const tmp = tags().concat(tag);
     setTags(tmp.sort());
@@ -233,6 +237,10 @@ export const Message = (props) => {
       document.title = msg.subject || "Kukulkan";
       if(msg.tags.includes("unread")) setTimeout(() => removeTag("unread"), 500);
     }
+  });
+
+  createEffect(() => {
+    props.sl?.(allTags.loading || message.loading);
   });
 
   mkShortcut(["r"],
@@ -432,7 +440,7 @@ export const FetchedMessage = () => {
 
   return (
     <>
-      <Show when={!allTags.loading && !message.loading} fallback={<LinearProgress/>}>
+      <Show when={!allTags.loading && !message.loading}>
         <Message msg={message()} allTags={allTags()} active={true}/>
       </Show>
     </>

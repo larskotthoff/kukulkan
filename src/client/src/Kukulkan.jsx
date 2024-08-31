@@ -1,6 +1,6 @@
 import { createEffect, createSignal, createResource, For, Show } from "solid-js";
 
-import { Box, Grid, LinearProgress, Modal, Stack } from "@suid/material";
+import { Box, Grid, Modal, Stack } from "@suid/material";
 import { Autocomplete } from "./Autocomplete.jsx";
 import Create from "@suid/icons-material/Create";
 
@@ -24,6 +24,10 @@ export const Kukulkan = (props) => {
         [editingTags, setEditingTags] = createSignal(null),
         [showEditingTagModal, setShowEditingTagModal] = createSignal(false),
         [allTags] = createResource(fetchAllTags);
+
+  createEffect(() => {
+    props.sl?.(allTags.loading || threads.loading);
+  });
 
   createEffect(() => {
     activeThread();
@@ -63,9 +67,11 @@ export const Kukulkan = (props) => {
               return apiURL(`api/tag/add/thread/${encodeURIComponent(thread.thread_id)}/${encodeURIComponent(edit)}`);
             }
           });
+      props.sl?.(true);
       Promise.all(urls.map((u) => fetch(u).then((response) => {
         if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
-      }))).then(() => mutate([...threads().slice(0, affectedThread), thread, ...threads().slice(affectedThread + 1)]));
+      }))).then(() => mutate([...threads().slice(0, affectedThread), thread, ...threads().slice(affectedThread + 1)]))
+      .finally(() => props.sl?.(false));
     });
     setEditingTags("");
   };
@@ -223,7 +229,7 @@ export const Kukulkan = (props) => {
           </a>
         </Stack>
       </Show>
-      <Show when={!allTags.loading && !threads.loading} fallback={<LinearProgress/>}>
+      <Show when={!allTags.loading && !threads.loading}>
         <div align="right">{threads().length} thread{threads().length === 1 ? "" : "s"}.</div>
         <Grid container width="95%" class="centered">
           <For each={threads().sort(props.sort)}>
