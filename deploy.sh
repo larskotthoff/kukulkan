@@ -5,7 +5,8 @@ set -e
 [ -d prod ] || mkdir prod
 rm -rf prod/*
 cd src/client
-npm run build --omit=dev
+npm i
+npm run build
 cd ../..
 cp src/server/src/kukulkan.py prod/
 mkdir prod/static
