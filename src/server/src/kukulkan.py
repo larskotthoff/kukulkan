@@ -158,8 +158,10 @@ def create_app():
     class Address(Resource):
         def get(self, query_string):
             # not supported by API...
-            addrs = os.popen("notmuch address " + query_string).read()
-            return [addr for addr in addrs.split('\n') if addr]
+            addrs = os.popen("notmuch address --output=sender --output=recipients " + query_string).read()
+            return [a for a in
+                    filter(lambda a: re.search(query_string, a, re.IGNORECASE),
+                           addrs.split('\n'))][:10]
 
     class Thread(Resource):
         def get(self, thread_id):
@@ -203,7 +205,7 @@ def create_app():
         else:
             f = io.BytesIO(bytes(d["content"]))
         return send_file(f, mimetype=d["content_type"], as_attachment=False,
-                         download_name=d["filename"])
+                         download_name=d["filename"].replace('\n', ''))
 
     @app.route("/api/message/<path:message_id>")
     def download_message(message_id):
@@ -655,6 +657,7 @@ def message_to_json(message):
                             found = True
                 if not found and 'gpg-keyserver' in current_app.config.custom:
                     current_app.logger.info("Key for " + fromAddr + " not found, attempting to download...")
+                    # TODO: handle case where server is unreachable
                     keys = gpg.search_keys(fromAddr, current_app.config.custom['gpg-keyserver'])
                     if(len(keys) > 0):
                         for key in keys:
