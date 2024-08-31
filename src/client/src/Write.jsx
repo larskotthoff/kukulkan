@@ -179,7 +179,9 @@ export const Write = (props) => {
           acct = accounts()?.find(a => baseMessage().forwarded_to.includes(a.email));
         }
       }
-      document.title = `Compose: ${prefix(baseMessage()?.subject)}`;
+      const subj = prefix(baseMessage()?.subject);
+      setMessage("subject", subj);
+      document.title = `Compose: ${subj}`;
 
       [defTo, defCc] = makeToCc(baseMessage(), action, accounts(), mode);
     } else {
@@ -192,6 +194,7 @@ export const Write = (props) => {
     setMessage("bcc", localStorage.getItem(`draft-${draftKey}-bcc`)?.split('\n') || []);
     setMessage("tags", localStorage.getItem(`draft-${draftKey}-tags`)?.split('\n') || baseMessage()?.tags.filter(t => !adminTags.includes(t)) || []);
     setMessage("bodyDefaultValue", localStorage.getItem(`draft-${draftKey}-body`) || quote(baseMessage()?.body["text/plain"]) || "");
+    setMessage("body", localStorage.getItem(`draft-${draftKey}-body`) || "");
   });
 
   createEffect(() => {
@@ -254,14 +257,14 @@ export const Write = (props) => {
       .then((result) => {
         if(result.sendStatus === 0) {
           setStatusMsg("Message sent.");
-          localStorage.removeItem(`draft-${draftKey.current}-from`);
-          localStorage.removeItem(`draft-${draftKey.current}-to`);
-          localStorage.removeItem(`draft-${draftKey.current}-cc`);
-          localStorage.removeItem(`draft-${draftKey.current}-bcc`);
-          localStorage.removeItem(`draft-${draftKey.current}-subject`);
-          localStorage.removeItem(`draft-${draftKey.current}-tags`);
-          localStorage.removeItem(`draft-${draftKey.current}-body`);
-          localStorage.removeItem(`draft-${draftKey.current}-files`);
+          localStorage.removeItem(`draft-${draftKey}-from`);
+          localStorage.removeItem(`draft-${draftKey}-to`);
+          localStorage.removeItem(`draft-${draftKey}-cc`);
+          localStorage.removeItem(`draft-${draftKey}-bcc`);
+          localStorage.removeItem(`draft-${draftKey}-subject`);
+          localStorage.removeItem(`draft-${draftKey}-tags`);
+          localStorage.removeItem(`draft-${draftKey}-body`);
+          localStorage.removeItem(`draft-${draftKey}-files`);
         } else {
           setStatusMsg(`Error sending message: ${result.sendOutput}`);
         }

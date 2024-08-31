@@ -243,7 +243,7 @@ export const Message = (props) => {
   });
 
   mkShortcut(["r"],
-    () => { if(props.active) document.querySelector("a[key='reply']")?.click(); }
+    () => { if(props.active) document.querySelector("a[id='reply']")?.click(); }
   );
 
   mkShortcut(["Shift", "r"],

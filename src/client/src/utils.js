@@ -97,10 +97,12 @@ export function formatFSz(size) {
 }
 
 export function mkShortcut(keys, func, preventDefault = false) {
-  createShortcut(keys, (e) => { if(document.activeElement.tagName !== "INPUT") {
-    func();
-    if(preventDefault) e.preventDefault();
-  }}, { preventDefault: false });
+  createShortcut(keys, (e) => {
+    if(["INPUT", "TEXTAREA"].includes(document.activeElement.tagName) === false) {
+      func();
+      if(preventDefault) e.preventDefault();
+    }
+  }, { preventDefault: false });
 }
 
 // claude wrote this specifically to work with SolidJS createShortcut
