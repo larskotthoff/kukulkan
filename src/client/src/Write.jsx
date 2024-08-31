@@ -1,7 +1,7 @@
 import { createEffect, createSignal, createResource, For, onMount, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 
-import { Alert, Box, Button, Divider, Grid, InputAdornment, LinearProgress, MenuItem, Paper, Select, TextField } from "@suid/material";
+import { Alert, Box, Button, Divider, Grid, InputAdornment, MenuItem, Paper, Select, TextField } from "@suid/material";
 import { Autocomplete } from "./Autocomplete.jsx";
 import { ColorChip } from "./ColorChip.jsx";
 
@@ -20,7 +20,7 @@ const Templates = (props) => {
           mkShortcut([template.shortcut],
             () => document.getElementById(`template-${template.shortcut}`).click()
           );
-          return (<Grid item key={template.shortcut}>
+          return (<Grid item>
             <Button id={`template-${template.shortcut}`} variant="outlined" onClick={() => props.setTemplate(template.template) }>{template.description} ({template.shortcut})</Button>
           </Grid>);
         }}
@@ -137,7 +137,7 @@ const makeToCc = (msg, action, accounts, mode) => {
   return [ tmpTo, tmpCc ];
 };
 
-export const Write = () => {
+export const Write = (props) => {
   const [sp] = createSignal(window.location.search),
         searchParams = new URLSearchParams(sp()),
         baseMessageId = searchParams.get("id"),
@@ -157,6 +157,7 @@ export const Write = () => {
       defCc = [];
 
   createEffect(() => {
+    props.sl?.(allTags.loading || accounts.loading || templates.loading || baseMessage.loading);
     document.title = "Compose: New Message";
     if(localStorage.getItem(`draft-${draftKey}-from`)) {
       setMessage("from", localStorage.getItem(`draft-${draftKey}-from`));
@@ -247,16 +248,68 @@ export const Write = () => {
     return pre + text;
   };
 
+  const sendMsg = () => {
+    if(message.to.length === 0) {
+      setStatusMsg(`Error: No to address. Not sending.`);
+      return;
+    }
+    if(!message.subject) {
+      setStatusMsg(`Error: No subject. Not sending.`);
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('refId', baseMessageId);
+    formData.append('action', action);
+    formData.append('from', message.from);
+    formData.append('to', message.to);
+    formData.append('cc', message.cc);
+    formData.append('bcc', message.bcc);
+    formData.append('subject', message.subject);
+    formData.append('tags', message.tags);
+    formData.append('body', message.body);
+    message.files.map((f, i) => formData.append(`attachment-${i}`, f.name));
+
+    props.sl?.(true);
+    fetch(apiURL("api/send"), { method: 'POST', body: formData })
+      .then((response) => response.json())
+      .then((result) => {
+        if(result.sendStatus === 0) {
+          setStatusMsg("Message sent.");
+          localStorage.removeItem(`draft-${draftKey.current}-from`);
+          localStorage.removeItem(`draft-${draftKey.current}-to`);
+          localStorage.removeItem(`draft-${draftKey.current}-cc`);
+          localStorage.removeItem(`draft-${draftKey.current}-bcc`);
+          localStorage.removeItem(`draft-${draftKey.current}-subject`);
+          localStorage.removeItem(`draft-${draftKey.current}-tags`);
+          localStorage.removeItem(`draft-${draftKey.current}-body`);
+          localStorage.removeItem(`draft-${draftKey.current}-files`);
+        } else {
+          setStatusMsg(`Error sending message: ${result.sendOutput}`);
+        }
+      })
+      .catch((error) => {
+        setStatusMsg(`Error: ${error}`);
+      })
+      .finally(() => {
+        props.sl?.(false);
+      });
+  };
+
   mkShortcut(["a"],
     () => document.getElementById("attach").click()
   );
 
+  mkShortcut(["y"],
+    () => document.getElementById("send").click()
+  );
+
   return (
     <>
-      <Show when={!allTags.loading && !accounts.loading && !templates.loading && !baseMessage.loading} fallback={<LinearProgress/>}>
+      <Show when={!allTags.loading && !accounts.loading && !templates.loading && !baseMessage.loading}>
         <Box width="95%" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <Show when={statusMsg()}>
-          <Alert severity="success">{statusMsg()}</Alert>
+          <Alert severity={statusMsg().startsWith("Error") ? "error" : "success"}>{statusMsg()}</Alert>
         </Show>
         <Show when={templates()}>
           <Templates templates={templates} setTemplate={setUseTemplate}/>
@@ -398,7 +451,7 @@ export const Write = () => {
               </Button>
             </Grid>
             <Grid item>
-              <Button key="send" startIcon={<Send/>} variant="outlined">Send</Button>
+              <Button id="send" startIcon={<Send/>} variant="outlined" onClick={sendMsg}>Send</Button>
             </Grid>
           </Grid>
         </Paper>

@@ -1,8 +1,8 @@
 import { render } from "solid-js/web";
 import { Route, Router } from "@solidjs/router";
 
-import { ErrorBoundary } from "solid-js";
-import { Alert } from "@suid/material";
+import { createSignal, ErrorBoundary, Show } from "solid-js";
+import { Alert, LinearProgress } from "@suid/material";
 
 import { Kukulkan } from "./Kukulkan.jsx";
 import { IndexThread } from "./IndexThread.jsx";
@@ -11,16 +11,25 @@ import { Thread } from "./Thread.jsx";
 import { FetchedMessage } from "./Message.jsx";
 import { Write } from "./Write.jsx";
 
-render(() => (
-  <ErrorBoundary fallback={(error) => <Alert severity="error">Error: {error}<pre>{error.stack}</pre></Alert>}>
-    <Router>
-      <Route path="/" component={() => <Kukulkan Thread={IndexThread}/>}/>
-      <Route path="/todo" component={() => <Kukulkan Thread={TodoThread} todo={true} sort={sortThreadsByDueDate}/>}/>
-      <Route path="/thread" component={Thread}/>
-      <Route path="/message" component={FetchedMessage}/>
-      <Route path="/write" component={Write}/>
-    </Router>
-  </ErrorBoundary>
-  ), document.getElementById("root"));
+render(() => {
+  const [loading, setLoading] = createSignal(false);
+
+  return (
+  <>
+    <Show when={loading()}>
+      <LinearProgress/>
+    </Show>
+    <ErrorBoundary fallback={(error) => <Alert severity="error">Error: {error}<pre>{error.stack}</pre></Alert>}>
+      <Router>
+        <Route path="/" component={() => <Kukulkan Thread={IndexThread} sl={setLoading}/>}/>
+        <Route path="/todo" component={() => <Kukulkan Thread={TodoThread} todo={true} sort={sortThreadsByDueDate} sl={setLoading}/>}/>
+        <Route path="/thread" component={() => <Thread sl={setLoading}/>}/>
+        <Route path="/message" component={() => <FetchedMessage sl={setLoading}/>}/>
+        <Route path="/write" component={() => <Write sl={setLoading}/>}/>
+      </Router>
+    </ErrorBoundary>
+  </>
+  );
+}, document.getElementById("root"));
 
 // vim: tabstop=2 shiftwidth=2 expandtab
