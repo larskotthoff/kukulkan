@@ -1,5 +1,5 @@
 import { afterEach, test, expect } from "vitest";
-import { cleanup, render, screen } from "@solidjs/testing-library";
+import { cleanup, render } from "@solidjs/testing-library";
 afterEach(cleanup);
 
 import { ColorChip } from "./ColorChip.jsx";

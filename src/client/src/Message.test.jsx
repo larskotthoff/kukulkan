@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
-import { cleanup, render, screen } from "@solidjs/testing-library";
-import sd from "shadow-dom-testing-library";
-import userEvent from "@testing-library/user-event";
+import { cleanup, render } from "@solidjs/testing-library";
+import { screen } from "shadow-dom-testing-library";
+import { userEvent } from "@testing-library/user-event";
 
 import { FetchedMessage, Message, separateQuotedNonQuoted } from "./Message.jsx";
 
@@ -160,16 +160,16 @@ test("links are linikified in text", () => {
 });
 
 test("allows to switch between text and HTML", async () => {
-  const { container, getByTestId } = render(() => <Message msg={msg} active={true}/>);
+  const { getByTestId } = render(() => <Message msg={msg} active={true}/>);
   expect(screen.getByText("Test mail")).toBeInTheDocument();
   expect(screen.getByText("bar foo <bar@foo.com>")).toBeInTheDocument();
 
   await userEvent.click(getByTestId("HTML"));
-  expect(sd.screen.getByShadowText("Test mail in HTML")).toBeInTheDocument();
+  expect(screen.getByShadowText("Test mail in HTML")).toBeInTheDocument();
   expect(screen.queryByText("Test mail")).not.toBeInTheDocument();
 
   await userEvent.click(getByTestId("Text"));
-  expect(sd.screen.queryByShadowText("Test mail in HTML")).not.toBeInTheDocument();
+  expect(screen.queryByShadowText("Test mail in HTML")).not.toBeInTheDocument();
   expect(screen.getByText("Test mail")).toBeInTheDocument();
 });
 

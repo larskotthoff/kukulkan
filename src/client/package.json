@@ -7,10 +7,14 @@
     "dev": "vite",
     "build": "vite build",
     "serve": "vite preview",
-    "test": "vitest"
+    "test": "vitest",
+    "lint": "eslint src/**/*.{js,jsx}"
   },
   "license": "MIT",
   "devDependencies": {
+    "eslint": "^8.57.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-solid": "^0.14.2",
     "shadow-dom-testing-library": "^1.11.2",
     "solid-devtools": "^0.30.1",
     "vite": "^5.3.1",

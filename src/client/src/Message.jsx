@@ -1,7 +1,7 @@
 import { createEffect, createSignal, createResource, For, onMount, Show } from "solid-js";
 
 import { Alert, Box, Button, Divider, Grid, Paper, Stack } from "@suid/material";
-import { Autocomplete, TagComplete } from "./Autocomplete.jsx";
+import { TagComplete } from "./Autocomplete.jsx";
 import { ColorChip } from "./ColorChip.jsx";
 
 import AttachFile from "@suid/icons-material/AttachFile";
@@ -113,11 +113,11 @@ const calendarAction = (msg, attachment, index) => {
       </a>
       </Grid>);
   } else if(attachment.preview.status === "ACCEPTED") {
-      return (<CheckCircle fontSize="large" style={{ margin: 8 }}/>);
+      return (<CheckCircle fontSize="large" style={{ margin: "8px" }}/>);
   } else if(attachment.preview.status === "DECLINED") {
-      return (<Cancel fontSize="large" style={{ margin: 8 }}/>);
+      return (<Cancel fontSize="large" style={{ margin: "8px" }}/>);
   } else if(attachment.preview.status === "TENTATIVE") {
-      return (<Help fontSize="large" style={{ margin: 8 }}/>);
+      return (<Help fontSize="large" style={{ margin: "8px" }}/>);
   }
 };
 
@@ -126,10 +126,10 @@ const handleAttachment = (msg, attachment, index, summary) => {
     let mw = summary ? "3em" : "30em",
         mh = summary ? "2em" : "20em";
     return (<a href={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}`)} target="_blank" rel="noreferrer">
-        <img src={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}`)} alt={attachment.filename} style={{ maxWidth: mw, maxHeight: mh }}/>
+        <img src={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}`)} alt={attachment.filename} style={{ 'max-width': mw, 'max-height': mh }}/>
       </a>);
   } else if(attachment.content_type.includes("calendar") && attachment.preview !== null && summary === false) {
-    return (<div style="text-align: center"><a href={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}`)} target="_blank" rel="noreferrer">
+    return (<div style={{ 'text-align': "center"}}><a href={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}`)} target="_blank" rel="noreferrer">
         <AttachFile/>{attachment.filename}
         {" (" + formatFSz(attachment.content_size) + ", " + attachment.content_type + ")"}
       </a>
@@ -176,9 +176,9 @@ const ShadowRoot = (props) => {
   return <div ref={containerRef}/>;
 };
 
-const HeaderLine = ({left, right}) => {
+const HeaderLine = (props) => {
   return (
-    <Stack direction="row" spacing={.5}><span>{left}</span><span>{right}</span></Stack>
+    <Stack direction="row" spacing={.5}><span>{props.left}</span><span>{props.right}</span></Stack>
   );
 };
 
@@ -239,7 +239,7 @@ export const Message = (props) => {
   });
 
   createEffect(() => {
-    props.sl?.(allTags.loading || message.loading);
+    props.sl?.(props.allTags.loading || msg.loading);
   });
 
   mkShortcut(["r"],
@@ -251,15 +251,15 @@ export const Message = (props) => {
   );
 
   mkShortcut(["f"],
-    () => { if(props.active) document.querySelector("a[key='forward']")?.click(); }
+    () => { if(props.active) document.querySelector("a[id='forward']")?.click(); }
   );
 
   mkShortcut(["p"],
-    () => { if(props.active) document.querySelector("a[key='print']")?.click(); }
+    () => { if(props.active) document.querySelector("a[id='print']")?.click(); }
   );
 
   mkShortcut(["s"],
-    () => { if(props.active) document.querySelector("a[key='security']")?.click(); }
+    () => { if(props.active) document.querySelector("a[id='security']")?.click(); }
   );
 
   mkShortcut(["w"],
@@ -306,7 +306,7 @@ export const Message = (props) => {
         </Box>
 
         <Show when={!props.print}>
-          <Grid container justifyContent="space-between" direction="row" style={{ minHeight: "3.5em" }} class="centered">
+          <Grid container justifyContent="space-between" direction="row" style={{ 'min-height': "3.5em" }} class="centered">
             <Grid item xs={11}>
               <TagComplete
                 id="kukulkan-editTags"
@@ -321,22 +321,22 @@ export const Message = (props) => {
               />
             </Grid>
             <Grid item>
-              <a key="reply" href={replyUrl(msg.notmuch_id)} target="_blank" rel="noreferrer">
+              <a id="reply" href={replyUrl(msg.notmuch_id)} target="_blank" rel="noreferrer">
                 <Reply/>
               </a>
             </Grid>
             <Grid item>
-              <a key="forward" href={fwdUrl(msg.notmuch_id)} target="_blank" rel="noreferrer">
+              <a id="forward" href={fwdUrl(msg.notmuch_id)} target="_blank" rel="noreferrer">
                 <Forward/>
               </a>
             </Grid>
             <Grid item>
-              <a key="print" href={printUrl(msg.notmuch_id)} target="_blank" rel="noreferrer">
+              <a id="print" href={printUrl(msg.notmuch_id)} target="_blank" rel="noreferrer">
                 <Print/>
               </a>
             </Grid>
             <Grid item>
-              <a key="security" href={secUrl(msg.notmuch_id)} target="_blank" rel="noreferrer">
+              <a id="security" href={secUrl(msg.notmuch_id)} target="_blank" rel="noreferrer">
                 <Security/>
               </a>
             </Grid>
@@ -344,11 +344,13 @@ export const Message = (props) => {
 
           <Show when={msg.attachments}>
             <Grid container spacing={1}>
-              { msg.attachments.map((attachment, index2) => (
-                  <Grid item xs={4} key={index2} style={{ minHeight: "3em" }}>
-                    {handleAttachment(msg, attachment, index2, false)}
+              <For each={msg.attachments}>
+                {(attachment, index) =>
+                  <Grid item xs={4} style={{ 'min-height': "3em" }}>
+                    {handleAttachment(msg, attachment, index(), false)}
                   </Grid>
-              )) }
+                }
+              </For>
             </Grid>
           </Show>
 
@@ -393,11 +395,15 @@ export const Message = (props) => {
         <Grid container direction="column">
           <Grid container direction="row" justifyContent="space-between" wrap="nowrap">
             <Grid item>{formatAddrs(msg.from)}</Grid>
-            {msg.attachments.filter((a) => a.filename !== "smime.p7s").map((attachment, index2) => (
-              <Grid item key={index2} xs={saw} class="text-preview">
-                {handleAttachment(msg, attachment, index2, true)}
-              </Grid>
-            ))}
+            <For each={msg.attachments}>
+              {(attachment, index) => {
+                if(attachment.filename !== "smime.p7s") {
+                  return(<Grid item xs={saw} class="text-preview">
+                    {handleAttachment(msg, attachment, index(), true)}
+                  </Grid>);
+                }
+              }}
+            </For>
             <Grid item>{formatDate(new Date(msg.date))}</Grid>
           </Grid>
           <Box class={{

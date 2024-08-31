@@ -1,7 +1,5 @@
 // based on https://stackoverflow.com/questions/75751029/how-to-create-an-autocomplete-element
-
-import { render } from 'solid-js/web';
-import { createEffect, createMemo, createSignal, Index, on, onMount } from 'solid-js';
+import { createEffect, createMemo, createSignal, For, Index, on } from 'solid-js';
 
 import { InputAdornment, List, ListItemButton, ListItemText, Popover, TextField } from "@suid/material";
 import { ColorChip } from "./ColorChip.jsx";

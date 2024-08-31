@@ -1,3 +1,4 @@
+import { For } from 'solid-js';
 import { Grid } from "@suid/material";
 import { ColorChip } from "./ColorChip.jsx";
 
@@ -10,7 +11,7 @@ export const IndexThread = (props) => {
         'active': props.index() === props.activeThread(),
         'selected': props.selectedThreads().indexOf(props.index()) !== -1
       }}
-      onClick={(e) => {
+      onClick={() => {
         props.setActiveThread(props.index());
         simulateKeyPress('Enter');
       }}

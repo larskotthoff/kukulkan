@@ -1,8 +1,8 @@
-import { createEffect, createSignal, createResource, For, onMount, Show } from "solid-js";
+import { createEffect, createSignal, createResource, For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 
-import { Alert, Box, Button, Divider, Grid, InputAdornment, MenuItem, Paper, Select, TextField } from "@suid/material";
-import { Autocomplete, ChipComplete, TagComplete } from "./Autocomplete.jsx";
+import { Alert, Box, Button, Grid, MenuItem, Paper, Select, TextField } from "@suid/material";
+import { ChipComplete, TagComplete } from "./Autocomplete.jsx";
 import { ColorChip } from "./ColorChip.jsx";
 
 import AttachFile from "@suid/icons-material/AttachFile";

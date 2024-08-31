@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@solidjs/testing-library";
-import userEvent from "@testing-library/user-event";
+import { userEvent } from "@testing-library/user-event";
 
 import { Write } from "./Write.jsx";
 
@@ -216,7 +216,7 @@ test("base message reply filters admin tags", async () => {
         .mockResolvedValueOnce({ ok: true, json: () => allTags })
         .mockResolvedValueOnce({ ok: true, json: () => accounts })
         .mockResolvedValueOnce({ ok: true, json: () => [] }); // templates
-  const { getByTestId } = render(() => <Write/>);
+  render(() => <Write/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(4);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
@@ -571,7 +571,7 @@ test("data assembled correctly for sending new email", async () => {
       method: 'POST',
       body: expect.any(FormData),
     }));
-  const [url, options] = fetchSpy.mock.calls[0];
+  const options = fetchSpy.mock.calls[0][1];
   expect(options.body.get("refId")).toBe("null");
   expect(options.body.get("action")).toBe("compose");
   expect(options.body.get("from")).toBe("bar");
@@ -622,7 +622,7 @@ test("data assembled correctly for sending reply", async () => {
       method: 'POST',
       body: expect.any(FormData),
     }));
-  const [url, options] = fetchSpy.mock.calls[0];
+  const options = fetchSpy.mock.calls[0][1];
   expect(options.body.get("refId")).toBe("foo");
   expect(options.body.get("action")).toBe("reply");
   expect(options.body.get("from")).toBe("foo");
@@ -641,7 +641,7 @@ test("error when mail cannot be sent", async () => {
         .mockResolvedValueOnce({ ok: true, json: () => [] })
         .mockResolvedValueOnce({ ok: true, json: () => accounts })
         .mockResolvedValueOnce({ ok: true, json: () => [] }); // templates
-  const { container, getByTestId } = render(() => <Write/>);
+  const { getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();

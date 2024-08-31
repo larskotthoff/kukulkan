@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { cleanup, render, screen } from "@solidjs/testing-library";
-import userEvent from "@testing-library/user-event";
+import { userEvent } from "@testing-library/user-event";
 
 import { Kukulkan } from "./Kukulkan.jsx";
 import { IndexThread } from "./IndexThread.jsx";
@@ -211,7 +211,7 @@ test("delete thread works", async () => {
         .mockResolvedValueOnce({ ok: true, json: () => ["foo", "foobar"] })
         .mockResolvedValueOnce({ ok: true })
         .mockResolvedValueOnce({ ok: true });
-  const { container } = render(() => <Kukulkan Thread={IndexThread}/>);
+  render(() => <Kukulkan Thread={IndexThread}/>);
   expect(global.fetch).toHaveBeenCalledTimes(2);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/query/foo");
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
@@ -240,7 +240,7 @@ test("mark thread done works", async () => {
         .mockResolvedValueOnce({ ok: true, json: () => ["foo", "foobar"] })
         .mockResolvedValueOnce({ ok: true })
         .mockResolvedValueOnce({ ok: true });
-  const { container } = render(() => <Kukulkan Thread={IndexThread}/>);
+  render(() => <Kukulkan Thread={IndexThread}/>);
   expect(global.fetch).toHaveBeenCalledTimes(2);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/query/foo");
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
@@ -271,7 +271,7 @@ test("tag edits work", async () => {
         .mockResolvedValueOnce({ ok: true, json: () => ["foo", "foobar"] })
         .mockResolvedValueOnce({ ok: true })
         .mockResolvedValueOnce({ ok: true });
-  const { container } = render(() => <Kukulkan Thread={IndexThread}/>);
+  render(() => <Kukulkan Thread={IndexThread}/>);
   expect(global.fetch).toHaveBeenCalledTimes(2);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/query/foo");
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
@@ -305,7 +305,7 @@ test("tag edits with multiple selection work", async () => {
         .mockResolvedValueOnce({ ok: true })
         .mockResolvedValueOnce({ ok: true })
         .mockResolvedValueOnce({ ok: true });
-  const { container } = render(() => <Kukulkan Thread={IndexThread}/>);
+  render(() => <Kukulkan Thread={IndexThread}/>);
   expect(global.fetch).toHaveBeenCalledTimes(2);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/query/foo");
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
