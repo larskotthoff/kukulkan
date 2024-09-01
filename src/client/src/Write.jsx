@@ -10,7 +10,7 @@ import Send from "@suid/icons-material/Send";
 
 import "./Kukulkan.css";
 import { separateQuotedNonQuoted } from "./Message.jsx";
-import { adminTags, apiURL, fetchAllTags, fetchMessage, formatFSz, mkShortcut } from "./utils.js";
+import { apiURL, fetchAllTags, fetchMessage, filterAdminTags, formatFSz, mkShortcut } from "./utils.js";
 
 const Templates = (props) => {
   return (
@@ -192,7 +192,7 @@ export const Write = (props) => {
     setMessage("to", localStorage.getItem(`draft-${draftKey}-to`)?.split('\n') || defTo);
     setMessage("cc", localStorage.getItem(`draft-${draftKey}-cc`)?.split('\n') || defCc);
     setMessage("bcc", localStorage.getItem(`draft-${draftKey}-bcc`)?.split('\n') || []);
-    setMessage("tags", localStorage.getItem(`draft-${draftKey}-tags`)?.split('\n') || baseMessage()?.tags.filter(t => !adminTags.includes(t)) || []);
+    setMessage("tags", localStorage.getItem(`draft-${draftKey}-tags`)?.split('\n') || filterAdminTags(baseMessage()?.tags) || []);
     setMessage("bodyDefaultValue", localStorage.getItem(`draft-${draftKey}-body`) || quote(baseMessage()?.body["text/plain"]) || "");
     setMessage("body", message.bodyDefaultValue);
   });

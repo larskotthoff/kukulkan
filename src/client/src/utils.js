@@ -30,8 +30,10 @@ export function extractEmailsSort(string) {
   return string.match(/([^ <>]+@[^ >]+)/g).join('').split('').sort().join('');
 }
 
-export function filterTagsColor(tags) {
-  return tags.filter(i => { return i !== "replied" && i !== "sent" && i !== "signed" && i !== "passed" && i !== "attachment"; });
+export function filterAdminTags(tags) {
+  if(!tags) return tags;
+  const adminTags = [ "attachment", "passed", "replied", "sent", "signed" ];
+  return tags.filter(i => !adminTags.includes(i));
 }
 
 export function filterSubjectColor(subject) {
@@ -130,13 +132,11 @@ export function simulateKeyPress(key, ctrlKey = false, shiftKey = false, altKey 
   document.dispatchEvent(event);
 }
 
-export const adminTags = [ "attachment", "passed", "replied", "sent", "signed" ];
-
 export async function fetchAllTags() {
   const response = await fetch(apiURL(`api/tags/`));
   if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
   const retval = await response.json();
-  return retval.filter(t => !adminTags.includes(t));
+  return filterAdminTags(retval);
 }
 
 export async function fetchMessage(id) {

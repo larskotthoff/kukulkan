@@ -20,9 +20,10 @@ test("extractEmailsSort", () => {
   expect(utils.extractEmailsSort("\"Foo Bar\" <foo@bar.com>")).toBe(".@abcfmooor");
 });
 
-test("filterTagsColor", () => {
-  expect(utils.filterTagsColor(["foo", "bar", "replied", "sent", "signed", "passed", "attachment"]))
+test("filterAdminTags", () => {
+  expect(utils.filterAdminTags(["foo", "bar", "replied", "sent", "signed", "passed", "attachment"]))
     .toStrictEqual(["foo", "bar"]);
+  expect(utils.filterAdminTags(undefined)).toStrictEqual(undefined);
 });
 
 test("filterSubjectColor", () => {

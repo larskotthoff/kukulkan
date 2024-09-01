@@ -4,7 +4,7 @@ import { Box, Grid } from "@suid/material";
 import { Message } from "./Message.jsx";
 
 import "./Kukulkan.css";
-import { apiURL, extractEmailsSort, fetchAllTags, filterSubjectColor, filterTagsColor, getColor, mkShortcut } from "./utils.js";
+import { apiURL, extractEmailsSort, fetchAllTags, filterSubjectColor, filterAdminTags, getColor, mkShortcut } from "./utils.js";
 
 async function fetchThread(id) {
   if(id === null) return null;
@@ -163,7 +163,7 @@ export const Thread = (props) => {
                   opacity: filteredThread()?.find((mp) => { return mp.message_id === m.message_id; }) ? 1 : .3,
                   'border-radius': m.tags.includes("unread") ? "1em" : "0em",
                   'border-color': filteredThread()[activeMessage()].message_id === m.message_id ? "black" : "white",
-                  'background-color': getColor(filterSubjectColor(m.subject) + filterTagsColor(m.tags) + extractEmailsSort(m.from + m.to + m.cc))
+                  'background-color': getColor(filterSubjectColor(m.subject) + filterAdminTags(m.tags) + extractEmailsSort(m.from + m.to + m.cc))
                 }}
               />}
           </For>
