@@ -2,7 +2,8 @@ import { For } from 'solid-js';
 import { Grid } from "@suid/material";
 import { ColorChip } from "./ColorChip.jsx";
 
-import { renderDateNumThread, simulateKeyPress } from "./utils.js";
+import { renderDateNumThread } from "./utils.js";
+import { simulateKeyPress } from "./UiUtils.jsx";
 
 export const IndexThread = (props) => {
   return (

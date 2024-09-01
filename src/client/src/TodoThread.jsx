@@ -2,7 +2,8 @@ import { For } from 'solid-js';
 import { Grid } from "@suid/material";
 import { ColorChip } from "./ColorChip.jsx";
 
-import { formatDuration, simulateKeyPress } from "./utils.js";
+import { formatDuration } from "./utils.js";
+import { simulateKeyPress } from "./UiUtils.jsx";
 
 function dateFromDue(due) {
   const dateComponents = due.split(':')[1].split('-'),

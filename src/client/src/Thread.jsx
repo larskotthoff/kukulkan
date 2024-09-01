@@ -4,7 +4,8 @@ import { Box, Grid } from "@suid/material";
 import { Message } from "./Message.jsx";
 
 import "./Kukulkan.css";
-import { apiURL, extractEmailsSort, fetchAllTags, filterSubjectColor, filterAdminTags, getColor, mkShortcut } from "./utils.js";
+import { apiURL, extractEmailsSort, fetchAllTags, filterSubjectColor, filterAdminTags, getColor } from "./utils.js";
+import { mkShortcut } from "./UiUtils.jsx";
 
 async function fetchThread(id) {
   if(id === null) return null;

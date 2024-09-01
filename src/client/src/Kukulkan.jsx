@@ -5,7 +5,8 @@ import { Autocomplete } from "./Autocomplete.jsx";
 import Create from "@suid/icons-material/Create";
 
 import "./Kukulkan.css";
-import { apiURL, fetchAllTags, mkShortcut } from "./utils.js";
+import { apiURL, fetchAllTags } from "./utils.js";
+import { mkShortcut } from "./UiUtils.jsx";
 
 async function fetchThreads(query) {
   if(query === null) return [];

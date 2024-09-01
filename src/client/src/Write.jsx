@@ -10,7 +10,8 @@ import Send from "@suid/icons-material/Send";
 
 import "./Kukulkan.css";
 import { separateQuotedNonQuoted } from "./Message.jsx";
-import { apiURL, fetchAllTags, fetchMessage, filterAdminTags, formatFSz, mkShortcut } from "./utils.js";
+import { apiURL, fetchAllTags, fetchMessage, filterAdminTags, formatFSz } from "./utils.js";
+import { mkShortcut } from "./UiUtils.jsx";
 
 const Templates = (props) => {
   return (

@@ -17,7 +17,8 @@ import linkifyStr from 'linkify-string';
 const linkifyOpts = { target: "_blank", rel: "nofollow" };
 
 import "./Kukulkan.css";
-import { apiURL, fetchAllTags, formatDate, formatFSz, mkShortcut, strip, fetchMessage } from "./utils.js";
+import { apiURL, fetchAllTags, formatDate, formatFSz, strip, fetchMessage } from "./utils.js";
+import { mkShortcut } from "./UiUtils.jsx";
 
 export const separateQuotedNonQuoted = (text) => {
   let lines = text.split('\n'),
