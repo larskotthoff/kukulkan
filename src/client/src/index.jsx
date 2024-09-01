@@ -17,7 +17,7 @@ render(() => {
   return (
   <>
     <Show when={loading()}>
-      <LinearProgress/>
+      <LinearProgress spacing={1}/>
     </Show>
     <ErrorBoundary fallback={(error) => <Alert severity="error">Error: {error}<pre>{error.stack}</pre></Alert>}>
       <Router>
