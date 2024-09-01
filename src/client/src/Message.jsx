@@ -374,7 +374,9 @@ export const Message = (props) => {
           <ShadowRoot html={msg.body["text/html"]}/>
         </Show>
         <Show when={!html()}>
-          <Box class="message-text" innerHTML={linkifyStr(mainPart, linkifyOpts)}/>
+          <Box class="message-text"
+            // eslint-disable-next-line solid/no-innerhtml
+            innerHTML={linkifyStr(mainPart, linkifyOpts)}/>
           <Show when={quotedPart}>
             <Box class={{
                 'message-text': true,
@@ -387,6 +389,7 @@ export const Message = (props) => {
                   e.stopPropagation();
                 }
               }}
+              // eslint-disable-next-line solid/no-innerhtml
               innerHTML={linkifyStr(quotedPart, linkifyOpts)}/>
           </Show>
         </Show>
@@ -411,6 +414,7 @@ export const Message = (props) => {
               'message-text': true,
               'text-preview': true
             }}
+            // eslint-disable-next-line solid/no-innerhtml
             innerHTML={linkifyStr(mainPart, linkifyOpts)}/>
         </Grid>
       </Show>

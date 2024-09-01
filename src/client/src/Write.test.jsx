@@ -513,7 +513,7 @@ test("localStorage deletes upon successful send", async () => {
         .mockResolvedValueOnce({ ok: true, json: () => [] })
         .mockResolvedValueOnce({ ok: true, json: () => accounts })
         .mockResolvedValueOnce({ ok: true, json: () => [] }); // templates
-  const { container, getByTestId } = render(() => <Write/>);
+  const { getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -636,7 +636,7 @@ test("data assembled correctly for sending reply w/o editing", async () => {
         .mockResolvedValueOnce({ ok: true, json: () => [] })
         .mockResolvedValueOnce({ ok: true, json: () => accounts })
         .mockResolvedValueOnce({ ok: true, json: () => [] }); // templates
-  const { getByTestId } = render(() => <Write/>);
+  render(() => <Write/>);
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
