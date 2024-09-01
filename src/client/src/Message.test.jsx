@@ -148,6 +148,26 @@ test("renders message attachments", () => {
   expect(screen.getByText("bar.txt (9.77 kiB, text)")).toBeInTheDocument();
 });
 
+test("smime attachment hidden when collapsed", () => {
+  msg.attachments = [ { content_type: "signed", content_size: 100, filename: "smime.p7s" },
+    { content_type: "text", content_size: 10000, filename: "test.txt" } ];
+
+  // shown when message active
+  let container = render(() => <Message msg={msg} active={true}/>).container;
+  expect(container.querySelector("a[href='http://localhost:5000/api/attachment/fo%40o/0']")).not.toBe(null);
+  expect(screen.getByText("smime.p7s (100 Bi, signed)")).toBeInTheDocument();
+  expect(container.querySelector("a[href='http://localhost:5000/api/attachment/fo%40o/1']")).not.toBe(null);
+  expect(screen.getByText("test.txt (9.77 kiB, text)")).toBeInTheDocument();
+  cleanup();
+
+  // hidden when message not active
+  container = render(() => <Message msg={msg} active={false}/>).container;
+  expect(container.querySelector("a[href='http://localhost:5000/api/attachment/fo%40o/0']")).toBe(null);
+  expect(screen.queryByText("smime.p7s (100 Bi, signed)")).not.toBeInTheDocument();
+  expect(container.querySelector("a[href='http://localhost:5000/api/attachment/fo%40o/1']")).not.toBe(null);
+  expect(screen.getByText("test.txt")).toBeInTheDocument();
+});
+
 test("links are linikified in text", () => {
   msg.body = {
     "text/html": "",
