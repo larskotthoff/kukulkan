@@ -626,6 +626,49 @@ test("data assembled correctly for sending new email", async () => {
   expect(screen.getByText("Message sent.")).toBeInTheDocument();
 });
 
+test("data assembled correctly for sending reply w/o editing", async () => {
+  vi.stubGlobal('location', {
+    ...window.location,
+    search: '?id=foo&action=reply&mode=all'
+  });
+  global.fetch
+        .mockResolvedValueOnce({ ok: true, json: () => msg })
+        .mockResolvedValueOnce({ ok: true, json: () => [] })
+        .mockResolvedValueOnce({ ok: true, json: () => accounts })
+        .mockResolvedValueOnce({ ok: true, json: () => [] }); // templates
+  const { getByTestId } = render(() => <Write/>);
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("Send")).toBeInTheDocument();
+  });
+
+  global.fetch.mockResolvedValue({ ok: true, json: () => [] });
+
+  const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
+      json: () => Promise.resolve({sendStatus: 0, sendOutput: ""})
+    });
+  await userEvent.click(screen.getByText("Send"));
+
+  expect(fetchSpy).toHaveBeenCalledTimes(1);
+  expect(fetchSpy).toHaveBeenCalledWith("http://localhost:5000/api/send",
+    expect.objectContaining({
+      method: 'POST',
+      body: expect.any(FormData),
+    }));
+  const options = fetchSpy.mock.calls[0][1];
+  expect(options.body.get("refId")).toBe("foo");
+  expect(options.body.get("action")).toBe("reply");
+  expect(options.body.get("from")).toBe("foo");
+  expect(options.body.get("to")).toBe("bar foo <bar@foo.com>");
+  expect(options.body.get("cc")).toBe("test@test.com");
+  expect(options.body.get("bcc")).toBe("");
+  expect(options.body.get("tags")).toBe("foo,bar,test");
+  expect(options.body.get("subject")).toBe("Re: Test.");
+  expect(options.body.get("body")).toBe("\n\n\nOn Thu, 01 Jan 1970 00:00:00 -0000, bar foo <bar@foo.com> wrote:\n> Test mail");
+
+  expect(screen.getByText("Message sent.")).toBeInTheDocument();
+});
+
 test("data assembled correctly for sending reply", async () => {
   vi.stubGlobal('location', {
     ...window.location,

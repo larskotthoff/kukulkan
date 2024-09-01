@@ -194,7 +194,7 @@ export const Write = (props) => {
     setMessage("bcc", localStorage.getItem(`draft-${draftKey}-bcc`)?.split('\n') || []);
     setMessage("tags", localStorage.getItem(`draft-${draftKey}-tags`)?.split('\n') || baseMessage()?.tags.filter(t => !adminTags.includes(t)) || []);
     setMessage("bodyDefaultValue", localStorage.getItem(`draft-${draftKey}-body`) || quote(baseMessage()?.body["text/plain"]) || "");
-    setMessage("body", localStorage.getItem(`draft-${draftKey}-body`) || "");
+    setMessage("body", message.bodyDefaultValue);
   });
 
   createEffect(() => {
