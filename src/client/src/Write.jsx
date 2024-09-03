@@ -281,6 +281,10 @@ export const Write = (props) => {
     () => document.getElementById("send").click()
   );
 
+  mkShortcut(["b"],
+    () => bodyRef().focus()
+  );
+
   return (
     <>
       <Show when={!allTags.loading && !accounts.loading && !compose.loading && !baseMessage.loading}>
