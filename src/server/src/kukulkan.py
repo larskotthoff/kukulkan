@@ -32,7 +32,7 @@ from bs4 import BeautifulSoup
 import lxml
 from lxml_html_clean import Cleaner
 
-from tempfile import mkstemp
+from tempfile import mkstemp, NamedTemporaryFile
 from gnupg import GPG
 
 cleaner = Cleaner(javascript=True,
@@ -182,9 +182,9 @@ def create_app():
         def get(self):
             return current_app.config.custom["accounts"]
 
-    class Templates(Resource):
+    class Compose(Resource):
         def get(self):
-            return current_app.config.custom["templates"]
+            return current_app.config.custom["compose"]
 
     # all requests that return lists must be defined this way
     api.add_resource(Query, "/api/query/<path:query_string>")
@@ -192,7 +192,7 @@ def create_app():
     api.add_resource(Thread, "/api/thread/<path:thread_id>")
     api.add_resource(Tags, "/api/tags/")
     api.add_resource(Accounts, "/api/accounts/")
-    api.add_resource(Templates, "/api/templates/")
+    api.add_resource(Compose, "/api/compose/")
 
     @app.route("/api/attachment/<path:message_id>/<int:num>")
     def download_attachment(message_id, num):
@@ -241,6 +241,25 @@ def create_app():
         finally:
             db_write.close()
         return tag
+
+    @app.route('/api/edit_external', methods=['POST'])
+    def edit_external():
+        if not current_app.config.custom["compose"]:
+            abort(404)
+        editcmd = current_app.config.custom["compose"]["external-editor"]
+        if not editcmd:
+            abort(404)
+
+        tmp = NamedTemporaryFile(mode="w", delete=False, prefix="kukulkan-tmp-")
+        try:
+            tmp.write(request.values['body'])
+            tmp.close()
+            subprocess.run(editcmd.split(' ') + [tmp.name])
+            tmp = open(tmp.name)
+            return tmp.read()
+        finally:
+            tmp.close()
+            os.unlink(tmp.name)
 
     @app.route('/api/send', methods=['GET', 'POST'])
     def parse_request():

@@ -33,12 +33,16 @@
         }
     },
 
-    "templates": [
-        {
-            "shortcut": "1",
-            "description": "foo",
-            "template": "Thank you for your message."
-        }
-    ]
+    "compose": {
+        "external-editor": "command that will be suffixed with file name",
+
+        "templates": [
+            {
+                "shortcut": "1",
+                "description": "foo",
+                "template": "Thank you for your message."
+            }
+        ]
+    }
 
 }

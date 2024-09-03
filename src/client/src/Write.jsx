@@ -16,7 +16,7 @@ import { mkShortcut } from "./UiUtils.jsx";
 const Templates = (props) => {
   return (
     <Grid container spacing={1} class="centered" sx={{ justifyContent: 'center' }}>
-      <For each={props.templates()}>
+      <For each={props.templates}>
         {(template) => {
           mkShortcut([template.shortcut],
             () => document.getElementById(`template-${template.shortcut}`).click()
@@ -69,8 +69,8 @@ async function fetchAccounts() {
   return await response.json();
 }
 
-async function fetchTemplates() {
-  const response = await fetch(apiURL(`api/templates/`));
+async function fetchCompose() {
+  const response = await fetch(apiURL(`api/compose/`));
   if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
   return await response.json();
 }
@@ -126,7 +126,7 @@ export const Write = (props) => {
         [baseMessage] = createResource(baseMessageId, fetchMessage),
         [allTags] = createResource(fetchAllTags),
         [accounts] = createResource(fetchAccounts),
-        [templates] = createResource(fetchTemplates),
+        [compose] = createResource(fetchCompose),
         [useTemplate, setUseTemplate] = createSignal(null),
         [bodyRef, setBodyRef] = createSignal(),
         [statusMsg, setStatusMsg] = createSignal(),
@@ -136,7 +136,7 @@ export const Write = (props) => {
       defCc = [];
 
   createEffect(() => {
-    props.sl?.(allTags.loading || accounts.loading || templates.loading || baseMessage.loading);
+    props.sl?.(allTags.loading || accounts.loading || compose.loading || baseMessage.loading);
     document.title = "Compose: New Message";
     if(localStorage.getItem(`draft-${draftKey}-from`)) {
       setMessage("from", localStorage.getItem(`draft-${draftKey}-from`));
@@ -283,13 +283,13 @@ export const Write = (props) => {
 
   return (
     <>
-      <Show when={!allTags.loading && !accounts.loading && !templates.loading && !baseMessage.loading}>
+      <Show when={!allTags.loading && !accounts.loading && !compose.loading && !baseMessage.loading}>
         <Box width="95%" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <Show when={statusMsg()}>
           <Alert severity={statusMsg().startsWith("Error") ? "error" : "success"}>{statusMsg()}</Alert>
         </Show>
-        <Show when={templates()}>
-          <Templates templates={templates} setTemplate={setUseTemplate}/>
+        <Show when={compose()}>
+          <Templates templates={compose().templates} setTemplate={setUseTemplate}/>
         </Show>
         <Paper elevation={3} class="kukulkan-message">
           <Grid container spacing={1} class="inputFieldSet">
@@ -379,6 +379,20 @@ export const Write = (props) => {
             inputRef={setBodyRef}
             data-testid="body"
             sx={{ marginBottom: ".5em", marginTop: "1em" }}
+            onFocus={async (ev) => {
+              if(compose()["external-editor"]) {
+                const formData = new FormData();
+                formData.append('body', ev.target.value);
+
+                ev.target.disabled = true;
+                ev.target.value = "[Editing externally...]";
+                const response = await fetch(apiURL("api/edit_external"), { method: 'POST', body: formData });
+                ev.target.value = await response.text();
+                ev.target.disabled = false;
+                localStorage.setItem(`draft-${draftKey}-body`, ev.target.value);
+                setMessage("body", ev.target.value);
+              }
+            }}
             onChange={(ev) => {
               localStorage.setItem(`draft-${draftKey}-body`, ev.target.value);
               setMessage("body", ev.target.value);

@@ -32,14 +32,16 @@ def test_accounts(setup):
         assert b'"foo"\n' == response.data
 
 
-def test_templates(setup):
+def test_compose(setup):
     app, db = setup
 
-    app.config.custom["templates"] = "foo"
+    app.config.custom["compose"] = {}
+    app.config.custom["compose"]["templates"] = "foo"
+    app.config.custom["compose"]["external-editor"] = "bar"
     with app.test_client() as test_client:
-        response = test_client.get('/api/templates/')
+        response = test_client.get('/api/compose/')
         assert response.status_code == 200
-        assert b'"foo"\n' == response.data
+        assert b'{\"templates\": \"foo\", \"external-editor\": \"bar\"}\n' == response.data
 
 
 def test_tags(setup):
@@ -1362,6 +1364,32 @@ def test_thread_duplicate(setup):
     mq.search_threads.assert_called_once()
 
 
+def test_external_editor(setup):
+    app, db = setup
+
+    pd = {"body": "foobar"}
+
+    app.config.custom["compose"] = {}
+    app.config.custom["compose"]["external-editor"] = "true"
+
+    fname = ""
+
+    with patch("os.unlink", return_value=None) as u:
+        with patch("builtins.open", mock_open(read_data="foobar")) as m:
+            with app.test_client() as test_client:
+                response = test_client.post('/api/edit_external', data=pd)
+                assert response.status_code == 200
+                assert response.data == b'foobar'
+            u.assert_called_once()
+            m.assert_called_once()
+            args = m.call_args.args
+            assert "kukulkan-tmp-" in args[0]
+            fname = args[0]
+            tmp = open(fname)
+            assert tmp.read() == "foobar"
+
+    os.unlink(fname)
+
 def test_send(setup):
     app, db = setup
 
@@ -1535,7 +1563,7 @@ def test_send_attachment(setup):
                 assert response.status_code == 200
                 assert response.json["sendStatus"] == 0
                 assert response.json["sendOutput"] == ""
-            assert m.call_count == 2
+            m.assert_called_once()
             args = m.call_args.args
             assert "kukulkan" in args[0]
             assert "folder" in args[0]

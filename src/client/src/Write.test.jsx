@@ -43,13 +43,13 @@ test("renders", async () => {
   global.fetch
         .mockResolvedValueOnce({ ok: true, json: () => allTags })
         .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // templates
+        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
   const { getByTestId } = render(() => <Write/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(3);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/templates/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -66,13 +66,13 @@ test("selects default account and lists others", async () => {
   global.fetch
         .mockResolvedValueOnce({ ok: true, json: () => allTags })
         .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // templates
+        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
   const { container } = render(() => <Write/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(3);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/templates/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -97,14 +97,14 @@ test("base message reply all", async () => {
         .mockResolvedValueOnce({ ok: true, json: () => msg })
         .mockResolvedValueOnce({ ok: true, json: () => allTags })
         .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // templates
+        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
   const { getByTestId } = render(() => <Write/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(4);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/templates/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -129,14 +129,14 @@ test("base message reply one", async () => {
         .mockResolvedValueOnce({ ok: true, json: () => msg })
         .mockResolvedValueOnce({ ok: true, json: () => allTags })
         .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // templates
+        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
   const { getByTestId } = render(() => <Write/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(4);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/templates/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -163,7 +163,7 @@ test("reply includes only main part of base message quoted", async () => {
         .mockResolvedValueOnce({ ok: true, json: () => msg1 })
         .mockResolvedValueOnce({ ok: true, json: () => allTags })
         .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // templates
+        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
   const { getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
@@ -181,14 +181,14 @@ test("base message forward", async () => {
         .mockResolvedValueOnce({ ok: true, json: () => msg })
         .mockResolvedValueOnce({ ok: true, json: () => allTags })
         .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // templates
+        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
   const { getByTestId } = render(() => <Write/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(4);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/templates/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -215,14 +215,14 @@ test("base message reply filters admin tags", async () => {
         .mockResolvedValueOnce({ ok: true, json: () => msg1 })
         .mockResolvedValueOnce({ ok: true, json: () => allTags })
         .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // templates
+        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
   render(() => <Write/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(4);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/templates/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -234,18 +234,18 @@ test("base message reply filters admin tags", async () => {
 });
 
 test("template set", async () => {
-  const templates = [{"shortcut": "1", "description": "foo", "template": "bar"},
-                     {"shortcut": "2", "description": "foobar", "template": "blurg"}];
+  const compose = {"templates": [{"shortcut": "1", "description": "foo", "template": "bar"},
+                     {"shortcut": "2", "description": "foobar", "template": "blurg"}]};
   global.fetch
         .mockResolvedValueOnce({ ok: true, json: () => allTags })
         .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => templates });
+        .mockResolvedValueOnce({ ok: true, json: () => compose });
   const { getByTestId } = render(() => <Write/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(3);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/templates/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -273,20 +273,20 @@ test("template set with base message", async () => {
     ...window.location,
     search: '?id=foo&action=reply&mode=all'
   });
-  const templates = [{"shortcut": "1", "description": "foo", "template": "bar"},
-                     {"shortcut": "2", "description": "foobar", "template": "blurg"}];
+  const compose = {"templates": [{"shortcut": "1", "description": "foo", "template": "bar"},
+                     {"shortcut": "2", "description": "foobar", "template": "blurg"}]};
   global.fetch
         .mockResolvedValueOnce({ ok: true, json: () => msg })
         .mockResolvedValueOnce({ ok: true, json: () => allTags })
         .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => templates });
+        .mockResolvedValueOnce({ ok: true, json: () => compose });
   const { getByTestId } = render(() => <Write/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(4);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/templates/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -318,13 +318,13 @@ test("tags editable and complete", async () => {
         .mockResolvedValueOnce({ ok: true, json: () => msg })
         .mockResolvedValueOnce({ ok: true, json: () => allTags })
         .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // templates
+        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
   const { getByTestId } = render(() => <Write/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(4);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/templates/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -367,13 +367,13 @@ test("addresses editable and complete", async () => {
   global.fetch
         .mockResolvedValueOnce({ ok: true, json: () => allTags })
         .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // templates
+        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
   const { getByTestId } = render(() => <Write/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(3);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/templates/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -416,7 +416,7 @@ test("files attachable and editable", async () => {
         .mockResolvedValueOnce({ ok: true, json: () => msg1 })
         .mockResolvedValueOnce({ ok: true, json: () => allTags })
         .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // templates
+        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
   const { container } = render(() => <Write/>);
 
   await vi.waitFor(() => {
@@ -443,7 +443,7 @@ test("localStorage stores for new email", async () => {
   global.fetch
         .mockResolvedValueOnce({ ok: true, json: () => [] })
         .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // templates
+        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
   const { container, getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
@@ -484,7 +484,7 @@ test("localStorage stores for reply", async () => {
         .mockResolvedValueOnce({ ok: true, json: () => msg })
         .mockResolvedValueOnce({ ok: true, json: () => [] })
         .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // templates
+        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
   const { getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
@@ -512,7 +512,7 @@ test("localStorage deletes upon successful send", async () => {
   global.fetch
         .mockResolvedValueOnce({ ok: true, json: () => [] })
         .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // templates
+        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
   const { getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
@@ -552,7 +552,7 @@ test("warns when attempting to send incomplete mail", async () => {
   global.fetch
         .mockResolvedValueOnce({ ok: true, json: () => [] })
         .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // templates
+        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
   const { getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
@@ -562,7 +562,7 @@ test("warns when attempting to send incomplete mail", async () => {
   expect(global.fetch).toHaveBeenCalledTimes(3);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/templates/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   await userEvent.click(screen.getByText("Send"));
 
@@ -581,7 +581,7 @@ test("data assembled correctly for sending new email", async () => {
   global.fetch
         .mockResolvedValueOnce({ ok: true, json: () => [] })
         .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // templates
+        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
   const { container, getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
@@ -635,7 +635,7 @@ test("data assembled correctly for sending reply w/o editing", async () => {
         .mockResolvedValueOnce({ ok: true, json: () => msg })
         .mockResolvedValueOnce({ ok: true, json: () => [] })
         .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // templates
+        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
   render(() => <Write/>);
 
   await vi.waitFor(() => {
@@ -678,7 +678,7 @@ test("data assembled correctly for sending reply", async () => {
         .mockResolvedValueOnce({ ok: true, json: () => msg })
         .mockResolvedValueOnce({ ok: true, json: () => [] })
         .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // templates
+        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
   const { getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
@@ -723,7 +723,7 @@ test("error when mail cannot be sent", async () => {
   global.fetch
         .mockResolvedValueOnce({ ok: true, json: () => [] })
         .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // templates
+        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
   const { getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
@@ -748,6 +748,37 @@ test("error when mail cannot be sent", async () => {
     }));
 
   expect(screen.getByText("Error sending message: foo")).toBeInTheDocument();
+});
+
+test("external editing", async () => {
+  const compose = {"external-editor": "foo"};
+  global.fetch
+        .mockResolvedValueOnce({ ok: true, json: () => [] })
+        .mockResolvedValueOnce({ ok: true, json: () => accounts })
+        .mockResolvedValueOnce({ ok: true, json: () => compose }); // compose
+  const { getByTestId } = render(() => <Write/>);
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("Send")).toBeInTheDocument();
+  });
+  expect(global.fetch).toHaveBeenCalledTimes(3);
+
+  global.fetch.mockResolvedValue({ ok: true, text: () => "foobar" });
+
+  await fireEvent.focus(getByTestId("body").querySelector("textarea"));
+  expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/edit_external",
+    expect.objectContaining({
+      method: 'POST',
+      body: expect.any(FormData),
+    }));
+
+  expect(getByTestId("body").querySelector("textarea").value).toBe("[Editing externally...]");
+
+  await vi.waitFor(() => {
+    expect(getByTestId("body").querySelector("textarea").value).toBe("foobar");
+  });
+  expect(localStorage.getItem("draft-compose-body")).toBe("foobar");
 });
 
 // vim: tabstop=2 shiftwidth=2 expandtab
