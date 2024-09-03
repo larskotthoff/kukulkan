@@ -161,12 +161,7 @@ export const Kukulkan = (props) => {
 
   const QueryBox = () => {
     return (
-      <Box component="form" width="100%" noValidate onSubmit={(e) => {
-        e.preventDefault();
-        const sp = new URLSearchParams(searchParams());
-        sp.set("query", searchText());
-        window.location.search = sp.toString();
-      }}>
+      <Box width="100%" noValidate>
         <Autocomplete
           id="kukulkan-queryBox"
           name="search"
@@ -182,6 +177,13 @@ export const Kukulkan = (props) => {
               return allTags().filter((t) => t.startsWith(last)).map((t) => [...pts, t].join(':'));
             } else {
               return opts.filter((t) => t.includes(text));
+            }
+          }}
+          handleKey={(ev) => {
+            if(ev.code === 'Enter') {
+              const sp = new URLSearchParams(searchParams());
+              sp.set("query", searchText());
+              window.location.search = sp.toString();
             }
           }}
         />

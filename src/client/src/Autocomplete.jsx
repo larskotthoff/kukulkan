@@ -35,6 +35,7 @@ export const Autocomplete = (props) => {
   }));
 
   const handleKeydown = (ev) => {
+    let wasVisible = isVisible();
     if (ev.code === 'ArrowUp') {
       setSelected(prev => prev === 0 ? (sortedOptions().length - 1) : prev - 1);
     } else if (ev.code === 'ArrowDown') {
@@ -48,7 +49,7 @@ export const Autocomplete = (props) => {
       setShowPopover(true);
     }
 
-    if(props.handleKey) props.handleKey(ev);
+    if(!wasVisible && props.handleKey) props.handleKey(ev);
   };
 
   const select = (i) => {

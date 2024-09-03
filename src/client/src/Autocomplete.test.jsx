@@ -155,7 +155,7 @@ test("ChipComplete works", async () => {
 
   expect(add).toBe("");
   await userEvent.type(input, "{arrowdown}");
-  await userEvent.type(input, "{enter}");
+  await userEvent.type(input, "{enter}{enter}");
   expect(add).toBe("foobar");
 });
 
@@ -182,7 +182,7 @@ test("TagComplete works", async () => {
 
   expect(add).toBe("");
   await userEvent.type(input, "{arrowdown}");
-  await userEvent.type(input, "{enter}");
+  await userEvent.type(input, "{enter}{enter}");
   expect(add).toBe("foobar");
 });
 

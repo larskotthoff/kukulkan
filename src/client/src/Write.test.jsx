@@ -364,7 +364,7 @@ test("tags editable and complete", async () => {
 
   // add tag in completion
   const input = getByTestId("tagedit").querySelector("input");
-  await userEvent.type(input, "foobar{enter}");
+  await userEvent.type(input, "foobar{enter}{enter}");
   expect(screen.getByText("foo")).toBeInTheDocument();
   expect(screen.getByText("bar")).toBeInTheDocument();
   expect(screen.getByText("foobar")).toBeInTheDocument();
@@ -405,7 +405,7 @@ test("addresses editable and complete", async () => {
   await userEvent.type(input, "foo");
   expect(global.fetch).toHaveBeenCalledTimes(4);
   //expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/foo");
-  await userEvent.type(input, "{enter}");
+  await userEvent.type(input, "{enter}{enter}");
   expect(screen.getByText("foo@bar.com")).toBeInTheDocument();
 
   await userEvent.click(screen.getByText("foo@bar.com"));
@@ -414,7 +414,7 @@ test("addresses editable and complete", async () => {
   await userEvent.type(input, "bar");
   expect(global.fetch).toHaveBeenCalledTimes(5);
   //expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/bar");
-  await userEvent.type(input, "{enter}");
+  await userEvent.type(input, "{enter}{enter}");
   expect(screen.getByText("bar@foo.com")).toBeInTheDocument();
   await userEvent.type(input, "{backspace}");
   expect(screen.queryByText("bar@foo.com")).not.toBeInTheDocument();
