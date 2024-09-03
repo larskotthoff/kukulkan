@@ -1375,18 +1375,18 @@ def test_external_editor(setup):
     fname = ""
 
     with patch("os.unlink", return_value=None) as u:
-        with patch("builtins.open", mock_open(read_data="foobar")) as m:
+        with patch("builtins.open", mock_open(read_data="barfoo")) as m:
             with app.test_client() as test_client:
                 response = test_client.post('/api/edit_external', data=pd)
                 assert response.status_code == 200
-                assert response.data == b'foobar'
+                assert response.data == b'barfoo'
             u.assert_called_once()
             m.assert_called_once()
             args = m.call_args.args
             assert "kukulkan-tmp-" in args[0]
             fname = args[0]
             tmp = open(fname)
-            assert tmp.read() == "foobar"
+            assert tmp.read() == "barfoo"
 
     os.unlink(fname)
 
