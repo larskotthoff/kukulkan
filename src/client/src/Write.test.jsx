@@ -568,7 +568,36 @@ test("localStorage deletes upon successful send", async () => {
   expect(localStorage.getItem("draft-reply-foo-body")).toBe(null);
 });
 
-test("warns when attempting to send incomplete mail", async () => {
+test("errors when attempting to send mail without account", async () => {
+  vi.stubGlobal('location', {
+    ...window.location,
+    search: '?id=foo&action=reply&mode=all'
+  });
+  const msg1 = JSON.parse(JSON.stringify(msg));
+  msg1.to = "something@test.com";
+  global.fetch
+        .mockResolvedValueOnce({ ok: true, json: () => msg1 })
+        .mockResolvedValueOnce({ ok: true, json: () => allTags })
+        .mockResolvedValueOnce({ ok: true, json: () => accounts })
+        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
+  const { container, getByTestId } = render(() => <Write/>);
+
+  expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("Send")).toBeInTheDocument();
+  });
+
+  await userEvent.click(screen.getByText("Send"));
+  expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(screen.getByText("Error: No from account. Not sending.")).toBeInTheDocument();
+});
+
+test("errors when attempting to send incomplete mail", async () => {
   global.fetch
         .mockResolvedValueOnce({ ok: true, json: () => [] })
         .mockResolvedValueOnce({ ok: true, json: () => accounts })

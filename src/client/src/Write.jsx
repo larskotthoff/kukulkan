@@ -231,6 +231,10 @@ export const Write = (props) => {
   };
 
   const sendMsg = () => {
+    if(!message.from || message.from.length === 0) {
+      setStatusMsg(`Error: No from account. Not sending.`);
+      return;
+    }
     if(message.to.length === 0) {
       setStatusMsg(`Error: No to address. Not sending.`);
       return;
