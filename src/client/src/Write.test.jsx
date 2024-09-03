@@ -765,6 +765,8 @@ test("external editing", async () => {
 
   global.fetch.mockResolvedValue({ ok: true, text: () => "foobar" });
 
+  expect(getByTestId("body").querySelector("textarea").value).toBe("");
+
   await fireEvent.focus(getByTestId("body").querySelector("textarea"));
   expect(global.fetch).toHaveBeenCalledTimes(4);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/edit_external",
@@ -779,6 +781,25 @@ test("external editing", async () => {
     expect(getByTestId("body").querySelector("textarea").value).toBe("foobar");
   });
   expect(localStorage.getItem("draft-compose-body")).toBe("foobar");
+
+  // required fields
+  await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}");
+  await userEvent.type(getByTestId("subject").querySelector("input"), " testsubject");
+  const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
+      json: () => Promise.resolve({sendStatus: 0, sendOutput: ""})
+    });
+  await userEvent.click(screen.getByText("Send"));
+
+  expect(fetchSpy).toHaveBeenCalledTimes(1);
+  expect(fetchSpy).toHaveBeenCalledWith("http://localhost:5000/api/send",
+    expect.objectContaining({
+      method: 'POST',
+      body: expect.any(FormData),
+    }));
+  const options = fetchSpy.mock.calls[0][1];
+  expect(options.body.get("body")).toBe("foobar");
+
+  expect(screen.getByText("Message sent.")).toBeInTheDocument();
 });
 
 // vim: tabstop=2 shiftwidth=2 expandtab

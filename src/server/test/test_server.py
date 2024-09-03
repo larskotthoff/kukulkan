@@ -1385,9 +1385,10 @@ def test_external_editor(setup):
             args = m.call_args.args
             assert "kukulkan-tmp-" in args[0]
             fname = args[0]
-            tmp = open(fname)
-            assert tmp.read() == "barfoo"
 
+    tmp = open(fname)
+    assert tmp.read() == "foobar"
+    tmp.close()
     os.unlink(fname)
 
 def test_send(setup):
