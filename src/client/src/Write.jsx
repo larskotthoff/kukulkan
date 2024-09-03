@@ -301,6 +301,7 @@ export const Write = (props) => {
             <Grid item>
               <Select
                 class="selectMargin"
+                data-testid="from"
                 value={message.from}
                 onChange={(ev) => {
                   setMessage("from", ev.target.value);

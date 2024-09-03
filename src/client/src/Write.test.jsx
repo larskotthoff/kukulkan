@@ -152,12 +152,32 @@ test("base message reply one", async () => {
   expect(document.title).toBe("Compose: Re: Test.");
 });
 
+test("base message from empty if unclear", async () => {
+  vi.stubGlobal('location', {
+    ...window.location,
+    search: '?id=foo&action=reply&mode=all'
+  });
+  const msg1 = JSON.parse(JSON.stringify(msg));
+  msg1.to = "something@test.com";
+  global.fetch
+        .mockResolvedValueOnce({ ok: true, json: () => msg1 })
+        .mockResolvedValueOnce({ ok: true, json: () => allTags })
+        .mockResolvedValueOnce({ ok: true, json: () => accounts })
+        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
+  const { getByTestId } = render(() => <Write/>);
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("Send")).toBeInTheDocument();
+  });
+  expect(getByTestId("from").querySelector("input").value).toBe("");
+});
+
 test("reply includes only main part of base message quoted", async () => {
   vi.stubGlobal('location', {
     ...window.location,
     search: '?id=foo&action=reply&mode=all'
   });
-  const msg1 = JSON.parse(JSON.stringify(msg))
+  const msg1 = JSON.parse(JSON.stringify(msg));
   msg1.body["text/plain"] = "Thanks.\n\nOn bla, blurg wrote:\n> foo\n> bar.";
   global.fetch
         .mockResolvedValueOnce({ ok: true, json: () => msg1 })
@@ -209,7 +229,7 @@ test("base message reply filters admin tags", async () => {
     ...window.location,
     search: '?id=foo&action=reply&mode=all'
   });
-  const msg1 = JSON.parse(JSON.stringify(msg))
+  const msg1 = JSON.parse(JSON.stringify(msg));
   msg1.tags.push("signed");
   global.fetch
         .mockResolvedValueOnce({ ok: true, json: () => msg1 })
@@ -410,7 +430,7 @@ test("files attachable and editable", async () => {
     ...window.location,
     search: '?id=foo&action=forward'
   });
-  const msg1 = JSON.parse(JSON.stringify(msg))
+  const msg1 = JSON.parse(JSON.stringify(msg));
   msg1.attachments = [{"filename": "foofile"}, {"filename": "barfile"}];
   global.fetch
         .mockResolvedValueOnce({ ok: true, json: () => msg1 })
