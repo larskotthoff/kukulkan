@@ -286,6 +286,10 @@ export const Message = (props) => {
     true
   );
 
+  mkShortcut(["Shift", "?"],
+    () => { if(props.active) window.open(`/?query=from:"${encodeURIComponent(msg.from)}"`, "_blank"); }
+  );
+
   return (
     <Paper elevation={props.active ? 20 : 3} onClick={props.onClick}
       class={{
