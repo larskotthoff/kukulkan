@@ -262,9 +262,8 @@ export const Write = (props) => {
       .then((result) => {
         if(result.sendStatus === 0) {
           setStatusMsg("Message sent.");
-          for(let key in Object.keys(localStorage).filter(k => k.startsWith(`draft-${draftKey}`))) {
-            localStorage.removeItem(key);
-          }
+          Object.keys(localStorage).filter(k => k.startsWith(`draft-${draftKey}`))
+            .map(k => localStorage.removeItem(k));
         } else {
           setStatusMsg(`Error sending message: ${result.sendOutput}`);
         }

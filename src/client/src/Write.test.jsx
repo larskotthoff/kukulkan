@@ -560,12 +560,12 @@ test("localStorage deletes upon successful send", async () => {
 
   expect(screen.getByText("Message sent.")).toBeInTheDocument();
 
-  expect(localStorage.getItem("draft-reply-foo-to")).toBe(null);
-  expect(localStorage.getItem("draft-reply-foo-cc")).toBe(null);
-  expect(localStorage.getItem("draft-reply-foo-bcc")).toBe(null);
-  expect(localStorage.getItem("draft-reply-foo-tags")).toBe(null);
-  expect(localStorage.getItem("draft-reply-foo-subject")).toBe(null);
-  expect(localStorage.getItem("draft-reply-foo-body")).toBe(null);
+  expect(localStorage.getItem("draft-compose-to")).toBe(null);
+  expect(localStorage.getItem("draft-compose-cc")).toBe(null);
+  expect(localStorage.getItem("draft-compose-bcc")).toBe(null);
+  expect(localStorage.getItem("draft-compose-tags")).toBe(null);
+  expect(localStorage.getItem("draft-compose-subject")).toBe(null);
+  expect(localStorage.getItem("draft-compose-body")).toBe(null);
 });
 
 test("errors when attempting to send mail without account", async () => {
