@@ -482,9 +482,6 @@ test("localStorage stores for new email", async () => {
   await userEvent.type(getByTestId("subject").querySelector("input"), "testsubject");
   await userEvent.type(getByTestId("body").querySelector("textarea"), "testbody");
 
-  const file = new File(['test content'], 'test.txt', { type: 'text/plain' });
-  await fireEvent.change(container.querySelector("input[type=file]"), { target: { files: [file] } });
-
   expect(localStorage.getItem("draft-compose-from")).toBe("foo");
   expect(localStorage.getItem("draft-compose-to")).toBe("to@test.com\notherto@test.com");
   expect(localStorage.getItem("draft-compose-cc")).toBe("cc@test.com");
@@ -492,7 +489,6 @@ test("localStorage stores for new email", async () => {
   expect(localStorage.getItem("draft-compose-tags")).toBe("foobar");
   expect(localStorage.getItem("draft-compose-subject")).toBe("testsubject");
   expect(localStorage.getItem("draft-compose-body")).toBe("testbody");
-  expect(localStorage.getItem("draft-compose-files")).toBe('{"name":"test.txt","size":12}');
 });
 
 test("localStorage stores for reply", async () => {
@@ -670,7 +666,7 @@ test("data assembled correctly for sending new email", async () => {
   expect(options.body.get("tags")).toBe("foobar");
   expect(options.body.get("subject")).toBe("testsubject");
   expect(options.body.get("body")).toBe("testbody");
-  expect(options.body.get("attachment-0")).toBe("test.txt");
+  expect(options.body.get("attachment-0")).toBe(file);
 
   expect(screen.getByText("Message sent.")).toBeInTheDocument();
 });

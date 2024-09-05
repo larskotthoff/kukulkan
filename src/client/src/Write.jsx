@@ -146,7 +146,7 @@ export const Write = (props) => {
 
     let acct = accounts()?.find(a => a.default);
 
-    setMessage("files", localStorage.getItem(`draft-${draftKey}-files`)?.split('\n').map(JSON.parse) || []);
+    setMessage("files", []);
     if(baseMessage()) {
       if(!draftKey.endsWith(baseMessage().message_id)) {
         draftKey += `-${baseMessage().message_id}`;
@@ -256,7 +256,7 @@ export const Write = (props) => {
     formData.append('subject', message.subject);
     formData.append('tags', message.tags);
     formData.append('body', message.body);
-    message.files.map((f, i) => formData.append(`attachment-${i}`, f.name));
+    message.files.map((f, i) => formData.append(`attachment-${i}`, f.dummy ? f.name : f));
 
     props.sl?.(true);
     fetch(apiURL("api/send"), { method: 'POST', body: formData })
@@ -412,11 +412,6 @@ export const Write = (props) => {
           <For each={message.files}>
             {(f) => <ColorChip value={`${f.name}` + (f.size ? ` (${formatFSz(f.size)})` : ``)} onClick={(e) => {
                 setMessage("files", message.files.filter(fi => fi !== f));
-                if(message.files.length > 0) {
-                  localStorage.setItem(`draft-${draftKey}-files`, message.files.map(JSON.stringify).join("\n"));
-                } else {
-                  localStorage.removeItem(`draft-${draftKey}-files`);
-                }
                 e.stopPropagation();
               }}/>
             }
@@ -426,9 +421,9 @@ export const Write = (props) => {
               <Button id="attach" startIcon={<AttachFile/>} variant="outlined" component="label">
                 Attach
                 <input type="file" multiple hidden onChange={(ev) => {
-                  const newFiles = Array.from(ev.target.files).map(f => { return { name: f.name, size: f.size }; });
-                  setMessage("files", (prevFiles) => [...prevFiles, ...newFiles]);
-                  localStorage.setItem(`draft-${draftKey}-files`, message.files.map(JSON.stringify).join("\n"));
+                  setMessage("files", (prevFiles) => [...prevFiles, ...Array.from(ev.target.files)]);
+                  // not storing these in localStorage as we would have to
+                  // encode/decode them and contents would become stale
                 }}/>
               </Button>
             </Grid>
