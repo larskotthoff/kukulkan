@@ -49,7 +49,9 @@ const AddrComplete = (props) => {
           try {
             controller?.abort();
             controller = new AbortController();
+            props.sl?.(true);
             const response = await fetch(apiURL(`api/address/${encodeURIComponent(text)}`), { signal: controller.signal });
+            props.sl?.(false);
             if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
             return await response.json();
           } catch(_) {
@@ -323,7 +325,7 @@ export const Write = (props) => {
           <Grid container spacing={1} class="inputFieldSet">
             <Grid item>To:</Grid>
             <Grid item xs>
-              <AddrComplete addrAttr="to" message={message} setMessage={setMessage} draftKey={draftKey} data-testid="to"/>
+              <AddrComplete addrAttr="to" message={message} setMessage={setMessage} draftKey={draftKey} data-testid="to" sl={props.sl}/>
             </Grid>
           </Grid>
           <Grid container spacing={1} class="inputFieldSet">
@@ -332,6 +334,7 @@ export const Write = (props) => {
               <AddrComplete addrAttr="cc" message={message} setMessage={setMessage}
                 draftKey={draftKey}
                 data-testid="cc"
+                sl={props.sl}
                 defVal={localStorage.getItem(`draft-${draftKey}-cc`)?.split('\n') || defCc}/>
             </Grid>
           </Grid>
@@ -341,6 +344,7 @@ export const Write = (props) => {
               <AddrComplete addrAttr="bcc" message={message} setMessage={setMessage}
                 draftKey={draftKey}
                 data-testid="bcc"
+                sl={props.sl}
                 defVal={localStorage.getItem(`draft-${draftKey}-bcc`)?.split('\n') || []}/>
             </Grid>
           </Grid>
