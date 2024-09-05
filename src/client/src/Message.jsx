@@ -81,7 +81,7 @@ const formatAddrs = (addrs) => {
 };
 
 function printUrl(id) {
-  return `/message?id=${encodeURIComponent(id)}`;
+  return `/message?id=${encodeURIComponent(id)}&print=true`;
 }
 
 function replyUrl(id, mode = "all") {
@@ -429,13 +429,14 @@ export const Message = (props) => {
 export const FetchedMessage = () => {
   const [searchParams] = createSignal(window.location.search),
         [messageId] = createSignal((new URLSearchParams(searchParams())).get("id")),
+        [print] = createSignal((new URLSearchParams(searchParams())).get("print")),
         [message] = createResource(messageId, fetchMessage),
         [allTags] = createResource(fetchAllTags);
 
   return (
     <>
       <Show when={!allTags.loading && !message.loading}>
-        <Message msg={message()} allTags={allTags()} active={true}/>
+        <Message msg={message()} allTags={allTags()} active={true} print={print}/>
       </Show>
     </>
   );
