@@ -436,7 +436,7 @@ export const FetchedMessage = () => {
   return (
     <>
       <Show when={!allTags.loading && !message.loading}>
-        <Message msg={message()} allTags={allTags()} active={true} print={print}/>
+        <Message msg={message()} allTags={allTags()} active={true} print={print()}/>
       </Show>
     </>
   );

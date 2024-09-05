@@ -66,6 +66,34 @@ test("fetches and renders message", async () => {
   expect(document.title).toBe("Test.");
 });
 
+test("fetches and renders message in print view", async () => {
+  vi.stubGlobal('location', {
+    ...window.location,
+    search: '?id=foo&print=true'
+  });
+  global.fetch
+        .mockResolvedValueOnce({ ok: true, json: () => msg })
+        .mockResolvedValueOnce({ ok: true, json: () => ["foo", "foobar"] });
+  render(() => <FetchedMessage/>);
+
+  expect(global.fetch).toHaveBeenCalledTimes(2);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("Test.")).toBeInTheDocument();
+  });
+  expect(screen.getByText("foo bar <foo@bar.com>")).toBeInTheDocument();
+  expect(screen.getByText("bar foo <bar@foo.com>")).toBeInTheDocument();
+  expect(screen.getByText("test@test.com")).toBeInTheDocument();
+  expect(screen.getByText("Test mail")).toBeInTheDocument();
+  expect(screen.queryByText("foo")).not.toBeInTheDocument();
+  expect(screen.queryByText("bar")).not.toBeInTheDocument();
+  expect(screen.queryByText("test")).not.toBeInTheDocument();
+
+  expect(document.title).toBe("Test.");
+});
+
 test("renders message components", () => {
   const { container } = render(() => <Message msg={msg} active={true}/>);
   expect(screen.getByText("Test.")).toBeInTheDocument();
@@ -79,7 +107,7 @@ test("renders message components", () => {
 
   expect(container.querySelector("a[href='/write?action=reply&id=fo%40o&mode=all']")).not.toBe(null);
   expect(container.querySelector("a[href='/write?action=forward&id=fo%40o']")).not.toBe(null);
-  expect(container.querySelector("a[href='/message?id=fo%40o']")).not.toBe(null);
+  expect(container.querySelector("a[href='/message?id=fo%40o&print=true']")).not.toBe(null);
   expect(container.querySelector("a[href='http://localhost:5000/api/auth_message/fo%40o']")).not.toBe(null);
 });
 
