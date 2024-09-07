@@ -7,6 +7,10 @@ import { Write } from "./Write.jsx";
 beforeEach(() => {
   global.fetch = vi.fn();
   localStorage.clear();
+
+  vi.useFakeTimers();
+  vi.runAllTimers();
+  vi.useRealTimers();
 });
 
 afterEach(() => {
@@ -14,6 +18,10 @@ afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
   localStorage.clear();
+
+  vi.useFakeTimers();
+  vi.runAllTimers();
+  vi.useRealTimers();
 });
 
 test("exports Write", () => {
