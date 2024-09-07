@@ -215,6 +215,7 @@ export const Kukulkan = (props) => {
               setShowEditingTagModal(false);
               // sad, but true
               makeTagEdits();
+              ev.stopPropagation();
             }
           }}
         />
