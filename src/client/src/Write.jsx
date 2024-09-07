@@ -47,17 +47,17 @@ const AddrComplete = (props) => {
       }}
       getOptions={async (text) => {
         if(text.length > 2) {
-          controller?.abort();
-          controller = new AbortController();
-          clearTimeout(debounceTimer);
-          return await (new Promise((resolve, reject) => {
+          return await (new Promise((resolve) => {
+            controller?.abort();
+            controller = new AbortController();
+            clearTimeout(debounceTimer);
             debounceTimer = setTimeout(async () => {
               try {
                 props.sl?.(true);
                 const response = await fetch(apiURL(`api/address/${encodeURIComponent(text)}`), { signal: controller.signal });
                 props.sl?.(false);
                 if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
-                resolve(await response.json());
+                resolve(response.json());
               } catch(_) {
                 // this is fine, previous aborted completion request
               }
