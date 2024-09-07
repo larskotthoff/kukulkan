@@ -198,6 +198,7 @@ export const Message = (props) => {
     props.sl?.(false);
     if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
     setTags(tags().filter((t) => t !== tag));
+    msg.tags = tags();
   }
 
   async function addTag(tag) {
@@ -207,6 +208,7 @@ export const Message = (props) => {
     if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
     const tmp = tags().concat(tag);
     setTags(tmp.sort());
+    msg.tags = tags();
   }
 
   let sigMsg = "",
