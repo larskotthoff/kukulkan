@@ -329,6 +329,53 @@ test("template set with base message", async () => {
   expect(getByTestId("body").querySelector("textarea").value).toBe(`blurg\n\n\nOn ${msg.date}, ${msg.from} wrote:\n> Test mail`);
 });
 
+test("addresses editable and complete", async () => {
+  global.fetch
+        .mockResolvedValueOnce({ ok: true, json: () => allTags })
+        .mockResolvedValueOnce({ ok: true, json: () => accounts })
+        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
+  const { getByTestId } = render(() => <Write/>);
+
+  expect(global.fetch).toHaveBeenCalledTimes(3);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("Send")).toBeInTheDocument();
+  });
+
+  const input = getByTestId("to").querySelector("input");
+  global.fetch.mockResolvedValue({ ok: true, json: () => ["foo@bar.com", "bar@foo.com"] });
+
+  await userEvent.type(input, "foo");
+  await vi.waitFor(() => {
+    expect(screen.getByText("foo@bar.com")).toBeInTheDocument();
+  });
+  expect(global.fetch).toHaveBeenCalledTimes(4);
+  //expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/foo");
+  await userEvent.type(input, "{enter}{enter}");
+  expect(screen.getByText("foo@bar.com")).toBeInTheDocument();
+
+  await userEvent.click(screen.getByText("foo@bar.com"));
+  expect(screen.queryByText("foo@bar.com")).not.toBeInTheDocument();
+
+  await userEvent.type(input, "bar");
+  await vi.waitFor(() => {
+    expect(screen.getByText("bar@foo.com")).toBeInTheDocument();
+  });
+  expect(global.fetch).toHaveBeenCalledTimes(5);
+  //expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/bar");
+  await userEvent.type(input, "{enter}{enter}");
+  expect(screen.getByText("bar@foo.com")).toBeInTheDocument();
+  await userEvent.type(input, "{backspace}");
+  expect(screen.queryByText("bar@foo.com")).not.toBeInTheDocument();
+
+  global.fetch.mockResolvedValue({ ok: true, json: () => [] });
+  await userEvent.type(input, "aaa@bar.com{enter}");
+  expect(screen.getByText("aaa@bar.com")).toBeInTheDocument();
+});
+
 test("tags editable and complete", async () => {
   vi.stubGlobal('location', {
     ...window.location,
@@ -381,48 +428,6 @@ test("tags editable and complete", async () => {
   expect(screen.getByText("foo")).toBeInTheDocument();
   expect(screen.getByText("bar")).toBeInTheDocument();
   expect(screen.queryByText("testTag")).not.toBeInTheDocument();
-});
-
-test("addresses editable and complete", async () => {
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => allTags })
-        .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
-  const { getByTestId } = render(() => <Write/>);
-
-  expect(global.fetch).toHaveBeenCalledTimes(3);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
-
-  await vi.waitFor(() => {
-    expect(screen.getByText("Send")).toBeInTheDocument();
-  });
-
-  const input = getByTestId("to").querySelector("input");
-  global.fetch.mockResolvedValue({ ok: true, json: () => ["foo@bar.com", "bar@foo.com"] });
-
-  await userEvent.type(input, "foo");
-  expect(global.fetch).toHaveBeenCalledTimes(4);
-  //expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/foo");
-  await userEvent.type(input, "{enter}{enter}");
-  expect(screen.getByText("foo@bar.com")).toBeInTheDocument();
-
-  await userEvent.click(screen.getByText("foo@bar.com"));
-  expect(screen.queryByText("foo@bar.com")).not.toBeInTheDocument();
-
-  await userEvent.type(input, "bar");
-  expect(global.fetch).toHaveBeenCalledTimes(5);
-  //expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/bar");
-  await userEvent.type(input, "{enter}{enter}");
-  expect(screen.getByText("bar@foo.com")).toBeInTheDocument();
-  await userEvent.type(input, "{backspace}");
-  expect(screen.queryByText("bar@foo.com")).not.toBeInTheDocument();
-
-  global.fetch.mockResolvedValue({ ok: true, json: () => [] });
-  await userEvent.type(input, "aaa@bar.com{enter}");
-  expect(global.fetch).toHaveBeenCalledTimes(14);
-  expect(screen.getByText("aaa@bar.com")).toBeInTheDocument();
 });
 
 test("files attachable and editable", async () => {
@@ -589,7 +594,7 @@ test("errors when attempting to send mail without account", async () => {
   });
 
   await userEvent.click(screen.getByText("Send"));
-  expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(global.fetch).toHaveBeenCalledTimes(6);
   expect(screen.getByText("Error: No from account. Not sending.")).toBeInTheDocument();
 });
 
@@ -604,20 +609,20 @@ test("errors when attempting to send incomplete mail", async () => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
 
-  expect(global.fetch).toHaveBeenCalledTimes(3);
+  expect(global.fetch).toHaveBeenCalledTimes(4);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   await userEvent.click(screen.getByText("Send"));
 
-  expect(global.fetch).toHaveBeenCalledTimes(3);
+  expect(global.fetch).toHaveBeenCalledTimes(4);
   expect(screen.getByText("Error: No to address. Not sending.")).toBeInTheDocument();
 
   await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}");
   await userEvent.click(screen.getByText("Send"));
 
-  expect(global.fetch).toHaveBeenCalledTimes(12);
+  expect(global.fetch).toHaveBeenCalledTimes(4);
   expect(global.fetch).not.toHaveBeenCalledWith("http://localhost:5000/api/send");
   expect(screen.getByText("Error: No subject. Not sending.")).toBeInTheDocument();
 });

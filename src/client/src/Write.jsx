@@ -31,7 +31,8 @@ const Templates = (props) => {
 };
 
 const AddrComplete = (props) => {
-  let controller = null;
+  let controller = null,
+      debounceTimer = null;
 
   return (
     <ChipComplete
@@ -46,17 +47,22 @@ const AddrComplete = (props) => {
       }}
       getOptions={async (text) => {
         if(text.length > 2) {
-          try {
-            controller?.abort();
-            controller = new AbortController();
-            props.sl?.(true);
-            const response = await fetch(apiURL(`api/address/${encodeURIComponent(text)}`), { signal: controller.signal });
-            props.sl?.(false);
-            if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
-            return await response.json();
-          } catch(_) {
-            // this is fine, previous aborted completion request
-          }
+          controller?.abort();
+          controller = new AbortController();
+          clearTimeout(debounceTimer);
+          return await (new Promise((resolve, reject) => {
+            debounceTimer = setTimeout(async () => {
+              try {
+                props.sl?.(true);
+                const response = await fetch(apiURL(`api/address/${encodeURIComponent(text)}`), { signal: controller.signal });
+                props.sl?.(false);
+                if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
+                resolve(await response.json());
+              } catch(_) {
+                // this is fine, previous aborted completion request
+              }
+            }, 200);
+          }));
         }
         return [];
       }}
