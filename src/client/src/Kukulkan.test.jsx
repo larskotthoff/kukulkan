@@ -329,6 +329,8 @@ test("tag edits with multiple selection work", async () => {
   expect(screen.queryByText("test1")).not.toBeInTheDocument();
   expect(screen.queryByText("test2")).toBeInTheDocument();
   expect(screen.queryAllByText("foobar").length).toBe(2);
+
+  expect(window.open).toHaveBeenCalledTimes(0);
 });
 
 // vim: tabstop=2 shiftwidth=2 expandtab
