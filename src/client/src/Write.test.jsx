@@ -353,7 +353,10 @@ test("addresses editable and complete", async () => {
     expect(screen.getByText("foo@bar.com")).toBeInTheDocument();
   });
   expect(global.fetch).toHaveBeenCalledTimes(4);
-  //expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/foo");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/foo",
+    expect.objectContaining({
+      signal: expect.any(AbortSignal),
+    }));
   await userEvent.type(input, "{enter}{enter}");
   expect(screen.getByText("foo@bar.com")).toBeInTheDocument();
 
@@ -365,7 +368,10 @@ test("addresses editable and complete", async () => {
     expect(screen.getByText("bar@foo.com")).toBeInTheDocument();
   });
   expect(global.fetch).toHaveBeenCalledTimes(5);
-  //expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/bar");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/bar",
+    expect.objectContaining({
+      signal: expect.any(AbortSignal),
+    }));
   await userEvent.type(input, "{enter}{enter}");
   expect(screen.getByText("bar@foo.com")).toBeInTheDocument();
   await userEvent.type(input, "{backspace}");
@@ -474,6 +480,7 @@ test("localStorage stores for new email", async () => {
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
+  expect(global.fetch).toHaveBeenCalledTimes(3);
 
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
 
@@ -481,11 +488,31 @@ test("localStorage stores for new email", async () => {
   await userEvent.click(screen.getByText("foo bar <foo@bar.com>"));
 
   await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}otherto@test.com{enter}");
+  await vi.waitFor(() => {
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/otherto%40test.com",
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      }));
+  });
   await userEvent.type(getByTestId("cc").querySelector("input"), "cc@test.com{enter}");
+  await vi.waitFor(() => {
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/cc%40test.com",
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      }));
+  });
   await userEvent.type(getByTestId("bcc").querySelector("input"), "bcc@test.com{enter}");
+  await vi.waitFor(() => {
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/bcc%40test.com",
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      }));
+  });
   await userEvent.type(getByTestId("tagedit").querySelector("input"), "foobar{enter}");
   await userEvent.type(getByTestId("subject").querySelector("input"), "testsubject");
   await userEvent.type(getByTestId("body").querySelector("textarea"), "testbody");
+
+  expect(global.fetch).toHaveBeenCalledTimes(6);
 
   expect(localStorage.getItem("draft-compose-from")).toBe("foo");
   expect(localStorage.getItem("draft-compose-to")).toBe("to@test.com\notherto@test.com");
@@ -511,15 +538,36 @@ test("localStorage stores for reply", async () => {
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
+  expect(global.fetch).toHaveBeenCalledTimes(4);
 
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
 
   await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}otherto@test.com{enter}");
+  await vi.waitFor(() => {
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/otherto%40test.com",
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      }));
+  });
   await userEvent.type(getByTestId("cc").querySelector("input"), "cc@test.com{enter}");
+  await vi.waitFor(() => {
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/cc%40test.com",
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      }));
+  });
   await userEvent.type(getByTestId("bcc").querySelector("input"), "bcc@test.com{enter}");
+  await vi.waitFor(() => {
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/bcc%40test.com",
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      }));
+  });
   await userEvent.type(getByTestId("tagedit").querySelector("input"), "foobar{enter}");
   await userEvent.type(getByTestId("subject").querySelector("input"), " testsubject");
   await userEvent.type(getByTestId("body").querySelector("textarea"), "testbody");
+
+  expect(global.fetch).toHaveBeenCalledTimes(7);
 
   expect(localStorage.getItem("draft-reply-foo-to")).toBe("bar foo <bar@foo.com>\nto@test.com\notherto@test.com");
   expect(localStorage.getItem("draft-reply-foo-cc")).toBe("test@test.com\ncc@test.com");
@@ -539,12 +587,32 @@ test("localStorage deletes upon successful send", async () => {
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
+  expect(global.fetch).toHaveBeenCalledTimes(3);
 
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
 
   await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}otherto@test.com{enter}");
+  await vi.waitFor(() => {
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/otherto%40test.com",
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      }));
+  });
   await userEvent.type(getByTestId("cc").querySelector("input"), "cc@test.com{enter}");
+  await vi.waitFor(() => {
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/cc%40test.com",
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      }));
+  });
   await userEvent.type(getByTestId("bcc").querySelector("input"), "bcc@test.com{enter}");
+  await vi.waitFor(() => {
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/bcc%40test.com",
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      }));
+  });
+  expect(global.fetch).toHaveBeenCalledTimes(6);
   await userEvent.type(getByTestId("tagedit").querySelector("input"), "foobar{enter}");
   await userEvent.type(getByTestId("subject").querySelector("input"), "testsubject");
   await userEvent.type(getByTestId("body").querySelector("textarea"), "testbody");
@@ -558,6 +626,12 @@ test("localStorage deletes upon successful send", async () => {
 
   global.fetch.mockResolvedValue({ ok: true, json: () => Promise.resolve({sendStatus: 0, sendOutput: ""}) });
   await userEvent.click(screen.getByText("Send"));
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/send",
+    expect.objectContaining({
+      method: 'POST',
+      body: expect.any(FormData),
+    }));
+  expect(global.fetch).toHaveBeenCalledTimes(7);
 
   expect(screen.getByText("Message sent.")).toBeInTheDocument();
 
@@ -576,6 +650,7 @@ test("errors when attempting to send mail without account", async () => {
   });
   const msg1 = JSON.parse(JSON.stringify(msg));
   msg1.to = "something@test.com";
+  msg1.cc = "";
   global.fetch
         .mockResolvedValueOnce({ ok: true, json: () => msg1 })
         .mockResolvedValueOnce({ ok: true, json: () => allTags })
@@ -594,7 +669,7 @@ test("errors when attempting to send mail without account", async () => {
   });
 
   await userEvent.click(screen.getByText("Send"));
-  expect(global.fetch).toHaveBeenCalledTimes(6);
+  expect(global.fetch).toHaveBeenCalledTimes(4);
   expect(screen.getByText("Error: No from account. Not sending.")).toBeInTheDocument();
 });
 
@@ -609,20 +684,20 @@ test("errors when attempting to send incomplete mail", async () => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
 
-  expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(global.fetch).toHaveBeenCalledTimes(3);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   await userEvent.click(screen.getByText("Send"));
 
-  expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(global.fetch).toHaveBeenCalledTimes(3);
   expect(screen.getByText("Error: No to address. Not sending.")).toBeInTheDocument();
 
   await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}");
   await userEvent.click(screen.getByText("Send"));
 
-  expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(global.fetch).toHaveBeenCalledTimes(3);
   expect(global.fetch).not.toHaveBeenCalledWith("http://localhost:5000/api/send");
   expect(screen.getByText("Error: No subject. Not sending.")).toBeInTheDocument();
 });
@@ -633,6 +708,7 @@ test("data assembled correctly for sending new email", async () => {
         .mockResolvedValueOnce({ ok: true, json: () => accounts })
         .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
   const { container, getByTestId } = render(() => <Write/>);
+  expect(global.fetch).toHaveBeenCalledTimes(3);
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -641,11 +717,34 @@ test("data assembled correctly for sending new email", async () => {
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
 
   await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}otherto@test.com{enter}");
+  await vi.waitFor(() => {
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/to%40test.com",
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      }));
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/otherto%40test.com",
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      }));
+  });
   await userEvent.type(getByTestId("cc").querySelector("input"), "cc@test.com{enter}");
+  await vi.waitFor(() => {
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/cc%40test.com",
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      }));
+  });
   await userEvent.type(getByTestId("bcc").querySelector("input"), "bcc@test.com{enter}");
+  await vi.waitFor(() => {
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/bcc%40test.com",
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      }));
+  });
   await userEvent.type(getByTestId("tagedit").querySelector("input"), "foobar{enter}");
   await userEvent.type(getByTestId("subject").querySelector("input"), "testsubject");
   await userEvent.type(getByTestId("body").querySelector("textarea"), "testbody");
+  expect(global.fetch).toHaveBeenCalledTimes(7);
 
   const file = new File(['test content'], 'test.txt', { type: 'text/plain' });
   await fireEvent.change(container.querySelector("input[type=file]"), { target: { files: [file] } });
@@ -691,6 +790,7 @@ test("data assembled correctly for sending reply w/o editing", async () => {
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
+  expect(global.fetch).toHaveBeenCalledTimes(4);
 
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
 
@@ -734,15 +834,35 @@ test("data assembled correctly for sending reply", async () => {
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
+  expect(global.fetch).toHaveBeenCalledTimes(4);
 
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
 
   await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}otherto@test.com{enter}");
+  await vi.waitFor(() => {
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/otherto%40test.com",
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      }));
+  });
   await userEvent.type(getByTestId("cc").querySelector("input"), "cc@test.com{enter}");
+  await vi.waitFor(() => {
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/cc%40test.com",
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      }));
+  });
   await userEvent.type(getByTestId("bcc").querySelector("input"), "bcc@test.com{enter}");
+  await vi.waitFor(() => {
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/bcc%40test.com",
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      }));
+  });
   await userEvent.type(getByTestId("tagedit").querySelector("input"), "foobar{enter}");
   await userEvent.type(getByTestId("subject").querySelector("input"), " testsubject");
   await userEvent.type(getByTestId("body").querySelector("textarea"), "testbody");
+  expect(global.fetch).toHaveBeenCalledTimes(7);
 
   const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
       json: () => Promise.resolve({sendStatus: 0, sendOutput: ""})
@@ -779,6 +899,7 @@ test("error when mail cannot be sent", async () => {
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
+  expect(global.fetch).toHaveBeenCalledTimes(3);
 
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
 
