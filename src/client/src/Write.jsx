@@ -209,6 +209,7 @@ export const Write = (props) => {
   createEffect(() => {
     if(useTemplate()) {
       bodyRef().value = useTemplate() + message.bodyDefaultValue;
+      setMessage("body", bodyRef().value);
     }
   });
 

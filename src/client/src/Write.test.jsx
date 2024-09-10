@@ -775,6 +775,74 @@ test("data assembled correctly for sending new email", async () => {
   expect(screen.getByText("Message sent.")).toBeInTheDocument();
 });
 
+test("data assembled correctly for sending new email w/ template", async () => {
+  const compose = {"templates": [{"shortcut": "1", "description": "foo", "template": "bar"},
+                     {"shortcut": "2", "description": "foobar", "template": "blurg"}]};
+  global.fetch
+        .mockResolvedValueOnce({ ok: true, json: () => [] })
+        .mockResolvedValueOnce({ ok: true, json: () => accounts })
+        .mockResolvedValueOnce({ ok: true, json: () => compose });
+  const { container, getByTestId } = render(() => <Write/>);
+  expect(global.fetch).toHaveBeenCalledTimes(3);
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("Send")).toBeInTheDocument();
+  });
+
+  global.fetch.mockResolvedValue({ ok: true, json: () => [] });
+
+  await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}otherto@test.com{enter}");
+  await vi.waitFor(() => {
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/otherto%40test.com",
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      }));
+  });
+  await userEvent.type(getByTestId("cc").querySelector("input"), "cc@test.com{enter}");
+  await vi.waitFor(() => {
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/cc%40test.com",
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      }));
+  });
+  await userEvent.type(getByTestId("bcc").querySelector("input"), "bcc@test.com{enter}");
+  await vi.waitFor(() => {
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/bcc%40test.com",
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      }));
+  });
+  await userEvent.type(getByTestId("tagedit").querySelector("input"), "foobar{enter}");
+  await userEvent.type(getByTestId("subject").querySelector("input"), "testsubject");
+  await userEvent.type(document.body, "1");
+  expect(getByTestId("body").querySelector("textarea").value).toBe("bar");
+  expect(global.fetch).toHaveBeenCalledTimes(6);
+
+  const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
+      json: () => Promise.resolve({sendStatus: 0, sendOutput: ""})
+    });
+  await userEvent.click(screen.getByText("Send"));
+
+  expect(fetchSpy).toHaveBeenCalledTimes(1);
+  expect(fetchSpy).toHaveBeenCalledWith("http://localhost:5000/api/send",
+    expect.objectContaining({
+      method: 'POST',
+      body: expect.any(FormData),
+    }));
+  const options = fetchSpy.mock.calls[0][1];
+  expect(options.body.get("refId")).toBe("null");
+  expect(options.body.get("action")).toBe("compose");
+  expect(options.body.get("from")).toBe("bar");
+  expect(options.body.get("to")).toBe("to@test.com,otherto@test.com");
+  expect(options.body.get("cc")).toBe("cc@test.com");
+  expect(options.body.get("bcc")).toBe("bcc@test.com");
+  expect(options.body.get("tags")).toBe("foobar");
+  expect(options.body.get("subject")).toBe("testsubject");
+  expect(options.body.get("body")).toBe("bar");
+
+  expect(screen.getByText("Message sent.")).toBeInTheDocument();
+});
+
 test("data assembled correctly for sending reply w/o editing", async () => {
   vi.stubGlobal('location', {
     ...window.location,
