@@ -204,6 +204,9 @@ export const Write = (props) => {
     setMessage("tags", localStorage.getItem(`draft-${draftKey}-tags`)?.split('\n') || filterAdminTags(baseMessage()?.tags) || []);
     setMessage("bodyDefaultValue", localStorage.getItem(`draft-${draftKey}-body`) || quote(baseMessage()?.body["text/plain"]) || "");
     setMessage("body", message.bodyDefaultValue);
+    if(bodyRef()) {
+      bodyRef().value = message.bodyDefaultValue;
+    }
   });
 
   createEffect(() => {
@@ -394,7 +397,6 @@ export const Write = (props) => {
             minRows={10}
             maxRows={window.innerHeight / parseFloat(window.getComputedStyle(document.getElementsByTagName("body")[0]).getPropertyValue("line-height")) - 18}
             fullWidth
-            defaultValue={message.bodyDefaultValue}
             inputRef={setBodyRef}
             data-testid="body"
             sx={{ marginBottom: ".5em", marginTop: "1em" }}
