@@ -523,6 +523,48 @@ test("localStorage stores for new email", async () => {
   expect(localStorage.getItem("draft-compose-body")).toBe("testbody");
 });
 
+test("localStorage removes when empty", async () => {
+  global.fetch
+        .mockResolvedValueOnce({ ok: true, json: () => [] })
+        .mockResolvedValueOnce({ ok: true, json: () => accounts })
+        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
+  const { container, getByTestId } = render(() => <Write/>);
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("Send")).toBeInTheDocument();
+  });
+  expect(global.fetch).toHaveBeenCalledTimes(3);
+
+  global.fetch.mockResolvedValue({ ok: true, json: () => [] });
+
+  // set from
+  await userEvent.click(container.querySelector("div[role='button']"));
+  await userEvent.click(screen.getByText("foo bar <foo@bar.com>"));
+
+  await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}otherto@test.com{enter}");
+  await vi.waitFor(() => {
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/otherto%40test.com",
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      }));
+  });
+  await userEvent.type(getByTestId("tagedit").querySelector("input"), "foobar{enter}");
+
+  expect(global.fetch).toHaveBeenCalledTimes(4);
+
+  expect(localStorage.getItem("draft-compose-from")).toBe("foo");
+  expect(localStorage.getItem("draft-compose-to")).toBe("to@test.com\notherto@test.com");
+  expect(localStorage.getItem("draft-compose-tags")).toBe("foobar");
+
+  // remove addresses and tags
+  await userEvent.click(screen.getByText("to@test.com"));
+  await userEvent.click(screen.getByText("otherto@test.com"));
+  await userEvent.click(screen.getByText("foobar"));
+
+  expect(localStorage.getItem("draft-compose-to")).toBe(null);
+  expect(localStorage.getItem("draft-compose-tags")).toBe(null);
+});
+
 test("localStorage stores for reply", async () => {
   vi.stubGlobal('location', {
     ...window.location,

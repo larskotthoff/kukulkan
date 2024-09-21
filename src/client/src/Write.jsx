@@ -43,7 +43,11 @@ const AddrComplete = (props) => {
       }}
       removeChip={(addr) => {
         props.setMessage(props.addrAttr, props.message[props.addrAttr].filter(a => a !== addr));
-        localStorage.setItem(`draft-${props.draftKey}-${props.addrAttr}`, props.message[props.addrAttr].join("\n"));
+        if(props.message[props.addrAttr].length > 0) {
+          localStorage.setItem(`draft-${props.draftKey}-${props.addrAttr}`, props.message[props.addrAttr].join("\n"));
+        } else {
+          localStorage.removeItem(`draft-${props.draftKey}-${props.addrAttr}`);
+        }
       }}
       getOptions={async (text) => {
         if(text.length > 2) {
@@ -385,7 +389,11 @@ export const Write = (props) => {
                 }}
                 removeTag={(tagToRemove) => {
                   setMessage("tags", message.tags.filter(t => t !== tagToRemove));
-                  localStorage.setItem(`draft-${draftKey}-tags`, message.tags.join("\n"));
+                  if(message.tags.length > 0) {
+                    localStorage.setItem(`draft-${draftKey}-tags`, message.tags.join("\n"));
+                  } else {
+                    localStorage.removeItem(`draft-${draftKey}-tags`);
+                  }
                 }}
                 data-testid="tagedit"
               />
