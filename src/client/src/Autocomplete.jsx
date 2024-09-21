@@ -109,7 +109,7 @@ export const ChipComplete = (props) => {
       text={toAdd}
       setText={setToAdd}
       InputProps={{
-        startAdornment: <InputAdornment>
+        startAdornment: <InputAdornment class="input-adorn">
           <For each={props.chips}>
             {(chip) => <ColorChip data-testid={chip} value={chip} onClick={(e) => {
                 props.removeChip(chip);
