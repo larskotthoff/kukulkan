@@ -16,6 +16,15 @@ body {
     align-items: center;
 }
 
+.calendar {
+    align-items: end;
+    text-align: end;
+    white-space: nowrap;
+
+    height: 98vh;
+    overflow-y: scroll;
+}
+
 .margin {
     margin-top: 10px !important;
     margin-bottom: 10px !important;
@@ -158,4 +167,12 @@ button {
 label {
     color: rgb(85, 139, 47) !important;
     border-color: rgb(85, 139, 47) !important;
+}
+
+.today {
+    background-color: #f0f4c3;
+}
+
+.weekend {
+    background-color: rgba(85, 139, 47, 0.4);
 }
