@@ -379,6 +379,13 @@ test("addresses editable and complete", async () => {
 
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
   await userEvent.type(input, "aaa@bar.com{enter}");
+  await vi.waitFor(() => {
+    expect(global.fetch).toHaveBeenCalledTimes(6);
+  });
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/aaa%40bar.com",
+    expect.objectContaining({
+      signal: expect.any(AbortSignal),
+    }));
   expect(screen.getByText("aaa@bar.com")).toBeInTheDocument();
 });
 
