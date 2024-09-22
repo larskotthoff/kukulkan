@@ -395,6 +395,7 @@ test("tags editable and complete", async () => {
   const { getByTestId } = render(() => <Write/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
@@ -450,6 +451,12 @@ test("files attachable and editable", async () => {
         .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
   const { container } = render(() => <Write/>);
 
+  expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
+
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
@@ -481,6 +488,9 @@ test("localStorage stores for new email", async () => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
   expect(global.fetch).toHaveBeenCalledTimes(3);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
 
@@ -534,6 +544,9 @@ test("localStorage removes when empty", async () => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
   expect(global.fetch).toHaveBeenCalledTimes(3);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
 
