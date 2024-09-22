@@ -698,7 +698,7 @@ test("errors when attempting to send mail without account", async () => {
         .mockResolvedValueOnce({ ok: true, json: () => allTags })
         .mockResolvedValueOnce({ ok: true, json: () => accounts })
         .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
-  const { container, getByTestId } = render(() => <Write/>);
+  render(() => <Write/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(4);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
@@ -824,7 +824,7 @@ test("data assembled correctly for sending new email w/ template", async () => {
         .mockResolvedValueOnce({ ok: true, json: () => [] })
         .mockResolvedValueOnce({ ok: true, json: () => accounts })
         .mockResolvedValueOnce({ ok: true, json: () => compose });
-  const { container, getByTestId } = render(() => <Write/>);
+  const { getByTestId } = render(() => <Write/>);
   expect(global.fetch).toHaveBeenCalledTimes(3);
 
   await vi.waitFor(() => {

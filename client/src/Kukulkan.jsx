@@ -1,4 +1,4 @@
-import { createEffect, createSignal, createResource, For, Show } from "solid-js";
+import { createEffect, createSignal, createResource, Show } from "solid-js";
 
 import { Box, Grid, Modal, Stack } from "@suid/material";
 import { Autocomplete } from "./Autocomplete.jsx";
@@ -17,7 +17,7 @@ async function fetchThreads(query) {
 
 export const Kukulkan = (props) => {
   const [searchParams] = createSignal(window.location.search),
-        [query] = createSignal(props.todo ? "tag:todo" : (new URLSearchParams(searchParams())).get("query")),
+        [query] = createSignal(props.Threads.name.match(/todo/i) !== null ? "tag:todo" : (new URLSearchParams(searchParams())).get("query")),
         [searchText, setSearchText] = createSignal(query()),
         [threads, { mutate }] = createResource(query, fetchThreads, { initialValue: [] }),
         [activeThread, setActiveThread] = createSignal(0),
@@ -225,7 +225,7 @@ export const Kukulkan = (props) => {
 
   return (
     <>
-      <Show when={props.todo === undefined}>
+      <Show when={props.Threads.name.match(/todo/i) === null}>
         <Stack direction="row" class="centered" width="80%" spacing={2}>
           <QueryBox/>
           <a href="/write" target="_blank" rel="noreferrer">
