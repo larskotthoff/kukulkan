@@ -236,10 +236,7 @@ export const Kukulkan = (props) => {
       <Show when={!allTags.loading && !threads.loading}>
         <div align="right">{threads().length} thread{threads().length === 1 ? "" : "s"}.</div>
         <Grid container width="95%" class="centered">
-          <For each={threads().sort(props.sort)}>
-            {(thread, index) => <props.Thread thread={thread} index={index} activeThread={activeThread}
-                                  setActiveThread={setActiveThread} selectedThreads={selectedThreads}/>}
-          </For>
+          <props.Threads threads={threads()} activeThread={activeThread} setActiveThread={setActiveThread} selectedThreads={selectedThreads}/>
         </Grid>
         <TagEditingModal/>
       </Show>
