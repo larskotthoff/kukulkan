@@ -98,19 +98,18 @@ body {
     border-style: solid;
 }
 
-.editAutoCompleteBox div {
+.chip-edit-autocomplete div {
     padding-left: 3px !important;
 }
 
-.editAutoCompleteBox input {
+.chip-edit-autocomplete input {
     padding-top: 7px !important;
     padding-bottom: 7px !important;
+    width: auto !important;
 }
 
-.editAutoCompleteBox .MuiInput-root {
-    grid-template-columns: auto auto;
-    display: grid;
-    align-items: last baseline
+.chip-edit-autocomplete .MuiInput-root {
+    flex-wrap: wrap;
 }
 
 #kukulkan-queryBox {
@@ -159,12 +158,4 @@ button {
 label {
     color: rgb(85, 139, 47) !important;
     border-color: rgb(85, 139, 47) !important;
-}
-
-.input-adorn {
-    flex-wrap: wrap;
-    flex-shrink: 0;
-    max-height: fit-content !important;
-    height: fit-content !important;
-    max-width: fit-content !important;
 }

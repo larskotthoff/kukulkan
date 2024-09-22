@@ -1,7 +1,7 @@
 // based on https://stackoverflow.com/questions/75751029/how-to-create-an-autocomplete-element
 import { createEffect, createMemo, createSignal, For, Index, on } from 'solid-js';
 
-import { InputAdornment, List, ListItemButton, ListItemText, Popover, TextField } from "@suid/material";
+import { List, ListItemButton, ListItemText, Popover, TextField } from "@suid/material";
 import { ColorChip } from "./ColorChip.jsx";
 
 export const Autocomplete = (props) => {
@@ -103,20 +103,20 @@ export const ChipComplete = (props) => {
 
   return (
     <Autocomplete
-      class="editAutoCompleteBox"
+      class="chip-edit-autocomplete"
       variant="standard"
       fullWidth
       text={toAdd}
       setText={setToAdd}
       InputProps={{
-        startAdornment: <InputAdornment class="input-adorn">
+        startAdornment: <>
           <For each={props.chips}>
             {(chip) => <ColorChip data-testid={chip} value={chip} onClick={(e) => {
                 props.removeChip(chip);
                 e.stopPropagation();
               }}/>}
           </For>
-        </InputAdornment>
+        </>
       }}
       handleKey={async (ev) => {
         if(ev.code === 'Enter' && toAdd()) {
