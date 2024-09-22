@@ -22,7 +22,7 @@ render(() => {
     <ErrorBoundary fallback={(error) => <Alert severity="error">Error: {error}<pre>{error.stack}</pre></Alert>}>
       <Router>
         <Route path="/" component={() => <Kukulkan Threads={IndexThreads} sl={setLoading}/>}/>
-        <Route path="/todo" component={() => <Kukulkan Threads={TodoThreads} sl={setLoading}/>}/>
+        <Route path="/todo" component={() => <Kukulkan Threads={TodoThreads} todo={true} sl={setLoading}/>}/>
         <Route path="/thread" component={() => <Thread sl={setLoading}/>}/>
         <Route path="/message" component={() => <FetchedMessage sl={setLoading}/>}/>
         <Route path="/write" component={() => <Write sl={setLoading}/>}/>

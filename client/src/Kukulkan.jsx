@@ -17,7 +17,7 @@ async function fetchThreads(query) {
 
 export const Kukulkan = (props) => {
   const [searchParams] = createSignal(window.location.search),
-        [query] = createSignal(props.Threads.name.match(/todo/i) !== null ? "tag:todo" : (new URLSearchParams(searchParams())).get("query")),
+        [query] = createSignal(props.todo ? "tag:todo" : (new URLSearchParams(searchParams())).get("query")),
         [searchText, setSearchText] = createSignal(query()),
         [threads, { mutate }] = createResource(query, fetchThreads, { initialValue: [] }),
         [activeThread, setActiveThread] = createSignal(0),
@@ -225,7 +225,7 @@ export const Kukulkan = (props) => {
 
   return (
     <>
-      <Show when={props.Threads.name.match(/todo/i) === null}>
+      <Show when={props.todo !== true}>
         <Stack direction="row" class="centered" width="80%" spacing={2}>
           <QueryBox/>
           <a href="/write" target="_blank" rel="noreferrer">
