@@ -214,7 +214,7 @@ export const Write = (props) => {
   });
 
   createEffect(() => {
-    if(useTemplate()) {
+    if(useTemplate() && bodyRef().disabled === false) {
       bodyRef().value = useTemplate() + message.bodyDefaultValue;
       setMessage("body", bodyRef().value);
     }
@@ -297,11 +297,11 @@ export const Write = (props) => {
   );
 
   mkShortcut(["y"],
-    () => document.getElementById("send").click()
+    () => bodyRef().disabled || document.getElementById("send").click()
   );
 
   mkShortcut(["b"],
-    () => bodyRef().focus()
+    () => bodyRef().disabled || bodyRef().focus()
   );
 
   return (

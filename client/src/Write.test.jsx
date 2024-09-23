@@ -1183,4 +1183,63 @@ test("external editing", async () => {
   expect(screen.getByText("Message sent.")).toBeInTheDocument();
 });
 
+test("shortcuts disabled while editing externally", async () => {
+  const compose = {"external-editor": "foo", "templates": [{"shortcut": "1", "description": "foo", "template": "bar"},
+                     {"shortcut": "2", "description": "foobar", "template": "blurg"}]};
+  global.fetch
+        .mockResolvedValueOnce({ ok: true, json: () => [] })
+        .mockResolvedValueOnce({ ok: true, json: () => accounts })
+        .mockResolvedValueOnce({ ok: true, json: () => compose }); // compose
+  const { getByTestId } = render(() => <Write/>);
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("Send")).toBeInTheDocument();
+  });
+  expect(global.fetch).toHaveBeenCalledTimes(3);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
+
+  // required fields
+  await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}");
+  await vi.waitFor(() => {
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/to%40test.com",
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      }));
+  });
+  expect(global.fetch).toHaveBeenCalledTimes(4);
+  await userEvent.type(getByTestId("subject").querySelector("input"), " testsubject");
+
+  vi.useFakeTimers();
+  global.fetch.mockResolvedValue({ ok: true, text: () => "foobar" });
+
+  expect(getByTestId("body").querySelector("textarea").value).toBe("");
+
+  await fireEvent.focus(getByTestId("body").querySelector("textarea"));
+  expect(global.fetch).toHaveBeenCalledTimes(5);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/edit_external",
+    expect.objectContaining({
+      method: 'POST',
+      body: expect.any(FormData),
+    }));
+
+  expect(getByTestId("body").querySelector("textarea").value).toBe("[Editing externally...]");
+
+  const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
+      json: () => Promise.resolve({sendStatus: 0, sendOutput: ""})
+    });
+  userEvent.type(document.body, "1");
+  expect(getByTestId("body").querySelector("textarea").value).toBe("[Editing externally...]");
+  userEvent.type(document.body, "y");
+  expect(fetchSpy).toHaveBeenCalledTimes(0);
+
+  vi.runAllTimers();
+  await vi.waitFor(() => {
+    expect(getByTestId("body").querySelector("textarea").value).toBe("foobar");
+  });
+  expect(localStorage.getItem("draft-compose-body")).toBe("foobar");
+  vi.useRealTimers();
+});
+
 // vim: tabstop=2 shiftwidth=2 expandtab
