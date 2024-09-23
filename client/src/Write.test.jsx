@@ -754,6 +754,9 @@ test("errors when attempting to send incomplete mail", async () => {
   await userEvent.click(screen.getByText("Send"));
 
   expect(global.fetch).toHaveBeenCalledTimes(3);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
   expect(screen.getByText("Error: No to address. Not sending.")).toBeInTheDocument();
 
   await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}");
@@ -771,6 +774,9 @@ test("data assembled correctly for sending new email", async () => {
         .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
   const { container, getByTestId } = render(() => <Write/>);
   expect(global.fetch).toHaveBeenCalledTimes(3);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -826,7 +832,7 @@ test("data assembled correctly for sending new email", async () => {
   expect(options.body.get("refId")).toBe("null");
   expect(options.body.get("action")).toBe("compose");
   expect(options.body.get("from")).toBe("bar");
-  expect(options.body.get("to")).toBe("to@test.com,otherto@test.com");
+  expect(options.body.get("to")).toBe("to@test.com\notherto@test.com");
   expect(options.body.get("cc")).toBe("cc@test.com");
   expect(options.body.get("bcc")).toBe("bcc@test.com");
   expect(options.body.get("tags")).toBe("foobar");
@@ -846,6 +852,9 @@ test("data assembled correctly for sending new email w/ template", async () => {
         .mockResolvedValueOnce({ ok: true, json: () => compose });
   const { getByTestId } = render(() => <Write/>);
   expect(global.fetch).toHaveBeenCalledTimes(3);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -895,7 +904,7 @@ test("data assembled correctly for sending new email w/ template", async () => {
   expect(options.body.get("refId")).toBe("null");
   expect(options.body.get("action")).toBe("compose");
   expect(options.body.get("from")).toBe("bar");
-  expect(options.body.get("to")).toBe("to@test.com,otherto@test.com");
+  expect(options.body.get("to")).toBe("to@test.com\notherto@test.com");
   expect(options.body.get("cc")).toBe("cc@test.com");
   expect(options.body.get("bcc")).toBe("bcc@test.com");
   expect(options.body.get("tags")).toBe("foobar");
@@ -1009,12 +1018,63 @@ test("data assembled correctly for sending reply", async () => {
   expect(options.body.get("refId")).toBe("foo");
   expect(options.body.get("action")).toBe("reply");
   expect(options.body.get("from")).toBe("foo");
-  expect(options.body.get("to")).toBe("bar foo <bar@foo.com>,to@test.com,otherto@test.com");
-  expect(options.body.get("cc")).toBe("test@test.com,cc@test.com");
+  expect(options.body.get("to")).toBe("bar foo <bar@foo.com>\nto@test.com\notherto@test.com");
+  expect(options.body.get("cc")).toBe("test@test.com\ncc@test.com");
   expect(options.body.get("bcc")).toBe("bcc@test.com");
   expect(options.body.get("tags")).toBe("foo,bar,test,foobar");
   expect(options.body.get("subject")).toBe("Re: Test. testsubject");
   expect(options.body.get("body")).toBe("\n\n\nOn Thu, 01 Jan 1970 00:00:00 -0000, bar foo <bar@foo.com> wrote:\n> Test mailtestbody");
+
+  expect(screen.getByText("Message sent.")).toBeInTheDocument();
+});
+
+test("data assembled correctly with non-ascii characters in addresses", async () => {
+  global.fetch
+        .mockResolvedValueOnce({ ok: true, json: () => [] })
+        .mockResolvedValueOnce({ ok: true, json: () => accounts })
+        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
+  const { container, getByTestId } = render(() => <Write/>);
+  expect(global.fetch).toHaveBeenCalledTimes(3);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("Send")).toBeInTheDocument();
+  });
+
+  global.fetch.mockResolvedValue({ ok: true, json: () => [] });
+
+  await userEvent.type(getByTestId("to").querySelector("input"), "tëst tést <to@test.com>{enter}");
+  await vi.waitFor(() => {
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/t%C3%ABst%20t%C3%A9st%20%3Cto%40test.com%3E",
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      }));
+  });
+  await userEvent.type(getByTestId("subject").querySelector("input"), "testsubject");
+  await userEvent.type(getByTestId("body").querySelector("textarea"), "testbody");
+  expect(global.fetch).toHaveBeenCalledTimes(4);
+
+  const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
+      json: () => Promise.resolve({sendStatus: 0, sendOutput: ""})
+    });
+  await userEvent.click(screen.getByText("Send"));
+
+  expect(fetchSpy).toHaveBeenCalledTimes(1);
+  expect(fetchSpy).toHaveBeenCalledWith("http://localhost:5000/api/send",
+    expect.objectContaining({
+      method: 'POST',
+      body: expect.any(FormData),
+    }));
+  const options = fetchSpy.mock.calls[0][1];
+  expect(options.body.get("refId")).toBe("null");
+  expect(options.body.get("action")).toBe("compose");
+  expect(options.body.get("from")).toBe("bar");
+  expect(options.body.get("to")).toBe("tëst tést <to@test.com>");
+  expect(options.body.get("tags")).toBe("");
+  expect(options.body.get("subject")).toBe("testsubject");
+  expect(options.body.get("body")).toBe("testbody");
 
   expect(screen.getByText("Message sent.")).toBeInTheDocument();
 });
@@ -1030,10 +1090,20 @@ test("error when mail cannot be sent", async () => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
   expect(global.fetch).toHaveBeenCalledTimes(3);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
 
   await userEvent.type(getByTestId("to").querySelector("input"), "otherto@test.com{enter}");
+  await vi.waitFor(() => {
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/otherto%40test.com",
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      }));
+  });
+  expect(global.fetch).toHaveBeenCalledTimes(4);
   await userEvent.type(getByTestId("subject").querySelector("input"), "testsubject");
 
   const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
@@ -1063,6 +1133,9 @@ test("external editing", async () => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
   expect(global.fetch).toHaveBeenCalledTimes(3);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   global.fetch.mockResolvedValue({ ok: true, text: () => "foobar" });
 
@@ -1085,6 +1158,13 @@ test("external editing", async () => {
 
   // required fields
   await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}");
+  await vi.waitFor(() => {
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/to%40test.com",
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      }));
+  });
+  expect(global.fetch).toHaveBeenCalledTimes(5);
   await userEvent.type(getByTestId("subject").querySelector("input"), " testsubject");
   const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
       json: () => Promise.resolve({sendStatus: 0, sendOutput: ""})
