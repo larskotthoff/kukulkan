@@ -158,7 +158,7 @@ def create_app():
     class Address(Resource):
         def get(self, query_string):
             # not supported by API...
-            addrs = os.popen("notmuch address --output=sender --output=recipients " + query_string.strip()).read()
+            addrs = os.popen("notmuch address --output=sender --output=recipients " + query_string.strip().replace('\n\r', '')).read()
             return [a for a in
                     filter(lambda a: re.search(query_string, a, re.IGNORECASE),
                            addrs.split('\n'))][:10]
