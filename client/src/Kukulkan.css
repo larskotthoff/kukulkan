@@ -22,7 +22,10 @@ body {
     white-space: nowrap;
 
     height: 98vh;
+    max-width: 9em;
+
     overflow-y: scroll;
+    scrollbar-width: none;
 }
 
 .margin {
@@ -115,6 +118,7 @@ body {
     padding-top: 7px !important;
     padding-bottom: 7px !important;
     width: auto !important;
+    flex-grow: 1;
 }
 
 .chip-edit-autocomplete .MuiInput-root {
@@ -145,6 +149,14 @@ body {
     border: .05em solid white;
 }
 
+.calendar-box {
+    width: 1em;
+    height: 1em;
+    border: .05em solid white;
+    background-color: grey;
+    display: inline-block;
+    text-align: left;
+}
 .selectMargin div {
     padding: 10px;
 }
@@ -170,7 +182,7 @@ label {
 }
 
 .today {
-    background-color: #f0f4c3;
+    background-color: rgba(255, 128, 0, 0.4) !important;
 }
 
 .weekend {

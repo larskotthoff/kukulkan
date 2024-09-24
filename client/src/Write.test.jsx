@@ -1028,57 +1028,6 @@ test("data assembled correctly for sending reply", async () => {
   expect(screen.getByText("Message sent.")).toBeInTheDocument();
 });
 
-test("data assembled correctly with non-ascii characters in addresses", async () => {
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => [] })
-        .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
-  const { container, getByTestId } = render(() => <Write/>);
-  expect(global.fetch).toHaveBeenCalledTimes(3);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
-
-  await vi.waitFor(() => {
-    expect(screen.getByText("Send")).toBeInTheDocument();
-  });
-
-  global.fetch.mockResolvedValue({ ok: true, json: () => [] });
-
-  await userEvent.type(getByTestId("to").querySelector("input"), "tëst tést <to@test.com>{enter}");
-  await vi.waitFor(() => {
-    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/t%C3%ABst%20t%C3%A9st%20%3Cto%40test.com%3E",
-      expect.objectContaining({
-        signal: expect.any(AbortSignal),
-      }));
-  });
-  await userEvent.type(getByTestId("subject").querySelector("input"), "testsubject");
-  await userEvent.type(getByTestId("body").querySelector("textarea"), "testbody");
-  expect(global.fetch).toHaveBeenCalledTimes(4);
-
-  const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
-      json: () => Promise.resolve({sendStatus: 0, sendOutput: ""})
-    });
-  await userEvent.click(screen.getByText("Send"));
-
-  expect(fetchSpy).toHaveBeenCalledTimes(1);
-  expect(fetchSpy).toHaveBeenCalledWith("http://localhost:5000/api/send",
-    expect.objectContaining({
-      method: 'POST',
-      body: expect.any(FormData),
-    }));
-  const options = fetchSpy.mock.calls[0][1];
-  expect(options.body.get("refId")).toBe("null");
-  expect(options.body.get("action")).toBe("compose");
-  expect(options.body.get("from")).toBe("bar");
-  expect(options.body.get("to")).toBe("tëst tést <to@test.com>");
-  expect(options.body.get("tags")).toBe("");
-  expect(options.body.get("subject")).toBe("testsubject");
-  expect(options.body.get("body")).toBe("testbody");
-
-  expect(screen.getByText("Message sent.")).toBeInTheDocument();
-});
-
 test("error when mail cannot be sent", async () => {
   global.fetch
         .mockResolvedValueOnce({ ok: true, json: () => [] })

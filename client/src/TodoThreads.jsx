@@ -1,4 +1,4 @@
-import { For } from 'solid-js';
+import { For, Show } from 'solid-js';
 import { Box, Grid, Stack } from "@suid/material";
 import { ColorChip } from "./ColorChip.jsx";
 
@@ -36,14 +36,14 @@ export const TodoThreads = (props) => {
   const threads = props.threads.sort(sortThreadsByDueDate),
         dueMap = {};
 
-  function processDueDate(thread) {
+  function processDueDate(thread, index) {
     const due = thread.tags.find((tag) => tag.startsWith("due:"));
     if(due) {
       const dueDate = dateFromDue(due);
       if(dueMap[dueDate] === undefined) {
-        dueMap[dueDate] = [thread];
+        dueMap[dueDate] = [index];
       } else {
-        dueMap[dueDate].push(thread);
+        dueMap[dueDate].push(index);
       }
 
       if(dueDate < today) return [ dueDate, "overdue!" ];
@@ -75,23 +75,33 @@ export const TodoThreads = (props) => {
 
   return (
     <Stack direction="row" class="centered" spacing={2}>
-      <Grid container item xs={0.5} class="calendar">
-        <For each={getDaysBetweenDates(earliest, latest)}>
-          {(day, index) =>
-            <Grid container columnSpacing={1}>
-              <Grid item xs={9} class={{'today': day === today, 'weekend': [0, 6].includes(day.getDay()), 'full-width-end': true }}>
-                {(day.getDate() === 1 && day.getMonth() === 0 ? day.getFullYear() : "") + " "}
-                {(day.getDate() === 1 || index() === 0 ? day.toLocaleString('default', { month: 'short' }) : "") + " "}
-                {day.getDate().toString().padStart(2, '0')}
+      <Show when={dueDates.length > 0}>
+        <Grid container item class="calendar">
+          <For each={getDaysBetweenDates(earliest, latest)}>
+            {(day, index) =>
+              <Grid container item columnSpacing={1}>
+                <Grid item xs={9} class={{
+                      'today': JSON.stringify(day) === JSON.stringify(today),
+                      'weekend': [0, 6].includes(day.getDay()),
+                      'full-width-end': true
+                    }}>
+                  {(day.getDate() === 1 && day.getMonth() === 0 ? day.getFullYear() : "") + " "}
+                  {(day.getDate() === 1 || index() === 0 ? day.toLocaleString('default', { month: 'short' }) : "") + " "}
+                  {day.getDate().toString().padStart(2, '0')}
+                </Grid>
+                <Grid item xs={3} style={{'text-align': 'left'}}>
+                  <For each={dueMap[day]}>
+                    {dueindex =>
+                      <Box class="calendar-box" onClick={() => props.setActiveThread(dueindex)}/>
+                    }
+                  </For>
+                </Grid>
               </Grid>
-              <Grid item xs={3}>
-                {dueMap[day] ? <Box class="threadnav-box" style={{'background-color': 'grey'}}/> : ""}
-              </Grid>
-            </Grid>
-          }
-        </For>
-      </Grid>
-      <Grid container item xs={11.5} style={{'margin-bottom': 'auto'}}>
+            }
+          </For>
+        </Grid>
+      </Show>
+      <Grid container item style={{'margin-bottom': 'auto'}}>
         <For each={threads}>
           {(thread, index) =>
             <Grid item container padding={.3} class={{
