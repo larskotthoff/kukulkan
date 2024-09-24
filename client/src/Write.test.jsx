@@ -1160,8 +1160,13 @@ test("shortcuts disabled while editing externally", async () => {
   expect(global.fetch).toHaveBeenCalledTimes(4);
   await userEvent.type(getByTestId("subject").querySelector("input"), " testsubject");
 
-  vi.useFakeTimers();
-  global.fetch.mockResolvedValue({ ok: true, text: () => "foobar" });
+  global.fetch.mockImplementation(() => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({ text: () => "foobar" });
+      }, 100);
+    });
+  });
 
   expect(getByTestId("body").querySelector("textarea").value).toBe("");
 
@@ -1178,17 +1183,15 @@ test("shortcuts disabled while editing externally", async () => {
   const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
       json: () => Promise.resolve({sendStatus: 0, sendOutput: ""})
     });
-  userEvent.type(document.body, "1");
+  await userEvent.type(document.body, "1");
   expect(getByTestId("body").querySelector("textarea").value).toBe("[Editing externally...]");
-  userEvent.type(document.body, "y");
+  await userEvent.type(document.body, "y");
   expect(fetchSpy).toHaveBeenCalledTimes(0);
 
-  vi.runAllTimers();
   await vi.waitFor(() => {
     expect(getByTestId("body").querySelector("textarea").value).toBe("foobar");
   });
   expect(localStorage.getItem("draft-compose-body")).toBe("foobar");
-  vi.useRealTimers();
 });
 
 // vim: tabstop=2 shiftwidth=2 expandtab
