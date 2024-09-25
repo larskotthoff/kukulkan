@@ -280,7 +280,7 @@ def test_tag_add_message(setup):
                 response = test_client.get('/api/tag/add/message/foo/bar')
                 assert response.status_code == 200
                 assert b'bar' == response.data
-            q.assert_called_once_with(dbw, 'id:"foo"')
+            q.assert_called_once_with(dbw, 'id:"foo" and not tag:bar')
 
     mf.add_tag.assert_called_once()
     mf.tags_to_maildir_flags.assert_called_once()
@@ -313,7 +313,7 @@ def test_tag_add_thread(setup):
                 response = test_client.get('/api/tag/add/thread/foo/bar')
                 assert response.status_code == 200
                 assert b'bar' == response.data
-            q.assert_called_once_with(dbw, 'thread:"foo"')
+            q.assert_called_once_with(dbw, 'thread:"foo" and not tag:bar')
 
     mf.add_tag.assert_called_once()
     mf.tags_to_maildir_flags.assert_called_once()
@@ -346,7 +346,7 @@ def test_tag_remove_message(setup):
                 response = test_client.get('/api/tag/remove/message/foo/bar')
                 assert response.status_code == 200
                 assert b'bar' == response.data
-            q.assert_called_once_with(dbw, 'id:"foo"')
+            q.assert_called_once_with(dbw, 'id:"foo" and tag:bar')
 
     mf.remove_tag.assert_called_once()
     mf.tags_to_maildir_flags.assert_called_once()
@@ -379,7 +379,7 @@ def test_tag_remove_thread(setup):
                 response = test_client.get('/api/tag/remove/thread/foo/bar')
                 assert response.status_code == 200
                 assert b'bar' == response.data
-            q.assert_called_once_with(dbw, 'thread:"foo"')
+            q.assert_called_once_with(dbw, 'thread:"foo" and tag:bar')
 
     mf.remove_tag.assert_called_once()
     mf.tags_to_maildir_flags.assert_called_once()

@@ -228,7 +228,8 @@ def create_app():
     @app.route("/api/tag/<op>/<string:typ>/<path:nid>/<tag>")
     def change_tag(op, typ, nid, tag):
         db_write = notmuch.Database(None, create=False, mode=notmuch.Database.MODE.READ_WRITE)
-        msgs = get_query(('id' if typ == "message" else typ) + ':"' + nid + '"', db_write, False).search_messages()
+        msgs = get_query(('id' if typ == "message" else typ) + ':"' + nid + '"' +
+                          ' and ' + ('not ' if op == "add" else '') + 'tag:' + tag, db_write, False).search_messages()
         try:
             db_write.begin_atomic()
             for msg in msgs:
