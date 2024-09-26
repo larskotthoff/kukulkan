@@ -9,8 +9,8 @@ import { Autocomplete, ChipComplete, TagComplete } from "./Autocomplete.jsx";
 
 test("exports Autocomplete, ChipComplete, TagComplete", () => {
   expect(Autocomplete).not.toBe(undefined);
-  expect(TagComplete).not.toBe(undefined);
   expect(ChipComplete).not.toBe(undefined);
+  expect(TagComplete).not.toBe(undefined);
 });
 
 test("sets text", () => {
@@ -176,12 +176,23 @@ test("TagComplete works", async () => {
   const input = container.querySelector("input");
   await userEvent.type(input, "f");
   expect(input.getAttribute("value")).toEqual("f");
-  const completions = document.querySelector(".MuiList-root").children;
+  let completions = document.querySelector(".MuiList-root").children;
+  expect(completions.length).toBe(2);
   expect(completions[0]).toHaveTextContent('foo');
   expect(completions[1]).toHaveTextContent('foobar');
 
   expect(add).toBe("");
   await userEvent.type(input, "{arrowdown}");
+  await userEvent.type(input, "{enter}{enter}");
+  expect(add).toBe("foobar");
+
+  await userEvent.type(input, "b");
+  expect(input.getAttribute("value")).toEqual("b");
+  completions = document.querySelector(".MuiList-root").children;
+  expect(completions.length).toBe(1);
+  expect(completions[0]).toHaveTextContent('foobar');
+
+  add = "";
   await userEvent.type(input, "{enter}{enter}");
   expect(add).toBe("foobar");
 });

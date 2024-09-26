@@ -140,7 +140,7 @@ export const TagComplete = (props) => {
       addChip={props.addTag}
       removeChip={props.removeTag}
       getOptions={(text) => {
-        return props.allTags.filter((t) => t.startsWith(text));
+        return props.allTags.filter((t) => t.includes(text));
       }}
       {...props}
     />
