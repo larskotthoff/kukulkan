@@ -79,7 +79,7 @@ export const TodoThreads = (props) => {
         <Grid container item class="calendar">
           <For each={getDaysBetweenDates(earliest, latest)}>
             {(day, index) =>
-              <Grid container item columnSpacing={1}>
+              <Grid data-testid={day.toDateString()} container item columnSpacing={1}>
                 <Grid item xs={9} class={{
                       'today': JSON.stringify(day) === JSON.stringify(today),
                       'weekend': [0, 6].includes(day.getDay()),
