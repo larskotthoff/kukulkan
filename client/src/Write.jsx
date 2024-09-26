@@ -147,14 +147,13 @@ export const Write = (props) => {
       defTo = [],
       defCc = [];
 
+  document.title = "Compose: New Message";
+
   createEffect(() => {
     props.sl?.(allTags.loading || accounts.loading || compose.loading || baseMessage.loading);
-    document.title = "Compose: New Message";
-    if(localStorage.getItem(`draft-${draftKey}-from`)) {
-      setMessage("from", localStorage.getItem(`draft-${draftKey}-from`));
-    }
 
-    let acct = accounts()?.find(a => a.default);
+    let defAcct = accounts()?.find(a => a.default),
+        from = defAcct?.id;
 
     setMessage("files", []);
     if(baseMessage()) {
@@ -172,10 +171,8 @@ export const Write = (props) => {
         setMessage("files", (prevFiles) => [...prevFiles, calFile]);
       }
 
-      if(localStorage.getItem(`draft-${draftKey}-from`)) {
-        setMessage("from", localStorage.getItem(`draft-${draftKey}-from`));
-      } else {
-        acct = accounts()?.find(a => baseMessage().to.includes(a.email));
+      if(!localStorage.getItem(`draft-${draftKey}-from`)) {
+        let acct = accounts()?.find(a => baseMessage().to.includes(a.email));
         if(!acct) {
           acct = accounts()?.find(a => baseMessage().from.includes(a.email));
         }
@@ -191,7 +188,9 @@ export const Write = (props) => {
         if(!acct && baseMessage().forwarded_to) {
           acct = accounts()?.find(a => baseMessage().forwarded_to.includes(a.email));
         }
+        from = acct?.id;
       }
+
       const subj = prefix(baseMessage()?.subject);
       setMessage("subject", subj);
       document.title = `Compose: ${subj}`;
@@ -201,7 +200,12 @@ export const Write = (props) => {
       setMessage("subject", "");
     }
 
-    setMessage("from", acct?.id);
+    if(localStorage.getItem(`draft-${draftKey}-from`)) {
+      from = localStorage.getItem(`draft-${draftKey}-from`);
+    } else if(!from) {
+      from = defAcct?.id;
+    }
+    setMessage("from", from);
     setMessage("to", localStorage.getItem(`draft-${draftKey}-to`)?.split('\n') || defTo);
     setMessage("cc", localStorage.getItem(`draft-${draftKey}-cc`)?.split('\n') || defCc);
     setMessage("bcc", localStorage.getItem(`draft-${draftKey}-bcc`)?.split('\n') || []);
@@ -247,10 +251,6 @@ export const Write = (props) => {
   };
 
   const sendMsg = () => {
-    if(!message.from || message.from.length === 0) {
-      setStatusMsg(`Error: No from account. Not sending.`);
-      return;
-    }
     if(message.to.length === 0) {
       setStatusMsg(`Error: No to address. Not sending.`);
       return;

@@ -16,10 +16,6 @@ afterEach(() => {
   localStorage.clear();
 });
 
-test("exports Write", () => {
-  expect(Write).not.toBe(undefined);
-});
-
 const allTags = ["foo", "foobar"];
 const accounts = [{"id": "foo", "name": "foo bar", "email": "foo@bar.com"},
   {"id": "bar", "name": "blurg", "email": "blurg@foo.com", "default": "true"}];
@@ -38,6 +34,10 @@ const msg = {
     "text/plain": "Test mail"
   }
 };
+
+test("exports Write", () => {
+  expect(Write).not.toBe(undefined);
+});
 
 test("renders", async () => {
   global.fetch
@@ -152,7 +152,7 @@ test("base message reply one", async () => {
   expect(document.title).toBe("Compose: Re: Test.");
 });
 
-test("base message from empty if unclear", async () => {
+test("base message from default if unclear", async () => {
   vi.stubGlobal('location', {
     ...window.location,
     search: '?id=foo&action=reply&mode=all'
@@ -166,10 +166,16 @@ test("base message from empty if unclear", async () => {
         .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
   const { getByTestId } = render(() => <Write/>);
 
+  expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
+
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
-  expect(getByTestId("from").querySelector("input").value).toBe("");
+  expect(getByTestId("from").querySelector("input").value).toBe("bar");
 });
 
 test("reply includes only main part of base message quoted", async () => {
@@ -185,6 +191,12 @@ test("reply includes only main part of base message quoted", async () => {
         .mockResolvedValueOnce({ ok: true, json: () => accounts })
         .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
   const { getByTestId } = render(() => <Write/>);
+
+  expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -601,6 +613,10 @@ test("localStorage stores for reply", async () => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
   expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
 
@@ -650,6 +666,9 @@ test("localStorage deletes upon successful send", async () => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
   expect(global.fetch).toHaveBeenCalledTimes(3);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
 
@@ -703,36 +722,6 @@ test("localStorage deletes upon successful send", async () => {
   expect(localStorage.getItem("draft-compose-tags")).toBe(null);
   expect(localStorage.getItem("draft-compose-subject")).toBe(null);
   expect(localStorage.getItem("draft-compose-body")).toBe(null);
-});
-
-test("errors when attempting to send mail without account", async () => {
-  vi.stubGlobal('location', {
-    ...window.location,
-    search: '?id=foo&action=reply&mode=all'
-  });
-  const msg1 = JSON.parse(JSON.stringify(msg));
-  msg1.to = "something@test.com";
-  msg1.cc = "";
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => msg1 })
-        .mockResolvedValueOnce({ ok: true, json: () => allTags })
-        .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
-  render(() => <Write/>);
-
-  expect(global.fetch).toHaveBeenCalledTimes(4);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
-
-  await vi.waitFor(() => {
-    expect(screen.getByText("Send")).toBeInTheDocument();
-  });
-
-  await userEvent.click(screen.getByText("Send"));
-  expect(global.fetch).toHaveBeenCalledTimes(4);
-  expect(screen.getByText("Error: No from account. Not sending.")).toBeInTheDocument();
 });
 
 test("errors when attempting to send incomplete mail", async () => {
