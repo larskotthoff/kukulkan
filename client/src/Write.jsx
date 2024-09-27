@@ -39,14 +39,14 @@ const AddrComplete = (props) => {
       chips={props.message[props.addrAttr]}
       addChip={(addr) => {
         props.setMessage(props.addrAttr, props.message[props.addrAttr].length, addr);
-        localStorage.setItem(`draft-${props.draftKey}-${props.addrAttr}`, props.message[props.addrAttr].join("\n"));
+        localStorage.setItem(`draft-${props.draftKey()}-${props.addrAttr}`, props.message[props.addrAttr].join("\n"));
       }}
       removeChip={(addr) => {
         props.setMessage(props.addrAttr, props.message[props.addrAttr].filter(a => a !== addr));
         if(props.message[props.addrAttr].length > 0) {
-          localStorage.setItem(`draft-${props.draftKey}-${props.addrAttr}`, props.message[props.addrAttr].join("\n"));
+          localStorage.setItem(`draft-${props.draftKey()}-${props.addrAttr}`, props.message[props.addrAttr].join("\n"));
         } else {
-          localStorage.removeItem(`draft-${props.draftKey}-${props.addrAttr}`);
+          localStorage.removeItem(`draft-${props.draftKey()}-${props.addrAttr}`);
         }
       }}
       getOptions={async (text) => {
@@ -142,23 +142,24 @@ export const Write = (props) => {
         [useTemplate, setUseTemplate] = createSignal(null),
         [bodyRef, setBodyRef] = createSignal(),
         [statusMsg, setStatusMsg] = createSignal(),
+        [draftKey, setDraftKey] = createSignal(action),
         [message, setMessage] = createStore({});
-  let draftKey = action,
-      defTo = [],
+  let defTo = [],
       defCc = [];
 
   document.title = "Compose: New Message";
 
   createEffect(() => {
-    props.sl?.(allTags.loading || accounts.loading || compose.loading || baseMessage.loading);
+    if(allTags.loading || accounts.loading || compose.loading || baseMessage.loading) return;
+    props.sl?.(false);
 
     let defAcct = accounts()?.find(a => a.default),
         from = defAcct?.id;
 
     setMessage("files", []);
     if(baseMessage()) {
-      if(!draftKey.endsWith(baseMessage().message_id)) {
-        draftKey += `-${baseMessage().message_id}`;
+      if(!draftKey().endsWith(baseMessage().message_id)) {
+        setDraftKey(draftKey() + `-${baseMessage().message_id}`);
       }
       if(action === "forward" && baseMessage().attachments) {
         // attach files attached to previous email
@@ -171,7 +172,7 @@ export const Write = (props) => {
         setMessage("files", (prevFiles) => [...prevFiles, calFile]);
       }
 
-      if(!localStorage.getItem(`draft-${draftKey}-from`)) {
+      if(!localStorage.getItem(`draft-${draftKey()}-from`)) {
         let acct = accounts()?.find(a => baseMessage().to.includes(a.email));
         if(!acct) {
           acct = accounts()?.find(a => baseMessage().from.includes(a.email));
@@ -200,17 +201,17 @@ export const Write = (props) => {
       setMessage("subject", "");
     }
 
-    if(localStorage.getItem(`draft-${draftKey}-from`)) {
-      from = localStorage.getItem(`draft-${draftKey}-from`);
+    if(localStorage.getItem(`draft-${draftKey()}-from`)) {
+      from = localStorage.getItem(`draft-${draftKey()}-from`);
     } else if(!from) {
       from = defAcct?.id;
     }
     setMessage("from", from);
-    setMessage("to", localStorage.getItem(`draft-${draftKey}-to`)?.split('\n') || defTo);
-    setMessage("cc", localStorage.getItem(`draft-${draftKey}-cc`)?.split('\n') || defCc);
-    setMessage("bcc", localStorage.getItem(`draft-${draftKey}-bcc`)?.split('\n') || []);
-    setMessage("tags", localStorage.getItem(`draft-${draftKey}-tags`)?.split('\n') || filterAdminTags(baseMessage()?.tags) || []);
-    setMessage("bodyDefaultValue", localStorage.getItem(`draft-${draftKey}-body`) || quote(baseMessage()?.body["text/plain"]) || "");
+    setMessage("to", localStorage.getItem(`draft-${draftKey()}-to`)?.split('\n') || defTo);
+    setMessage("cc", localStorage.getItem(`draft-${draftKey()}-cc`)?.split('\n') || defCc);
+    setMessage("bcc", localStorage.getItem(`draft-${draftKey()}-bcc`)?.split('\n') || []);
+    setMessage("tags", localStorage.getItem(`draft-${draftKey()}-tags`)?.split('\n') || filterAdminTags(baseMessage()?.tags) || []);
+    setMessage("bodyDefaultValue", localStorage.getItem(`draft-${draftKey()}-body`) || quote(baseMessage()?.body["text/plain"]) || "");
     setMessage("body", message.bodyDefaultValue);
     if(bodyRef()) {
       bodyRef().value = message.bodyDefaultValue;
@@ -278,7 +279,7 @@ export const Write = (props) => {
       .then((result) => {
         if(result.sendStatus === 0) {
           setStatusMsg("Message sent.");
-          Object.keys(localStorage).filter(k => k.startsWith(`draft-${draftKey}`))
+          Object.keys(localStorage).filter(k => k.startsWith(`draft-${draftKey()}`))
             .map(k => localStorage.removeItem(k));
         } else {
           setStatusMsg(`Error sending message: ${result.sendOutput}`);
@@ -321,10 +322,10 @@ export const Write = (props) => {
               <Select
                 class="selectMargin"
                 data-testid="from"
-                value={message.from}
+                value={message.from || ""}
                 onChange={(ev) => {
                   setMessage("from", ev.target.value);
-                  localStorage.setItem(`draft-${draftKey}-from`, ev.target.value);
+                  localStorage.setItem(`draft-${draftKey()}-from`, ev.target.value);
                 }}>
                   <For each={accounts()}>
                     {(acct) =>
@@ -349,7 +350,7 @@ export const Write = (props) => {
                 draftKey={draftKey}
                 data-testid="cc"
                 sl={props.sl}
-                defVal={localStorage.getItem(`draft-${draftKey}-cc`)?.split('\n') || defCc}/>
+                defVal={localStorage.getItem(`draft-${draftKey()}-cc`)?.split('\n') || defCc}/>
             </Grid>
           </Grid>
           <Grid container spacing={1} class="inputFieldSet">
@@ -359,18 +360,18 @@ export const Write = (props) => {
                 draftKey={draftKey}
                 data-testid="bcc"
                 sl={props.sl}
-                defVal={localStorage.getItem(`draft-${draftKey}-bcc`)?.split('\n') || []}/>
+                defVal={localStorage.getItem(`draft-${draftKey()}-bcc`)?.split('\n') || []}/>
             </Grid>
           </Grid>
           <Grid container spacing={1} class="inputFieldSet">
             <Grid item>Subject:</Grid>
             <Grid item xs><TextField
               variant="standard"
-              defaultValue={localStorage.getItem(`draft-${draftKey}-subject`) || prefix(baseMessage()?.subject)}
+              defaultValue={localStorage.getItem(`draft-${draftKey()}-subject`) || prefix(baseMessage()?.subject)}
               data-testid="subject"
               onChange={(ev) => {
                 setMessage("subject", ev.target.value);
-                localStorage.setItem(`draft-${draftKey}-subject`, message.subject);
+                localStorage.setItem(`draft-${draftKey()}-subject`, message.subject);
                 document.title = `Compose: ${message.subject}`;
               }}
               fullWidth/>
@@ -385,14 +386,14 @@ export const Write = (props) => {
                 allTags={allTags()}
                 addTag={(tagToAdd) => {
                   setMessage("tags", message.tags.length, tagToAdd);
-                  localStorage.setItem(`draft-${draftKey}-tags`, message.tags.join("\n"));
+                  localStorage.setItem(`draft-${draftKey()}-tags`, message.tags.join("\n"));
                 }}
                 removeTag={(tagToRemove) => {
                   setMessage("tags", message.tags.filter(t => t !== tagToRemove));
                   if(message.tags.length > 0) {
-                    localStorage.setItem(`draft-${draftKey}-tags`, message.tags.join("\n"));
+                    localStorage.setItem(`draft-${draftKey()}-tags`, message.tags.join("\n"));
                   } else {
-                    localStorage.removeItem(`draft-${draftKey}-tags`);
+                    localStorage.removeItem(`draft-${draftKey()}-tags`);
                   }
                 }}
                 data-testid="tagedit"
@@ -418,12 +419,12 @@ export const Write = (props) => {
                 const response = await fetch(apiURL("api/edit_external"), { method: 'POST', body: formData });
                 ev.target.value = await response.text();
                 ev.target.disabled = false;
-                localStorage.setItem(`draft-${draftKey}-body`, ev.target.value);
+                localStorage.setItem(`draft-${draftKey()}-body`, ev.target.value);
                 setMessage("body", ev.target.value);
               }
             }}
             onChange={(ev) => {
-              localStorage.setItem(`draft-${draftKey}-body`, ev.target.value);
+              localStorage.setItem(`draft-${draftKey()}-body`, ev.target.value);
               setMessage("body", ev.target.value);
             }}/>
           <For each={message.files}>

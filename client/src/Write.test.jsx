@@ -610,7 +610,7 @@ test("localStorage stores for reply", async () => {
   const { getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
-    expect(screen.getByText("Send")).toBeInTheDocument();
+    expect(getByTestId("from").querySelector("input").value).toBe("foo");
   });
   expect(global.fetch).toHaveBeenCalledTimes(4);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
