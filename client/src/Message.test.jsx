@@ -43,9 +43,16 @@ test("fetches and renders message", async () => {
     ...window.location,
     search: '?id=foo'
   });
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => msg })
-        .mockResolvedValueOnce({ ok: true, json: () => ["foo", "foobar"] });
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/tags":
+        return Promise.resolve({ ok: true, json: () => ["foo", "foobar"] });
+      case "http://localhost:5000/api/message/foo":
+        return Promise.resolve({ ok: true, json: () => msg });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   render(() => <FetchedMessage/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(2);
@@ -71,9 +78,16 @@ test("fetches and renders message in print view", async () => {
     ...window.location,
     search: '?id=foo&print=true'
   });
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => msg })
-        .mockResolvedValueOnce({ ok: true, json: () => ["foo", "foobar"] });
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/tags":
+        return Promise.resolve({ ok: true, json: () => ["foo", "foobar"] });
+      case "http://localhost:5000/api/message/foo":
+        return Promise.resolve({ ok: true, json: () => msg });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   render(() => <FetchedMessage/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(2);

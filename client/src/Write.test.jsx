@@ -40,10 +40,16 @@ test("exports Write", () => {
 });
 
 test("renders", async () => {
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => allTags })
-        .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/tags/":
+        return Promise.resolve({ ok: true, json: () => allTags });
+      case "http://localhost:5000/api/accounts/":
+        return Promise.resolve({ ok: true, json: () => accounts });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   const { getByTestId } = render(() => <Write/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(3);
@@ -63,10 +69,16 @@ test("renders", async () => {
 });
 
 test("selects default account and lists others", async () => {
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => allTags })
-        .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/tags/":
+        return Promise.resolve({ ok: true, json: () => allTags });
+      case "http://localhost:5000/api/accounts/":
+        return Promise.resolve({ ok: true, json: () => accounts });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   const { container } = render(() => <Write/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(3);
@@ -93,11 +105,18 @@ test("base message reply all", async () => {
     ...window.location,
     search: '?id=foo&action=reply&mode=all'
   });
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => msg })
-        .mockResolvedValueOnce({ ok: true, json: () => allTags })
-        .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/tags/":
+        return Promise.resolve({ ok: true, json: () => allTags });
+      case "http://localhost:5000/api/accounts/":
+        return Promise.resolve({ ok: true, json: () => accounts });
+      case "http://localhost:5000/api/message/foo":
+        return Promise.resolve({ ok: true, json: () => msg });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   const { getByTestId } = render(() => <Write/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(4);
@@ -125,11 +144,18 @@ test("base message reply one", async () => {
     ...window.location,
     search: '?id=foo&action=reply&mode=one'
   });
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => msg })
-        .mockResolvedValueOnce({ ok: true, json: () => allTags })
-        .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/tags/":
+        return Promise.resolve({ ok: true, json: () => allTags });
+      case "http://localhost:5000/api/accounts/":
+        return Promise.resolve({ ok: true, json: () => accounts });
+      case "http://localhost:5000/api/message/foo":
+        return Promise.resolve({ ok: true, json: () => msg });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   const { getByTestId } = render(() => <Write/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(4);
@@ -159,11 +185,18 @@ test("base message from default if unclear", async () => {
   });
   const msg1 = JSON.parse(JSON.stringify(msg));
   msg1.to = "something@test.com";
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => msg1 })
-        .mockResolvedValueOnce({ ok: true, json: () => allTags })
-        .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/tags/":
+        return Promise.resolve({ ok: true, json: () => allTags });
+      case "http://localhost:5000/api/accounts/":
+        return Promise.resolve({ ok: true, json: () => accounts });
+      case "http://localhost:5000/api/message/foo":
+        return Promise.resolve({ ok: true, json: () => msg1 });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   const { getByTestId } = render(() => <Write/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(4);
@@ -185,11 +218,18 @@ test("reply includes only main part of base message quoted", async () => {
   });
   const msg1 = JSON.parse(JSON.stringify(msg));
   msg1.body["text/plain"] = "Thanks.\n\nOn bla, blurg wrote:\n> foo\n> bar.";
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => msg1 })
-        .mockResolvedValueOnce({ ok: true, json: () => allTags })
-        .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/tags/":
+        return Promise.resolve({ ok: true, json: () => allTags });
+      case "http://localhost:5000/api/accounts/":
+        return Promise.resolve({ ok: true, json: () => accounts });
+      case "http://localhost:5000/api/message/foo":
+        return Promise.resolve({ ok: true, json: () => msg1 });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   const { getByTestId } = render(() => <Write/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(4);
@@ -209,11 +249,18 @@ test("base message forward", async () => {
     ...window.location,
     search: '?id=foo&action=forward'
   });
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => msg })
-        .mockResolvedValueOnce({ ok: true, json: () => allTags })
-        .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/tags/":
+        return Promise.resolve({ ok: true, json: () => allTags });
+      case "http://localhost:5000/api/accounts/":
+        return Promise.resolve({ ok: true, json: () => accounts });
+      case "http://localhost:5000/api/message/foo":
+        return Promise.resolve({ ok: true, json: () => msg });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   const { getByTestId } = render(() => <Write/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(4);
@@ -243,11 +290,18 @@ test("base message reply filters admin tags", async () => {
   });
   const msg1 = JSON.parse(JSON.stringify(msg));
   msg1.tags.push("signed");
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => msg1 })
-        .mockResolvedValueOnce({ ok: true, json: () => allTags })
-        .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/tags/":
+        return Promise.resolve({ ok: true, json: () => allTags });
+      case "http://localhost:5000/api/accounts/":
+        return Promise.resolve({ ok: true, json: () => accounts });
+      case "http://localhost:5000/api/message/foo":
+        return Promise.resolve({ ok: true, json: () => msg1 });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   render(() => <Write/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(4);
@@ -268,10 +322,18 @@ test("base message reply filters admin tags", async () => {
 test("template set", async () => {
   const compose = {"templates": [{"shortcut": "1", "description": "foo", "template": "bar"},
                      {"shortcut": "2", "description": "foobar", "template": "blurg"}]};
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => allTags })
-        .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => compose });
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/tags/":
+        return Promise.resolve({ ok: true, json: () => allTags });
+      case "http://localhost:5000/api/accounts/":
+        return Promise.resolve({ ok: true, json: () => accounts });
+      case "http://localhost:5000/api/compose/":
+        return Promise.resolve({ ok: true, json: () => compose });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   const { getByTestId } = render(() => <Write/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(3);
@@ -307,11 +369,20 @@ test("template set with base message", async () => {
   });
   const compose = {"templates": [{"shortcut": "1", "description": "foo", "template": "bar"},
                      {"shortcut": "2", "description": "foobar", "template": "blurg"}]};
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => msg })
-        .mockResolvedValueOnce({ ok: true, json: () => allTags })
-        .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => compose });
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/tags/":
+        return Promise.resolve({ ok: true, json: () => allTags });
+      case "http://localhost:5000/api/accounts/":
+        return Promise.resolve({ ok: true, json: () => accounts });
+      case "http://localhost:5000/api/compose/":
+        return Promise.resolve({ ok: true, json: () => compose });
+      case "http://localhost:5000/api/message/foo":
+        return Promise.resolve({ ok: true, json: () => msg });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   const { getByTestId } = render(() => <Write/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(4);
@@ -342,10 +413,16 @@ test("template set with base message", async () => {
 });
 
 test("addresses editable and complete", async () => {
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => allTags })
-        .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/tags/":
+        return Promise.resolve({ ok: true, json: () => allTags });
+      case "http://localhost:5000/api/accounts/":
+        return Promise.resolve({ ok: true, json: () => accounts });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   const { getByTestId } = render(() => <Write/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(3);
@@ -406,11 +483,18 @@ test("tags editable and complete", async () => {
     ...window.location,
     search: '?id=foo&action=reply&mode=all'
   });
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => msg })
-        .mockResolvedValueOnce({ ok: true, json: () => allTags })
-        .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/tags/":
+        return Promise.resolve({ ok: true, json: () => allTags });
+      case "http://localhost:5000/api/accounts/":
+        return Promise.resolve({ ok: true, json: () => accounts });
+      case "http://localhost:5000/api/message/foo":
+        return Promise.resolve({ ok: true, json: () => msg });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   const { getByTestId } = render(() => <Write/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(4);
@@ -463,11 +547,18 @@ test("files attachable and editable", async () => {
   });
   const msg1 = JSON.parse(JSON.stringify(msg));
   msg1.attachments = [{"filename": "foofile"}, {"filename": "barfile"}];
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => msg1 })
-        .mockResolvedValueOnce({ ok: true, json: () => allTags })
-        .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/tags/":
+        return Promise.resolve({ ok: true, json: () => allTags });
+      case "http://localhost:5000/api/accounts/":
+        return Promise.resolve({ ok: true, json: () => accounts });
+      case "http://localhost:5000/api/message/foo":
+        return Promise.resolve({ ok: true, json: () => msg1 });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   const { container } = render(() => <Write/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(4);
@@ -497,10 +588,14 @@ test("files attachable and editable", async () => {
 });
 
 test("localStorage stores for new email", async () => {
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => [] })
-        .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/accounts/":
+        return Promise.resolve({ ok: true, json: () => accounts });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   const { container, getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
@@ -553,10 +648,14 @@ test("localStorage stores for new email", async () => {
 });
 
 test("localStorage removes when empty", async () => {
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => [] })
-        .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/accounts/":
+        return Promise.resolve({ ok: true, json: () => accounts });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   const { container, getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
@@ -602,11 +701,16 @@ test("localStorage stores for reply", async () => {
     ...window.location,
     search: '?id=foo&action=reply&mode=all'
   });
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => msg })
-        .mockResolvedValueOnce({ ok: true, json: () => [] })
-        .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/accounts/":
+        return Promise.resolve({ ok: true, json: () => accounts });
+      case "http://localhost:5000/api/message/foo":
+        return Promise.resolve({ ok: true, json: () => msg });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   const { getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
@@ -656,10 +760,14 @@ test("localStorage stores for reply", async () => {
 });
 
 test("localStorage deletes upon successful send", async () => {
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => [] })
-        .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/accounts/":
+        return Promise.resolve({ ok: true, json: () => accounts });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   const { getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
@@ -725,10 +833,14 @@ test("localStorage deletes upon successful send", async () => {
 });
 
 test("errors when attempting to send incomplete mail", async () => {
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => [] })
-        .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/accounts/":
+        return Promise.resolve({ ok: true, json: () => accounts });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   const { getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
@@ -757,10 +869,14 @@ test("errors when attempting to send incomplete mail", async () => {
 });
 
 test("data assembled correctly for sending new email", async () => {
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => [] })
-        .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/accounts/":
+        return Promise.resolve({ ok: true, json: () => accounts });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   const { container, getByTestId } = render(() => <Write/>);
   expect(global.fetch).toHaveBeenCalledTimes(3);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
@@ -835,10 +951,16 @@ test("data assembled correctly for sending new email", async () => {
 test("data assembled correctly for sending new email w/ template", async () => {
   const compose = {"templates": [{"shortcut": "1", "description": "foo", "template": "bar"},
                      {"shortcut": "2", "description": "foobar", "template": "blurg"}]};
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => [] })
-        .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => compose });
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/accounts/":
+        return Promise.resolve({ ok: true, json: () => accounts });
+      case "http://localhost:5000/api/compose/":
+        return Promise.resolve({ ok: true, json: () => compose });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   const { getByTestId } = render(() => <Write/>);
   expect(global.fetch).toHaveBeenCalledTimes(3);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
@@ -908,17 +1030,26 @@ test("data assembled correctly for sending reply w/o editing", async () => {
     ...window.location,
     search: '?id=foo&action=reply&mode=all'
   });
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => msg })
-        .mockResolvedValueOnce({ ok: true, json: () => [] })
-        .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/accounts/":
+        return Promise.resolve({ ok: true, json: () => accounts });
+      case "http://localhost:5000/api/message/foo":
+        return Promise.resolve({ ok: true, json: () => msg });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   render(() => <Write/>);
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
   expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
 
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
 
@@ -952,17 +1083,26 @@ test("data assembled correctly for sending reply", async () => {
     ...window.location,
     search: '?id=foo&action=reply&mode=all'
   });
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => msg })
-        .mockResolvedValueOnce({ ok: true, json: () => [] })
-        .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/accounts/":
+        return Promise.resolve({ ok: true, json: () => accounts });
+      case "http://localhost:5000/api/message/foo":
+        return Promise.resolve({ ok: true, json: () => msg });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   const { getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
   expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
 
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
 
@@ -1018,10 +1158,14 @@ test("data assembled correctly for sending reply", async () => {
 });
 
 test("error when mail cannot be sent", async () => {
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => [] })
-        .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => [] }); // compose
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/accounts/":
+        return Promise.resolve({ ok: true, json: () => accounts });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   const { getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
@@ -1061,10 +1205,16 @@ test("error when mail cannot be sent", async () => {
 
 test("external editing", async () => {
   const compose = {"external-editor": "foo"};
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => [] })
-        .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => compose }); // compose
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/compose/":
+        return Promise.resolve({ ok: true, json: () => compose });
+      case "http://localhost:5000/api/accounts/":
+        return Promise.resolve({ ok: true, json: () => accounts });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   const { getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
@@ -1124,10 +1274,16 @@ test("external editing", async () => {
 test("shortcuts disabled while editing externally", async () => {
   const compose = {"external-editor": "foo", "templates": [{"shortcut": "1", "description": "foo", "template": "bar"},
                      {"shortcut": "2", "description": "foobar", "template": "blurg"}]};
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => [] })
-        .mockResolvedValueOnce({ ok: true, json: () => accounts })
-        .mockResolvedValueOnce({ ok: true, json: () => compose }); // compose
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/compose/":
+        return Promise.resolve({ ok: true, json: () => compose });
+      case "http://localhost:5000/api/accounts/":
+        return Promise.resolve({ ok: true, json: () => accounts });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   const { getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {

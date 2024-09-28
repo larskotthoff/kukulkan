@@ -77,9 +77,16 @@ test("fetches and renders thread", async () => {
     ...window.location,
     search: '?id=foo'
   });
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => thread })
-        .mockResolvedValueOnce({ ok: true, json: () => ["foo", "foobar"] });
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/tags":
+        return Promise.resolve({ ok: true, json: () => ["foo", "foobar"] });
+      case "http://localhost:5000/api/thread/foo":
+        return Promise.resolve({ ok: true, json: () => thread });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   const { container } = render(() => <Thread/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(2);
@@ -120,9 +127,16 @@ test("changing active message works", async () => {
     ...window.location,
     search: '?id=foo'
   });
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => thread })
-        .mockResolvedValueOnce({ ok: true, json: () => ["foo", "foobar"] });
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/tags":
+        return Promise.resolve({ ok: true, json: () => ["foo", "foobar"] });
+      case "http://localhost:5000/api/thread/foo":
+        return Promise.resolve({ ok: true, json: () => thread });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   const { container } = render(() => <Thread/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(2);
@@ -266,9 +280,16 @@ test("thread nav shows and allows to navigate levels", async () => {
     ...window.location,
     search: '?id=foo'
   });
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => complexThread })
-        .mockResolvedValueOnce({ ok: true, json: () => ["foo", "foobar"] });
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/tags":
+        return Promise.resolve({ ok: true, json: () => ["foo", "foobar"] });
+      case "http://localhost:5000/api/thread/foo":
+        return Promise.resolve({ ok: true, json: () => complexThread });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   const { container } = render(() => <Thread/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(2);
@@ -417,9 +438,16 @@ test("flat view works", async () => {
     ...window.location,
     search: '?id=foo'
   });
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => complexThread })
-        .mockResolvedValueOnce({ ok: true, json: () => ["foo", "foobar"] });
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/tags":
+        return Promise.resolve({ ok: true, json: () => ["foo", "foobar"] });
+      case "http://localhost:5000/api/thread/foo":
+        return Promise.resolve({ ok: true, json: () => complexThread });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   const { container } = render(() => <Thread/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(2);
@@ -521,9 +549,16 @@ test("works correctly when msg references are messed up", async () => {
   });
   const tmp = JSON.parse(JSON.stringify(thread));
   tmp[1].in_reply_to = "<doesnotexist>";
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => tmp })
-        .mockResolvedValueOnce({ ok: true, json: () => ["foo", "foobar"] });
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/tags":
+        return Promise.resolve({ ok: true, json: () => ["foo", "foobar"] });
+      case "http://localhost:5000/api/thread/foo":
+        return Promise.resolve({ ok: true, json: () => tmp });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   const { container } = render(() => <Thread/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(2);
@@ -567,9 +602,16 @@ test("sets active message based on unread", async () => {
   const tmp = JSON.parse(JSON.stringify(thread));
   tmp[0].tags.push("unread");
   tmp[1].tags.push("unread");
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => tmp })
-        .mockResolvedValueOnce({ ok: true, json: () => ["foo", "foobar"] });
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/tags":
+        return Promise.resolve({ ok: true, json: () => ["foo", "foobar"] });
+      case "http://localhost:5000/api/thread/foo":
+        return Promise.resolve({ ok: true, json: () => tmp });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   const { container } = render(() => <Thread/>);
 
   expect(global.fetch).toHaveBeenCalledTimes(2);

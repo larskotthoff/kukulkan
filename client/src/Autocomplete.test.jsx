@@ -29,8 +29,14 @@ test("shows completions", async () => {
 });
 
 test("shows completions with async completion function", async () => {
-  global.fetch = vi.fn();
-  global.fetch.mockResolvedValueOnce({ ok: true, json: () => ["foo", "foobar"] });
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "blarg":
+        return Promise.resolve({ ok: true, json: () => ["foo", "foobar"] });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   async function fetchSomething() {
     const response = await fetch(`blarg`);
     if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
