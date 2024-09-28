@@ -1,8 +1,7 @@
 import { createEffect, createSignal, createResource, Show } from "solid-js";
 
-import { Box, Grid, Modal, Stack } from "@suid/material";
+import { Modal } from "@suid/material";
 import { Autocomplete } from "./Autocomplete.jsx";
-import Create from "@suid/icons-material/Create";
 
 import "./Kukulkan.css";
 import { apiURL, fetchAllTags } from "./utils.js";
@@ -16,9 +15,7 @@ async function fetchThreads(query) {
 }
 
 export const Kukulkan = (props) => {
-  const [searchParams] = createSignal(window.location.search),
-        [query] = createSignal(props.todo ? "tag:todo" : (new URLSearchParams(searchParams())).get("query")),
-        [searchText, setSearchText] = createSignal(query()),
+  const [query, setQuery] = createSignal(),
         [threads, { mutate }] = createResource(query, fetchThreads, { initialValue: [] }),
         [activeThread, setActiveThread] = createSignal(0),
         [selectedThreads, setSelectedThreads] = createSignal([]),
@@ -39,20 +36,9 @@ export const Kukulkan = (props) => {
     if(showEditingTagModal()) document.getElementById("kukulkan-editTagBox").focus();
   });
 
-  let opts = ["tag:unread", "tag:todo", "date:today"],
-      qs = localStorage.getItem("queries");
-  if(qs !== null) {
-    qs = JSON.parse(qs);
-    if(query()) {
-      qs.unshift(query());
-      qs = [...new Set(qs)];
-      // store up to 20 most recent queries
-      localStorage.setItem("queries", JSON.stringify(qs.slice(0, 20)));
-    }
-    opts = [...new Set(opts.concat(qs))];
-  }
-  
-  document.title = query() || "Kukulkan";
+  createEffect(() => {
+    document.title = query() || "Kukulkan";
+  });
 
   const makeTagEdits = () => {
     let affectedThreads = selectedThreads();
@@ -159,38 +145,6 @@ export const Kukulkan = (props) => {
     true
   );
 
-  const QueryBox = () => {
-    return (
-      <Box width="100%" noValidate>
-        <Autocomplete
-          id="kukulkan-queryBox"
-          name="search"
-          variant="standard"
-          fullWidth
-          text={searchText}
-          setText={setSearchText}
-          getOptions={(text) => {
-            let pts = text.split(':'),
-                last = pts.pop();
-            if(pts.length > 0 && pts[pts.length - 1].endsWith("tag") && last.length > 0) {
-              // autocomplete possible tag
-              return allTags().filter((t) => t.startsWith(last)).map((t) => [...pts, t].join(':'));
-            } else {
-              return opts.filter((t) => t.includes(text));
-            }
-          }}
-          handleKey={(ev) => {
-            if(ev.code === 'Enter') {
-              const sp = new URLSearchParams(searchParams());
-              sp.set("query", searchText());
-              window.location.search = sp.toString();
-            }
-          }}
-        />
-      </Box>
-    );
-  };
-
   const TagEditingModal = () => {
     return (
       <Modal open={showEditingTagModal()} onClose={() => { setShowEditingTagModal(false); setEditingTags(""); }} BackdropProps={{timeout: 0}}>
@@ -224,23 +178,11 @@ export const Kukulkan = (props) => {
   };
 
   return (
-    <>
-      <Show when={props.todo !== true}>
-        <Stack direction="row" class="centered" width="80%" spacing={2}>
-          <QueryBox/>
-          <a href="/write" target="_blank" rel="noreferrer">
-            <Create/>
-          </a>
-        </Stack>
-      </Show>
-      <Show when={!allTags.loading && !threads.loading}>
-        <div align="right">{threads().length} thread{threads().length === 1 ? "" : "s"}.</div>
-        <Grid container width="95%" class="centered">
-          <props.Threads threads={threads()} activeThread={activeThread} setActiveThread={setActiveThread} selectedThreads={selectedThreads}/>
-        </Grid>
-        <TagEditingModal/>
-      </Show>
-    </>
+    <Show when={!allTags.loading && !threads.loading}>
+      <props.Threads threads={threads} activeThread={activeThread} setActiveThread={setActiveThread}
+        selectedThreads={selectedThreads} setQuery={setQuery} allTags={allTags}/>
+      <TagEditingModal/>
+    </Show>
   );
 };
 

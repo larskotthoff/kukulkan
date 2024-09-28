@@ -28,12 +28,14 @@ export const sortThreadsByDueDate = (a, b) => {
 };
 
 export const TodoThreads = (props) => {
+  props.setQuery("tag:todo");
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
-  const threads = props.threads.sort(sortThreadsByDueDate),
+  const threads = props.threads().sort(sortThreadsByDueDate),
         dueMap = {};
 
   function processDueDate(thread, index) {

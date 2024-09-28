@@ -21,22 +21,30 @@ test("exports Kukulkan", () => {
   expect(Kukulkan).not.toBe(undefined);
 });
 
-test("renders components", () => {
+test("renders components", async () => {
   const { container } = render(() => <Kukulkan Threads={SearchThreads}/>);
-  expect(container.querySelector("input")).not.toBe(null);
+  await vi.waitFor(() => {
+    expect(container.querySelector("input")).not.toBe(null);
+  });
   expect(container.querySelector("a[href='/write']")).not.toBe(null);
 });
 
-test("sets query and title based on URL", () => {
+test("sets query and title based on URL", async () => {
   let { container } = render(() => <Kukulkan Threads={SearchThreads}/>);
+  await vi.waitFor(() => {
+    expect(container.querySelector("input")).not.toBe(null);
+  });
   expect(container.querySelector("input").getAttribute("value")).toEqual("");
 
   vi.stubGlobal('location', {
     ...window.location,
     search: '?query=foo'
   });
-  global.fetch.mockResolvedValue({ ok: true });
+  global.fetch.mockResolvedValue({ ok: true, json: () => "" });
   container = render(() => <Kukulkan Threads={SearchThreads}/>).container;
+  await vi.waitFor(() => {
+    expect(container.querySelector("input")).not.toBe(null);
+  });
   expect(container.querySelector("input").getAttribute("value")).toEqual("foo");
 
   expect(document.title).toBe("foo");
@@ -51,6 +59,9 @@ test("sets query and title based on URL", () => {
 
 test("shows predefined query completions", async () => {
   const { container } = render(() => <Kukulkan Threads={SearchThreads}/>);
+  await vi.waitFor(() => {
+    expect(container.querySelector("input")).not.toBe(null);
+  });
   const input = container.querySelector("input");
   await userEvent.type(input, "t");
   expect(input.getAttribute("value")).toEqual("t");
@@ -61,6 +72,9 @@ test("shows predefined query completions", async () => {
 
 test("general shortcuts work", async () => {
   const { container } = render(() => <Kukulkan Threads={SearchThreads}/>);
+  await vi.waitFor(() => {
+    expect(container.querySelector("input")).not.toBe(null);
+  });
   const input = container.querySelector("input");
   expect(document.activeElement).not.toBe(input);
   await userEvent.type(document.body, "/");
@@ -74,6 +88,9 @@ test("general shortcuts work", async () => {
 test("fetches tags and provides completions", async () => {
   global.fetch.mockResolvedValue({ ok: true, json: () => ["foo", "foobar"] });
   const { container } = render(() => <Kukulkan Threads={SearchThreads}/>);
+  await vi.waitFor(() => {
+    expect(container.querySelector("input")).not.toBe(null);
+  });
   expect(global.fetch).toHaveBeenCalledTimes(1);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
 
@@ -89,20 +106,28 @@ test("shows threads", async () => {
     ...window.location,
     search: '?query=foo'
   });
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => [
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/query/foo":
+        return Promise.resolve({ ok: true, json: () => [
             {authors: "fooAuthor, barAuthor", subject: "test", tags: ["fooTag", "barTag"], total_messages: 2, newest_date: 1000, oldest_date: 100},
             {authors: "test1, test2", subject: "foobar", tags: ["unread", "new"], total_messages: 1, newest_date: 1000, oldest_date: 100}
-        ]})
-        .mockResolvedValueOnce({ ok: true, json: () => ["foo", "foobar"] });
+        ]});
+      case "http://localhost:5000/api/tags":
+        return Promise.resolve({ ok: true, json: () => ["foo", "foobar"] });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   const { container } = render(() => <Kukulkan Threads={SearchThreads}/>);
+  await vi.waitFor(() => {
+    expect(container.querySelector("input")).not.toBe(null);
+  });
   expect(global.fetch).toHaveBeenCalledTimes(2);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/query/foo");
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
 
-  await vi.waitFor(() => {
-    expect(screen.getByText("2 threads.")).toBeInTheDocument();
-  });
+  expect(screen.getByText("2 threads.")).toBeInTheDocument();
 
   expect(container.querySelectorAll(".kukulkan-thread").length).toBe(2);
   expect(container.querySelectorAll(".chip").length).toBe(8);
@@ -124,19 +149,27 @@ test("opens thread on enter and click", async () => {
     ...window.location,
     search: '?query=foo'
   });
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => [
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/query/foo":
+        return Promise.resolve({ ok: true, json: () => [
             {thread_id: "foo", authors: "test", subject: "foobar", tags: ["test"], total_messages: 1, newest_date: 1000, oldest_date: 100}
-        ]})
-        .mockResolvedValueOnce({ ok: true, json: () => ["foo", "foobar"] });
+        ]});
+      case "http://localhost:5000/api/tags":
+        return Promise.resolve({ ok: true, json: () => ["foo", "foobar"] });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   const { container } = render(() => <Kukulkan Threads={SearchThreads}/>);
+  await vi.waitFor(() => {
+    expect(container.querySelector("input")).not.toBe(null);
+  });
   expect(global.fetch).toHaveBeenCalledTimes(2);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/query/foo");
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
 
-  await vi.waitFor(() => {
-    expect(screen.getByText("1 thread.")).toBeInTheDocument();
-  });
+  expect(screen.getByText("1 thread.")).toBeInTheDocument();
 
   await userEvent.type(document.body, "{enter}");
   expect(window.open).toHaveBeenCalledTimes(1);
@@ -153,20 +186,28 @@ test("navigation and selection shortcuts work", async () => {
     ...window.location,
     search: '?query=foo'
   });
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => [
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/query/foo":
+        return Promise.resolve({ ok: true, json: () => [
             {thread_id: "foo", authors: "test1", subject: "foobar1", tags: ["test1"], total_messages: 1, newest_date: 1000, oldest_date: 100},
             {thread_id: "bar", authors: "test2", subject: "foobar2", tags: ["test2"], total_messages: 1, newest_date: 1000, oldest_date: 100}
-        ]})
-        .mockResolvedValueOnce({ ok: true, json: () => ["foo", "foobar"] });
+        ]});
+      case "http://localhost:5000/api/tags":
+        return Promise.resolve({ ok: true, json: () => ["foo", "foobar"] });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   const { container } = render(() => <Kukulkan Threads={SearchThreads}/>);
+  await vi.waitFor(() => {
+    expect(container.querySelector("input")).not.toBe(null);
+  });
   expect(global.fetch).toHaveBeenCalledTimes(2);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/query/foo");
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
 
-  await vi.waitFor(() => {
-    expect(screen.getByText("2 threads.")).toBeInTheDocument();
-  });
+  expect(screen.getByText("2 threads.")).toBeInTheDocument();
 
   expect(container.querySelector(".kukulkan-thread.active").querySelector(".MuiChip-label").textContent).toBe("test1");
 
@@ -204,21 +245,26 @@ test("delete thread works", async () => {
     ...window.location,
     search: '?query=foo'
   });
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => [
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/query/foo":
+        return Promise.resolve({ ok: true, json: () => [
             {thread_id: "foo", authors: "test", subject: "foobar", tags: ["unread"], total_messages: 1, newest_date: 1000, oldest_date: 100}
-        ]})
-        .mockResolvedValueOnce({ ok: true, json: () => ["foo", "foobar"] })
-        .mockResolvedValueOnce({ ok: true })
-        .mockResolvedValueOnce({ ok: true });
+        ]});
+      case "http://localhost:5000/api/tags":
+        return Promise.resolve({ ok: true, json: () => ["foo", "foobar"] });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   render(() => <Kukulkan Threads={SearchThreads}/>);
-  expect(global.fetch).toHaveBeenCalledTimes(2);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/query/foo");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-
   await vi.waitFor(() => {
     expect(screen.getByText("1 thread.")).toBeInTheDocument();
   });
+
+  expect(global.fetch).toHaveBeenCalledTimes(2);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/query/foo");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
 
   await userEvent.type(document.body, "{delete}");
   expect(global.fetch).toHaveBeenCalledTimes(4);
@@ -233,21 +279,27 @@ test("mark thread done works", async () => {
     ...window.location,
     search: '?query=foo'
   });
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => [
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/query/foo":
+        return Promise.resolve({ ok: true, json: () => [
             {thread_id: "foo", authors: "test", subject: "foobar", tags: ["todo", "due:1970-01-01"], total_messages: 1, newest_date: 1000, oldest_date: 100}
-        ]})
-        .mockResolvedValueOnce({ ok: true, json: () => ["foo", "foobar"] })
-        .mockResolvedValueOnce({ ok: true })
-        .mockResolvedValueOnce({ ok: true });
+        ]});
+      case "http://localhost:5000/api/tags":
+        return Promise.resolve({ ok: true, json: () => ["foo", "foobar"] });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   render(() => <Kukulkan Threads={SearchThreads}/>);
+  await vi.waitFor(() => {
+    expect(screen.getByText("1 thread.")).toBeInTheDocument();
+  });
+
   expect(global.fetch).toHaveBeenCalledTimes(2);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/query/foo");
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
 
-  await vi.waitFor(() => {
-    expect(screen.getByText("1 thread.")).toBeInTheDocument();
-  });
   expect(screen.getByText("todo")).toBeInTheDocument();
   expect(screen.getByText("due:1970-01-01")).toBeInTheDocument();
 
@@ -264,30 +316,37 @@ test("tag edits work", async () => {
     ...window.location,
     search: '?query=foo'
   });
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => [
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/query/foo":
+        return Promise.resolve({ ok: true, json: () => [
             {thread_id: "foo", authors: "authors", subject: "subject", tags: ["test"], total_messages: 1, newest_date: 1000, oldest_date: 100}
-        ]})
-        .mockResolvedValueOnce({ ok: true, json: () => ["foo", "foobar"] })
-        .mockResolvedValueOnce({ ok: true })
-        .mockResolvedValueOnce({ ok: true });
+        ]});
+      case "http://localhost:5000/api/tags":
+        return Promise.resolve({ ok: true, json: () => ["foo", "foobar"] });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   render(() => <Kukulkan Threads={SearchThreads}/>);
-  expect(global.fetch).toHaveBeenCalledTimes(2);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/query/foo");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-
   await vi.waitFor(() => {
     expect(screen.getByText("1 thread.")).toBeInTheDocument();
   });
 
+  expect(global.fetch).toHaveBeenCalledTimes(2);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/query/foo");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
+
   await userEvent.type(document.body, "t");
-  await userEvent.type(document.querySelector("#kukulkan-editTagBox"), "-test foobar{enter}{enter}");
+  await userEvent.type(document.querySelector("#kukulkan-editTagBox"), "-test foobar{enter}");
 
   expect(global.fetch).toHaveBeenCalledTimes(4);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/remove/thread/foo/test");
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/add/thread/foo/foobar");
   expect(screen.queryByText("test")).not.toBeInTheDocument();
   expect(screen.getByText("foobar")).toBeInTheDocument();
+
+  expect(window.open).toHaveBeenCalledTimes(0);
 });
 
 test("tag edits with multiple selection work", async () => {
@@ -295,31 +354,34 @@ test("tag edits with multiple selection work", async () => {
     ...window.location,
     search: '?query=foo'
   });
-  global.fetch
-        .mockResolvedValueOnce({ ok: true, json: () => [
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/query/foo":
+        return Promise.resolve({ ok: true, json: () => [
             {thread_id: "foo", authors: "authors", subject: "subject", tags: ["test1"], total_messages: 1, newest_date: 1000, oldest_date: 100},
             {thread_id: "bar", authors: "authors", subject: "subject", tags: ["test2"], total_messages: 1, newest_date: 1000, oldest_date: 100}
-        ]})
-        .mockResolvedValueOnce({ ok: true, json: () => ["foo", "foobar"] })
-        .mockResolvedValueOnce({ ok: true })
-        .mockResolvedValueOnce({ ok: true })
-        .mockResolvedValueOnce({ ok: true })
-        .mockResolvedValueOnce({ ok: true });
+        ]});
+      case "http://localhost:5000/api/tags":
+        return Promise.resolve({ ok: true, json: () => ["foo", "foobar"] });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
   render(() => <Kukulkan Threads={SearchThreads}/>);
-  expect(global.fetch).toHaveBeenCalledTimes(2);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/query/foo");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-
   await vi.waitFor(() => {
     expect(screen.getByText("2 threads.")).toBeInTheDocument();
   });
+
+  expect(global.fetch).toHaveBeenCalledTimes(2);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/query/foo");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
 
   await userEvent.type(document.body, " ");
   await userEvent.type(document.body, "j");
   await userEvent.type(document.body, " ");
 
   await userEvent.type(document.body, "t");
-  await userEvent.type(document.querySelector("#kukulkan-editTagBox"), "-test1 foobar{enter}{enter}");
+  await userEvent.type(document.querySelector("#kukulkan-editTagBox"), "-test1 foobar{enter}");
 
   expect(global.fetch).toHaveBeenCalledTimes(6);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/remove/thread/foo/test1");

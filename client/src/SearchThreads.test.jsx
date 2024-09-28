@@ -17,12 +17,14 @@ test("exports SearchThreads", () => {
 });
 
 test("renders components", () => {
-  const { container } = render(() => <SearchThreads threads={threads} index={() => 0} activeThread={() => 0} selectedThreads={() => []}/>);
+  const { container } = render(() => <SearchThreads threads={() => threads} index={() => 0} activeThread={() => 0}
+    selectedThreads={() => []} setQuery={() => []}/>);
   expect(container.querySelector("div")).not.toBe(undefined);
 });
 
 test("shows threads", () => {
-  const { container } = render(() => <SearchThreads threads={[threads[0], threads[0]]} index={() => 0} activeThread={() => 2} selectedThreads={() => []}/>);
+  const { container } = render(() => <SearchThreads threads={() => [threads[0], threads[0]]} index={() => 0} activeThread={() => 2}
+    selectedThreads={() => []} setQuery={() => []}/>);
 
   expect(container.querySelectorAll(".kukulkan-thread").length).toBe(2);
   expect(container.querySelectorAll(".kukulkan-thread.active").length).toBe(0);
@@ -37,7 +39,8 @@ test("shows threads", () => {
 });
 
 test("sets active and selected classes", () => {
-  const { container } = render(() => <SearchThreads threads={threads} index={() => 0} activeThread={() => 0} selectedThreads={() => [0]}/>);
+  const { container } = render(() => <SearchThreads threads={() => threads} index={() => 0} activeThread={() => 0}
+    selectedThreads={() => [0]} setQuery={() => []}/>);
 
   expect(container.querySelectorAll(".kukulkan-thread").length).toBe(1);
   expect(container.querySelectorAll(".kukulkan-thread.active").length).toBe(1);
@@ -46,8 +49,8 @@ test("sets active and selected classes", () => {
 
 test("sets active threads on click", async () => {
   const setActiveThread = vi.fn(),
-        { container } = render(() => <SearchThreads threads={threads} index={() => 0} activeThread={() => 0}
-          selectedThreads={() => []} setActiveThread={setActiveThread}/>);
+        { container } = render(() => <SearchThreads threads={() => threads} index={() => 0} activeThread={() => 0}
+          selectedThreads={() => []} setActiveThread={setActiveThread} setQuery={() => []}/>);
 
   expect(container.querySelectorAll(".kukulkan-thread").length).toBe(1);
 

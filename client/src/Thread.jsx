@@ -52,7 +52,7 @@ const filterThread = (msg, thread) => {
 export const Thread = (props) => {
   const [searchParams] = createSignal(window.location.search),
         [threadId] = createSignal((new URLSearchParams(searchParams())).get("id")),
-        [thread] = createResource(threadId(), fetchThread),
+        [thread] = createResource(threadId, fetchThread),
         [filteredThread, setFilteredThread] = createSignal(),
         [allTags] = createResource(fetchAllTags),
         [activeMessage, setActiveMessage] = createSignal();

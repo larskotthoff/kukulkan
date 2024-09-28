@@ -16,12 +16,14 @@ test("exports TodoThreads", () => {
 });
 
 test("renders components", () => {
-  const { container } = render(() => <TodoThreads threads={threads} index={() => 0} activeThread={() => 0} selectedThreads={() => []}/>);
+  const { container } = render(() => <TodoThreads threads={() => threads} index={() => 0} activeThread={() => 0}
+    selectedThreads={() => []} setQuery={() => []}/>);
   expect(container.querySelector("div")).not.toBe(undefined);
 });
 
 test("shows threads", () => {
-  const { container } = render(() => <TodoThreads threads={[threads[0], threads[0]]} index={() => 0} activeThread={() => 2} selectedThreads={() => []}/>);
+  const { container } = render(() => <TodoThreads threads={() => [threads[0], threads[0]]} index={() => 0}
+    activeThread={() => 2} selectedThreads={() => []} setQuery={() => []}/>);
 
   expect(container.querySelectorAll(".kukulkan-thread").length).toBe(2);
   expect(container.querySelectorAll(".kukulkan-thread.active").length).toBe(0);
@@ -34,7 +36,8 @@ test("shows threads", () => {
 });
 
 test("sets active and selected classes", () => {
-  const { container } = render(() => <TodoThreads threads={threads} index={() => 0} activeThread={() => 0} selectedThreads={() => [0]}/>);
+  const { container } = render(() => <TodoThreads threads={() => threads} index={() => 0} activeThread={() => 0}
+    selectedThreads={() => [0]} setQuery={() => []}/>);
 
   expect(container.querySelectorAll(".kukulkan-thread").length).toBe(1);
   expect(container.querySelectorAll(".kukulkan-thread.active").length).toBe(1);
@@ -43,8 +46,8 @@ test("sets active and selected classes", () => {
 
 test("sets active thread on click", async () => {
   const setActiveThread = vi.fn(),
-        { container } = render(() => <TodoThreads threads={threads} index={() => 0} activeThread={() => 0}
-          selectedThreads={() => []} setActiveThread={setActiveThread}/>);
+        { container } = render(() => <TodoThreads threads={() => threads} index={() => 0} activeThread={() => 0}
+          selectedThreads={() => []} setActiveThread={setActiveThread} setQuery={() => []}/>);
 
   expect(container.querySelectorAll(".kukulkan-thread").length).toBe(1);
 
@@ -62,47 +65,56 @@ test("shows due dates correctly", () => {
         tags = JSON.parse(JSON.stringify(threads[0].tags));
 
   t[0].tags = tags.concat("due:" + (new Date(now.getTime() - 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
-  render(() => <TodoThreads threads={t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}/>);
+  render(() => <TodoThreads threads={() => t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}
+    setQuery={() => []}/>);
   expect(screen.getByText("overdue!")).toBeInTheDocument();
   cleanup();
 
   t[0].tags = tags.concat("due:" + now.toISOString().split('T')[0]);
-  render(() => <TodoThreads threads={t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}/>);
+  render(() => <TodoThreads threads={() => t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}
+    setQuery={() => []}/>);
   expect(screen.getByText("今日")).toBeInTheDocument();
   cleanup();
 
   t[0].tags = tags.concat("due:" + (new Date(now.getTime() + 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
-  render(() => <TodoThreads threads={t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}/>);
+  render(() => <TodoThreads threads={() => t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}
+    setQuery={() => []}/>);
   expect(screen.getByText("明日")).toBeInTheDocument();
   cleanup();
 
   t[0].tags = tags.concat("due:" + (new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
-  render(() => <TodoThreads threads={t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}/>);
+  render(() => <TodoThreads threads={() => t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}
+    setQuery={() => []}/>);
   expect(screen.getByText("2日")).toBeInTheDocument();
   cleanup();
 
   t[0].tags = tags.concat("due:" + (new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
-  render(() => <TodoThreads threads={t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}/>);
+  render(() => <TodoThreads threads={() => t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}
+    setQuery={() => []}/>);
   expect(screen.getByText("2週")).toBeInTheDocument();
   cleanup();
 
   t[0].tags = tags.concat("due:" + (new Date(now.getTime() + 31 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
-  render(() => <TodoThreads threads={t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}/>);
+  render(() => <TodoThreads threads={() => t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}
+    setQuery={() => []}/>);
   expect(screen.getByText("4週")).toBeInTheDocument();
   cleanup();
 
   t[0].tags = tags.concat("due:" + (new Date(now.getTime() + 100 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
-  render(() => <TodoThreads threads={t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}/>);
+  render(() => <TodoThreads threads={() => t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}
+    setQuery={() => []}/>);
   expect(screen.getByText("3月")).toBeInTheDocument();
   cleanup();
 
   t[0].tags = tags.concat("due:" + (new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
-  render(() => <TodoThreads threads={t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}/>);
+  render(() => <TodoThreads threads={() => t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}
+    setQuery={() => []}/>);
   expect(screen.getByText("12月")).toBeInTheDocument();
   cleanup();
 
   t[0].tags = tags.concat("due:" + (new Date(now.getTime() + 1000 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
-  render(() => <TodoThreads threads={t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}/>);
+  render(() => <TodoThreads threads={() => t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}
+    setQuery={() => []}/>);
   expect(screen.getByText("3年")).toBeInTheDocument();
 
   vi.useRealTimers();
@@ -119,7 +131,8 @@ test("sorts threads by due date", () => {
 });
 
 test("shows calendar when there are due dates, but not otherwise", () => {
-  let { container } = render(() => <TodoThreads threads={threads} index={() => 0} activeThread={() => 1} selectedThreads={() => []}/>);
+  let { container } = render(() => <TodoThreads threads={() => threads} index={() => 0} activeThread={() => 1}
+    selectedThreads={() => []} setQuery={() => []}/>);
   expect(container.querySelector(".calendar")).toBe(null);
   cleanup();
 
@@ -127,7 +140,8 @@ test("shows calendar when there are due dates, but not otherwise", () => {
         tags = JSON.parse(JSON.stringify(threads[0].tags));
   t[0].tags = tags.concat("due:1970-01-01");
 
-  container = (render(() => <TodoThreads threads={t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}/>)).container;
+  container = (render(() => <TodoThreads threads={() => t} index={() => 0} activeThread={() => 1}
+    selectedThreads={() => []} setQuery={() => []}/>)).container;
   expect(container.querySelector(".calendar")).not.toBe(null);
 });
 
@@ -140,13 +154,15 @@ test("first calendar date is today or earliest overdue", () => {
         tags = JSON.parse(JSON.stringify(threads[0].tags));
 
   t[0].tags = tags.concat("due:" + (new Date(now.getTime() + 10 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
-  render(() => <TodoThreads threads={t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}/>);
+  render(() => <TodoThreads threads={() => t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}
+    setQuery={() => []}/>);
   expect(screen.getByText("Jul 01")).toBeInTheDocument();
   expect(screen.queryByText("Jun 30")).not.toBeInTheDocument();
   cleanup();
 
   t[0].tags = tags.concat("due:" + (new Date(now.getTime() - 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
-  render(() => <TodoThreads threads={t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}/>);
+  render(() => <TodoThreads threads={() => t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}
+    setQuery={() => []}/>);
   expect(screen.getByText("Jun 30")).toBeInTheDocument();
 
   vi.useRealTimers();
@@ -163,7 +179,8 @@ test("last calendar date is last due", () => {
 
   msg1.tags = tags.concat("due:" + (new Date(now.getTime() + 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
   msg2.tags = tags.concat("due:" + (new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
-  render(() => <TodoThreads threads={[msg1, msg2]} index={() => 0} activeThread={() => 1} selectedThreads={() => []}/>);
+  render(() => <TodoThreads threads={() => [msg1, msg2]} index={() => 0} activeThread={() => 1} selectedThreads={() => []}
+    setQuery={() => []}/>);
   expect(screen.getByText("Jul 01")).toBeInTheDocument();
   expect(screen.getByText("31")).toBeInTheDocument();
   expect(screen.queryByText("Aug 01")).not.toBeInTheDocument();
@@ -185,7 +202,8 @@ test("todo boxes shown next to calendar dates for emails with due dates", () => 
   msg1.tags = tags.concat("due:" + (new Date(now.getTime() + 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
   msg2.tags = tags.concat("due:" + (new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
   msg3.tags = tags.concat("due:" + (new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
-  const { container, getByTestId } = render(() => <TodoThreads threads={[msg1, msg2, msg3, msg4]} index={() => 0} activeThread={() => 1} selectedThreads={() => []}/>);
+  const { container, getByTestId } = render(() => <TodoThreads threads={() => [msg1, msg2, msg3, msg4]} index={() => 0}
+    activeThread={() => 1} selectedThreads={() => []} setQuery={() => []}/>);
   expect(container.querySelectorAll(".calendar-box").length).toBe(3);
   expect(getByTestId("Tue Jul 02 2024").querySelectorAll(".calendar-box").length).toBe(1);
   expect(getByTestId("Wed Jul 31 2024").querySelectorAll(".calendar-box").length).toBe(2);
@@ -203,7 +221,8 @@ test("clicking on todo boxes changes active thread", async () => {
   msg1.tags = tags.concat("due:1970-01-01");
   msg2.tags = tags.concat("due:1970-01-02");
   msg3.tags = tags.concat("due:1970-01-02");
-  const { container } = render(() => <TodoThreads threads={[msg1, msg2, msg3]} index={() => 0} activeThread={() => 0} selectedThreads={() => []} setActiveThread={setActiveThread}/>);
+  const { container } = render(() => <TodoThreads threads={() => [msg1, msg2, msg3]} index={() => 0} activeThread={() => 0}
+    selectedThreads={() => []} setActiveThread={setActiveThread} setQuery={() => []}/>);
   expect(container.querySelectorAll(".calendar-box").length).toBe(3);
 
   await userEvent.click(container.querySelectorAll(".calendar-box")[0]);
