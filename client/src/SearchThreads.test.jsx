@@ -2,7 +2,7 @@ import { afterEach, expect, test, vi } from "vitest";
 import { cleanup, render, screen } from "@solidjs/testing-library";
 import { userEvent } from "@testing-library/user-event";
 
-import { IndexThreads } from "./IndexThreads.jsx";
+import { SearchThreads } from "./SearchThreads.jsx";
 import { renderDateNumThread } from "./utils.js";
 
 afterEach(() => {
@@ -12,17 +12,17 @@ afterEach(() => {
 const threads = [{authors: "fooAuthor, barAuthor", subject: "test", tags:
   ["fooTag", "barTag"], total_messages: 2, newest_date: 1000, oldest_date: 100}];
 
-test("exports IndexThreads", () => {
-  expect(IndexThreads).not.toBe(undefined);
+test("exports SearchThreads", () => {
+  expect(SearchThreads).not.toBe(undefined);
 });
 
 test("renders components", () => {
-  const { container } = render(() => <IndexThreads threads={threads} index={() => 0} activeThread={() => 0} selectedThreads={() => []}/>);
+  const { container } = render(() => <SearchThreads threads={threads} index={() => 0} activeThread={() => 0} selectedThreads={() => []}/>);
   expect(container.querySelector("div")).not.toBe(undefined);
 });
 
 test("shows threads", () => {
-  const { container } = render(() => <IndexThreads threads={[threads[0], threads[0]]} index={() => 0} activeThread={() => 2} selectedThreads={() => []}/>);
+  const { container } = render(() => <SearchThreads threads={[threads[0], threads[0]]} index={() => 0} activeThread={() => 2} selectedThreads={() => []}/>);
 
   expect(container.querySelectorAll(".kukulkan-thread").length).toBe(2);
   expect(container.querySelectorAll(".kukulkan-thread.active").length).toBe(0);
@@ -37,7 +37,7 @@ test("shows threads", () => {
 });
 
 test("sets active and selected classes", () => {
-  const { container } = render(() => <IndexThreads threads={threads} index={() => 0} activeThread={() => 0} selectedThreads={() => [0]}/>);
+  const { container } = render(() => <SearchThreads threads={threads} index={() => 0} activeThread={() => 0} selectedThreads={() => [0]}/>);
 
   expect(container.querySelectorAll(".kukulkan-thread").length).toBe(1);
   expect(container.querySelectorAll(".kukulkan-thread.active").length).toBe(1);
@@ -46,7 +46,7 @@ test("sets active and selected classes", () => {
 
 test("sets active threads on click", async () => {
   const setActiveThread = vi.fn(),
-        { container } = render(() => <IndexThreads threads={threads} index={() => 0} activeThread={() => 0}
+        { container } = render(() => <SearchThreads threads={threads} index={() => 0} activeThread={() => 0}
           selectedThreads={() => []} setActiveThread={setActiveThread}/>);
 
   expect(container.querySelectorAll(".kukulkan-thread").length).toBe(1);

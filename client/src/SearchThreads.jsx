@@ -5,7 +5,7 @@ import { ColorChip } from "./ColorChip.jsx";
 import { renderDateNumThread } from "./utils.js";
 import { simulateKeyPress } from "./UiUtils.jsx";
 
-export const IndexThreads = (props) => {
+export const SearchThreads = (props) => {
   return (
     <For each={props.threads}>
       {(thread, index) =>
