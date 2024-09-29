@@ -1205,6 +1205,66 @@ test("data assembled correctly for sending reply", async () => {
   expect(screen.getByText("Message sent.")).toBeInTheDocument();
 });
 
+test("data assembled correctly when retrieving from localStorage w/o editing", async () => {
+  localStorage.setItem("draft-compose-to", "to@test.com\notherto@test.com");
+  localStorage.getItem("draft-compose-to");
+  localStorage.setItem("draft-compose-cc", "foo@bar.com");
+  localStorage.setItem("draft-compose-subject", "testsubject");
+  localStorage.setItem("draft-compose-body", "testbody");
+
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/accounts/":
+        return Promise.resolve({ ok: true, json: () => accounts });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
+  render(() => <Write/>);
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("Send")).toBeInTheDocument();
+  });
+  expect(global.fetch).toHaveBeenCalledTimes(3);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
+
+  global.fetch.mockResolvedValue({ ok: true, json: () => [] });
+
+  const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
+      json: () => Promise.resolve({send_id: 0})
+    });
+  let eventSourceInstance;
+  vi.spyOn(global, 'EventSource').mockImplementation((url) => {
+      eventSourceInstance = new MockEventSource(url);
+      return eventSourceInstance;
+  });
+  await userEvent.click(screen.getByText("Send"));
+  expect(screen.queryByText("Error: No to address. Not sending.")).not.toBeInTheDocument();
+  expect(fetchSpy).toHaveBeenCalledTimes(1);
+  expect(fetchSpy).toHaveBeenCalledWith("http://localhost:5000/api/send",
+    expect.objectContaining({
+      method: 'POST',
+      body: expect.any(FormData),
+    }));
+
+  eventSourceInstance.simulateMessage({send_status: 0, send_output: ""});
+
+  const options = fetchSpy.mock.calls[0][1];
+  expect(options.body.get("refId")).toBe("null");
+  expect(options.body.get("action")).toBe("compose");
+  expect(options.body.get("from")).toBe("bar");
+  expect(options.body.get("to")).toBe("to@test.com\notherto@test.com");
+  expect(options.body.get("cc")).toBe("foo@bar.com");
+  expect(options.body.get("bcc")).toBe("");
+  expect(options.body.get("tags")).toBe("");
+  expect(options.body.get("subject")).toBe("testsubject");
+  expect(options.body.get("body")).toBe("testbody");
+
+  expect(screen.getByText("Message sent.")).toBeInTheDocument();
+});
+
 test("error when mail cannot be sent", async () => {
   global.fetch = vi.fn((url) => {
     switch(url) {

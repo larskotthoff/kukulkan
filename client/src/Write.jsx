@@ -154,7 +154,8 @@ export const Write = (props) => {
     if(allTags.loading || accounts.loading || compose.loading || baseMessage.loading) return;
 
     let defAcct = accounts()?.find(a => a.default),
-        from = defAcct?.id;
+        from = defAcct?.id,
+        subject = "";
 
     setMessage("files", []);
     if(baseMessage()) {
@@ -192,13 +193,10 @@ export const Write = (props) => {
         from = acct?.id;
       }
 
-      const subj = prefix(baseMessage()?.subject);
-      setMessage("subject", subj);
-      document.title = `Compose: ${subj}`;
+      subject = prefix(baseMessage()?.subject);
+      document.title = `Compose: ${subject}`;
 
       [defTo, defCc] = makeToCc(baseMessage(), action, accounts(), mode);
-    } else {
-      setMessage("subject", "");
     }
 
     if(localStorage.getItem(`draft-${draftKey()}-from`)) {
@@ -206,6 +204,12 @@ export const Write = (props) => {
     } else if(!from) {
       from = defAcct?.id;
     }
+    setMessage("from", from);
+    if(localStorage.getItem(`draft-${draftKey()}-subject`)) {
+      subject = localStorage.getItem(`draft-${draftKey()}-subject`);
+      document.title = `Compose: ${subject}`;
+    }
+    setMessage("subject", subject);
     setMessage("from", from);
     setMessage("to", localStorage.getItem(`draft-${draftKey()}-to`)?.split('\n') || defTo);
     setMessage("cc", localStorage.getItem(`draft-${draftKey()}-cc`)?.split('\n') || defCc);
@@ -358,7 +362,10 @@ export const Write = (props) => {
           <Grid container spacing={1} class="inputFieldSet">
             <Grid item>To:</Grid>
             <Grid item xs>
-              <AddrComplete addrAttr="to" message={message} setMessage={setMessage} draftKey={draftKey} data-testid="to" sp={props.sp}/>
+              <AddrComplete addrAttr="to" message={message} setMessage={setMessage}
+                draftKey={draftKey}
+                data-testid="to"
+                sp={props.sp}/>
             </Grid>
           </Grid>
           <Grid container spacing={1} class="inputFieldSet">
@@ -367,8 +374,7 @@ export const Write = (props) => {
               <AddrComplete addrAttr="cc" message={message} setMessage={setMessage}
                 draftKey={draftKey}
                 data-testid="cc"
-                sp={props.sp}
-                defVal={localStorage.getItem(`draft-${draftKey()}-cc`)?.split('\n') || defCc}/>
+                sp={props.sp}/>
             </Grid>
           </Grid>
           <Grid container spacing={1} class="inputFieldSet">
@@ -377,15 +383,14 @@ export const Write = (props) => {
               <AddrComplete addrAttr="bcc" message={message} setMessage={setMessage}
                 draftKey={draftKey}
                 data-testid="bcc"
-                sp={props.sp}
-                defVal={localStorage.getItem(`draft-${draftKey()}-bcc`)?.split('\n') || []}/>
+                sp={props.sp}/>
             </Grid>
           </Grid>
           <Grid container spacing={1} class="inputFieldSet">
             <Grid item>Subject:</Grid>
             <Grid item xs><TextField
               variant="standard"
-              defaultValue={localStorage.getItem(`draft-${draftKey()}-subject`) || prefix(baseMessage()?.subject)}
+              value={message.subject || ""}
               data-testid="subject"
               onChange={(ev) => {
                 setMessage("subject", ev.target.value);
