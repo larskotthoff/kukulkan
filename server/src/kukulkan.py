@@ -55,6 +55,7 @@ cleaner = Cleaner(javascript=True,
 
 send_queue = queue.Queue()
 
+
 # claude helped with this
 def feed_input(process, buffer, bytes_written):
     processed = 0
@@ -107,7 +108,7 @@ def email_header(emails):
     tmp = email.header.Header()
     if len(emails) > 0:
         parts = emails.split('\n')
-        for i,_ in enumerate(parts):
+        for i, _ in enumerate(parts):
             try:
                 [name, address] = parts[i].split('<')
                 if name.isascii():
@@ -178,7 +179,7 @@ def create_app():
     class Address(Resource):
         def get(self, query_string):
             # not supported by API...
-            addrs = os.popen(f"notmuch address --output=sender --output=recipients {query_string.strip().replace('\n\r', '')}").read()
+            addrs = os.popen("notmuch address --output=sender --output=recipients " + query_string.strip().replace('\n\r', '')).read()
             return list(filter(lambda a: re.search(query_string, a, re.IGNORECASE), addrs.split('\n')))[:10]
 
     class Thread(Resource):
@@ -584,8 +585,8 @@ def get_attachments(email_msg, content=False):
             if part.get_content_type() == "text/calendar" or part.get_content_type() == "text/x-vcalendar":
                 # create "preview"
                 try:
-                    if "BEGIN:VCALENDAR" in ctnt and not "END:VCALENDAR" in ctnt:
-                        ctnt += "END:VCALENDAR" # thanks outlook!
+                    if "BEGIN:VCALENDAR" in ctnt and "END:VCALENDAR" not in ctnt:
+                        ctnt += "END:VCALENDAR"  # thanks outlook!
                     gcal = icalendar.Calendar.from_ical(ctnt)
                     timezone = None
                     status = None
@@ -617,7 +618,7 @@ def get_attachments(email_msg, content=False):
 
                             # this assumes that start and end are the same timezone
                             timezone = str(component.get("dtstart").dt.tzinfo)
-                        except AttributeError: # only date, no time
+                        except AttributeError:  # only date, no time
                             dtstart = component.get("dtstart").dt.strftime("%c")
                             dtend = component.get("dtend").dt.strftime("%c")
                         try:
