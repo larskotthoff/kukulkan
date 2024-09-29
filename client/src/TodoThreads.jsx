@@ -116,6 +116,13 @@ export const TodoThreads = (props) => {
                 props.setActiveThread(index());
                 simulateKeyPress('Enter');
               }}
+              onmouseenter={() => {
+                document.getElementsByClassName("calendar-box")[index()]?.classList.add("highlight");
+                document.getElementsByClassName("calendar-box")[index()]?.scrollIntoView({block: "nearest"});
+              }}
+              onmouseleave={() => {
+                document.getElementsByClassName("calendar-box")[index()]?.classList.remove("highlight");
+              }}
             >
               <Grid item xs={12} sm={10} lg={4}>
                 <For each={thread.authors.split(/\s*[,|]\s*/)}>

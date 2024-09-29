@@ -157,6 +157,10 @@ body {
     display: inline-block;
     text-align: left;
 }
+.calendar-box.highlight {
+    background-color: red;
+}
+
 .selectMargin div {
     padding: 10px;
 }
