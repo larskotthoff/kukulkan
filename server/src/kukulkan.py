@@ -17,6 +17,8 @@ import queue
 import json
 import re
 
+from tempfile import mkstemp, NamedTemporaryFile
+
 import notmuch
 from flask import Flask, Response, current_app, g, send_file, send_from_directory, request, abort
 from werkzeug.utils import safe_join
@@ -28,13 +30,13 @@ from dateutil.rrule import rrulestr
 from recurrent.event_parser import RecurringEvent
 
 from M2Crypto import SMIME, BIO, X509
+from asn1crypto import cms
 
 from bs4 import BeautifulSoup
 
 import lxml
 from lxml_html_clean import Cleaner
 
-from tempfile import mkstemp, NamedTemporaryFile
 from gnupg import GPG
 
 cleaner = Cleaner(javascript=True,
@@ -86,7 +88,7 @@ def get_query(query_string, db=None, exclude=True):
 
 def get_message(message_id):
     """Get a single message."""
-    msgs = list(get_query('id:"{}"'.format(message_id), exclude=False).search_messages())
+    msgs = list(get_query(f'id:"{message_id}"', exclude=False).search_messages())
     if not msgs:
         abort(404)
     if len(msgs) > 1:
@@ -94,6 +96,7 @@ def get_message(message_id):
     return msgs[0]
 
 
+# pylint: disable=unused-argument
 def close_db(e=None):
     """Close the Database. Called after every request."""
     g.db.close()
@@ -104,14 +107,14 @@ def email_header(emails):
     tmp = email.header.Header()
     if len(emails) > 0:
         parts = emails.split('\n')
-        for i in range(0, len(parts)):
+        for i,_ in enumerate(parts):
             try:
                 [name, address] = parts[i].split('<')
                 if name.isascii():
                     tmp.append(name.strip(), 'ascii')
                 else:
                     tmp.append(name.strip(), 'utf8')
-                address = '<' + address
+                address = f"<{address}"
             except ValueError:  # only email address, no name
                 address = parts[i]
             tmp.append(address.strip() + ("," if i < (len(parts) - 1) else ""), 'ascii')
@@ -124,9 +127,9 @@ def create_app():
     app = Flask(__name__, static_folder="static")
     app.config["PROPAGATE_EXCEPTIONS"] = True
 
-    configPath = os.getenv("XDG_CONFIG_HOME") if os.getenv("XDG_CONFIG_HOME") else os.getenv("HOME") + os.path.sep + ".config"
+    config_path = os.getenv("XDG_CONFIG_HOME") if os.getenv("XDG_CONFIG_HOME") else os.getenv("HOME") + os.path.sep + ".config"
     try:
-        with open(configPath + os.path.sep + "kukulkan" + os.path.sep + "config", "r") as f:
+        with open(f"{config_path}{os.path.sep}kukulkan{os.path.sep}config", "r", encoding="utf8") as f:
             app.config.custom = json.load(f)
     except FileNotFoundError:
         app.logger.warning("Configuration file not found, setting empty config.")
@@ -175,14 +178,12 @@ def create_app():
     class Address(Resource):
         def get(self, query_string):
             # not supported by API...
-            addrs = os.popen("notmuch address --output=sender --output=recipients " + query_string.strip().replace('\n\r', '')).read()
-            return [a for a in
-                    filter(lambda a: re.search(query_string, a, re.IGNORECASE),
-                           addrs.split('\n'))][:10]
+            addrs = os.popen(f"notmuch address --output=sender --output=recipients {query_string.strip().replace('\n\r', '')}").read()
+            return list(filter(lambda a: re.search(query_string, a, re.IGNORECASE), addrs.split('\n')))[:10]
 
     class Thread(Resource):
         def get(self, thread_id):
-            threads = list(get_query('thread:"{}"'.format(thread_id), exclude=False).search_threads())
+            threads = list(get_query(f'thread:"{thread_id}"', exclude=False).search_threads())
             if not threads:
                 abort(404)
             if len(threads) > 1:
@@ -232,7 +233,7 @@ def create_app():
     @app.route("/api/raw_message/<path:message_id>")
     def download_raw_message(message_id):
         msg = get_message(message_id)
-        with open(msg.get_filename(), "r") as f:
+        with open(msg.get_filename(), "r", encoding="utf8") as f:
             content = f.read()
         return content
 
@@ -240,11 +241,11 @@ def create_app():
     def auth_message(message_id):
         msg = get_message(message_id)
         # https://npm.io/package/mailauth
-        return json.loads(os.popen("mailauth " + msg.get_filename()).read())['arc']['authResults']
+        return json.loads(os.popen(f"mailauth {msg.get_filename()}").read())['arc']['authResults']
 
     @app.route("/api/tag/<op>/<string:typ>/<path:nid>/<tag>")
     def change_tag(op, typ, nid, tag):
-        db_write = notmuch.Database(None, create=False, mode=notmuch.Database.MODE.READ_WRITE)
+        db_write = notmuch.Database(None, create=False, mode="rw")
         msgs = get_query(('id' if typ == "message" else typ) + ':"' + nid + '"' +
                           ' and ' + ('not ' if op == "add" else '') + 'tag:' + tag, db_write, False).search_messages()
         try:
@@ -268,12 +269,14 @@ def create_app():
         if not editcmd:
             abort(404)
 
+        # pylint: disable=consider-using-with
         tmp = NamedTemporaryFile(mode="w", delete=False, prefix="kukulkan-tmp-")
         try:
             tmp.write(request.values['body'])
             tmp.close()
-            subprocess.run(editcmd.split(' ') + [tmp.name])
-            tmp = open(tmp.name)
+            subprocess.run(editcmd.split(' ') + [tmp.name], check=True)
+            # pylint: disable=consider-using-with
+            tmp = open(tmp.name, encoding="utf8")
             return tmp.read()
         finally:
             tmp.close()
@@ -289,11 +292,11 @@ def create_app():
 
         if request.values['action'] == "forward":
             # attach attachments from original mail
-            refMsg = get_message(request.values['refId'])
-            refAtts = message_attachment(refMsg)
+            ref_msg = get_message(request.values['refId'])
+            ref_atts = message_attachment(ref_msg)
             for key in request.values.keys():
                 if key.startswith("attachment-") and key not in request.files:
-                    att = [tmp for tmp in refAtts if tmp["filename"] == request.values[key]][0]
+                    att = [tmp for tmp in ref_atts if tmp["filename"] == request.values[key]][0]
                     typ = att["content_type"].split('/', 1)
                     if isinstance(att["content"], bytes):
                         msg.add_attachment(att["content"], maintype=typ[0], subtype=typ[1], filename=att["filename"])
@@ -303,11 +306,11 @@ def create_app():
         if request.values['action'].startswith("reply-cal-"):
             # create new calendar reply attachment
             action = request.values['action'].split('-')[2].capitalize()
-            refMsg = get_message(request.values['refId'])
-            refAtts = message_attachment(refMsg)
+            ref_msg = get_message(request.values['refId'])
+            ref_atts = message_attachment(ref_msg)
             for key in request.values.keys():
                 if key.startswith("attachment-") and key not in request.files:
-                    att = [tmp for tmp in refAtts if tmp["filename"] == request.values[key]][0]
+                    att = [tmp for tmp in ref_atts if tmp["filename"] == request.values[key]][0]
                     typ = att["content_type"].split('/', 1)
                     gcal = icalendar.Calendar.from_ical(att["content"])
                     for component in gcal.walk("VEVENT"):
@@ -322,8 +325,8 @@ def create_app():
                         event["organizer"] = component["organizer"]
                         event["description"] = component["description"]
                         event["location"] = component["location"]
-                        event["summary"] = action + ": " + component["summary"]
-                        attendee = icalendar.vCalAddress('MAILTO:' + account["email"])
+                        event["summary"] = f"{action}: {component['summary']}"
+                        attendee = icalendar.vCalAddress(f'MAILTO:{account["email"]}')
                         attendee.params['cn'] = icalendar.vText(account["name"])
                         if action == "Accept":
                             attendee.params['partstat'] = icalendar.vText('ACCEPTED')
@@ -357,7 +360,7 @@ def create_app():
             msg = email.message_from_bytes(out.read())
 
         msg['Subject'] = request.values['subject']
-        msg['From'] = account["name"] + " <" + account["email"] + ">"
+        msg['From'] = f'{account["name"]} <{account["email"]}>'
         msg['To'] = email_header(request.values['to'])
         msg['Cc'] = email_header(request.values['cc'])
         msg['Bcc'] = email_header(request.values['bcc'])
@@ -367,18 +370,20 @@ def create_app():
         msg['Message-ID'] = msg_id
 
         if request.values['action'] == "reply" or request.values['action'].startswith("reply-cal-"):
-            refMsg = get_message(request.values['refId'])
-            refMsg = message_to_json(refMsg)
-            msg['In-Reply-To'] = '<' + refMsg['message_id'] + '>'
-            if refMsg['references']:
-                msg['References'] = refMsg['references'] + ' <' + refMsg['message_id'] + '>'
+            ref_msg = get_message(request.values['refId'])
+            ref_msg = message_to_json(ref_msg)
+            msg['In-Reply-To'] = f"<{ref_msg['message_id']}>"
+            if ref_msg['references']:
+                msg['References'] = f"{ref_msg['references']} <{ref_msg['message_id']}>"
             else:
-                msg['References'] = '<' + refMsg['message_id'] + '>'
+                msg['References'] = f"<{ref_msg['message_id']}>"
 
         # need to extract the request values for testing
         ra = request.values['action']
         if ra == "reply" or ra == "forward" or ra.startswith("reply-cal-"):
             rr = request.values['refId']
+        else:
+            rr = ""
         rt = request.values['tags']
 
         # claude helped with this
@@ -387,50 +392,52 @@ def create_app():
             bytes_msg = str(msg).encode()
             bytes_total = len(bytes_msg)
             bytes_written = queue.Queue()
-            p = subprocess.Popen(sendcmd.split(' '), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            input_thread = threading.Thread(target=feed_input, args=(p, io.BytesIO(bytes_msg), bytes_written))
-            input_thread.start()
+            with subprocess.Popen(sendcmd.split(' '), stdin=subprocess.PIPE,
+                                  stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE) as p:
+                input_thread = threading.Thread(target=feed_input, args=(p, io.BytesIO(bytes_msg), bytes_written))
+                input_thread.start()
 
-            while True:
-                send_queue.put({"send_id": send_id, "send_status": "sending", "progress": bytes_written.get() / bytes_total})
-                if input_thread.is_alive() == False:
-                    break
-            out, err = p.communicate()
-            send_output = out.decode() + err.decode()
+                while True:
+                    send_queue.put({"send_id": send_id, "send_status": "sending", "progress": bytes_written.get() / bytes_total})
+                    if input_thread.is_alive() is False:
+                        break
+                out, err = p.communicate()
+                send_output = out.decode() + err.decode()
 
-            if p.returncode == 0:
-                fname = account["save_sent_to"] + msg_id[1:-1] + ":2,S"
-                with open(fname, "w") as f:
-                    f.write(str(msg))
+                if p.returncode == 0:
+                    fname = f'{account["save_sent_to"]}{msg_id[1:-1]}:2,S'
+                    with open(fname, "w", encoding="utf8") as f:
+                        f.write(str(msg))
 
-                db_write = notmuch.Database(None, create=False, mode=notmuch.Database.MODE.READ_WRITE)
-                try:
-                    db_write.begin_atomic()
-                    if ra == "reply" or ra.startswith("reply-cal-"):
-                        refMsgs = get_query("id:" + rr, db_write, False).search_messages()
-                        for refMsg in refMsgs:
-                            refMsg.add_tag("replied")
-                            refMsg.tags_to_maildir_flags()
-                    elif ra == "forward":
-                        refMsgs = get_query("id:" + rr, db_write, False).search_messages()
-                        for refMsg in refMsgs:
-                            refMsg.add_tag("passed")
-                            refMsg.tags_to_maildir_flags()
+                    db_write = notmuch.Database(None, create=False, mode="rw")
+                    try:
+                        db_write.begin_atomic()
+                        if ra == "reply" or ra.startswith("reply-cal-"):
+                            ref_msgs = get_query(f"id:{rr}", db_write, False).search_messages()
+                            for ref_msg in ref_msgs:
+                                ref_msg.add_tag("replied")
+                                ref_msg.tags_to_maildir_flags()
+                        elif ra == "forward":
+                            ref_msgs = get_query(f"id:{rr}", db_write, False).search_messages()
+                            for ref_msg in ref_msgs:
+                                ref_msg.add_tag("passed")
+                                ref_msg.tags_to_maildir_flags()
 
-                    (notmuch_msg, status) = db_write.index_file(fname, True)
-                    notmuch_msg.maildir_flags_to_tags()
-                    for tag in rt.split(',') + account["additional_sent_tags"]:
-                        if tag != "":
-                            notmuch_msg.add_tag(tag)
-                    notmuch_msg.add_tag("sent")
-                    notmuch_msg.tags_to_maildir_flags()
-                    db_write.end_atomic()
-                finally:
-                    db_write.close()
-            else:
-                print(send_output)
+                        (notmuch_msg, _) = db_write.index_file(fname, True)
+                        notmuch_msg.maildir_flags_to_tags()
+                        for tag in rt.split(',') + account["additional_sent_tags"]:
+                            if tag != "":
+                                notmuch_msg.add_tag(tag)
+                        notmuch_msg.add_tag("sent")
+                        notmuch_msg.tags_to_maildir_flags()
+                        db_write.end_atomic()
+                    finally:
+                        db_write.close()
+                else:
+                    print(send_output)
 
-            send_queue.put({"send_id": send_id, "send_status": p.returncode, "send_output": send_output})
+                send_queue.put({"send_id": send_id, "send_status": p.returncode, "send_output": send_output})
 
         send_id = str(datetime.datetime.now().timestamp())
         threading.Thread(target=worker, args=(send_id,)).start()
@@ -470,7 +477,7 @@ def thread_to_json(thread):
     # necessary to get accurate tags and metadata, work around the notmuch API
     # only considering the matched messages
     messages = list(thread.get_messages())
-    tags = list(set([tag for msg in messages for tag in msg.get_tags()]))
+    tags = list({tag for msg in messages for tag in msg.get_tags()})
     tags.sort()
     return {
         "authors": thread.get_authors() if thread.get_authors() else "(no author)",
@@ -515,7 +522,6 @@ def get_nested_body(email_msg):
             content_html += tmp
         elif part.get_content_type() == "application/pkcs7-mime":
             # https://stackoverflow.com/questions/58427642/how-to-extract-data-from-application-pkcs7-mime-using-the-email-module-in-pyth
-            from asn1crypto import cms
             content_info = cms.ContentInfo.load(part.get_payload(decode=True))
             compressed_data = content_info['content']
             smime = compressed_data['encap_content_info']['content'].native
@@ -593,7 +599,7 @@ def get_attachments(email_msg, content=False):
                             people = []
                         try:
                             a = component.get("attendee")
-                            if type(a) == list:
+                            if isinstance(a, list):
                                 for c in a:
                                     people.append(c.params["CN"])
                                     if attendee_matches_addr(c, email_msg):
@@ -603,7 +609,7 @@ def get_attachments(email_msg, content=False):
                                 if attendee_matches_addr(a, email_msg):
                                     status = a.params["PARTSTAT"]
                         except KeyError:
-                            None
+                            pass
 
                         try:
                             dtstart = component.get("dtstart").dt.astimezone(tz.tzlocal()).strftime("%c")
@@ -637,8 +643,8 @@ def get_attachments(email_msg, content=False):
                             "recur": recur,
                             "rrule": rrule
                         }
-                except ValueError as e:
-                    None
+                except ValueError:
+                    pass
 
                 if preview and timezone:
                     preview["tz"] = timezone
@@ -654,7 +660,6 @@ def get_attachments(email_msg, content=False):
             # "nested" attachments
             if part.get_content_type() == "application/pkcs7-mime":
                 # https://stackoverflow.com/questions/58427642/how-to-extract-data-from-application-pkcs7-mime-using-the-email-module-in-pyth
-                from asn1crypto import cms
                 content_info = cms.ContentInfo.load(part.get_payload(decode=True))
                 compressed_data = content_info['content']
                 smime = compressed_data['encap_content_info']['content'].native
@@ -687,8 +692,8 @@ def message_to_json(message):
                     p7, data_bio = SMIME.smime_load_pkcs7_bio(BIO.MemoryBuffer(bytes(part)))
 
                     s = SMIME.SMIME()
-                    certStack = p7.get0_signers(X509.X509_Stack())
-                    s.set_x509_stack(certStack)
+                    cert_stack = p7.get0_signers(X509.X509_Stack())
+                    s.set_x509_stack(cert_stack)
                     accounts = current_app.config.custom["accounts"]
                     accts = [acct for acct in accounts if acct["email"] in
                              message.get_header("from").strip().replace('\t', ' ')]
@@ -707,8 +712,8 @@ def message_to_json(message):
                             try:
                                 s.verify(p7, data_bio, flags=SMIME.PKCS7_NOVERIFY | SMIME.PKCS7_DETACHED)
                                 signature = {"valid": None, "message": "self-signed or unavailable certificate(s)"}
-                            except SMIME.PKCS7_Error as e:
-                                signature = {"valid": False, "message": str(e)}
+                            except SMIME.PKCS7_Error as ee:
+                                signature = {"valid": False, "message": str(ee)}
                         else:
                             signature = {"valid": False, "message": str(e)}
                 except Exception as e:
@@ -718,25 +723,25 @@ def message_to_json(message):
                 sig = bytes(part.get_payload()[1])
                 gpg = GPG()
                 public_keys = gpg.list_keys()
-                fromAddr = message.get_header("from")
+                from_addr = message.get_header("from")
                 try:
-                    [name, address] = fromAddr.split('<')
-                    fromAddr = address.split('>')[0]
+                    [_, address] = from_addr.split('<')
+                    from_addr = address.split('>')[0]
                 except ValueError:
-                    fromAddr # only email address there anyway
+                    pass
 
                 found = False
                 for pkey in public_keys:
                     for uid in pkey.get('uids'):
-                        if fromAddr in uid:
+                        if from_addr in uid:
                             found = True
                 if not found and 'gpg-keyserver' in current_app.config.custom:
-                    current_app.logger.info("Key for " + fromAddr + " not found, attempting to download...")
+                    current_app.logger.info(f"Key for {from_addr} not found, attempting to download...")
                     # TODO: handle case where server is unreachable
-                    keys = gpg.search_keys(fromAddr, current_app.config.custom['gpg-keyserver'])
-                    if(len(keys) > 0):
+                    keys = gpg.search_keys(from_addr, current_app.config.custom['gpg-keyserver'])
+                    if len(keys) > 0:
                         for key in keys:
-                            current_app.logger.info("Getting key " + key.get('keyid'))
+                            current_app.logger.info(f"Getting key {key.get('keyid')}")
                             gpg.recv_keys(current_app.config.custom['gpg-keyserver'], key.get('keyid'))
                 osfile, path = mkstemp()
                 try:
@@ -747,7 +752,7 @@ def message_to_json(message):
                         if verified.valid:
                             signature = {"valid": True}
                         else:
-                            signature = {"valid": False, "message": verified.stderr}
+                            signature = {"valid": False, "message": verified.trust_text}
                 except Exception as e:
                     signature = {"valid": False, "message": str(e)}
                 finally:
@@ -772,10 +777,10 @@ def message_to_json(message):
         },
         "attachments": attachments,
         "notmuch_id": message.get_message_id(),
-        "tags": [tag for tag in message.get_tags()],
+        "tags": list(message.get_tags()),
         "signature": signature
     }
-    if '<' + res['message_id'] + '>' == res['in_reply_to']:
+    if f"<{res['message_id']}>" == res['in_reply_to']:
         # this should never happen, but apparently does
         res['in_reply_to'] = None
     return res
