@@ -4,8 +4,27 @@ import { userEvent } from "@testing-library/user-event";
 
 import { Write } from "./Write.jsx";
 
+// claude helped with this
+class MockEventSource {
+  constructor(url) {
+    this.url = url;
+    this.onmessage = null;
+  }
+
+  close() {
+  }
+
+  // Method to simulate receiving a message
+  simulateMessage(data) {
+    if(this.onmessage) {
+      this.onmessage({ data: JSON.stringify(data) });
+    }
+  }
+}
+
 beforeEach(() => {
   global.fetch = vi.fn();
+  vi.stubGlobal('EventSource', MockEventSource);
   localStorage.clear();
 });
 
@@ -813,14 +832,19 @@ test("localStorage deletes upon successful send", async () => {
   expect(localStorage.getItem("draft-compose-subject")).toBe("testsubject");
   expect(localStorage.getItem("draft-compose-body")).toBe("testbody");
 
-  global.fetch.mockResolvedValue({ ok: true, json: () => Promise.resolve({sendStatus: 0, sendOutput: ""}) });
+  global.fetch.mockResolvedValue({ ok: true, json: () => Promise.resolve({send_id: 0}) });
+  let eventSourceInstance;
+  vi.spyOn(global, 'EventSource').mockImplementation((url) => {
+      eventSourceInstance = new MockEventSource(url);
+      return eventSourceInstance;
+  });
   await userEvent.click(screen.getByText("Send"));
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/send",
     expect.objectContaining({
       method: 'POST',
       body: expect.any(FormData),
     }));
-  expect(global.fetch).toHaveBeenCalledTimes(7);
+  eventSourceInstance.simulateMessage({send_status: 0, send_output: ""});
 
   expect(screen.getByText("Message sent.")).toBeInTheDocument();
 
@@ -923,9 +947,15 @@ test("data assembled correctly for sending new email", async () => {
   await fireEvent.change(container.querySelector("input[type=file]"), { target: { files: [file] } });
 
   const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
-      json: () => Promise.resolve({sendStatus: 0, sendOutput: ""})
+      json: () => Promise.resolve({send_id: 0})
     });
+  let eventSourceInstance;
+  vi.spyOn(global, 'EventSource').mockImplementation((url) => {
+      eventSourceInstance = new MockEventSource(url);
+      return eventSourceInstance;
+  });
   await userEvent.click(screen.getByText("Send"));
+  eventSourceInstance.simulateMessage({send_status: 0, send_output: ""});
 
   expect(fetchSpy).toHaveBeenCalledTimes(1);
   expect(fetchSpy).toHaveBeenCalledWith("http://localhost:5000/api/send",
@@ -1001,9 +1031,15 @@ test("data assembled correctly for sending new email w/ template", async () => {
   expect(global.fetch).toHaveBeenCalledTimes(6);
 
   const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
-      json: () => Promise.resolve({sendStatus: 0, sendOutput: ""})
+      json: () => Promise.resolve({send_id: 0})
     });
+  let eventSourceInstance;
+  vi.spyOn(global, 'EventSource').mockImplementation((url) => {
+      eventSourceInstance = new MockEventSource(url);
+      return eventSourceInstance;
+  });
   await userEvent.click(screen.getByText("Send"));
+  eventSourceInstance.simulateMessage({send_status: 0, send_output: ""});
 
   expect(fetchSpy).toHaveBeenCalledTimes(1);
   expect(fetchSpy).toHaveBeenCalledWith("http://localhost:5000/api/send",
@@ -1054,9 +1090,15 @@ test("data assembled correctly for sending reply w/o editing", async () => {
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
 
   const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
-      json: () => Promise.resolve({sendStatus: 0, sendOutput: ""})
+      json: () => Promise.resolve({send_id: 0})
     });
+  let eventSourceInstance;
+  vi.spyOn(global, 'EventSource').mockImplementation((url) => {
+      eventSourceInstance = new MockEventSource(url);
+      return eventSourceInstance;
+  });
   await userEvent.click(screen.getByText("Send"));
+  eventSourceInstance.simulateMessage({send_status: 0, send_output: ""});
 
   expect(fetchSpy).toHaveBeenCalledTimes(1);
   expect(fetchSpy).toHaveBeenCalledWith("http://localhost:5000/api/send",
@@ -1133,9 +1175,15 @@ test("data assembled correctly for sending reply", async () => {
   expect(global.fetch).toHaveBeenCalledTimes(7);
 
   const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
-      json: () => Promise.resolve({sendStatus: 0, sendOutput: ""})
+      json: () => Promise.resolve({send_id: 0})
     });
+  let eventSourceInstance;
+  vi.spyOn(global, 'EventSource').mockImplementation((url) => {
+      eventSourceInstance = new MockEventSource(url);
+      return eventSourceInstance;
+  });
   await userEvent.click(screen.getByText("Send"));
+  eventSourceInstance.simulateMessage({send_status: 0, send_output: ""});
 
   expect(fetchSpy).toHaveBeenCalledTimes(1);
   expect(fetchSpy).toHaveBeenCalledWith("http://localhost:5000/api/send",
@@ -1189,9 +1237,15 @@ test("error when mail cannot be sent", async () => {
   await userEvent.type(getByTestId("subject").querySelector("input"), "testsubject");
 
   const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
-      json: () => Promise.resolve({sendStatus: 1, sendOutput: "foo"})
+      json: () => Promise.resolve({send_id: 0})
     });
+  let eventSourceInstance;
+  vi.spyOn(global, 'EventSource').mockImplementation((url) => {
+      eventSourceInstance = new MockEventSource(url);
+      return eventSourceInstance;
+  });
   await userEvent.click(screen.getByText("Send"));
+  eventSourceInstance.simulateMessage({send_status: 1, send_output: "foo"});
 
   expect(fetchSpy).toHaveBeenCalledTimes(1);
   expect(fetchSpy).toHaveBeenCalledWith("http://localhost:5000/api/send",
@@ -1254,10 +1308,17 @@ test("external editing", async () => {
   });
   expect(global.fetch).toHaveBeenCalledTimes(5);
   await userEvent.type(getByTestId("subject").querySelector("input"), " testsubject");
+
   const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
-      json: () => Promise.resolve({sendStatus: 0, sendOutput: ""})
+      json: () => Promise.resolve({send_id: 0})
     });
+  let eventSourceInstance;
+  vi.spyOn(global, 'EventSource').mockImplementation((url) => {
+      eventSourceInstance = new MockEventSource(url);
+      return eventSourceInstance;
+  });
   await userEvent.click(screen.getByText("Send"));
+  eventSourceInstance.simulateMessage({send_status: 0, send_output: ""});
 
   expect(fetchSpy).toHaveBeenCalledTimes(1);
   expect(fetchSpy).toHaveBeenCalledWith("http://localhost:5000/api/send",
@@ -1325,9 +1386,7 @@ test("shortcuts disabled while editing externally", async () => {
 
   expect(getByTestId("body").querySelector("textarea").value).toBe("[Editing externally...]");
 
-  const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
-      json: () => Promise.resolve({sendStatus: 0, sendOutput: ""})
-    });
+  const fetchSpy = vi.spyOn(global, 'fetch');
   await userEvent.type(document.body, "1");
   expect(getByTestId("body").querySelector("textarea").value).toBe("[Editing externally...]");
   await userEvent.type(document.body, "y");

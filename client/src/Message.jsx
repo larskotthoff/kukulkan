@@ -193,18 +193,18 @@ export const Message = (props) => {
   let elementTop;
 
   async function removeTag(tag) {
-    props.sl?.(true);
+    props.sp?.(0);
     const response = await fetch(apiURL(`api/tag/remove/message/${encodeURIComponent(msg.notmuch_id)}/${encodeURIComponent(tag)}`));
-    props.sl?.(false);
+    props.sp?.(100);
     if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
     setTags(tags().filter((t) => t !== tag));
     msg.tags = tags();
   }
 
   async function addTag(tag) {
-    props.sl?.(true);
+    props.sp?.(0);
     const response = await fetch(apiURL(`api/tag/add/message/${encodeURIComponent(msg.notmuch_id)}/${encodeURIComponent(tag)}`));
-    props.sl?.(false);
+    props.sp?.(100);
     if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
     const tmp = tags().concat(tag);
     setTags(tmp.sort());
@@ -242,7 +242,7 @@ export const Message = (props) => {
   });
 
   createEffect(() => {
-    props.sl?.(props.allTags.loading || msg.loading);
+    props.sp?.(100 * (1 - (props.allTags.loading + msg.loading) / 2));
   });
 
   mkShortcut(["r"],

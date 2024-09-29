@@ -1418,9 +1418,25 @@ def test_send(setup):
         with patch("builtins.open", mock_open()) as m:
             with app.test_client() as test_client:
                 response = test_client.post('/api/send', data=pd)
+                assert response.status_code == 202
+                sid = response.json["send_id"]
+                assert sid != None
+                response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
                 assert response.status_code == 200
-                assert response.json["sendStatus"] == 0
-                assert response.json["sendOutput"] == ""
+                status = None
+                response_iter = response.response.__iter__()
+                try:
+                    while (chunk := next(response_iter)) is not None:
+                        lines = chunk.decode().strip().split('\n\n')
+                        for line in lines:
+                            if line.startswith('data: '):
+                                data = json.loads(line[6:])
+                                if 'send_status' in data and data['send_status'] != 'sending':
+                                    status = data['send_status']
+                                    break
+                except StopIteration:
+                    pass
+                assert status == 0
             m.assert_called_once()
             args = m.call_args.args
             assert "kukulkan" in args[0]
@@ -1479,9 +1495,25 @@ def test_send_addresses(setup):
         with patch("builtins.open", mock_open()) as m:
             with app.test_client() as test_client:
                 response = test_client.post('/api/send', data=pd)
+                assert response.status_code == 202
+                sid = response.json["send_id"]
+                assert sid != None
+                response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
                 assert response.status_code == 200
-                assert response.json["sendStatus"] == 0
-                assert response.json["sendOutput"] == ""
+                status = None
+                response_iter = response.response.__iter__()
+                try:
+                    while (chunk := next(response_iter)) is not None:
+                        lines = chunk.decode().strip().split('\n\n')
+                        for line in lines:
+                            if line.startswith('data: '):
+                                data = json.loads(line[6:])
+                                if 'send_status' in data and data['send_status'] != 'sending':
+                                    status = data['send_status']
+                                    break
+                except StopIteration:
+                    pass
+                assert status == 0
             m.assert_called_once()
             args = m.call_args.args
             assert "kukulkan" in args[0]
@@ -1526,9 +1558,25 @@ def test_send_fail(setup):
 
     with app.test_client() as test_client:
         response = test_client.post('/api/send', data=pd)
+        assert response.status_code == 202
+        sid = response.json["send_id"]
+        assert sid != None
+        response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
         assert response.status_code == 200
-        assert response.json["sendStatus"] == 1
-        assert response.json["sendOutput"] == ""
+        status = None
+        response_iter = response.response.__iter__()
+        try:
+            while (chunk := next(response_iter)) is not None:
+                lines = chunk.decode().strip().split('\n\n')
+                for line in lines:
+                    if line.startswith('data: '):
+                        data = json.loads(line[6:])
+                        if 'send_status' in data and data['send_status'] != 'sending':
+                            status = data['send_status']
+                            break
+        except StopIteration:
+            pass
+        assert status == 1
 
 
 def test_send_attachment(setup):
@@ -1561,9 +1609,25 @@ def test_send_attachment(setup):
         with patch("builtins.open", mock_open()) as m:
             with app.test_client() as test_client:
                 response = test_client.post('/api/send', data=pd)
+                assert response.status_code == 202
+                sid = response.json["send_id"]
+                assert sid != None
+                response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
                 assert response.status_code == 200
-                assert response.json["sendStatus"] == 0
-                assert response.json["sendOutput"] == ""
+                status = None
+                response_iter = response.response.__iter__()
+                try:
+                    while (chunk := next(response_iter)) is not None:
+                        lines = chunk.decode().strip().split('\n\n')
+                        for line in lines:
+                            if line.startswith('data: '):
+                                data = json.loads(line[6:])
+                                if 'send_status' in data and data['send_status'] != 'sending':
+                                    status = data['send_status']
+                                    break
+                except StopIteration:
+                    pass
+                assert status == 0
             # WTF?
             if(os.getenv("CI") == "true"):
                 assert m.call_count == 2
@@ -1639,9 +1703,25 @@ def test_send_reply(setup):
                 with patch("builtins.open", mock_open()) as m:
                     with app.test_client() as test_client:
                         response = test_client.post('/api/send', data=pd)
+                        assert response.status_code == 202
+                        sid = response.json["send_id"]
+                        assert sid != None
+                        response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
                         assert response.status_code == 200
-                        assert response.json["sendStatus"] == 0
-                        assert response.json["sendOutput"] == ""
+                        status = None
+                        response_iter = response.response.__iter__()
+                        try:
+                            while (chunk := next(response_iter)) is not None:
+                                lines = chunk.decode().strip().split('\n\n')
+                                for line in lines:
+                                    if line.startswith('data: '):
+                                        data = json.loads(line[6:])
+                                        if 'send_status' in data and data['send_status'] != 'sending':
+                                            status = data['send_status']
+                                            break
+                        except StopIteration:
+                            pass
+                        assert status == 0
                     m.assert_called_once()
                     args = m.call_args.args
                     assert "kukulkan" in args[0]
@@ -1721,9 +1801,25 @@ def test_send_reply_more_refs(setup):
                 with patch("builtins.open", mock_open()) as m:
                     with app.test_client() as test_client:
                         response = test_client.post('/api/send', data=pd)
+                        assert response.status_code == 202
+                        sid = response.json["send_id"]
+                        assert sid != None
+                        response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
                         assert response.status_code == 200
-                        assert response.json["sendStatus"] == 0
-                        assert response.json["sendOutput"] == ""
+                        status = None
+                        response_iter = response.response.__iter__()
+                        try:
+                            while (chunk := next(response_iter)) is not None:
+                                lines = chunk.decode().strip().split('\n\n')
+                                for line in lines:
+                                    if line.startswith('data: '):
+                                        data = json.loads(line[6:])
+                                        if 'send_status' in data and data['send_status'] != 'sending':
+                                            status = data['send_status']
+                                            break
+                        except StopIteration:
+                            pass
+                        assert status == 0
                     m.assert_called_once()
                     args = m.call_args.args
                     assert "kukulkan" in args[0]
@@ -1804,9 +1900,25 @@ def test_send_forward(setup):
                 with patch("builtins.open", mock_open()) as m:
                     with app.test_client() as test_client:
                         response = test_client.post('/api/send', data=pd)
+                        assert response.status_code == 202
+                        sid = response.json["send_id"]
+                        assert sid != None
+                        response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
                         assert response.status_code == 200
-                        assert response.json["sendStatus"] == 0
-                        assert response.json["sendOutput"] == ""
+                        status = None
+                        response_iter = response.response.__iter__()
+                        try:
+                            while (chunk := next(response_iter)) is not None:
+                                lines = chunk.decode().strip().split('\n\n')
+                                for line in lines:
+                                    if line.startswith('data: '):
+                                        data = json.loads(line[6:])
+                                        if 'send_status' in data and data['send_status'] != 'sending':
+                                            status = data['send_status']
+                                            break
+                        except StopIteration:
+                            pass
+                        assert status == 0
                     m.assert_called_once()
                     args = m.call_args.args
                     assert "kukulkan" in args[0]
@@ -1888,9 +2000,25 @@ def test_send_forward_text_attachment(setup):
                 with patch("builtins.open", mock_open()) as m:
                     with app.test_client() as test_client:
                         response = test_client.post('/api/send', data=pd)
+                        assert response.status_code == 202
+                        sid = response.json["send_id"]
+                        assert sid != None
+                        response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
                         assert response.status_code == 200
-                        assert response.json["sendStatus"] == 0
-                        assert response.json["sendOutput"] == ""
+                        status = None
+                        response_iter = response.response.__iter__()
+                        try:
+                            while (chunk := next(response_iter)) is not None:
+                                lines = chunk.decode().strip().split('\n\n')
+                                for line in lines:
+                                    if line.startswith('data: '):
+                                        data = json.loads(line[6:])
+                                        if 'send_status' in data and data['send_status'] != 'sending':
+                                            status = data['send_status']
+                                            break
+                        except StopIteration:
+                            pass
+                        assert status == 0
                     m.assert_called_once()
                     args = m.call_args.args
                     assert "kukulkan" in args[0]
@@ -1972,9 +2100,25 @@ def test_send_sign(setup):
                 with patch.object(smime, "load_key") as smimload:
                     with app.test_client() as test_client:
                         response = test_client.post('/api/send', data=pd)
+                        assert response.status_code == 202
+                        sid = response.json["send_id"]
+                        assert sid != None
+                        response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
                         assert response.status_code == 200
-                        assert response.json["sendStatus"] == 0
-                        assert response.json["sendOutput"] == ""
+                        status = None
+                        response_iter = response.response.__iter__()
+                        try:
+                            while (chunk := next(response_iter)) is not None:
+                                lines = chunk.decode().strip().split('\n\n')
+                                for line in lines:
+                                    if line.startswith('data: '):
+                                        data = json.loads(line[6:])
+                                        if 'send_status' in data and data['send_status'] != 'sending':
+                                            status = data['send_status']
+                                            break
+                        except StopIteration:
+                            pass
+                        assert status == 0
                     smimload.assert_called_once()
                 smim.assert_called_once()
             m.assert_called_once()
@@ -2069,9 +2213,25 @@ def test_send_reply_cal(setup):
                     with patch("builtins.open", mock_open()) as m:
                         with app.test_client() as test_client:
                             response = test_client.post('/api/send', data=pd)
+                            assert response.status_code == 202
+                            sid = response.json["send_id"]
+                            assert sid != None
+                            response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
                             assert response.status_code == 200
-                            assert response.json["sendStatus"] == 0
-                            assert response.json["sendOutput"] == ""
+                            status = None
+                            response_iter = response.response.__iter__()
+                            try:
+                                while (chunk := next(response_iter)) is not None:
+                                    lines = chunk.decode().strip().split('\n\n')
+                                    for line in lines:
+                                        if line.startswith('data: '):
+                                            data = json.loads(line[6:])
+                                            if 'send_status' in data and data['send_status'] != 'sending':
+                                                status = data['send_status']
+                                                break
+                            except StopIteration:
+                                pass
+                            assert status == 0
                         m.assert_called_once()
                         args = m.call_args.args
                         assert "kukulkan" in args[0]

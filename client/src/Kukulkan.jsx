@@ -24,7 +24,7 @@ export const Kukulkan = (props) => {
         [allTags] = createResource(fetchAllTags);
 
   createEffect(() => {
-    props.sl?.(allTags.loading || threads.loading);
+    props.sp?.(100 * (1 - (allTags.loading + threads.loading) / 2));
   });
 
   createEffect(() => {
@@ -54,11 +54,14 @@ export const Kukulkan = (props) => {
               return apiURL(`api/tag/add/thread/${encodeURIComponent(thread.thread_id)}/${encodeURIComponent(edit)}`);
             }
           });
-      props.sl?.(true);
+      let done = 0;
+      props.sp?.(0);
       Promise.all(urls.map((u) => fetch(u).then((response) => {
+        done += 1;
+        props.sp?.(100 * done / urls.length);
         if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
       }))).then(() => mutate([...threads().slice(0, affectedThread), thread, ...threads().slice(affectedThread + 1)]))
-      .finally(() => props.sl?.(false));
+      .finally(() => props.sp?.(100));
     });
     setEditingTags("");
   };

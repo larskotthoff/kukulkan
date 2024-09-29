@@ -12,20 +12,20 @@ import { FetchedMessage } from "./Message.jsx";
 import { Write } from "./Write.jsx";
 
 render(() => {
-  const [loading, setLoading] = createSignal(false);
+  const [progress, setProgress] = createSignal(100);
 
   return (
   <>
-    <Show when={loading()}>
-      <LinearProgress spacing={1}/>
+    <Show when={progress() < 100}>
+      <LinearProgress variant="determinate" value={progress()} spacing={1}/>
     </Show>
     <ErrorBoundary fallback={(error) => <Alert severity="error">Error: {error}<pre>{error.stack}</pre></Alert>}>
       <Router>
-        <Route path="/" component={() => <Kukulkan Threads={SearchThreads} sl={setLoading}/>}/>
-        <Route path="/todo" component={() => <Kukulkan Threads={TodoThreads} sl={setLoading}/>}/>
-        <Route path="/thread" component={() => <Thread sl={setLoading}/>}/>
-        <Route path="/message" component={() => <FetchedMessage sl={setLoading}/>}/>
-        <Route path="/write" component={() => <Write sl={setLoading}/>}/>
+        <Route path="/" component={() => <Kukulkan Threads={SearchThreads} sp={setProgress}/>}/>
+        <Route path="/todo" component={() => <Kukulkan Threads={TodoThreads} sp={setProgress}/>}/>
+        <Route path="/thread" component={() => <Thread sp={setProgress}/>}/>
+        <Route path="/message" component={() => <FetchedMessage sp={setProgress}/>}/>
+        <Route path="/write" component={() => <Write sp={setProgress}/>}/>
       </Router>
     </ErrorBoundary>
   </>

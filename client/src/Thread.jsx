@@ -79,7 +79,7 @@ export const Thread = (props) => {
   });
 
   createEffect(() => {
-    props.sl?.(allTags.loading || thread.loading);
+    props.sp?.(100 * (1 - (allTags.loading + thread.loading) / 2));
   });
 
   mkShortcut(["Home"],

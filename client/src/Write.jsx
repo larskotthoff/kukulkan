@@ -57,9 +57,9 @@ const AddrComplete = (props) => {
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(async () => {
               try {
-                props.sl?.(true);
+                props.sp?.(0);
                 const response = await fetch(apiURL(`api/address/${encodeURIComponent(text)}`), { signal: controller.signal });
-                props.sl?.(false);
+                props.sp?.(100);
                 if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
                 resolve(response.json());
               } catch(_) {
@@ -150,8 +150,8 @@ export const Write = (props) => {
   document.title = "Compose: New Message";
 
   createEffect(() => {
+    props.sp?.(100 * (1 - (allTags.loading + accounts.loading + compose.loading + baseMessage.loading) / 4));
     if(allTags.loading || accounts.loading || compose.loading || baseMessage.loading) return;
-    props.sl?.(false);
 
     let defAcct = accounts()?.find(a => a.default),
         from = defAcct?.id;
@@ -251,6 +251,33 @@ export const Write = (props) => {
     return pre + text;
   };
 
+  const listenForUpdates = (sendId) => {
+    const eventSource = new EventSource(apiURL(`api/send_progress/${sendId}`));
+
+    eventSource.onmessage = function(message) {
+      const data = JSON.parse(message.data);
+
+      if(data.send_status === "sending") {
+        props.sp?.(Math.min(data.progress * 100, 99.9));
+      } else {
+        if(data.send_status === 0) {
+          props.sp?.(100);
+          setStatusMsg("Message sent.");
+          Object.keys(localStorage).filter(k => k.startsWith(`draft-${draftKey()}`))
+            .map(k => localStorage.removeItem(k));
+        } else {
+          setStatusMsg(`Error sending message: ${data.send_output}`);
+        }
+        eventSource.close();
+      }
+    };
+
+    eventSource.onerror = function(error) {
+      setStatusMsg(`Error: ${error}`);
+      eventSource.close();
+    };
+  };
+
   const sendMsg = () => {
     if(message.to.length === 0) {
       setStatusMsg(`Error: No to address. Not sending.`);
@@ -273,23 +300,14 @@ export const Write = (props) => {
     formData.append('body', message.body);
     message.files.map((f, i) => formData.append(`attachment-${i}`, f.dummy ? f.name : f));
 
-    props.sl?.(true);
+    props.sp?.(0);
     fetch(apiURL("api/send"), { method: 'POST', body: formData })
       .then((response) => response.json())
-      .then((result) => {
-        if(result.sendStatus === 0) {
-          setStatusMsg("Message sent.");
-          Object.keys(localStorage).filter(k => k.startsWith(`draft-${draftKey()}`))
-            .map(k => localStorage.removeItem(k));
-        } else {
-          setStatusMsg(`Error sending message: ${result.sendOutput}`);
-        }
+      .then((data) => {
+        listenForUpdates(data.send_id);
       })
       .catch((error) => {
-        setStatusMsg(`Error: ${error}`);
-      })
-      .finally(() => {
-        props.sl?.(false);
+        setStatusMsg(`Error: ${JSON.stringify(error)}`);
       });
   };
 
@@ -340,7 +358,7 @@ export const Write = (props) => {
           <Grid container spacing={1} class="inputFieldSet">
             <Grid item>To:</Grid>
             <Grid item xs>
-              <AddrComplete addrAttr="to" message={message} setMessage={setMessage} draftKey={draftKey} data-testid="to" sl={props.sl}/>
+              <AddrComplete addrAttr="to" message={message} setMessage={setMessage} draftKey={draftKey} data-testid="to" sp={props.sp}/>
             </Grid>
           </Grid>
           <Grid container spacing={1} class="inputFieldSet">
@@ -349,7 +367,7 @@ export const Write = (props) => {
               <AddrComplete addrAttr="cc" message={message} setMessage={setMessage}
                 draftKey={draftKey}
                 data-testid="cc"
-                sl={props.sl}
+                sp={props.sp}
                 defVal={localStorage.getItem(`draft-${draftKey()}-cc`)?.split('\n') || defCc}/>
             </Grid>
           </Grid>
@@ -359,7 +377,7 @@ export const Write = (props) => {
               <AddrComplete addrAttr="bcc" message={message} setMessage={setMessage}
                 draftKey={draftKey}
                 data-testid="bcc"
-                sl={props.sl}
+                sp={props.sp}
                 defVal={localStorage.getItem(`draft-${draftKey()}-bcc`)?.split('\n') || []}/>
             </Grid>
           </Grid>

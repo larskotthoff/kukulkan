@@ -11,12 +11,14 @@ import itertools
 import logging
 import os
 import subprocess
+import threading
+import queue
 
 import json
 import re
 
 import notmuch
-from flask import Flask, current_app, g, send_file, send_from_directory, request, abort
+from flask import Flask, Response, current_app, g, send_file, send_from_directory, request, abort
 from werkzeug.utils import safe_join
 from flask_restful import Api, Resource
 
@@ -47,6 +49,21 @@ cleaner = Cleaner(javascript=True,
                   remove_unknown_tags=True,
                   safe_attrs_only=False,
                   add_nofollow=True)
+
+
+send_queue = queue.Queue()
+
+# claude helped with this
+def feed_input(process, buffer, bytes_written):
+    processed = 0
+    while True:
+        chunk = buffer.read(1024)
+        if not chunk:
+            break
+        processed += len(chunk)
+        process.stdin.write(chunk)
+        process.stdin.flush()
+        bytes_written.put(processed)
 
 
 def get_db():
@@ -263,7 +280,7 @@ def create_app():
             os.unlink(tmp.name)
 
     @app.route('/api/send', methods=['GET', 'POST'])
-    def parse_request():
+    def send():
         accounts = current_app.config.custom["accounts"]
         account = [acct for acct in accounts if acct["id"] == request.values['from']][0]
 
@@ -358,44 +375,82 @@ def create_app():
             else:
                 msg['References'] = '<' + refMsg['message_id'] + '>'
 
-        sendcmd = account["sendmail"]
-        p = subprocess.Popen(sendcmd.split(' '), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (out, err) = p.communicate(input=str(msg).encode())
-        sendOutput = out.decode() + err.decode()
+        # need to extract the request values for testing
+        ra = request.values['action']
+        if ra == "reply" or ra == "forward" or ra.startswith("reply-cal-"):
+            rr = request.values['refId']
+        rt = request.values['tags']
 
-        if p.returncode == 0:
-            fname = account["save_sent_to"] + msg_id[1:-1] + ":2,S"
-            with open(fname, "w") as f:
-                f.write(str(msg))
+        # claude helped with this
+        def worker(send_id):
+            sendcmd = account["sendmail"]
+            bytes_msg = str(msg).encode()
+            bytes_total = len(bytes_msg)
+            bytes_written = queue.Queue()
+            p = subprocess.Popen(sendcmd.split(' '), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            input_thread = threading.Thread(target=feed_input, args=(p, io.BytesIO(bytes_msg), bytes_written))
+            input_thread.start()
 
-            db_write = notmuch.Database(None, create=False, mode=notmuch.Database.MODE.READ_WRITE)
-            try:
-                db_write.begin_atomic()
-                if request.values['action'] == "reply" or request.values['action'].startswith("reply-cal-"):
-                    refMsgs = get_query("id:" + request.values['refId'], db_write, False).search_messages()
-                    for refMsg in refMsgs:
-                        refMsg.add_tag("replied")
-                        refMsg.tags_to_maildir_flags()
-                elif request.values['action'] == "forward":
-                    refMsgs = get_query("id:" + request.values['refId'], db_write, False).search_messages()
-                    for refMsg in refMsgs:
-                        refMsg.add_tag("passed")
-                        refMsg.tags_to_maildir_flags()
+            while True:
+                send_queue.put({"send_id": send_id, "send_status": "sending", "progress": bytes_written.get() / bytes_total})
+                if input_thread.is_alive() == False:
+                    break
+            out, err = p.communicate()
+            send_output = out.decode() + err.decode()
 
-                (notmuch_msg, status) = db_write.index_file(fname, True)
-                notmuch_msg.maildir_flags_to_tags()
-                for tag in request.values['tags'].split(',') + account["additional_sent_tags"]:
-                    if tag != "":
-                        notmuch_msg.add_tag(tag)
-                notmuch_msg.add_tag("sent")
-                notmuch_msg.tags_to_maildir_flags()
-                db_write.end_atomic()
-            finally:
-                db_write.close()
-        else:
-            print(sendOutput)
+            if p.returncode == 0:
+                fname = account["save_sent_to"] + msg_id[1:-1] + ":2,S"
+                with open(fname, "w") as f:
+                    f.write(str(msg))
 
-        return {"sendStatus": p.returncode, "sendOutput": sendOutput}
+                db_write = notmuch.Database(None, create=False, mode=notmuch.Database.MODE.READ_WRITE)
+                try:
+                    db_write.begin_atomic()
+                    if ra == "reply" or ra.startswith("reply-cal-"):
+                        refMsgs = get_query("id:" + rr, db_write, False).search_messages()
+                        for refMsg in refMsgs:
+                            refMsg.add_tag("replied")
+                            refMsg.tags_to_maildir_flags()
+                    elif ra == "forward":
+                        refMsgs = get_query("id:" + rr, db_write, False).search_messages()
+                        for refMsg in refMsgs:
+                            refMsg.add_tag("passed")
+                            refMsg.tags_to_maildir_flags()
+
+                    (notmuch_msg, status) = db_write.index_file(fname, True)
+                    notmuch_msg.maildir_flags_to_tags()
+                    for tag in rt.split(',') + account["additional_sent_tags"]:
+                        if tag != "":
+                            notmuch_msg.add_tag(tag)
+                    notmuch_msg.add_tag("sent")
+                    notmuch_msg.tags_to_maildir_flags()
+                    db_write.end_atomic()
+                finally:
+                    db_write.close()
+            else:
+                print(send_output)
+
+            send_queue.put({"send_id": send_id, "send_status": p.returncode, "send_output": send_output})
+
+        send_id = str(datetime.datetime.now().timestamp())
+        threading.Thread(target=worker, args=(send_id,)).start()
+        return {"send_id": send_id}, 202
+
+    # claude helped with this
+    @app.route("/api/send_progress/<send_id>")
+    def task_progress(send_id):
+        def generate():
+            run = True
+            while run:
+                try:
+                    progress = send_queue.get()
+                    if progress["send_id"] == send_id:
+                        if progress["send_status"] != "sending":
+                            run = False
+                        yield f"data: {json.dumps(progress)}\n\n"
+                except queue.Empty:
+                    yield f"data: {json.dumps({'send_id': send_id, 'progress': '0'})}\n\n"
+        return Response(generate(), mimetype='text/event-stream')
 
     return app
 
