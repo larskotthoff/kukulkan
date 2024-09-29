@@ -246,7 +246,8 @@ def create_app():
 
     @app.route("/api/tag/<op>/<string:typ>/<path:nid>/<tag>")
     def change_tag(op, typ, nid, tag):
-        db_write = notmuch.Database(None, create=False, mode="rw")
+        # pylint: disable=no-member
+        db_write = notmuch.Database(None, create=False, mode=notmuch.Database.MODE.READ_WRITE)
         msgs = get_query(('id' if typ == "message" else typ) + ':"' + nid + '"' +
                           ' and ' + ('not ' if op == "add" else '') + 'tag:' + tag, db_write, False).search_messages()
         try:
@@ -411,7 +412,8 @@ def create_app():
                     with open(fname, "w", encoding="utf8") as f:
                         f.write(str(msg))
 
-                    db_write = notmuch.Database(None, create=False, mode="rw")
+                    # pylint: disable=no-member
+                    db_write = notmuch.Database(None, create=False, mode=notmuch.Database.MODE.READ_WRITE)
                     try:
                         db_write.begin_atomic()
                         if ra == "reply" or ra.startswith("reply-cal-"):
