@@ -180,7 +180,9 @@ def create_app():
         def get(self, query_string):
             # not supported by API...
             addrs = os.popen("notmuch address --output=sender --output=recipients " + query_string.strip().replace('\n\r', '')).read()
-            return list(filter(lambda a: re.search(query_string, a, re.IGNORECASE), addrs.split('\n')))[:10]
+            matches = filter(lambda a: re.search(query_string, a, re.IGNORECASE), addrs.replace('\t', ' ').split('\n'))
+            seen = set()
+            return [s for s in matches if not (s.lower() in seen or seen.add(s.lower()))][:10]
 
     class Thread(Resource):
         def get(self, thread_id):
