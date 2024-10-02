@@ -6,6 +6,49 @@
 
 Email client in beta stage.
 
+## Main Features
+
+- integrates with [notmuch](https://notmuchmail.org) and sendmail/smtp/...
+- fast and responsive web interface
+- support for multiple email accounts
+- all search queries/thread IDs/message IDs/etc part of URL, i.e. you can
+  bookmark "views"
+- autocomplete notmuch queries, including history of previous queries
+- color chips for addresses and tags
+- thread/message subject set as page title, i.e. you can search through your
+  emails by typing in your browser search bar
+- thread overview shows first few lines of messages that are not "open" for
+  quick overview
+- signatures/quoted text shown collapsed by default
+- preview of attachments, quick links in collapsed messages for easy download
+- threads can be shown in full or individual "fibers" (complete paths from root
+  to leaf in thread tree)
+- thread overview that shows map of thread tree colored by tag, addresses, and
+  subject -- allows for easy identification of messages where subject was
+  changed or people added or dropped
+- text-only view of every message, HTML in emails stripped of tracking links etc
+- allows to filter "CAUTION EXTERNAL EMAIL" and similar stuff before showing
+  emails
+- GPG and S/MIME verification support, S/MIME signing support
+- email "security" verification (DKIM etc)
+- edit notmuch tags for emails/threads with tag autocomplete, batch tagging for
+  threads
+- reply/reply all/forward emails
+- calendar invitation support -- reply, preview (with times converted to local
+  timezone), link to add to Google Calendar
+- compose email templates
+- autocomplete addressed when composing email
+- tags from "parent" email automatically applied to new email when replying
+- quote only relevant part of email being replied to
+- draft emails backed up in localStorage
+- external editor support
+- progress bar when sending email
+- TODO view -- lists emails tagged "todo", sorted by due date (specified in
+  another tag), shows calendar overview and time until due
+- keyboard shortcuts available for all actions
+- fully tested backend and frontend
+- minimal resource requirements, small frontend bundle size
+
 Assumes that you have [notmuch](https://notmuchmail.org) installed and working. Start the server with `FLASK_APP=kukulkan NOTMUCH_CONFIG="$HOME/.notmuch-config" flask run` (changing the path to your notmuch config if necessary) and the client with `npm start` in the respective directories.
 
 For the production version, it should be sufficient to serve the `prod/` directory through a suitable WSGI container, e.g. `gunicorn 'kukulkan.prod.kukulkan:create_app()'`.
