@@ -232,10 +232,12 @@ export const Write = (props) => {
   const quote = (text) => {
     if(text) {
       let {mainPart, quotedPart} = separateQuotedNonQuoted(text);
+      mainPart = mainPart.trim();
+      mainPart = mainPart.replace(/&gt;/g, ">").replace(/&lt;/g, "<").split('\n').join("\n> ");
       if(quotedPart) {
-        mainPart += "[...]";
+        mainPart += "\n> [...]";
       }
-      return `\n\n\nOn ${baseMessage().date}, ${baseMessage().from} wrote:\n> ${mainPart.replace(/&gt;/g, ">").replace(/&lt;/g, "<").split('\n').join("\n> ")}`;
+      return `\n\n\nOn ${baseMessage().date}, ${baseMessage().from} wrote:\n> ${mainPart}`;
     }
   };
 
