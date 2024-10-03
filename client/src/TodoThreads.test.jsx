@@ -156,14 +156,14 @@ test("first calendar date is today or earliest overdue", () => {
   t[0].tags = tags.concat("due:" + (new Date(now.getTime() + 10 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
   render(() => <TodoThreads threads={() => t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}
     setQuery={() => []}/>);
-  expect(screen.getByText("Jul 01")).toBeInTheDocument();
+  expect(screen.getByText("2024 Jul 01")).toBeInTheDocument();
   expect(screen.queryByText("Jun 30")).not.toBeInTheDocument();
   cleanup();
 
   t[0].tags = tags.concat("due:" + (new Date(now.getTime() - 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
   render(() => <TodoThreads threads={() => t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}
     setQuery={() => []}/>);
-  expect(screen.getByText("Jun 30")).toBeInTheDocument();
+  expect(screen.getByText("2024 Jun 30")).toBeInTheDocument();
 
   vi.useRealTimers();
 });
@@ -181,7 +181,7 @@ test("last calendar date is last due", () => {
   msg2.tags = tags.concat("due:" + (new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
   render(() => <TodoThreads threads={() => [msg1, msg2]} index={() => 0} activeThread={() => 1} selectedThreads={() => []}
     setQuery={() => []}/>);
-  expect(screen.getByText("Jul 01")).toBeInTheDocument();
+  expect(screen.getByText("2024 Jul 01")).toBeInTheDocument();
   expect(screen.getByText("31")).toBeInTheDocument();
   expect(screen.queryByText("Aug 01")).not.toBeInTheDocument();
 
