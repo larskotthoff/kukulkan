@@ -623,8 +623,11 @@ def get_attachments(email_msg, content=False):
                             # this assumes that start and end are the same timezone
                             timezone = str(component.get("dtstart").dt.tzinfo)
                         except AttributeError:  # only date, no time
-                            dtstart = component.get("dtstart").dt.strftime("%c")
-                            dtend = component.get("dtend").dt.strftime("%c")
+                            try:
+                                dtstart = component.get("dtstart").dt.strftime("%c")
+                                dtend = component.get("dtend").dt.strftime("%c")
+                            except AttributeError:  # nothing?
+                                pass
                         try:
                             rrule = component.get("rrule").to_ical().decode("utf8")
                             recur = RecurringEvent().format(rrulestr(component.get("rrule").to_ical().decode("utf8")))
@@ -641,9 +644,9 @@ def get_attachments(email_msg, content=False):
                             "summary": component.get("summary"),
                             "location": component.get("location"),
                             "start": dtstart,
-                            "dtstart": component.get("dtstart").to_ical().decode("utf8"),
+                            "dtstart": component.get("dtstart").to_ical().decode("utf8") if component.get("dtstart") else None,
                             "end": dtend,
-                            "dtend": component.get("dtend").to_ical().decode("utf8"),
+                            "dtend": component.get("dtend").to_ical().decode("utf8") if component.get("dtend") else None,
                             "attendees": ", ".join(people),
                             "recur": recur,
                             "rrule": rrule
