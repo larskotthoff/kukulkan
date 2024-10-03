@@ -87,7 +87,7 @@ export const TodoThreads = (props) => {
                       'weekend': [0, 6].includes(day.getDay()),
                       'full-width-end': true
                     }}>
-                  {(day.getDate() === 1 && day.getMonth() === 0 ? day.getFullYear() : "") + " "}
+                  {((day.getDate() === 1 && day.getMonth() === 0) || index() === 0 ? day.getFullYear() : "") + " "}
                   {(day.getDate() === 1 || index() === 0 ? day.toLocaleString('default', { month: 'short' }) : "") + " "}
                   {day.getDate().toString().padStart(2, '0')}
                 </Grid>
