@@ -1,0 +1,19 @@
+name: Create distribution files
+
+on:
+  workflow_run:
+    workflows: ["Node.js Frontend", "Python Backend"]
+    types:
+      - completed
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./deploy.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
