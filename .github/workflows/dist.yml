@@ -11,8 +11,11 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     steps:
-      - uses: actions/checkout@v4, actions/upload-artifact@v4
-        run: ./deploy.sh
+      - uses: actions/checkout@v4
+      - run: ./deploy.sh
+      - run: ls -la
+      - run: ls -la dist
+      - uses: actions/upload-artifact@v4
         with:
           name: dist
           path: dist
