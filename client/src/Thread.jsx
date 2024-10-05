@@ -183,7 +183,7 @@ export const Thread = (props) => {
           <Grid item xs style={{height: '100vh', 'overflow-y': 'auto'}}>
             <Grid container direction="column" class="centered">
               <For each={filteredThread()}>
-                {(m, i) => <Message msg={m} allTags={allTags()} active={i() === activeMessage()}
+                {(m, i) => <Message msg={m} allTags={allTags()} active={i() === activeMessage()} sp={props.sp}
                   onClick={(e) => {
                       if(e.target.tagName.toLowerCase() !== 'a' &&
                           e.target.tagName.toLowerCase() !== 'input' &&
