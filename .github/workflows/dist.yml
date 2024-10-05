@@ -13,9 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: ./deploy.sh
-      - run: ls -la
-      - run: ls -la dist
       - uses: actions/upload-artifact@v4
         with:
-          name: dist
-          path: dist
+          name: prod
+          path: prod
