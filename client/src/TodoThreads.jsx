@@ -58,43 +58,85 @@ export const TodoThreads = (props) => {
   }
 
   // claude helped with this
-  function getDaysBetweenDates(startDate, endDate) {
+  function getIntervalBetweenDates(startDate, endDate, interval) {
     const dates = [],
           currentDate = new Date(startDate);
 
     while(currentDate <= endDate) {
       dates.push(new Date(currentDate));
-      currentDate.setDate(currentDate.getDate() + 1);
+      currentDate[`set${interval}`](currentDate[`get${interval}`]() + 1);
     }
 
     return dates;
   }
 
+  function startOfYear(date) {
+    const retval = new Date(date);
+    retval.setMonth(0);
+    retval.setDate(1);
+    return retval;
+  }
+
+  function endOfYear(date) {
+    const retval = new Date(date);
+    retval.setMonth(11);
+    return retval;
+  }
+
+  function startOfMonth(date) {
+    const retval = new Date(date);
+    retval.setDate(1);
+    return retval;
+  }
+
+  function endOfMonth(date) {
+    const retval = new Date(date);
+    retval.setMonth(date.getMonth() + 1);
+    retval.setDate(0);
+    return retval;
+  }
+
   const dues = threads.map(processDueDate),
         dueDates = dues.map(d => d[0]).filter(x => x),
         earliest = new Date(Math.min(...(dueDates.concat(today)))),
-        latest = new Date(Math.max(...dueDates));
+        latest = new Date(Math.max(...dueDates)),
+        years = getIntervalBetweenDates(earliest, endOfYear(latest), "FullYear");
 
   return (
     <Stack direction="row" class="centered" spacing={2}>
       <Show when={dueDates.length > 0}>
         <Grid container item class="calendar">
-          <For each={getDaysBetweenDates(earliest, latest)}>
-            {(day, index) =>
-              <Grid data-testid={day.toDateString()} container item columnSpacing={1}>
-                <Grid item xs={9} class={{
-                      'today': JSON.stringify(day) === JSON.stringify(today),
-                      'weekend': [0, 6].includes(day.getDay()),
-                      'full-width-end': true
-                    }}>
-                  {((day.getDate() === 1 && day.getMonth() === 0) || index() === 0 ? day.getFullYear() : "") + " "}
-                  {(day.getDate() === 1 || index() === 0 ? day.toLocaleString('default', { month: 'short' }) : "") + " "}
-                  {day.getDate().toString().padStart(2, '0')}
-                </Grid>
-                <Grid item xs={3} style={{'text-align': 'left'}}>
-                  <For each={dueMap[day]}>
-                    {dueindex =>
-                      <Box class="calendar-box" onClick={() => props.setActiveThread(dueindex)}/>
+          <For each={years}>
+            {(year, yi) =>
+              <Grid container item columnSpacing={1}>
+                <Grid item class="sticky" xs={3}>{year.getFullYear()}</Grid>
+                <Grid container item xs={9}>
+                  <For each={getIntervalBetweenDates(yi() === 0 ? year : startOfYear(year), Math.min(endOfYear(year), latest), "Month")}>
+                    {(month, mi) =>
+                      <Grid container item columnSpacing={1}>
+                        <Grid item class="sticky" xs={4}>{month.toLocaleString('default', { month: 'short' })}</Grid>
+                        <Grid container item xs={8} columnSpacing={0.5}>
+                          <For each={getIntervalBetweenDates(mi() === 0 ? month : startOfMonth(month), Math.min(endOfMonth(month), latest), "Date")}>
+                            {(day) =>
+                              <>
+                              <Grid item xs={4} data-testid={day.toDateString()} class={{
+                                    'today': JSON.stringify(day) === JSON.stringify(today),
+                                    'weekend': [0, 6].includes(day.getDay())
+                                  }}>
+                                {day.getDate().toString().padStart(2, '0')}
+                              </Grid>
+                              <Grid item xs={8} data-testid={`${day.toDateString()}-boxes`} style={{'text-align': 'left'}}>
+                                <For each={dueMap[day]}>
+                                  {dueindex =>
+                                    <Box class="calendar-box" onClick={() => props.setActiveThread(dueindex)}/>
+                                  }
+                                </For>
+                              </Grid>
+                              </>
+                            }
+                          </For>
+                        </Grid>
+                      </Grid>
                     }
                   </For>
                 </Grid>

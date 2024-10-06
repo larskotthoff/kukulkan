@@ -156,14 +156,14 @@ test("first calendar date is today or earliest overdue", () => {
   t[0].tags = tags.concat("due:" + (new Date(now.getTime() + 10 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
   render(() => <TodoThreads threads={() => t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}
     setQuery={() => []}/>);
-  expect(screen.getByText("2024 Jul 01")).toBeInTheDocument();
-  expect(screen.queryByText("Jun 30")).not.toBeInTheDocument();
+  expect(screen.getByTestId("Mon Jul 01 2024")).toBeInTheDocument();
+  expect(screen.queryByTestId("Sun Jun 30 2024")).not.toBeInTheDocument();
   cleanup();
 
   t[0].tags = tags.concat("due:" + (new Date(now.getTime() - 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
   render(() => <TodoThreads threads={() => t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}
     setQuery={() => []}/>);
-  expect(screen.getByText("2024 Jun 30")).toBeInTheDocument();
+  expect(screen.getByTestId("Sun Jun 30 2024")).toBeInTheDocument();
 
   vi.useRealTimers();
 });
@@ -181,9 +181,9 @@ test("last calendar date is last due", () => {
   msg2.tags = tags.concat("due:" + (new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
   render(() => <TodoThreads threads={() => [msg1, msg2]} index={() => 0} activeThread={() => 1} selectedThreads={() => []}
     setQuery={() => []}/>);
-  expect(screen.getByText("2024 Jul 01")).toBeInTheDocument();
-  expect(screen.getByText("31")).toBeInTheDocument();
-  expect(screen.queryByText("Aug 01")).not.toBeInTheDocument();
+  expect(screen.getByTestId("Mon Jul 01 2024")).toBeInTheDocument();
+  expect(screen.getByTestId("Wed Jul 31 2024")).toBeInTheDocument();
+  expect(screen.queryByTestId("Thu Aug 01 2024")).not.toBeInTheDocument();
 
   vi.useRealTimers();
 });
@@ -202,11 +202,11 @@ test("todo boxes shown next to calendar dates for emails with due dates", () => 
   msg1.tags = tags.concat("due:" + (new Date(now.getTime() + 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
   msg2.tags = tags.concat("due:" + (new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
   msg3.tags = tags.concat("due:" + (new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
-  const { container, getByTestId } = render(() => <TodoThreads threads={() => [msg1, msg2, msg3, msg4]} index={() => 0}
+  const { container } = render(() => <TodoThreads threads={() => [msg1, msg2, msg3, msg4]} index={() => 0}
     activeThread={() => 1} selectedThreads={() => []} setQuery={() => []}/>);
   expect(container.querySelectorAll(".calendar-box").length).toBe(3);
-  expect(getByTestId("Tue Jul 02 2024").querySelectorAll(".calendar-box").length).toBe(1);
-  expect(getByTestId("Wed Jul 31 2024").querySelectorAll(".calendar-box").length).toBe(2);
+  expect(screen.getByTestId("Tue Jul 02 2024-boxes").querySelectorAll(".calendar-box").length).toBe(1);
+  expect(screen.getByTestId("Wed Jul 31 2024-boxes").querySelectorAll(".calendar-box").length).toBe(2);
 
   vi.useRealTimers();
 });
