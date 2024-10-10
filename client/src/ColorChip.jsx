@@ -1,4 +1,5 @@
-import { Chip } from "@suid/material";
+import Chip from "@suid/material/Chip";
+
 import { getColor } from "./utils.js";
 
 export const ColorChip = (props) => {

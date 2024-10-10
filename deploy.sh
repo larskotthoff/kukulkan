@@ -11,3 +11,4 @@ cd ..
 cp server/src/kukulkan.py prod/
 mkdir prod/static
 cp -r client/dist/* prod/static/
+rm -f prod/static/stats.html

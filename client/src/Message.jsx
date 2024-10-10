@@ -1,8 +1,12 @@
 import { createEffect, createSignal, createResource, For, onMount, Show } from "solid-js";
 
-import { Alert, Box, Button, Divider, Grid, Paper, Stack } from "@suid/material";
-import { TagComplete } from "./Autocomplete.jsx";
-import { ColorChip } from "./ColorChip.jsx";
+import Alert from "@suid/material/Alert";
+import Box from "@suid/material/Box";
+import Button from "@suid/material/Button";
+import Divider from "@suid/material/Divider";
+import Grid from "@suid/material/Grid";
+import Paper from "@suid/material/Paper";
+import Stack from "@suid/material/Stack";
 
 import AttachFile from "@suid/icons-material/AttachFile";
 import Cancel from "@suid/icons-material/Cancel";
@@ -13,8 +17,11 @@ import Print from "@suid/icons-material/Print";
 import Reply from "@suid/icons-material/Reply";
 import Security from "@suid/icons-material/Security";
 
-import linkifyStr from 'linkify-string';
-const linkifyOpts = { target: "_blank", rel: "nofollow" };
+import { linkifyUrlsToHtml } from "linkify-urls";
+const linkifyOpts = { attributes: { target: "_blank", rel: "nofollow" } };
+
+import { TagComplete } from "./Autocomplete.jsx";
+import { ColorChip } from "./ColorChip.jsx";
 
 import "./Kukulkan.css";
 import { apiURL, fetchAllTags, formatDate, formatFSz, strip, fetchMessage } from "./utils.js";
@@ -382,7 +389,7 @@ export const Message = (props) => {
         <Show when={!html()}>
           <Box class="message-text"
             // eslint-disable-next-line solid/no-innerhtml
-            innerHTML={linkifyStr(mainPart, linkifyOpts)}/>
+            innerHTML={linkifyUrlsToHtml(mainPart, linkifyOpts)}/>
           <Show when={quotedPart}>
             <Box class={{
                 'message-text': true,
@@ -396,7 +403,7 @@ export const Message = (props) => {
                 }
               }}
               // eslint-disable-next-line solid/no-innerhtml
-              innerHTML={linkifyStr(quotedPart, linkifyOpts)}/>
+              innerHTML={linkifyUrlsToHtml(quotedPart, linkifyOpts)}/>
           </Show>
         </Show>
       </Show>
@@ -421,7 +428,7 @@ export const Message = (props) => {
               'text-preview': true
             }}
             // eslint-disable-next-line solid/no-innerhtml
-            innerHTML={linkifyStr(mainPart, linkifyOpts)}/>
+            innerHTML={linkifyUrlsToHtml(mainPart, linkifyOpts)}/>
         </Grid>
       </Show>
     </Paper>

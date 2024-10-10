@@ -1,7 +1,12 @@
 // based on https://stackoverflow.com/questions/75751029/how-to-create-an-autocomplete-element
 import { createEffect, createMemo, createSignal, For, Index, on } from 'solid-js';
 
-import { List, ListItemButton, ListItemText, Popover, TextField } from "@suid/material";
+import List from "@suid/material/List";
+import ListItemButton from "@suid/material/ListItemButton";
+import ListItemText from "@suid/material/ListItemText";
+import Popover from "@suid/material/Popover";
+import TextField from "@suid/material/TextField";
+
 import { ColorChip } from "./ColorChip.jsx";
 
 export const Autocomplete = (props) => {

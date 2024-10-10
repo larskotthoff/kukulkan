@@ -2,7 +2,9 @@ import { render } from "solid-js/web";
 import { Route, Router } from "@solidjs/router";
 
 import { createSignal, ErrorBoundary, Show } from "solid-js";
-import { Alert, LinearProgress } from "@suid/material";
+
+import Alert from "@suid/material/Alert";
+import LinearProgress from "@suid/material/LinearProgress";
 
 import { Kukulkan } from "./Kukulkan.jsx";
 import { SearchThreads } from "./SearchThreads.jsx";

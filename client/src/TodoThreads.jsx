@@ -1,5 +1,9 @@
 import { For, Show } from 'solid-js';
-import { Box, Grid, Stack } from "@suid/material";
+
+import Box from "@suid/material/Box";
+import Grid from "@suid/material/Grid";
+import Stack from "@suid/material/Stack";
+
 import { ColorChip } from "./ColorChip.jsx";
 
 import { formatDuration } from "./utils.js";

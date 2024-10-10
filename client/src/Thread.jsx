@@ -1,5 +1,7 @@
 import { createEffect, createSignal, createResource, For, Show } from "solid-js";
-import { Box, Grid } from "@suid/material";
+
+import Box from "@suid/material/Box";
+import Grid from "@suid/material/Grid";
 
 import { Message } from "./Message.jsx";
 

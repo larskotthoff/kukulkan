@@ -1,8 +1,10 @@
 import { createSignal, For } from 'solid-js';
-import { Grid } from "@suid/material";
+
+import Grid from "@suid/material/Grid";
+import Create from "@suid/icons-material/Create";
+
 import { ColorChip } from "./ColorChip.jsx";
 import { Autocomplete } from "./Autocomplete.jsx";
-import Create from "@suid/icons-material/Create";
 
 import { renderDateNumThread } from "./utils.js";
 import { simulateKeyPress } from "./UiUtils.jsx";

@@ -1,12 +1,20 @@
 import { createEffect, createSignal, createResource, For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 
-import { Alert, Box, Button, Grid, MenuItem, Paper, Select, TextField } from "@suid/material";
-import { ChipComplete, TagComplete } from "./Autocomplete.jsx";
-import { ColorChip } from "./ColorChip.jsx";
+import Alert from "@suid/material/Alert";
+import Box from "@suid/material/Box";
+import Button from "@suid/material/Button";
+import Grid from "@suid/material/Grid";
+import MenuItem from "@suid/material/MenuItem";
+import Paper from "@suid/material/Paper";
+import Select from "@suid/material/Select";
+import TextField from "@suid/material/TextField";
 
 import AttachFile from "@suid/icons-material/AttachFile";
 import Send from "@suid/icons-material/Send";
+
+import { ChipComplete, TagComplete } from "./Autocomplete.jsx";
+import { ColorChip } from "./ColorChip.jsx";
 
 import "./Kukulkan.css";
 import { separateQuotedNonQuoted } from "./Message.jsx";

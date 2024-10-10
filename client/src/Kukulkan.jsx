@@ -1,6 +1,6 @@
 import { createEffect, createSignal, createResource, Show } from "solid-js";
 
-import { Modal } from "@suid/material";
+import Modal from "@suid/material/Modal";
 import { Autocomplete } from "./Autocomplete.jsx";
 
 import "./Kukulkan.css";
