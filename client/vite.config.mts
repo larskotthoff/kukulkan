@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import solidPlugin from 'vite-plugin-solid';
 // import devtools from 'solid-devtools/vite';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 export default defineConfig({
   plugins: [
@@ -10,6 +11,12 @@ export default defineConfig({
     */
     // devtools(),
     solidPlugin(),
+    visualizer({
+      filename: 'dist/stats.html',
+      open: true,
+      gzipSize: true,
+      brotliSize: true,
+    }),
   ],
   server: {
     port: 3000,
