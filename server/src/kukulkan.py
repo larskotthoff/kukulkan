@@ -57,6 +57,8 @@ cleaner = Cleaner(javascript=True,
 
 send_queue = queue.Queue()
 
+policy = email.policy.default.clone(utf8=True)
+
 
 # claude helped with this
 def feed_input(process, buffer, bytes_written):
@@ -356,13 +358,13 @@ def create_app():
                                filename=request.files[att].filename)
 
         if "key" in account and "cert" in account:
-            buf = BIO.MemoryBuffer(str(msg).encode("utf8"))
+            buf = BIO.MemoryBuffer(msg.as_string(policy=policy).encode("utf8"))
             smime = SMIME.SMIME()
             smime.load_key(account["key"], account["cert"])
             p7 = smime.sign(buf, SMIME.PKCS7_DETACHED)
 
             out = BIO.MemoryBuffer()
-            buf = BIO.MemoryBuffer(str(msg).encode("utf8"))
+            buf = BIO.MemoryBuffer(msg.as_string(policy=policy).encode("utf8"))
             smime.write(out, p7, buf)
             msg = email.message_from_bytes(out.read())
 
@@ -533,7 +535,7 @@ def get_nested_body(email_msg):
             content_info = cms.ContentInfo.load(part.get_payload(decode=True))
             compressed_data = content_info['content']
             smime = compressed_data['encap_content_info']['content'].native
-            tmp = email.message_from_bytes(smime, policy=email.policy.default)
+            tmp = email.message_from_bytes(smime, policy=policy)
             tmp_plain, tmp_html = get_nested_body(tmp)
             content_plain += tmp_plain
             content_html += tmp_html
@@ -674,7 +676,7 @@ def get_attachments(email_msg, content=False):
                 content_info = cms.ContentInfo.load(part.get_payload(decode=True))
                 compressed_data = content_info['content']
                 smime = compressed_data['encap_content_info']['content'].native
-                tmp = email.message_from_bytes(smime, policy=email.policy.default)
+                tmp = email.message_from_bytes(smime, policy=policy)
                 att_tmp = get_attachments(tmp, content)
                 attachments += att_tmp
     return attachments
@@ -718,7 +720,7 @@ def smime_verify(part, accts):
 def message_to_json(message):
     """Converts a `notmuch.message.Message` instance to a JSON object."""
     with open(message.get_filename(), "rb") as f:
-        email_msg = email.message_from_binary_file(f, policy=email.policy.default)
+        email_msg = email.message_from_binary_file(f, policy=policy)
 
     attachments = get_attachments(email_msg)
     body, html_body = get_nested_body(email_msg)
@@ -804,7 +806,7 @@ def message_to_json(message):
 def message_attachment(message, num=-1):
     """Returns attachment no. `num` of a `notmuch.message.Message` instance."""
     with open(message.get_filename(), "rb") as f:
-        email_msg = email.message_from_binary_file(f, policy=email.policy.default)
+        email_msg = email.message_from_binary_file(f, policy=policy)
     attachments = get_attachments(email_msg, True)
     if not attachments or num > len(attachments) - 1:
         return None
