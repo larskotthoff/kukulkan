@@ -685,6 +685,36 @@ def messages_to_json(messages):
     return [message_to_json(m) for m in messages]
 
 
+def smime_verify(part, accts):
+    try:
+        p7, data_bio = SMIME.smime_load_pkcs7_bio(BIO.MemoryBuffer(bytes(part)))
+        s = SMIME.SMIME()
+        cert_stack = p7.get0_signers(X509.X509_Stack())
+        s.set_x509_stack(cert_stack)
+        store = X509.X509_Store()
+        if current_app.config.custom['ca-bundle']:
+            store.load_info(current_app.config.custom['ca-bundle'])
+        for acct in accts:
+            if 'ca' in acct:
+                for ca in acct['ca']:
+                    store.load_info(ca)
+        s.set_x509_store(store)
+        try:
+            s.verify(p7, data_bio, flags=SMIME.PKCS7_DETACHED)
+            return {"valid": True}
+        except SMIME.PKCS7_Error as e:
+            if "self-signed certificate" in str(e) or "self signed certificate" in str(e) or "unable to get local issuer certificate" in str(e) or "unable to get issuer certificate" in str(e):
+                try:
+                    s.verify(p7, data_bio, flags=SMIME.PKCS7_NOVERIFY | SMIME.PKCS7_DETACHED)
+                    return {"valid": None, "message": "self-signed or unavailable certificate(s)"}
+                except SMIME.PKCS7_Error as ee:
+                    return {"valid": False, "message": str(ee)}
+            else:
+                return {"valid": False, "message": str(e)}
+    except Exception as e:
+        return {"valid": False, "message": str(e)}
+
+
 def message_to_json(message):
     """Converts a `notmuch.message.Message` instance to a JSON object."""
     with open(message.get_filename(), "rb") as f:
@@ -699,36 +729,10 @@ def message_to_json(message):
     for part in email_msg.walk():
         if part.get('Content-Type') and "signed" in part.get('Content-Type'):
             if "pkcs7-signature" in part.get('Content-Type') or "pkcs7-mime" in part.get('Content-Type'):
-                try:
-                    p7, data_bio = SMIME.smime_load_pkcs7_bio(BIO.MemoryBuffer(bytes(part)))
-
-                    s = SMIME.SMIME()
-                    cert_stack = p7.get0_signers(X509.X509_Stack())
-                    s.set_x509_stack(cert_stack)
-                    accounts = current_app.config.custom["accounts"]
-                    accts = [acct for acct in accounts if acct["email"] in
-                             message.get_header("from").strip().replace('\t', ' ')]
-                    store = X509.X509_Store()
-                    if current_app.config.custom['ca-bundle']:
-                        store.load_info(current_app.config.custom['ca-bundle'])
-                    if accts and accts[0]["ca"]:
-                        for ca in accts[0]["ca"]:
-                            store.load_info(ca)
-                    s.set_x509_store(store)
-                    try:
-                        s.verify(p7, data_bio, flags=SMIME.PKCS7_DETACHED)
-                        signature = {"valid": True}
-                    except SMIME.PKCS7_Error as e:
-                        if "self-signed certificate" in str(e) or "self signed certificate" in str(e) or "unable to get local issuer certificate" in str(e) or "unable to get issuer certificate" in str(e):
-                            try:
-                                s.verify(p7, data_bio, flags=SMIME.PKCS7_NOVERIFY | SMIME.PKCS7_DETACHED)
-                                signature = {"valid": None, "message": "self-signed or unavailable certificate(s)"}
-                            except SMIME.PKCS7_Error as ee:
-                                signature = {"valid": False, "message": str(ee)}
-                        else:
-                            signature = {"valid": False, "message": str(e)}
-                except Exception as e:
-                    signature = {"valid": False, "message": str(e)}
+                accounts = current_app.config.custom["accounts"]
+                accts = [acct for acct in accounts if acct["email"] in
+                         message.get_header("from").strip().replace('\t', ' ')]
+                signature = smime_verify(part, accts)
             elif "pgp-signature" in part.get('Content-Type'):
                 signed_content = bytes(part.get_payload()[0])
                 sig = bytes(part.get_payload()[1])
