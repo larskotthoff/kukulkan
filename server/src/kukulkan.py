@@ -225,7 +225,7 @@ def create_app():
         if not d:
             abort(404)
         if isinstance(d["content"], str):
-            f = io.BytesIO(io.StringIO(d["content"]).getvalue().encode())
+            f = io.BytesIO(io.StringIO(d["content"]).getvalue().encode("utf8"))
         else:
             f = io.BytesIO(bytes(d["content"]))
         return send_file(f, mimetype=d["content_type"], as_attachment=False,
@@ -343,10 +343,10 @@ def create_app():
                             attendee.params['partstat'] = icalendar.vText(action.upper())
                         event.add('attendee', attendee)
                         rcal.add_component(event)
-                        msg.add_attachment(rcal.to_ical().decode(),
+                        msg.add_attachment(rcal.to_ical().decode("utf8"),
                                            subtype=typ[1],
                                            filename=att["filename"])
-                        msg.attach(email.mime.text.MIMEText(rcal.to_ical().decode(),
+                        msg.attach(email.mime.text.MIMEText(rcal.to_ical().decode("utf8"),
                                                                        "calendar;method=REPLY"))
 
         for att in request.files:
@@ -356,13 +356,13 @@ def create_app():
                                filename=request.files[att].filename)
 
         if "key" in account and "cert" in account:
-            buf = BIO.MemoryBuffer(str(msg).encode())
+            buf = BIO.MemoryBuffer(str(msg).encode("utf8"))
             smime = SMIME.SMIME()
             smime.load_key(account["key"], account["cert"])
             p7 = smime.sign(buf, SMIME.PKCS7_DETACHED)
 
             out = BIO.MemoryBuffer()
-            buf = BIO.MemoryBuffer(str(msg).encode())
+            buf = BIO.MemoryBuffer(str(msg).encode("utf8"))
             smime.write(out, p7, buf)
             msg = email.message_from_bytes(out.read())
 
@@ -396,7 +396,7 @@ def create_app():
         # claude helped with this
         def worker(send_id):
             sendcmd = account["sendmail"]
-            bytes_msg = str(msg).encode()
+            bytes_msg = str(msg).encode("utf8")
             bytes_total = len(bytes_msg)
             bytes_written = queue.Queue()
             with subprocess.Popen(sendcmd.split(' '), stdin=subprocess.PIPE,
@@ -410,7 +410,7 @@ def create_app():
                     if input_thread.is_alive() is False:
                         break
                 out, err = p.communicate()
-                send_output = out.decode() + err.decode()
+                send_output = out.decode("utf8") + err.decode("utf8")
 
                 if p.returncode == 0:
                     fname = f'{account["save_sent_to"]}{msg_id[1:-1]}:2,S'
