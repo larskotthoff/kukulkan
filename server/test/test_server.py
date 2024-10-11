@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import pytest
 import json
 import io
@@ -2305,6 +2304,7 @@ def test_send_sign_base64_transfer(setup):
 
     pd = {"from": "foo", "to": "bar", "cc": "", "bcc": "", "subject": "test",
           "body": "täst", "action": "compose", "tags": "foo,bar"}
+    print(pd)
 
     app.config.custom["accounts"] = [{"id": "foo",
                                       "name": "Foo Bar",
