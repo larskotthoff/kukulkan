@@ -2276,8 +2276,8 @@ def test_send_sign(setup):
             for part in email_msg.walk():
                 if "signed" in part.get('Content-Type') and "pkcs7-signature" in part.get('Content-Type'):
                     signature = k.smime_verify(part, app.config.custom["accounts"])
-                    assert signature['valid'] == None
                     assert signature['message'] == "self-signed or unavailable certificate(s)"
+                    assert signature['valid'] == None
 
     mm.maildir_flags_to_tags.assert_called_once()
     mm.tags_to_maildir_flags.assert_called_once()
@@ -2380,8 +2380,8 @@ def test_send_sign_attachment(setup):
             for part in email_msg.walk():
                 if "signed" in part.get('Content-Type') and "pkcs7-signature" in part.get('Content-Type'):
                     signature = k.smime_verify(part, app.config.custom["accounts"])
-                    assert signature['valid'] == None
                     assert signature['message'] == "self-signed or unavailable certificate(s)"
+                    assert signature['valid'] == None
 
     mm.maildir_flags_to_tags.assert_called_once()
     mm.tags_to_maildir_flags.assert_called_once()
@@ -2518,8 +2518,8 @@ def test_send_sign_reply_cal(setup):
                         for part in email_msg.walk():
                             if "signed" in part.get('Content-Type') and "pkcs7-signature" in part.get('Content-Type'):
                                 signature = k.smime_verify(part, app.config.custom["accounts"])
-                                assert signature['valid'] == None
                                 assert signature['message'] == "self-signed or unavailable certificate(s)"
+                                assert signature['valid'] == None
 
                 ma.assert_called_once_with(mf)
             mtj.assert_called_once_with(mf)
