@@ -107,26 +107,6 @@ def close_db(e=None):
     g.db.close()
 
 
-def email_header(emails):
-    """Encodes email names and addresses as email header from list of addresses separated by newline."""
-    tmp = email.header.Header()
-    if len(emails) > 0:
-        parts = emails.split('\n')
-        for i, _ in enumerate(parts):
-            try:
-                [name, address] = parts[i].split('<')
-                if name.isascii():
-                    tmp.append(name.strip(), 'ascii')
-                else:
-                    tmp.append(name.strip(), 'utf8')
-                address = f"<{address}"
-            except ValueError:  # only email address, no name
-                address = parts[i]
-            tmp.append(address.strip() + ("," if i < (len(parts) - 1) else ""), 'ascii')
-
-    return tmp
-
-
 def create_app():
     """Flask application factory."""
     app = Flask(__name__, static_folder="static")
@@ -184,7 +164,7 @@ def create_app():
         def get(self, query_string):
             # not supported by API...
             query = quote(query_string.replace('\n\r', '').strip())
-            addrs = os.popen("notmuch address --output=sender --output=recipients {}".format(query)).read()
+            addrs = os.popen(f"notmuch address --output=sender --output=recipients {query}").read()
             matches = filter(lambda a: re.search(query_string, a, re.IGNORECASE), addrs.replace('\t', ' ').split('\n'))
             seen = set()
             return [s for s in matches if not (s.lower() in seen or seen.add(s.lower()))][:10]
@@ -370,9 +350,9 @@ def create_app():
 
         msg['Subject'] = request.values['subject']
         msg['From'] = f'{account["name"]} <{account["email"]}>'
-        msg['To'] = email_header(request.values['to'])
-        msg['Cc'] = email_header(request.values['cc'])
-        msg['Bcc'] = email_header(request.values['bcc'])
+        msg['To'] = ", ".join(request.values['to'].split('\n'))
+        msg['Cc'] = ", ".join(request.values['cc'].split('\n'))
+        msg['Bcc'] = ", ".join(request.values['bcc'].split('\n'))
         msg['Date'] = email.utils.formatdate(localtime=True)
 
         msg_id = email.utils.make_msgid("kukulkan")
@@ -398,7 +378,7 @@ def create_app():
         # claude helped with this
         def worker(send_id):
             sendcmd = account["sendmail"]
-            bytes_msg = str(msg).encode("utf8")
+            bytes_msg = msg.as_string(policy=policy).encode("utf8")
             bytes_total = len(bytes_msg)
             bytes_written = queue.Queue()
             with subprocess.Popen(sendcmd.split(' '), stdin=subprocess.PIPE,
@@ -417,7 +397,7 @@ def create_app():
                 if p.returncode == 0:
                     fname = f'{account["save_sent_to"]}{msg_id[1:-1]}:2,S'
                     with open(fname, "w", encoding="utf8") as f:
-                        f.write(str(msg))
+                        f.write(msg.as_string(policy=policy))
 
                     # pylint: disable=no-member
                     db_write = notmuch.Database(None, create=False, mode=notmuch.Database.MODE.READ_WRITE)
