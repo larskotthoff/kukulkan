@@ -12,6 +12,10 @@ on:
 permissions:
   contents: read
 
+env:
+  PYTHONIOENCODING: UTF-8
+  LC_ALL: C.UTF-8
+
 jobs:
   backend-test:
 
@@ -41,5 +45,4 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        locale
-        LANG=en_US.utf8 pytest
+        pytest
