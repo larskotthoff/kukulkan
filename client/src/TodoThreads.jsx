@@ -11,9 +11,9 @@ import { simulateKeyPress } from "./UiUtils.jsx";
 
 function dateFromDue(due) {
   const dateComponents = due.split(':')[1].split('-'),
-        year = parseInt(dateComponents[0]),
-        month = parseInt(dateComponents[1]) - 1,
-        day = parseInt(dateComponents[2]);
+        year = parseInt(dateComponents[0], 10),
+        month = parseInt(dateComponents[1], 10) - 1,
+        day = parseInt(dateComponents[2], 10);
   return new Date(year, month, day);
 }
 
