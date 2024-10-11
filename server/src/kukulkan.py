@@ -18,9 +18,10 @@ import json
 import re
 
 from tempfile import mkstemp, NamedTemporaryFile
+from shlex import quote
 
 import notmuch
-from flask import Flask, Response, current_app, g, send_file, send_from_directory, request, abort
+from flask import Flask, Response, abort, current_app, escape, g, send_file, send_from_directory, request
 from werkzeug.utils import safe_join
 from flask_restful import Api, Resource
 
@@ -179,7 +180,8 @@ def create_app():
     class Address(Resource):
         def get(self, query_string):
             # not supported by API...
-            addrs = os.popen("notmuch address --output=sender --output=recipients " + query_string.strip().replace('\n\r', '')).read()
+            query = quote(query_string.replace('\n\r', '').strip())
+            addrs = os.popen("notmuch address --output=sender --output=recipients {}".format(query)).read()
             matches = filter(lambda a: re.search(query_string, a, re.IGNORECASE), addrs.replace('\t', ' ').split('\n'))
             seen = set()
             return [s for s in matches if not (s.lower() in seen or seen.add(s.lower()))][:10]
@@ -263,7 +265,7 @@ def create_app():
             db_write.end_atomic()
         finally:
             db_write.close()
-        return tag
+        return escape(tag)
 
     @app.route('/api/edit_external', methods=['POST'])
     def edit_external():
