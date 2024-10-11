@@ -356,13 +356,13 @@ def create_app():
                                filename=request.files[att].filename)
 
         if "key" in account and "cert" in account:
-            buf = BIO.MemoryBuffer(bytes(msg))
+            buf = BIO.MemoryBuffer(str(msg).encode())
             smime = SMIME.SMIME()
             smime.load_key(account["key"], account["cert"])
             p7 = smime.sign(buf, SMIME.PKCS7_DETACHED)
 
             out = BIO.MemoryBuffer()
-            buf = BIO.MemoryBuffer(bytes(msg))
+            buf = BIO.MemoryBuffer(str(msg).encode())
             smime.write(out, p7, buf)
             msg = email.message_from_bytes(out.read())
 
