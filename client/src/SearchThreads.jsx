@@ -18,16 +18,21 @@ export const SearchThreads = (props) => {
 
   let opts = ["tag:unread", "tag:todo", "date:today"],
       qs = localStorage.getItem("queries");
+
   if(qs !== null) {
     qs = JSON.parse(qs);
-    if(searchText()) {
-      qs.unshift(searchText());
-      qs = [...new Set(qs)];
-      // store up to 20 most recent queries
-      localStorage.setItem("queries", JSON.stringify(qs.slice(0, 20)));
-    }
-    opts = [...new Set(opts.concat(qs))];
+  } else {
+    qs = [];
   }
+
+  if(searchText()) {
+    qs.unshift(searchText());
+    qs = [...new Set(qs)];
+    // store up to 20 most recent queries
+    localStorage.setItem("queries", JSON.stringify(qs.slice(0, 20)));
+  }
+
+  opts = [...new Set(opts.concat(qs))];
   
   const QueryBox = () => {
     return (
