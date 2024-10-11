@@ -692,7 +692,7 @@ def smime_verify(part, accts):
         cert_stack = p7.get0_signers(X509.X509_Stack())
         s.set_x509_stack(cert_stack)
         store = X509.X509_Store()
-        if current_app.config.custom['ca-bundle']:
+        if 'ca-bundle' in current_app.config.custom:
             store.load_info(current_app.config.custom['ca-bundle'])
         for acct in accts:
             if 'ca' in acct:
