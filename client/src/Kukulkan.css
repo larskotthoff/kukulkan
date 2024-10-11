@@ -28,6 +28,10 @@ body {
     scrollbar-width: none;
 }
 
+.calendar::-webkit-scrollbar {
+  display: none;
+}
+
 .margin {
     margin-top: 10px !important;
     margin-bottom: 10px !important;
@@ -73,39 +77,39 @@ body {
     background-color: #f0f4c3;
 }
 
-.kukulkan-message {
+.message {
     background-color: #f0f4c3 !important;
     padding: 8px;
     margin: 8px;
     width: min(80em, 80vw);
 }
 
-.kukulkan-message.deleted {
+.message.deleted {
     border-color: red;
     border-style: solid;
 }
 
-.kukulkan-thread.active {
+.thread.active {
     background-color: rgba(85, 139, 47, 0.4) !important;
 }
 
-.kukulkan-thread.active:hover {
+.thread.active:hover {
     background-color: rgba(85, 139, 47, 0.5) !important;
 }
 
-.kukulkan-thread.selected.active {
+.thread.selected.active {
     background-color: rgba(85, 139, 47, 0.45) !important;
 }
 
-.kukulkan-thread.selected {
+.thread.selected {
     background-color: rgba(85, 139, 47, 0.3);
 }
 
-.kukulkan-thread:hover {
+.thread:hover {
     background-color: rgba(85, 139, 47, 0.2) !important;
 }
 
-.kukulkan-thread.due {
+.thread.due {
     border-color: red;
     border-style: solid;
 }
@@ -125,11 +129,11 @@ body {
     flex-wrap: wrap;
 }
 
-#kukulkan-queryBox {
+#query-box {
     margin-top: 10px;
 }
 
-#kukulkan-editTagBox {
+#edit-tag-box {
     position: fixed !important;
     top: 10%;
     left: 10%;
@@ -138,7 +142,7 @@ body {
     border: 2px solid black;
 }
 
-#kukulkan-editTagBox + .MuiOutlinedInput-notchedOutline {
+#edit-tag-box + .MuiOutlinedInput-notchedOutline {
     border: none;
 }
 
@@ -161,15 +165,11 @@ body {
     background-color: red;
 }
 
-.selectMargin div {
+.select-margin div {
     padding: 10px;
 }
 
-.inputMargin input {
-    padding: 5px;
-}
-
-.inputFieldSet {
+.input-field-set {
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;

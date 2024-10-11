@@ -26,9 +26,9 @@ test("shows threads", () => {
   const { container } = render(() => <SearchThreads threads={() => [threads[0], threads[0]]} index={() => 0} activeThread={() => 2}
     selectedThreads={() => []} setQuery={() => []}/>);
 
-  expect(container.querySelectorAll(".kukulkan-thread").length).toBe(2);
-  expect(container.querySelectorAll(".kukulkan-thread.active").length).toBe(0);
-  expect(container.querySelectorAll(".kukulkan-thread.selected").length).toBe(0);
+  expect(container.querySelectorAll(".thread").length).toBe(2);
+  expect(container.querySelectorAll(".thread.active").length).toBe(0);
+  expect(container.querySelectorAll(".thread.selected").length).toBe(0);
   expect(container.querySelectorAll(".chip").length).toBe(8);
   expect(screen.getAllByText("fooAuthor").length).toBe(2);
   expect(screen.getAllByText("barAuthor").length).toBe(2);
@@ -42,9 +42,9 @@ test("sets active and selected classes", () => {
   const { container } = render(() => <SearchThreads threads={() => threads} index={() => 0} activeThread={() => 0}
     selectedThreads={() => [0]} setQuery={() => []}/>);
 
-  expect(container.querySelectorAll(".kukulkan-thread").length).toBe(1);
-  expect(container.querySelectorAll(".kukulkan-thread.active").length).toBe(1);
-  expect(container.querySelectorAll(".kukulkan-thread.selected").length).toBe(1);
+  expect(container.querySelectorAll(".thread").length).toBe(1);
+  expect(container.querySelectorAll(".thread.active").length).toBe(1);
+  expect(container.querySelectorAll(".thread.selected").length).toBe(1);
 });
 
 test("sets active threads on click", async () => {
@@ -52,9 +52,9 @@ test("sets active threads on click", async () => {
         { container } = render(() => <SearchThreads threads={() => threads} index={() => 0} activeThread={() => 0}
           selectedThreads={() => []} setActiveThread={setActiveThread} setQuery={() => []}/>);
 
-  expect(container.querySelectorAll(".kukulkan-thread").length).toBe(1);
+  expect(container.querySelectorAll(".thread").length).toBe(1);
 
-  await userEvent.click(container.querySelector(".kukulkan-thread"));
+  await userEvent.click(container.querySelector(".thread"));
   expect(setActiveThread).toHaveBeenCalledTimes(1);
   expect(setActiveThread).toHaveBeenCalledWith(0);
 });

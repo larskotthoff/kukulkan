@@ -29,11 +29,11 @@ export const Kukulkan = (props) => {
 
   createEffect(() => {
     activeThread();
-    document.getElementsByClassName("kukulkan-thread active")[0]?.scrollIntoView({block: "nearest"});
+    document.getElementsByClassName("thread active")[0]?.scrollIntoView({block: "nearest"});
   });
 
   createEffect(() => {
-    if(showEditingTagModal()) document.getElementById("kukulkan-editTagBox").focus();
+    if(showEditingTagModal()) document.getElementById("edit-tag-box").focus();
   });
 
   createEffect(() => {
@@ -112,8 +112,8 @@ export const Kukulkan = (props) => {
 
   mkShortcut(["/"],
     () => {
-      document.getElementById("kukulkan-queryBox")?.focus();
-      document.getElementById("kukulkan-queryBox")?.select();
+      document.getElementById("query-box")?.focus();
+      document.getElementById("query-box")?.select();
     },
     true
   );
@@ -152,7 +152,7 @@ export const Kukulkan = (props) => {
     return (
       <Modal open={showEditingTagModal()} onClose={() => { setShowEditingTagModal(false); setEditingTags(""); }} BackdropProps={{timeout: 0}}>
         <Autocomplete
-          id="kukulkan-editTagBox"
+          id="edit-tag-box"
           name="editTags"
           variant="standard"
           fullWidth

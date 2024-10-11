@@ -32,7 +32,7 @@ export const SearchThreads = (props) => {
   const QueryBox = () => {
     return (
       <Autocomplete
-        id="kukulkan-queryBox"
+        id="query-box"
         name="search"
         variant="standard"
         fullWidth
@@ -73,7 +73,7 @@ export const SearchThreads = (props) => {
         <For each={props.threads()}>
           {(thread, index) =>
             <Grid item container padding={.3} class={{
-                'kukulkan-thread': true,
+                'thread': true,
                 'active': index() === props.activeThread(),
                 'selected': props.selectedThreads().indexOf(index()) !== -1
               }}

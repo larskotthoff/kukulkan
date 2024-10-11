@@ -277,12 +277,12 @@ export const Message = (props) => {
   );
 
   mkShortcut(["t"],
-    () => { if(props.active) document.getElementById("kukulkan-editTags")?.focus(); },
+    () => { if(props.active) document.getElementById("editTags")?.focus(); },
     true
   );
 
   mkShortcut(["c"],
-    () => { if(props.active) document.querySelector("button.kukulkan-content")?.click(); }
+    () => { if(props.active) document.querySelector("button.content")?.click(); }
   );
 
   mkShortcut(["Delete"],
@@ -302,7 +302,7 @@ export const Message = (props) => {
   return (
     <Paper elevation={props.active ? 20 : 3} onClick={props.onClick}
       class={{
-        'kukulkan-message': true,
+        'message': true,
         'active': props.active,
         'deleted': msg.tags.includes("deleted")
       }}
@@ -323,7 +323,7 @@ export const Message = (props) => {
           <Grid container justifyContent="space-between" direction="row" style={{ 'min-height': "3.5em" }} class="centered">
             <Grid item xs={11}>
               <TagComplete
-                id="kukulkan-editTags"
+                id="editTags"
                 tags={tags()}
                 allTags={props.allTags}
                 addTag={(tagToAdd) => {
@@ -377,7 +377,7 @@ export const Message = (props) => {
 
         <Grid container justifyContent="flex-end">
           <Show when={msg.body["text/html"]}>
-            <Button variant="outlined" class="kukulkan-content" data-testid={html() ? "Text" : "HTML"} onClick={(e) => {
+            <Button variant="outlined" class="content" data-testid={html() ? "Text" : "HTML"} onClick={(e) => {
                 setHtml(!html());
                 e.stopPropagation();
               }}>{html() ? "Text" : "HTML"}</Button>

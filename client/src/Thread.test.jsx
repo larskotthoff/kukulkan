@@ -205,7 +205,7 @@ test("changing active message works", async () => {
   expect(navs[0].style["border-color"]).toBe("white");
   expect(navs[1].style["border-color"]).toBe("black");
 
-  await userEvent.click(container.querySelector(".kukulkan-message:not(.active)"));
+  await userEvent.click(container.querySelector(".message:not(.active)"));
   // expanded email
   expect(screen.getByText("foo bar <foo@bar.com>")).toBeInTheDocument();
   expect(screen.getByText("bar foo <bar@foo.com>")).toBeInTheDocument();

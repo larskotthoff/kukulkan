@@ -153,7 +153,7 @@ export const TodoThreads = (props) => {
         <For each={threads}>
           {(thread, index) =>
             <Grid item container padding={.3} class={{
-                'kukulkan-thread': true,
+                'thread': true,
                 'active': index() === props.activeThread(),
                 'selected': props.selectedThreads().indexOf(index()) !== -1,
                 'due': dues[index()][0] ? dues[index()][0] < tomorrow : false

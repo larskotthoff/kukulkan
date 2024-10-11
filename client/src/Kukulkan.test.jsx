@@ -129,7 +129,7 @@ test("shows threads", async () => {
 
   expect(screen.getByText("2 threads.")).toBeInTheDocument();
 
-  expect(container.querySelectorAll(".kukulkan-thread").length).toBe(2);
+  expect(container.querySelectorAll(".thread").length).toBe(2);
   expect(container.querySelectorAll(".chip").length).toBe(8);
   expect(screen.getByText("fooAuthor")).toBeInTheDocument();
   expect(screen.getByText("barAuthor")).toBeInTheDocument();
@@ -175,7 +175,7 @@ test("opens thread on enter and click", async () => {
   expect(window.open).toHaveBeenCalledTimes(1);
   expect(window.open).toHaveBeenCalledWith('/thread?id=foo', '_blank');
 
-  await userEvent.click(container.querySelector(".kukulkan-thread"));
+  await userEvent.click(container.querySelector(".thread"));
   expect(window.open).toHaveBeenCalledTimes(2);
   expect(window.open).toHaveBeenCalledWith('/thread?id=foo', '_blank');
   expect(window.open).toHaveBeenCalledWith('/thread?id=foo', '_blank');
@@ -209,30 +209,30 @@ test("navigation and selection shortcuts work", async () => {
 
   expect(screen.getByText("2 threads.")).toBeInTheDocument();
 
-  expect(container.querySelector(".kukulkan-thread.active").querySelector(".MuiChip-label").textContent).toBe("test1");
+  expect(container.querySelector(".thread.active").querySelector(".MuiChip-label").textContent).toBe("test1");
 
   await userEvent.type(document.body, "j");
-  expect(container.querySelector(".kukulkan-thread.active").querySelector(".MuiChip-label").textContent).toBe("test2");
+  expect(container.querySelector(".thread.active").querySelector(".MuiChip-label").textContent).toBe("test2");
   await userEvent.type(document.body, "k");
-  expect(container.querySelector(".kukulkan-thread.active").querySelector(".MuiChip-label").textContent).toBe("test1");
+  expect(container.querySelector(".thread.active").querySelector(".MuiChip-label").textContent).toBe("test1");
 
   await userEvent.type(document.body, "J");
-  expect(container.querySelector(".kukulkan-thread.active").querySelector(".MuiChip-label").textContent).toBe("test2");
+  expect(container.querySelector(".thread.active").querySelector(".MuiChip-label").textContent).toBe("test2");
   await userEvent.type(document.body, "K");
-  expect(container.querySelector(".kukulkan-thread.active").querySelector(".MuiChip-label").textContent).toBe("test1");
+  expect(container.querySelector(".thread.active").querySelector(".MuiChip-label").textContent).toBe("test1");
 
   await userEvent.type(document.body, "0");
-  expect(container.querySelector(".kukulkan-thread.active").querySelector(".MuiChip-label").textContent).toBe("test2");
+  expect(container.querySelector(".thread.active").querySelector(".MuiChip-label").textContent).toBe("test2");
   await userEvent.type(document.body, "{home}");
-  expect(container.querySelector(".kukulkan-thread.active").querySelector(".MuiChip-label").textContent).toBe("test1");
+  expect(container.querySelector(".thread.active").querySelector(".MuiChip-label").textContent).toBe("test1");
   await userEvent.type(document.body, "{end}");
-  expect(container.querySelector(".kukulkan-thread.active").querySelector(".MuiChip-label").textContent).toBe("test2");
+  expect(container.querySelector(".thread.active").querySelector(".MuiChip-label").textContent).toBe("test2");
 
   await userEvent.type(document.body, " ");
-  expect(container.querySelectorAll(".kukulkan-thread.selected").length).toBe(1);
+  expect(container.querySelectorAll(".thread.selected").length).toBe(1);
   await userEvent.type(document.body, "k");
   await userEvent.type(document.body, " ");
-  expect(container.querySelectorAll(".kukulkan-thread.selected").length).toBe(2);
+  expect(container.querySelectorAll(".thread.selected").length).toBe(2);
 
   await userEvent.type(document.body, "{end}");
   await userEvent.type(document.body, "{enter}");
@@ -338,7 +338,7 @@ test("tag edits work", async () => {
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
 
   await userEvent.type(document.body, "t");
-  await userEvent.type(document.querySelector("#kukulkan-editTagBox"), "-test foobar{enter}");
+  await userEvent.type(document.querySelector("#edit-tag-box"), "-test foobar{enter}");
 
   expect(global.fetch).toHaveBeenCalledTimes(4);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/remove/thread/foo/test");
@@ -381,7 +381,7 @@ test("tag edits with multiple selection work", async () => {
   await userEvent.type(document.body, " ");
 
   await userEvent.type(document.body, "t");
-  await userEvent.type(document.querySelector("#kukulkan-editTagBox"), "-test1 foobar{enter}");
+  await userEvent.type(document.querySelector("#edit-tag-box"), "-test1 foobar{enter}");
 
   expect(global.fetch).toHaveBeenCalledTimes(6);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/remove/thread/foo/test1");

@@ -347,12 +347,12 @@ export const Write = (props) => {
         <Show when={compose()}>
           <Templates templates={compose().templates} setTemplate={setUseTemplate}/>
         </Show>
-        <Paper elevation={3} class="kukulkan-message">
-          <Grid container spacing={1} class="inputFieldSet">
+        <Paper elevation={3} class="message">
+          <Grid container spacing={1} class="input-field-set">
             <Grid item>From:</Grid>
             <Grid item>
               <Select
-                class="selectMargin"
+                class="select-margin"
                 data-testid="from"
                 value={message.from || ""}
                 onChange={(ev) => {
@@ -369,7 +369,7 @@ export const Write = (props) => {
               </Select>
             </Grid>
           </Grid>
-          <Grid container spacing={1} class="inputFieldSet">
+          <Grid container spacing={1} class="input-field-set">
             <Grid item>To:</Grid>
             <Grid item xs>
               <AddrComplete addrAttr="to" message={message} setMessage={setMessage}
@@ -378,7 +378,7 @@ export const Write = (props) => {
                 sp={props.sp}/>
             </Grid>
           </Grid>
-          <Grid container spacing={1} class="inputFieldSet">
+          <Grid container spacing={1} class="input-field-set">
             <Grid item>CC:</Grid>
             <Grid item xs>
               <AddrComplete addrAttr="cc" message={message} setMessage={setMessage}
@@ -387,7 +387,7 @@ export const Write = (props) => {
                 sp={props.sp}/>
             </Grid>
           </Grid>
-          <Grid container spacing={1} class="inputFieldSet">
+          <Grid container spacing={1} class="input-field-set">
             <Grid item>BCC:</Grid>
             <Grid item xs>
               <AddrComplete addrAttr="bcc" message={message} setMessage={setMessage}
@@ -396,7 +396,7 @@ export const Write = (props) => {
                 sp={props.sp}/>
             </Grid>
           </Grid>
-          <Grid container spacing={1} class="inputFieldSet">
+          <Grid container spacing={1} class="input-field-set">
             <Grid item>Subject:</Grid>
             <Grid item xs><TextField
               variant="standard"
@@ -411,7 +411,7 @@ export const Write = (props) => {
             </Grid>
           </Grid>
 
-          <Grid container spacing={1} class="inputFieldSet">
+          <Grid container spacing={1} class="input-field-set">
             <Grid item>Tags:</Grid>
             <Grid item xs>
               <TagComplete
