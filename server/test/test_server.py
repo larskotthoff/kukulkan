@@ -2355,6 +2355,7 @@ def test_send_sign_base64_transfer(setup):
             hdl = m()
             hdl.write.assert_called_once()
             args = hdl.write.call_args.args
+            print(args[0])
             assert "Content-Type: text/plain; charset=\"utf-8\"" in args[0]
             assert "Content-Transfer-Encoding: base64" in args[0]
             assert "MIME-Version: 1.0" in args[0]
