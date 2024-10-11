@@ -21,7 +21,8 @@ from tempfile import mkstemp, NamedTemporaryFile
 from shlex import quote
 
 import notmuch
-from flask import Flask, Response, abort, current_app, escape, g, send_file, send_from_directory, request
+from flask import Flask, Response, abort, current_app, g, send_file, send_from_directory, request
+from markupsafe import escape
 from werkzeug.utils import safe_join
 from flask_restful import Api, Resource
 

@@ -8,7 +8,7 @@ Email client in beta stage.
 
 ## Main Features
 
-- integrates with [notmuch](https://notmuchmail.org) and sendmail/smtp/...
+- integrates with [notmuch](https://notmuchmail.org) and sendmail/msmtp/...
 - fast and responsive web interface
 - support for multiple email accounts
 - all search queries/thread IDs/message IDs/etc part of URL, i.e. you can

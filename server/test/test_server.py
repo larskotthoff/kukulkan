@@ -1195,9 +1195,9 @@ def test_message_link_scrubbing(setup):
             assert response.status_code == 200
             msg = json.loads(response.data.decode())
             assert "foo" == msg["body"]["text/plain"]
-            assert "example.com" in msg["body"]["text/html"]
-            assert "tracking.com" not in msg["body"]["text/html"]
-            assert "image.com" not in msg["body"]["text/html"]
+            assert "https://example.com" in msg["body"]["text/html"]
+            assert "https://tracking.com" not in msg["body"]["text/html"]
+            assert "http://image.com" not in msg["body"]["text/html"]
         q.assert_called_once_with(db, 'id:"foo"')
 
     mf.get_filename.assert_called_once()
