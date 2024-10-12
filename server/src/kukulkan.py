@@ -75,8 +75,8 @@ def feed_input(process, buffer, bytes_written):
 
 
 # claude helped with this as well
-def email_header(emails):
-    """Encodes email names and addresses as Addresses from list of addresses separated by newline."""
+def email_addresses_header(emails):
+    """Encodes email names and addresses from list of addresses separated by newline."""
     tmp = []
     # Regular expression to match email address parts
     pattern = r'^(.*?)\s*<?([^<@]+@[^>]+)>?$'
@@ -379,9 +379,9 @@ def create_app():
 
         msg['Subject'] = request.values['subject']
         msg['From'] = f'{account["name"]} <{account["email"]}>'
-        msg['To'] = email_header(request.values['to'])
-        msg['Cc'] = email_header(request.values['cc'])
-        msg['Bcc'] = email_header(request.values['bcc'])
+        msg['To'] = email_addresses_header(request.values['to'])
+        msg['Cc'] = email_addresses_header(request.values['cc'])
+        msg['Bcc'] = email_addresses_header(request.values['bcc'])
         msg['Date'] = email.utils.formatdate(localtime=True)
 
         msg_id = email.utils.make_msgid("kukulkan")
