@@ -5,6 +5,8 @@ import Grid from "@suid/material/Grid";
 
 import { Message } from "./Message.jsx";
 
+import { getSetting } from "./Settings.jsx";
+
 import "./Kukulkan.css";
 import { apiURL, extractEmailsSort, fetchAllTags, filterSubjectColor, filterAdminTags, getColor } from "./utils.js";
 import { mkShortcut } from "./UiUtils.jsx";
@@ -74,9 +76,14 @@ export const Thread = (props) => {
         depth++;
       }
 
-      let [ft, activeIdx] = filterThread(null, thread());
-      setFilteredThread(ft);
-      setActiveMessage(activeIdx);
+      if(getSetting("showNestedThread")) {
+        let [ft, activeIdx] = filterThread(null, thread());
+        setFilteredThread(ft);
+        setActiveMessage(activeIdx);
+      } else {
+        setFilteredThread(thread());
+        setActiveMessage(getFirstUnread(thread()));
+      }
     }
   });
 

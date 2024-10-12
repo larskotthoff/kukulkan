@@ -3,6 +3,8 @@ import { createEffect, createSignal, createResource, Show } from "solid-js";
 import Modal from "@suid/material/Modal";
 import { Autocomplete } from "./Autocomplete.jsx";
 
+import { getSetting } from "./Settings.jsx";
+
 import "./Kukulkan.css";
 import { apiURL, fetchAllTags } from "./utils.js";
 import { mkShortcut } from "./UiUtils.jsx";
@@ -89,7 +91,7 @@ export const Kukulkan = (props) => {
   );
 
   mkShortcut(["Enter"],
-    () => { if(threads()[activeThread()]) window.open(`/thread?id=${encodeURIComponent(threads()[activeThread()].thread_id)}`, '_blank') }
+    () => { if(threads()[activeThread()]) window.open(`/thread?id=${encodeURIComponent(threads()[activeThread()].thread_id)}`, getSetting("openInTab")) }
   );
 
   document.addEventListener('keydown', function(event) {
@@ -107,7 +109,11 @@ export const Kukulkan = (props) => {
   });
 
   mkShortcut(["c"],
-    () => window.open('/write', '_blank')
+    () => window.open('/write', getSetting("openInTab"))
+  );
+
+  mkShortcut(["s"],
+    () => window.open('/settings', getSetting("openInTab"))
   );
 
   mkShortcut(["/"],

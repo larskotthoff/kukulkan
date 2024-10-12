@@ -6,11 +6,12 @@ import { createSignal, ErrorBoundary, Show } from "solid-js";
 import Alert from "@suid/material/Alert";
 import LinearProgress from "@suid/material/LinearProgress";
 
+import { FetchedMessage } from "./Message.jsx";
 import { Kukulkan } from "./Kukulkan.jsx";
 import { SearchThreads } from "./SearchThreads.jsx";
-import { TodoThreads } from "./TodoThreads.jsx";
+import { Settings } from "./Settings.jsx";
 import { Thread } from "./Thread.jsx";
-import { FetchedMessage } from "./Message.jsx";
+import { TodoThreads } from "./TodoThreads.jsx";
 import { Write } from "./Write.jsx";
 
 render(() => {
@@ -28,6 +29,7 @@ render(() => {
         <Route path="/thread" component={() => <Thread sp={setProgress}/>}/>
         <Route path="/message" component={() => <FetchedMessage sp={setProgress}/>}/>
         <Route path="/write" component={() => <Write sp={setProgress}/>}/>
+        <Route path="/settings" component={() => <Settings/>}/>
       </Router>
     </ErrorBoundary>
   </>

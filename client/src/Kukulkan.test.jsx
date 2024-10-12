@@ -6,12 +6,14 @@ import { Kukulkan } from "./Kukulkan.jsx";
 import { SearchThreads } from "./SearchThreads.jsx";
 
 beforeEach(() => {
+  localStorage.clear();
   vi.spyOn(window, "open").mockImplementation(() => {});
   global.fetch = vi.fn();
   window.HTMLElement.prototype.scrollIntoView = function() {};
 });
 
 afterEach(() => {
+  localStorage.clear();
   cleanup();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
@@ -179,6 +181,44 @@ test("opens thread on enter and click", async () => {
   expect(window.open).toHaveBeenCalledTimes(2);
   expect(window.open).toHaveBeenCalledWith('/thread?id=foo', '_blank');
   expect(window.open).toHaveBeenCalledWith('/thread?id=foo', '_blank');
+});
+
+test("opens thread on enter and click in same tab with config", async () => {
+  vi.stubGlobal('location', {
+    ...window.location,
+    search: '?query=foo'
+  });
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/query/foo":
+        return Promise.resolve({ ok: true, json: () => [
+            {thread_id: "foo", authors: "test", subject: "foobar", tags: ["test"], total_messages: 1, newest_date: 1000, oldest_date: 100}
+        ]});
+      case "http://localhost:5000/api/tags":
+        return Promise.resolve({ ok: true, json: () => ["foo", "foobar"] });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
+  localStorage.setItem("settings-openInTab", "_self");
+  const { container } = render(() => <Kukulkan Threads={SearchThreads}/>);
+  await vi.waitFor(() => {
+    expect(container.querySelector("input")).not.toBe(null);
+  });
+  expect(global.fetch).toHaveBeenCalledTimes(2);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/query/foo");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
+
+  expect(screen.getByText("1 thread.")).toBeInTheDocument();
+
+  await userEvent.type(document.body, "{enter}");
+  expect(window.open).toHaveBeenCalledTimes(1);
+  expect(window.open).toHaveBeenCalledWith('/thread?id=foo', '_self');
+
+  await userEvent.click(container.querySelector(".thread"));
+  expect(window.open).toHaveBeenCalledTimes(2);
+  expect(window.open).toHaveBeenCalledWith('/thread?id=foo', '_self');
+  expect(window.open).toHaveBeenCalledWith('/thread?id=foo', '_self');
 });
 
 test("navigation and selection shortcuts work", async () => {

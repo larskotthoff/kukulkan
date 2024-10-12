@@ -57,12 +57,14 @@ complexThread.push({
 });
 
 beforeEach(() => {
+  localStorage.clear();
   vi.spyOn(window, "open").mockImplementation(() => {});
   global.fetch = vi.fn();
   window.HTMLElement.prototype.scrollIntoView = function() {};
 });
 
 afterEach(() => {
+  localStorage.clear();
   cleanup();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
@@ -539,6 +541,98 @@ test("flat view works", async () => {
   expect(navs[2].style["left"]).toBe("0em");
   expect(navs[0].style["opacity"]).toBe("1");
   expect(navs[1].style["opacity"]).toBe("0.3");
+  expect(navs[2].style["opacity"]).toBe("1");
+});
+
+test("flat view can be set to be default", async () => {
+  vi.stubGlobal('location', {
+    ...window.location,
+    search: '?id=foo'
+  });
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/tags":
+        return Promise.resolve({ ok: true, json: () => ["foo", "foobar"] });
+      case "http://localhost:5000/api/thread/foo":
+        return Promise.resolve({ ok: true, json: () => complexThread });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
+  let { container } = render(() => <Thread/>);
+
+  expect(global.fetch).toHaveBeenCalledTimes(2);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/thread/foo");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("Test3.")).toBeInTheDocument();
+  });
+
+  // collapsed email
+  expect(screen.getByText("foo bar <foo@bar.com>")).toBeInTheDocument();
+  expect(screen.getByText("foo.txt")).toBeInTheDocument();
+  expect(screen.getByText("Test mail")).toBeInTheDocument();
+
+  // initially hidden
+  expect(screen.queryByText("foo2 bar <foo@bar.com>")).not.toBeInTheDocument();
+  expect(screen.queryByText("Test mail2")).not.toBeInTheDocument();
+
+  // expanded email
+  expect(screen.getByText("foo3 bar <foo@bar.com>")).toBeInTheDocument();
+  expect(screen.getByText("bar3 foo3 <bar@foo.com>")).toBeInTheDocument();
+  expect(screen.getByText("test3@test3.com")).toBeInTheDocument();
+  expect(screen.getByText("Test mail3")).toBeInTheDocument();
+  expect(screen.getByText("foo3")).toBeInTheDocument();
+  expect(screen.getByText("bar3")).toBeInTheDocument();
+  expect(screen.getByText("test3")).toBeInTheDocument();
+
+  expect(document.title).toBe("Test3.");
+
+  // thread nav
+  let navs = container.querySelectorAll(".threadnav-box");
+  expect(navs.length).toBe(3);
+  expect(navs[0].style["left"]).toBe("0em");
+  expect(navs[1].style["left"]).toBe("1em");
+  expect(navs[2].style["left"]).toBe("0em");
+  expect(navs[0].style["opacity"]).toBe("1");
+  expect(navs[1].style["opacity"]).toBe("0.3");
+  expect(navs[2].style["opacity"]).toBe("1");
+
+  cleanup();
+  localStorage.setItem("settings-showNestedThread", false);
+  container = render(() => <Thread/>).container;
+  expect(global.fetch).toHaveBeenCalledTimes(4);
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("Test3.")).toBeInTheDocument();
+  });
+
+  // collapsed email
+  expect(screen.getByText("foo bar <foo@bar.com>")).toBeInTheDocument();
+  expect(screen.getByText("foo.txt")).toBeInTheDocument();
+  expect(screen.getByText("Test mail")).toBeInTheDocument();
+
+  // other collapsed email
+  expect(screen.getByText("foo2 bar <foo@bar.com>")).toBeInTheDocument();
+  expect(screen.getByText("Test mail2")).toBeInTheDocument();
+
+  // expanded email
+  expect(screen.getByText("foo3 bar <foo@bar.com>")).toBeInTheDocument();
+  expect(screen.getByText("bar3 foo3 <bar@foo.com>")).toBeInTheDocument();
+  expect(screen.getByText("test3@test3.com")).toBeInTheDocument();
+  expect(screen.getByText("Test mail3")).toBeInTheDocument();
+  expect(screen.getByText("foo3")).toBeInTheDocument();
+  expect(screen.getByText("bar3")).toBeInTheDocument();
+  expect(screen.getByText("test3")).toBeInTheDocument();
+
+  navs = container.querySelectorAll(".threadnav-box");
+  expect(navs.length).toBe(3);
+  expect(navs[0].style["left"]).toBe("0em");
+  expect(navs[1].style["left"]).toBe("0em");
+  expect(navs[2].style["left"]).toBe("0em");
+  expect(navs[0].style["opacity"]).toBe("1");
+  expect(navs[1].style["opacity"]).toBe("1");
   expect(navs[2].style["opacity"]).toBe("1");
 });
 

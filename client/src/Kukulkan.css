@@ -198,3 +198,12 @@ label {
     position: sticky;
     height: fit-content;
 }
+
+.settings-box {
+    vertical-align: baseline !important;
+    width: 2em;
+}
+
+.settings-box input {
+    text-align: center;
+}

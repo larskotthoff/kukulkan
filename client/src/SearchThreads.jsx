@@ -2,9 +2,12 @@ import { createSignal, For } from 'solid-js';
 
 import Grid from "@suid/material/Grid";
 import Create from "@suid/icons-material/Create";
+import Settings from "@suid/icons-material/Settings";
 
 import { ColorChip } from "./ColorChip.jsx";
 import { Autocomplete } from "./Autocomplete.jsx";
+
+import { getSetting } from "./Settings.jsx";
 
 import { renderDateNumThread } from "./utils.js";
 import { simulateKeyPress } from "./UiUtils.jsx";
@@ -28,8 +31,7 @@ export const SearchThreads = (props) => {
   if(searchText()) {
     qs.unshift(searchText());
     qs = [...new Set(qs)];
-    // store up to 20 most recent queries
-    localStorage.setItem("queries", JSON.stringify(qs.slice(0, 20)));
+    localStorage.setItem("queries", JSON.stringify(qs.slice(0, getSetting("numQueries"))));
   }
 
   opts = [...new Set(opts.concat(qs))];
@@ -68,9 +70,14 @@ export const SearchThreads = (props) => {
     <Grid container width="95%" class="centered">
       <Grid container item class="centered" width="80%" spacing={2}>
         <Grid item xs={11}><QueryBox/></Grid>
-        <Grid item xs={1}>
-          <a href="/write" target="_blank" rel="noreferrer">
+        <Grid item xs={0.5}>
+          <a href="/write" target={getSetting("openInTab")} rel="noreferrer">
             <Create/>
+          </a>
+        </Grid>
+        <Grid item xs={0.5}>
+          <a href="/settings" target={getSetting("openInTab")} rel="noreferrer">
+            <Settings/>
           </a>
         </Grid>
       </Grid>

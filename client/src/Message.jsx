@@ -17,8 +17,10 @@ import Print from "@suid/icons-material/Print";
 import Reply from "@suid/icons-material/Reply";
 import Security from "@suid/icons-material/Security";
 
+import { getSetting } from "./Settings.jsx";
+
 import { linkifyUrlsToHtml } from "linkify-urls";
-const linkifyOpts = { attributes: { target: "_blank", rel: "nofollow" } };
+const linkifyOpts = { attributes: { target: getSetting("openInTab"), rel: "nofollow" } };
 
 import { TagComplete } from "./Autocomplete.jsx";
 import { ColorChip } from "./ColorChip.jsx";
@@ -110,13 +112,13 @@ const calUrl = (id, action, index) => {
 const calendarAction = (msg, attachment, index) => {
   if(attachment.preview.method === "REQUEST" && attachment.preview.status === "NEEDS-ACTION") {
     return (<Grid container direction="row" justifyContent="space-around" m={1}>
-      <a href={calUrl(msg.notmuch_id, 'accept', index)} target="_blank" rel="noreferrer">
+      <a href={calUrl(msg.notmuch_id, 'accept', index)} target={getSetting("openInTab")} rel="noreferrer">
         <CheckCircle fontSize="large"/>
       </a>
-      <a href={calUrl(msg.notmuch_id, 'decline', index)} target="_blank" rel="noreferrer">
+      <a href={calUrl(msg.notmuch_id, 'decline', index)} target={getSetting("openInTab")} rel="noreferrer">
         <Cancel fontSize="large"/>
       </a>
-      <a href={calUrl(msg.notmuch_id, 'tentative', index)} target="_blank" rel="noreferrer">
+      <a href={calUrl(msg.notmuch_id, 'tentative', index)} target={getSetting("openInTab")} rel="noreferrer">
         <Help fontSize="large"/>
       </a>
       </Grid>);
@@ -133,15 +135,15 @@ const handleAttachment = (msg, attachment, index, summary) => {
   if(attachment.content_type.includes("image")) {
     let mw = summary ? "3em" : "30em",
         mh = summary ? "2em" : "20em";
-    return (<a href={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}`)} target="_blank" rel="noreferrer">
+    return (<a href={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}`)} target={getSetting("openInTab")} rel="noreferrer">
         <img src={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}`)} alt={attachment.filename} style={{ 'max-width': mw, 'max-height': mh }}/>
       </a>);
   } else if(attachment.content_type.includes("calendar") && attachment.preview !== null && summary === false) {
-    return (<div style={{ 'text-align': "center"}}><a href={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}`)} target="_blank" rel="noreferrer">
+    return (<div style={{ 'text-align': "center"}}><a href={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}`)} target={getSetting("openInTab")} rel="noreferrer">
         <AttachFile/>{attachment.filename}
         {" (" + formatFSz(attachment.content_size) + ", " + attachment.content_type + ")"}
       </a>
-      <a target="_blank" rel="noreferrer"
+      <a target={getSetting("openInTab")} rel="noreferrer"
         href={"https://www.google.com/calendar/render?action=TEMPLATE&text=" +
           encodeURIComponent(attachment.preview.summary) +
           "&dates=" + encodeURIComponent(attachment.preview.dtstart) +
@@ -159,7 +161,7 @@ const handleAttachment = (msg, attachment, index, summary) => {
       { calendarAction(msg, attachment, index) }
       </div>);
   } else {
-    return (<a href={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}`)} target="_blank" rel="noreferrer"><AttachFile/>{attachment.filename}
+    return (<a href={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}`)} target={getSetting("openInTab")} rel="noreferrer"><AttachFile/>{attachment.filename}
       {summary ? "" : " (" + formatFSz(attachment.content_size) + ", " + attachment.content_type + ")"}
       </a>);
   }
@@ -257,7 +259,7 @@ export const Message = (props) => {
   );
 
   mkShortcut(["Shift", "r"],
-    () => { if(props.active) window.open(replyUrl(msg.notmuch_id, "one"), "_blank"); }
+    () => { if(props.active) window.open(replyUrl(msg.notmuch_id, "one"), getSetting("openInTab")); }
   );
 
   mkShortcut(["f"],
@@ -273,7 +275,7 @@ export const Message = (props) => {
   );
 
   mkShortcut(["w"],
-    () => { if(props.active) window.open(apiURL(`api/raw_message/${encodeURIComponent(msg.notmuch_id)}`), "_blank"); }
+    () => { if(props.active) window.open(apiURL(`api/raw_message/${encodeURIComponent(msg.notmuch_id)}`), getSetting("openInTab")); }
   );
 
   mkShortcut(["t"],
@@ -296,7 +298,7 @@ export const Message = (props) => {
   );
 
   mkShortcut(["Shift", "?"],
-    () => { if(props.active) window.open(`/?query=from:"${encodeURIComponent(msg.from)}"`, "_blank"); }
+    () => { if(props.active) window.open(`/?query=from:"${encodeURIComponent(msg.from)}"`, getSetting("openInTab")); }
   );
 
   return (
@@ -335,22 +337,22 @@ export const Message = (props) => {
               />
             </Grid>
             <Grid item>
-              <a id="reply" href={replyUrl(msg.notmuch_id)} target="_blank" rel="noreferrer">
+              <a id="reply" href={replyUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
                 <Reply/>
               </a>
             </Grid>
             <Grid item>
-              <a id="forward" href={fwdUrl(msg.notmuch_id)} target="_blank" rel="noreferrer">
+              <a id="forward" href={fwdUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
                 <Forward/>
               </a>
             </Grid>
             <Grid item>
-              <a id="print" href={printUrl(msg.notmuch_id)} target="_blank" rel="noreferrer">
+              <a id="print" href={printUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
                 <Print/>
               </a>
             </Grid>
             <Grid item>
-              <a id="security" href={secUrl(msg.notmuch_id)} target="_blank" rel="noreferrer">
+              <a id="security" href={secUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
                 <Security/>
               </a>
             </Grid>

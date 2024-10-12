@@ -16,6 +16,8 @@ import Send from "@suid/icons-material/Send";
 import { ChipComplete, TagComplete } from "./Autocomplete.jsx";
 import { ColorChip } from "./ColorChip.jsx";
 
+import { getSetting } from "./Settings.jsx";
+
 import "./Kukulkan.css";
 import { separateQuotedNonQuoted } from "./Message.jsx";
 import { apiURL, fetchAllTags, fetchMessage, filterAdminTags, formatFSz } from "./utils.js";
@@ -243,7 +245,11 @@ export const Write = (props) => {
       mainPart = mainPart.trim();
       mainPart = mainPart.replace(/&gt;/g, ">").replace(/&lt;/g, "<").split('\n').join("\n> ");
       if(quotedPart) {
-        mainPart += "\n> [...]";
+        if(getSetting("abbreviateQuoted")) {
+          mainPart += "\n> [...]";
+        } else {
+          mainPart += `\n${quotedPart}`;
+        }
       }
       return `\n\n\nOn ${baseMessage().date}, ${baseMessage().from} wrote:\n> ${mainPart}`;
     }
