@@ -338,6 +338,9 @@ def create_app():
                                filename=request.files[att].filename)
 
         if "key" in account and "cert" in account:
+            # using as_bytes directly doesn't seem to trigger content transfer
+            # encoding etc, so the computed digest will be different from what's
+            # sent
             buf = BIO.MemoryBuffer(msg.as_string(policy=policy).encode("utf8"))
             smime = SMIME.SMIME()
             smime.load_key(account["key"], account["cert"])
@@ -397,7 +400,7 @@ def create_app():
                 if p.returncode == 0:
                     fname = f'{account["save_sent_to"]}{msg_id[1:-1]}:2,S'
                     with open(fname, "w", encoding="utf8") as f:
-                        f.write(msg.as_string(policy=policy))
+                        f.write(msg.as_bytes(policy=policy).decode("utf8"))
 
                     # pylint: disable=no-member
                     db_write = notmuch.Database(None, create=False, mode=notmuch.Database.MODE.READ_WRITE)
