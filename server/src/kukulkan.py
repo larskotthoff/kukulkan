@@ -78,21 +78,15 @@ def feed_input(process, buffer, bytes_written):
 def email_addresses_header(emails):
     """Encodes email names and addresses from list of addresses separated by newline."""
     tmp = []
-    # Regular expression to match email address parts
-    pattern = r'^(.*?)\s*<?([^<@]+@[^>]+)>?$'
     if len(emails) > 0:
-        for email in emails.split('\n'):
-            match = re.match(pattern, email.strip())
-            if match:
-                display_name, address = match.groups()
-                local_part, domain = address.rsplit('@', 1)
-
-                # Strip any surrounding quotes from the display name
+        for email in [ x.strip() for x in emails.split('\n') ]:
+            try:
+                display_name, address = email.rsplit('<', 1)
+                local_part, domain = address.strip('>').rsplit('@', 1)
+                # strip any surrounding quotes from the display name
                 display_name = display_name.strip('" ')
-
                 tmp.append(Address(display_name or "", local_part, domain))
-            else:
-                # If no match, assume the whole string is an email address without a display name
+            except ValueError:  # only email address, no name
                 local_part, domain = email.rsplit('@', 1)
                 tmp.append(Address("", local_part, domain))
 
