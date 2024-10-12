@@ -1411,7 +1411,7 @@ def test_send(setup):
     app.config.custom["accounts"] = [{"id": "foo",
                                       "name": "Foo Bar",
                                       "email": "foo@bar.com",
-                                      "sendmail": "true",
+                                      "sendmail": "cat",
                                       "save_sent_to": "folder",
                                       "additional_sent_tags": ["test"]}]
 
@@ -1425,6 +1425,7 @@ def test_send(setup):
                 response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
                 assert response.status_code == 200
                 status = None
+                text = None
                 response_iter = response.response.__iter__()
                 try:
                     while (chunk := next(response_iter)) is not None:
@@ -1434,10 +1435,22 @@ def test_send(setup):
                                 data = json.loads(line[6:])
                                 if 'send_status' in data and data['send_status'] != 'sending':
                                     status = data['send_status']
+                                    text = data['send_output']
                                     break
                 except StopIteration:
                     pass
                 assert status == 0
+                assert "Content-Type: text/plain; charset=\"utf-8\"" in text
+                assert "Content-Transfer-Encoding: 7bit" in text
+                assert "MIME-Version: 1.0" in text
+                assert "Subject: test" in text
+                assert "From: Foo Bar <foo@bar.com>" in text
+                assert "To: bar" in text
+                assert "Cc:" in text
+                assert "Bcc:" in text
+                assert "Date: " in text
+                assert "Message-ID: <" in text
+                assert "\n\nfoobar\n" in text
             m.assert_called_once()
             args = m.call_args.args
             assert "kukulkan" in args[0]
@@ -1456,7 +1469,7 @@ def test_send(setup):
             assert "Cc:" in args[0]
             assert "Bcc:" in args[0]
             assert "Date: " in args[0]
-            assert "Message-ID: <"
+            assert "Message-ID: <" in args[0]
             assert "\n\nfoobar\n" in args[0]
 
     mm.maildir_flags_to_tags.assert_called_once()
@@ -1488,7 +1501,7 @@ def test_send_addresses(setup):
     app.config.custom["accounts"] = [{"id": "foo",
                                       "name": "Foo Bar",
                                       "email": "foo@bar.com",
-                                      "sendmail": "true",
+                                      "sendmail": "cat",
                                       "save_sent_to": "folder",
                                       "additional_sent_tags": ["test"]}]
 
@@ -1502,6 +1515,7 @@ def test_send_addresses(setup):
                 response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
                 assert response.status_code == 200
                 status = None
+                text = None
                 response_iter = response.response.__iter__()
                 try:
                     while (chunk := next(response_iter)) is not None:
@@ -1511,10 +1525,22 @@ def test_send_addresses(setup):
                                 data = json.loads(line[6:])
                                 if 'send_status' in data and data['send_status'] != 'sending':
                                     status = data['send_status']
+                                    text = data['send_output']
                                     break
                 except StopIteration:
                     pass
                 assert status == 0
+                assert "Content-Type: text/plain; charset=\"utf-8\"" in text
+                assert "Content-Transfer-Encoding: 7bit" in text
+                assert "MIME-Version: 1.0" in text
+                assert "Subject: test" in text
+                assert "From: Foo Bar <foo@bar.com>" in text
+                assert "To: Foo bar <foo@bar.com>" in text
+                assert "Cc: Föö Bår <foo@bar.com>" in text
+                assert "Bcc: Føø Bär <foo@bar.com>" in text
+                assert "Date: " in text
+                assert "Message-ID: <" in text
+                assert "\n\nfoobar\n" in text
             m.assert_called_once()
             args = m.call_args.args
             assert "kukulkan" in args[0]
@@ -1533,7 +1559,7 @@ def test_send_addresses(setup):
             assert "Cc: Föö Bår <foo@bar.com>" in args[0]
             assert "Bcc: Føø Bär <foo@bar.com>" in args[0]
             assert "Date: " in args[0]
-            assert "Message-ID: <"
+            assert "Message-ID: <" in args[0]
             assert "\n\nfoobar\n" in args[0]
 
     mm.maildir_flags_to_tags.assert_called_once()
@@ -1602,7 +1628,7 @@ def test_send_attachment(setup):
     app.config.custom["accounts"] = [{"id": "foo",
                                       "name": "Foo Bar",
                                       "email": "foo@bar.com",
-                                      "sendmail": "true",
+                                      "sendmail": "cat",
                                       "save_sent_to": "folder",
                                       "additional_sent_tags": ["test"]}]
 
@@ -1616,6 +1642,7 @@ def test_send_attachment(setup):
                 response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
                 assert response.status_code == 200
                 status = None
+                text = None
                 response_iter = response.response.__iter__()
                 try:
                     while (chunk := next(response_iter)) is not None:
@@ -1625,10 +1652,25 @@ def test_send_attachment(setup):
                                 data = json.loads(line[6:])
                                 if 'send_status' in data and data['send_status'] != 'sending':
                                     status = data['send_status']
+                                    text = data['send_output']
                                     break
                 except StopIteration:
                     pass
                 assert status == 0
+                assert "Content-Type: text/plain; charset=\"utf-8\"" in text
+                assert "Content-Transfer-Encoding: 7bit" in text
+                assert "MIME-Version: 1.0" in text
+                assert "Subject: test" in text
+                assert "From: Foo Bar <foo@bar.com>" in text
+                assert "To: bar" in text
+                assert "Cc:" in text
+                assert "Bcc:" in text
+                assert "Date: " in text
+                assert "Message-ID: <" in text
+                assert "\n\nfoobar\n" in text
+                assert "Content-Transfer-Encoding: base64" in text
+                assert "Content-Disposition: attachment; filename=\"test.txt\"" in text
+                assert "\nVGhpcyBpcyBhIGZpbGUu\n" in text
             # WTF?
             if(os.getenv("CI") == "true"):
                 assert m.call_count == 2
@@ -1651,7 +1693,7 @@ def test_send_attachment(setup):
             assert "Cc:" in args[0]
             assert "Bcc:" in args[0]
             assert "Date: " in args[0]
-            assert "Message-ID: <"
+            assert "Message-ID: <" in args[0]
             assert "\n\nfoobar\n" in args[0]
             assert "Content-Transfer-Encoding: base64" in args[0]
             assert "Content-Disposition: attachment; filename=\"test.txt\"" in args[0]
@@ -1686,7 +1728,7 @@ def test_send_reply(setup):
     app.config.custom["accounts"] = [{"id": "foo",
                                       "name": "Foo Bar",
                                       "email": "foo@bar.com",
-                                      "sendmail": "true",
+                                      "sendmail": "cat",
                                       "save_sent_to": "folder",
                                       "additional_sent_tags": ["test"]}]
 
@@ -1710,6 +1752,7 @@ def test_send_reply(setup):
                         response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
                         assert response.status_code == 200
                         status = None
+                        text = None
                         response_iter = response.response.__iter__()
                         try:
                             while (chunk := next(response_iter)) is not None:
@@ -1719,10 +1762,24 @@ def test_send_reply(setup):
                                         data = json.loads(line[6:])
                                         if 'send_status' in data and data['send_status'] != 'sending':
                                             status = data['send_status']
+                                            text = data['send_output']
                                             break
                         except StopIteration:
                             pass
                         assert status == 0
+                        assert "Content-Type: text/plain; charset=\"utf-8\"" in text
+                        assert "Content-Transfer-Encoding: 7bit" in text
+                        assert "MIME-Version: 1.0" in text
+                        assert "Subject: test" in text
+                        assert "From: Foo Bar <foo@bar.com>" in text
+                        assert "To: bar" in text
+                        assert "Cc:" in text
+                        assert "Bcc:" in text
+                        assert "Date: " in text
+                        assert "Message-ID: <" in text
+                        assert "In-Reply-To: <oldFoo>" in text
+                        assert "References: <oldFoo>" in text
+                        assert "\n\nfoobar\n" in text
                     m.assert_called_once()
                     args = m.call_args.args
                     assert "kukulkan" in args[0]
@@ -1741,7 +1798,7 @@ def test_send_reply(setup):
                     assert "Cc:" in args[0]
                     assert "Bcc:" in args[0]
                     assert "Date: " in args[0]
-                    assert "Message-ID: <"
+                    assert "Message-ID: <" in args[0]
                     assert "In-Reply-To: <oldFoo>" in args[0]
                     assert "References: <oldFoo>" in args[0]
                     assert "\n\nfoobar\n" in args[0]
@@ -1784,7 +1841,7 @@ def test_send_reply_more_refs(setup):
     app.config.custom["accounts"] = [{"id": "foo",
                                       "name": "Foo Bar",
                                       "email": "foo@bar.com",
-                                      "sendmail": "true",
+                                      "sendmail": "cat",
                                       "save_sent_to": "folder",
                                       "additional_sent_tags": ["test"]}]
 
@@ -1808,6 +1865,7 @@ def test_send_reply_more_refs(setup):
                         response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
                         assert response.status_code == 200
                         status = None
+                        text = None
                         response_iter = response.response.__iter__()
                         try:
                             while (chunk := next(response_iter)) is not None:
@@ -1817,10 +1875,24 @@ def test_send_reply_more_refs(setup):
                                         data = json.loads(line[6:])
                                         if 'send_status' in data and data['send_status'] != 'sending':
                                             status = data['send_status']
+                                            text = data['send_output']
                                             break
                         except StopIteration:
                             pass
                         assert status == 0
+                        assert "Content-Type: text/plain; charset=\"utf-8\"" in text
+                        assert "Content-Transfer-Encoding: 7bit" in text
+                        assert "MIME-Version: 1.0" in text
+                        assert "Subject: test" in text
+                        assert "From: Foo Bar <foo@bar.com>" in text
+                        assert "To: bar" in text
+                        assert "Cc:" in text
+                        assert "Bcc:" in text
+                        assert "Date: " in text
+                        assert "Message-ID: <" in text
+                        assert "In-Reply-To: <oldFoo>" in text
+                        assert "References: olderFoo <oldFoo>" in text
+                        assert "\n\nfoobar\n" in text
                     m.assert_called_once()
                     args = m.call_args.args
                     assert "kukulkan" in args[0]
@@ -1839,7 +1911,7 @@ def test_send_reply_more_refs(setup):
                     assert "Cc:" in args[0]
                     assert "Bcc:" in args[0]
                     assert "Date: " in args[0]
-                    assert "Message-ID: <"
+                    assert "Message-ID: <" in args[0]
                     assert "In-Reply-To: <oldFoo>" in args[0]
                     assert "References: olderFoo <oldFoo>" in args[0]
                     assert "\n\nfoobar\n" in args[0]
@@ -1883,7 +1955,7 @@ def test_send_reply_cal(setup):
     app.config.custom["accounts"] = [{"id": "foo",
                                       "name": "Foo Bar",
                                       "email": "unittest@tine20.org",
-                                      "sendmail": "true",
+                                      "sendmail": "cat",
                                       "save_sent_to": "folder",
                                       "additional_sent_tags": ["test"]}]
 
@@ -1925,6 +1997,7 @@ def test_send_reply_cal(setup):
                             response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
                             assert response.status_code == 200
                             status = None
+                            text = None
                             response_iter = response.response.__iter__()
                             try:
                                 while (chunk := next(response_iter)) is not None:
@@ -1934,10 +2007,30 @@ def test_send_reply_cal(setup):
                                             data = json.loads(line[6:])
                                             if 'send_status' in data and data['send_status'] != 'sending':
                                                 status = data['send_status']
+                                                text = data['send_output']
                                                 break
                             except StopIteration:
                                 pass
                             assert status == 0
+                            assert "Content-Type: text/plain" in text
+                            assert "Content-Type: multipart/mixed" in text
+                            assert "Content-Transfer-Encoding: 7bit" in text
+                            assert "Subject: Accept: test" in text
+                            assert "From: Foo Bar <unittest@tine20.org>" in text
+                            assert "To: bar" in text
+                            assert "Cc:" in text
+                            assert "Bcc:" in text
+                            assert "Date: " in text
+                            assert "Message-ID: <" in text
+                            assert "In-Reply-To: <oldFoo>" in text
+                            assert "References: <oldFoo>" in text
+                            assert "\n\nfoobar\n" in text
+                            assert "METHOD:REPLY" in text
+                            assert "DTSTAMP:" in text
+                            assert 'ATTENDEE;CN="Foo Bar";PARTSTAT=ACCEPTED:MAILTO:unittest@tine20.org' in text
+                            assert "SUMMARY:Accept: testevent" in text
+                            assert "SEQUENCE:1" in text
+                            assert "UID:6f59364f-987e-48bb-a0d1-5512a2ba5570" in text
                         m.assert_called_once()
                         args = m.call_args.args
                         assert "kukulkan" in args[0]
@@ -1956,7 +2049,7 @@ def test_send_reply_cal(setup):
                         assert "Cc:" in args[0]
                         assert "Bcc:" in args[0]
                         assert "Date: " in args[0]
-                        assert "Message-ID: <"
+                        assert "Message-ID: <" in args[0]
                         assert "In-Reply-To: <oldFoo>" in args[0]
                         assert "References: <oldFoo>" in args[0]
                         assert "\n\nfoobar\n" in args[0]
@@ -2007,7 +2100,7 @@ def test_send_forward(setup):
     app.config.custom["accounts"] = [{"id": "foo",
                                       "name": "Foo Bar",
                                       "email": "foo@bar.com",
-                                      "sendmail": "true",
+                                      "sendmail": "cat",
                                       "save_sent_to": "folder",
                                       "additional_sent_tags": ["test"]}]
 
@@ -2031,6 +2124,7 @@ def test_send_forward(setup):
                         response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
                         assert response.status_code == 200
                         status = None
+                        text = None
                         response_iter = response.response.__iter__()
                         try:
                             while (chunk := next(response_iter)) is not None:
@@ -2040,10 +2134,25 @@ def test_send_forward(setup):
                                         data = json.loads(line[6:])
                                         if 'send_status' in data and data['send_status'] != 'sending':
                                             status = data['send_status']
+                                            text = data['send_output']
                                             break
                         except StopIteration:
                             pass
                         assert status == 0
+                        assert "Content-Type: text/plain; charset=\"utf-8\"" in text
+                        assert "Content-Transfer-Encoding: 7bit" in text
+                        assert "MIME-Version: 1.0" in text
+                        assert "Subject: test" in text
+                        assert "From: Foo Bar <foo@bar.com>" in text
+                        assert "To: bar" in text
+                        assert "Cc:" in text
+                        assert "Bcc:" in text
+                        assert "Date: " in text
+                        assert "Message-ID: <" in text
+                        assert "Content-Transfer-Encoding: base64" in text
+                        assert "Content-Disposition: attachment; filename=\"testfile\"" in text
+                        assert "\nVGhpcyBpcyBjb250ZW50Lg==\n" in text
+                        assert "\n\nfoobar\n" in text
                     m.assert_called_once()
                     args = m.call_args.args
                     assert "kukulkan" in args[0]
@@ -2062,7 +2171,7 @@ def test_send_forward(setup):
                     assert "Cc:" in args[0]
                     assert "Bcc:" in args[0]
                     assert "Date: " in args[0]
-                    assert "Message-ID: <"
+                    assert "Message-ID: <" in args[0]
                     assert "Content-Transfer-Encoding: base64" in args[0]
                     assert "Content-Disposition: attachment; filename=\"testfile\"" in args[0]
                     assert "\nVGhpcyBpcyBjb250ZW50Lg==\n" in args[0]
@@ -2107,7 +2216,7 @@ def test_send_forward_text_attachment(setup):
     app.config.custom["accounts"] = [{"id": "foo",
                                       "name": "Foo Bar",
                                       "email": "foo@bar.com",
-                                      "sendmail": "true",
+                                      "sendmail": "cat",
                                       "save_sent_to": "folder",
                                       "additional_sent_tags": ["test"]}]
 
@@ -2131,6 +2240,7 @@ def test_send_forward_text_attachment(setup):
                         response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
                         assert response.status_code == 200
                         status = None
+                        text = None
                         response_iter = response.response.__iter__()
                         try:
                             while (chunk := next(response_iter)) is not None:
@@ -2140,10 +2250,27 @@ def test_send_forward_text_attachment(setup):
                                         data = json.loads(line[6:])
                                         if 'send_status' in data and data['send_status'] != 'sending':
                                             status = data['send_status']
+                                            text = data['send_output']
                                             break
                         except StopIteration:
                             pass
                         assert status == 0
+                        assert "Content-Type: text/plain; charset=\"utf-8\"" in text
+                        assert "Content-Transfer-Encoding: 7bit" in text
+                        assert "MIME-Version: 1.0" in text
+                        assert "Subject: test" in text
+                        assert "From: Foo Bar <foo@bar.com>" in text
+                        assert "To: bar" in text
+                        assert "Cc:" in text
+                        assert "Bcc:" in text
+                        assert "Date: " in text
+                        assert "Message-ID: <" in text
+                        assert "\n\nfoobar\n" in text
+                        assert "Content-Type: text/plain; charset=\"utf-8\"" in text
+                        assert "Content-Transfer-Encoding: 7bit" in text
+                        assert "Content-Disposition: attachment; filename=\"unnamed attachment\"" in text
+                        assert "MIME-Version: 1.0" in text
+                        assert "\n\nThis is content.\n" in text
                     m.assert_called_once()
                     args = m.call_args.args
                     assert "kukulkan" in args[0]
@@ -2162,7 +2289,7 @@ def test_send_forward_text_attachment(setup):
                     assert "Cc:" in args[0]
                     assert "Bcc:" in args[0]
                     assert "Date: " in args[0]
-                    assert "Message-ID: <"
+                    assert "Message-ID: <" in args[0]
                     assert "\n\nfoobar\n" in args[0]
                     assert "Content-Type: text/plain; charset=\"utf-8\"" in args[0]
                     assert "Content-Transfer-Encoding: 7bit" in args[0]
@@ -2210,7 +2337,7 @@ def test_send_sign(setup):
                                       "email": "foo@bar.com",
                                       "key": "test/mails/cert.key",
                                       "cert": "test/mails/cert.crt",
-                                      "sendmail": "true",
+                                      "sendmail": "cat",
                                       "save_sent_to": "folder",
                                       "additional_sent_tags": ["test"]}]
 
@@ -2231,6 +2358,7 @@ def test_send_sign(setup):
                         response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
                         assert response.status_code == 200
                         status = None
+                        text = None
                         response_iter = response.response.__iter__()
                         try:
                             while (chunk := next(response_iter)) is not None:
@@ -2240,12 +2368,37 @@ def test_send_sign(setup):
                                         data = json.loads(line[6:])
                                         if 'send_status' in data and data['send_status'] != 'sending':
                                             status = data['send_status']
+                                            text = data['send_output']
                                             break
                         except StopIteration:
                             pass
                         assert status == 0
+                        assert "Content-Type: text/plain; charset=\"utf-8\"" in text
+                        assert "Content-Transfer-Encoding: 7bit" in text
+                        assert "MIME-Version: 1.0" in text
+                        assert "Subject: test" in text
+                        assert "From: Foo Bar <foo@bar.com>" in text
+                        assert "To: bar" in text
+                        assert "Cc:" in text
+                        assert "Bcc:" in text
+                        assert "Date: " in text
+                        assert "Message-ID: <" in text
+                        assert "\n\nfoobar\n" in text
+
+                        assert "\n\nThis is an S/MIME signed message\n" in text
+                        assert "Content-Type: application/x-pkcs7-signature; name=\"smime.p7s\"" in text
+                        assert "Content-Transfer-Encoding: base64" in text
+                        assert "Content-Disposition: attachment; filename=\"smime.p7s\"" in text
+
+                        email_msg = email.message_from_string(text)
+                        for part in email_msg.walk():
+                            if "signed" in part.get('Content-Type') and "pkcs7-signature" in part.get('Content-Type'):
+                                signature = k.smime_verify(part, app.config.custom["accounts"])
+                                assert signature['message'] == "self-signed or unavailable certificate(s)"
+                                assert signature['valid'] == None
+
                     smimload.assert_called_once()
-                smim.assert_called_once()
+                assert smim.call_count == 2
             m.assert_called_once()
             args = m.call_args.args
             assert "kukulkan" in args[0]
@@ -2264,7 +2417,7 @@ def test_send_sign(setup):
             assert "Cc:" in args[0]
             assert "Bcc:" in args[0]
             assert "Date: " in args[0]
-            assert "Message-ID: <"
+            assert "Message-ID: <" in args[0]
             assert "\n\nfoobar\n" in args[0]
 
             assert "\n\nThis is an S/MIME signed message\n" in args[0]
@@ -2310,7 +2463,7 @@ def test_send_sign_base64_transfer(setup):
                                       "email": "foo@bar.com",
                                       "key": "test/mails/cert.key",
                                       "cert": "test/mails/cert.crt",
-                                      "sendmail": "true",
+                                      "sendmail": "cat",
                                       "save_sent_to": "folder",
                                       "additional_sent_tags": ["test"]}]
 
@@ -2331,6 +2484,7 @@ def test_send_sign_base64_transfer(setup):
                         response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
                         assert response.status_code == 200
                         status = None
+                        text = None
                         response_iter = response.response.__iter__()
                         try:
                             while (chunk := next(response_iter)) is not None:
@@ -2340,12 +2494,36 @@ def test_send_sign_base64_transfer(setup):
                                         data = json.loads(line[6:])
                                         if 'send_status' in data and data['send_status'] != 'sending':
                                             status = data['send_status']
+                                            text = data['send_output']
                                             break
                         except StopIteration:
                             pass
                         assert status == 0
+                        assert "Content-Type: text/plain; charset=\"utf-8\"" in text
+                        assert "Content-Transfer-Encoding: base64" in text
+                        assert "MIME-Version: 1.0" in text
+                        assert "Subject: test" in text
+                        assert "From: Foo Bar <foo@bar.com>" in text
+                        assert "To: bar" in text
+                        assert "Cc:" in text
+                        assert "Bcc:" in text
+                        assert "Date: " in text
+                        assert "Message-ID: <" in text
+                        assert "\n\ndMOkc3QK\n" in text
+
+                        assert "\n\nThis is an S/MIME signed message\n" in text
+                        assert "Content-Type: application/x-pkcs7-signature; name=\"smime.p7s\"" in text
+                        assert "Content-Transfer-Encoding: base64" in text
+                        assert "Content-Disposition: attachment; filename=\"smime.p7s\"" in text
+
+                        email_msg = email.message_from_string(text)
+                        for part in email_msg.walk():
+                            if "signed" in part.get('Content-Type') and "pkcs7-signature" in part.get('Content-Type'):
+                                signature = k.smime_verify(part, app.config.custom["accounts"])
+                                assert signature['message'] == "self-signed or unavailable certificate(s)"
+                                assert signature['valid'] == None
                     smimload.assert_called_once()
-                smim.assert_called_once()
+                assert smim.call_count == 2
             m.assert_called_once()
             args = m.call_args.args
             assert "kukulkan" in args[0]
@@ -2364,7 +2542,7 @@ def test_send_sign_base64_transfer(setup):
             assert "Cc:" in args[0]
             assert "Bcc:" in args[0]
             assert "Date: " in args[0]
-            assert "Message-ID: <"
+            assert "Message-ID: <" in args[0]
             assert "\n\ndMOkc3QK\n" in args[0]
 
             assert "\n\nThis is an S/MIME signed message\n" in args[0]
@@ -2411,7 +2589,7 @@ def test_send_sign_attachment(setup):
                                       "email": "foo@bar.com",
                                       "key": "test/mails/cert.key",
                                       "cert": "test/mails/cert.crt",
-                                      "sendmail": "true",
+                                      "sendmail": "cat",
                                       "save_sent_to": "folder",
                                       "additional_sent_tags": ["test"]}]
 
@@ -2432,6 +2610,7 @@ def test_send_sign_attachment(setup):
                         response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
                         assert response.status_code == 200
                         status = None
+                        text = None
                         response_iter = response.response.__iter__()
                         try:
                             while (chunk := next(response_iter)) is not None:
@@ -2441,12 +2620,40 @@ def test_send_sign_attachment(setup):
                                         data = json.loads(line[6:])
                                         if 'send_status' in data and data['send_status'] != 'sending':
                                             status = data['send_status']
+                                            text = data['send_output']
                                             break
                         except StopIteration:
                             pass
                         assert status == 0
+                        assert "Content-Type: text/plain; charset=\"utf-8\"" in text
+                        assert "Content-Transfer-Encoding: 7bit" in text
+                        assert "MIME-Version: 1.0" in text
+                        assert "Subject: test" in text
+                        assert "From: Foo Bar <foo@bar.com>" in text
+                        assert "To: bar" in text
+                        assert "Cc:" in text
+                        assert "Bcc:" in text
+                        assert "Date: " in text
+                        assert "Message-ID: <" in text
+                        assert "\n\nfoobar\n" in text
+                        assert "Content-Transfer-Encoding: base64" in text
+                        assert "Content-Disposition: attachment; filename=\"test.txt\"" in text
+                        assert "\nVGhpcyBpcyBhIGZpbGUu\n" in text
+
+                        assert "\n\nThis is an S/MIME signed message\n" in text
+                        assert "Content-Type: application/x-pkcs7-signature; name=\"smime.p7s\"" in text
+                        assert "Content-Transfer-Encoding: base64" in text
+                        assert "Content-Disposition: attachment; filename=\"smime.p7s\"" in text
+
+                        email_msg = email.message_from_string(text)
+                        for part in email_msg.walk():
+                            if "signed" in part.get('Content-Type') and "pkcs7-signature" in part.get('Content-Type'):
+                                signature = k.smime_verify(part, app.config.custom["accounts"])
+                                assert signature['message'] == "self-signed or unavailable certificate(s)"
+                                assert signature['valid'] == None
+
                     smimload.assert_called_once()
-                smim.assert_called_once()
+                assert smim.call_count == 2
             m.assert_called_once()
             args = m.call_args.args
             assert "kukulkan" in args[0]
@@ -2465,7 +2672,7 @@ def test_send_sign_attachment(setup):
             assert "Cc:" in args[0]
             assert "Bcc:" in args[0]
             assert "Date: " in args[0]
-            assert "Message-ID: <"
+            assert "Message-ID: <" in args[0]
             assert "\n\nfoobar\n" in args[0]
             assert "Content-Transfer-Encoding: base64" in args[0]
             assert "Content-Disposition: attachment; filename=\"test.txt\"" in args[0]
@@ -2515,7 +2722,7 @@ def test_send_sign_reply_cal(setup):
                                       "email": "unittest@tine20.org",
                                       "key": "test/mails/cert.key",
                                       "cert": "test/mails/cert.crt",
-                                      "sendmail": "true",
+                                      "sendmail": "cat",
                                       "save_sent_to": "folder",
                                       "additional_sent_tags": ["test"]}]
 
@@ -2564,6 +2771,7 @@ def test_send_sign_reply_cal(setup):
                                     response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
                                     assert response.status_code == 200
                                     status = None
+                                    text = None
                                     response_iter = response.response.__iter__()
                                     try:
                                         while (chunk := next(response_iter)) is not None:
@@ -2573,12 +2781,45 @@ def test_send_sign_reply_cal(setup):
                                                     data = json.loads(line[6:])
                                                     if 'send_status' in data and data['send_status'] != 'sending':
                                                         status = data['send_status']
+                                                        text = data['send_output']
                                                         break
                                     except StopIteration:
                                         pass
                                     assert status == 0
+                                    assert "Content-Type: text/plain" in text
+                                    assert "Content-Type: multipart/mixed" in text
+                                    assert "Content-Transfer-Encoding: 7bit" in text
+                                    assert "Subject: Accept: test" in text
+                                    assert "From: Foo Bar <unittest@tine20.org>" in text
+                                    assert "To: bar" in text
+                                    assert "Cc:" in text
+                                    assert "Bcc:" in text
+                                    assert "Date: " in text
+                                    assert "Message-ID: <" in text
+                                    assert "In-Reply-To: <oldFoo>" in text
+                                    assert "References: <oldFoo>" in text
+                                    assert "\n\nfoobar\n" in text
+                                    assert "METHOD:REPLY" in text
+                                    assert "DTSTAMP:" in text
+                                    assert 'ATTENDEE;CN="Foo Bar";PARTSTAT=ACCEPTED:MAILTO:unittest@tine20.org' in text
+                                    assert "SUMMARY:Accept: testevent" in text
+                                    assert "SEQUENCE:1" in text
+                                    assert "UID:6f59364f-987e-48bb-a0d1-5512a2ba5570" in text
+
+                                    assert "\n\nThis is an S/MIME signed message\n" in text
+                                    assert "Content-Type: application/x-pkcs7-signature; name=\"smime.p7s\"" in text
+                                    assert "Content-Transfer-Encoding: base64" in text
+                                    assert "Content-Disposition: attachment; filename=\"smime.p7s\"" in text
+
+                                    email_msg = email.message_from_string(text)
+                                    for part in email_msg.walk():
+                                        if "signed" in part.get('Content-Type') and "pkcs7-signature" in part.get('Content-Type'):
+                                            signature = k.smime_verify(part, app.config.custom["accounts"])
+                                            assert signature['message'] == "self-signed or unavailable certificate(s)"
+                                            assert signature['valid'] == None
+
                                 smimload.assert_called_once()
-                            smim.assert_called_once()
+                            assert smim.call_count == 2
 
                         m.assert_called_once()
                         args = m.call_args.args
@@ -2598,7 +2839,7 @@ def test_send_sign_reply_cal(setup):
                         assert "Cc:" in args[0]
                         assert "Bcc:" in args[0]
                         assert "Date: " in args[0]
-                        assert "Message-ID: <"
+                        assert "Message-ID: <" in args[0]
                         assert "In-Reply-To: <oldFoo>" in args[0]
                         assert "References: <oldFoo>" in args[0]
                         assert "\n\nfoobar\n" in args[0]

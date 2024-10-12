@@ -381,7 +381,7 @@ def create_app():
         # claude helped with this
         def worker(send_id):
             sendcmd = account["sendmail"]
-            bytes_msg = msg.as_string(policy=policy).encode("utf8")
+            bytes_msg = msg.as_bytes(policy=policy)
             bytes_total = len(bytes_msg)
             bytes_written = queue.Queue()
             with subprocess.Popen(sendcmd.split(' '), stdin=subprocess.PIPE,
@@ -400,7 +400,7 @@ def create_app():
                 if p.returncode == 0:
                     fname = f'{account["save_sent_to"]}{msg_id[1:-1]}:2,S'
                     with open(fname, "w", encoding="utf8") as f:
-                        f.write(msg.as_bytes(policy=policy).decode("utf8"))
+                        f.write(msg.as_string(policy=policy))
 
                     # pylint: disable=no-member
                     db_write = notmuch.Database(None, create=False, mode=notmuch.Database.MODE.READ_WRITE)
