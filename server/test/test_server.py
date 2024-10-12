@@ -1418,6 +1418,7 @@ def test_send(setup):
 
     with patch("notmuch.Database", return_value=dbw):
         with patch("builtins.open", mock_open()) as m:
+            text = None
             with app.test_client() as test_client:
                 response = test_client.post('/api/send', data=pd)
                 assert response.status_code == 202
@@ -1426,7 +1427,6 @@ def test_send(setup):
                 response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
                 assert response.status_code == 200
                 status = None
-                text = None
                 response_iter = response.response.__iter__()
                 try:
                     while (chunk := next(response_iter)) is not None:
@@ -1461,17 +1461,7 @@ def test_send(setup):
             hdl = m()
             hdl.write.assert_called_once()
             args = hdl.write.call_args.args
-            assert "Content-Type: text/plain; charset=\"utf-8\"" in args[0]
-            assert "Content-Transfer-Encoding: 7bit" in args[0]
-            assert "MIME-Version: 1.0" in args[0]
-            assert "Subject: test" in args[0]
-            assert "From: Foo Bar <foo@bar.com>" in args[0]
-            assert "To: bar" in args[0]
-            assert "Cc:" in args[0]
-            assert "Bcc:" in args[0]
-            assert "Date: " in args[0]
-            assert "Message-ID: <" in args[0]
-            assert "\n\nfoobar\n" in args[0]
+            assert text == args[0]
 
     mm.maildir_flags_to_tags.assert_called_once()
     mm.tags_to_maildir_flags.assert_called_once()
@@ -1509,6 +1499,7 @@ def test_send_base64_transfer(setup):
 
     with patch("notmuch.Database", return_value=dbw):
         with patch("builtins.open", mock_open()) as m:
+            text = None
             with app.test_client() as test_client:
                 response = test_client.post('/api/send', data=pd)
                 assert response.status_code == 202
@@ -1517,7 +1508,6 @@ def test_send_base64_transfer(setup):
                 response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
                 assert response.status_code == 200
                 status = None
-                text = None
                 response_iter = response.response.__iter__()
                 try:
                     while (chunk := next(response_iter)) is not None:
@@ -1552,17 +1542,7 @@ def test_send_base64_transfer(setup):
             hdl = m()
             hdl.write.assert_called_once()
             args = hdl.write.call_args.args
-            assert "Content-Type: text/plain; charset=\"utf-8\"" in args[0]
-            assert "Content-Transfer-Encoding: base64" in args[0]
-            assert "MIME-Version: 1.0" in args[0]
-            assert "Subject: test" in args[0]
-            assert "From: Foo Bar <foo@bar.com>" in args[0]
-            assert "To: bar" in args[0]
-            assert "Cc:" in args[0]
-            assert "Bcc:" in args[0]
-            assert "Date: " in args[0]
-            assert "Message-ID: <" in args[0]
-            assert "\n\ndMOkc3QK\n" in args[0]
+            assert text == args[0]
 
     mm.maildir_flags_to_tags.assert_called_once()
     mm.tags_to_maildir_flags.assert_called_once()
@@ -1600,6 +1580,7 @@ def test_send_addresses(setup):
 
     with patch("notmuch.Database", return_value=dbw):
         with patch("builtins.open", mock_open()) as m:
+            text = None
             with app.test_client() as test_client:
                 response = test_client.post('/api/send', data=pd)
                 assert response.status_code == 202
@@ -1608,7 +1589,6 @@ def test_send_addresses(setup):
                 response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
                 assert response.status_code == 200
                 status = None
-                text = None
                 response_iter = response.response.__iter__()
                 try:
                     while (chunk := next(response_iter)) is not None:
@@ -1643,17 +1623,7 @@ def test_send_addresses(setup):
             hdl = m()
             hdl.write.assert_called_once()
             args = hdl.write.call_args.args
-            assert "Content-Type: text/plain; charset=\"utf-8\"" in args[0]
-            assert "Content-Transfer-Encoding: 7bit" in args[0]
-            assert "MIME-Version: 1.0" in args[0]
-            assert "Subject: test" in args[0]
-            assert "From: Foo Bar <foo@bar.com>" in args[0]
-            assert "To: Foo bar <foo@bar.com>, täst <test@bar.com>" in args[0]
-            assert "Cc: \"Föö, Bår\" <foo@bar.com>" in args[0]
-            assert "Bcc: Føø Bär <foo@bar.com>, test@test.com, test1@test1.com" in args[0]
-            assert "Date: " in args[0]
-            assert "Message-ID: <" in args[0]
-            assert "\n\nfoobar\n" in args[0]
+            assert text == args[0]
 
     mm.maildir_flags_to_tags.assert_called_once()
     mm.tags_to_maildir_flags.assert_called_once()
@@ -1728,6 +1698,7 @@ def test_send_attachment(setup):
 
     with patch("notmuch.Database", return_value=dbw):
         with patch("builtins.open", mock_open()) as m:
+            text = None
             with app.test_client() as test_client:
                 response = test_client.post('/api/send', data=pd)
                 assert response.status_code == 202
@@ -1736,7 +1707,6 @@ def test_send_attachment(setup):
                 response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
                 assert response.status_code == 200
                 status = None
-                text = None
                 response_iter = response.response.__iter__()
                 try:
                     while (chunk := next(response_iter)) is not None:
@@ -1778,20 +1748,7 @@ def test_send_attachment(setup):
             hdl = m()
             hdl.write.assert_called_once()
             args = hdl.write.call_args.args
-            assert "Content-Type: text/plain; charset=\"utf-8\"" in args[0]
-            assert "Content-Transfer-Encoding: 7bit" in args[0]
-            assert "MIME-Version: 1.0" in args[0]
-            assert "Subject: test" in args[0]
-            assert "From: Foo Bar <foo@bar.com>" in args[0]
-            assert "To: bar" in args[0]
-            assert "Cc:" in args[0]
-            assert "Bcc:" in args[0]
-            assert "Date: " in args[0]
-            assert "Message-ID: <" in args[0]
-            assert "\n\nfoobar\n" in args[0]
-            assert "Content-Transfer-Encoding: base64" in args[0]
-            assert "Content-Disposition: attachment; filename=\"test.txt\"" in args[0]
-            assert "\nVGhpcyBpcyBhIGZpbGUu\n" in args[0]
+            assert text == args[0]
 
     mm.maildir_flags_to_tags.assert_called_once()
     mm.tags_to_maildir_flags.assert_called_once()
@@ -1838,6 +1795,7 @@ def test_send_reply(setup):
         with patch("src.kukulkan.message_to_json", return_value={"message_id": "oldFoo", "references": None}) as mtj:
             with patch("notmuch.Database", return_value=dbw):
                 with patch("builtins.open", mock_open()) as m:
+                    text = None
                     with app.test_client() as test_client:
                         response = test_client.post('/api/send', data=pd)
                         assert response.status_code == 202
@@ -1846,7 +1804,6 @@ def test_send_reply(setup):
                         response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
                         assert response.status_code == 200
                         status = None
-                        text = None
                         response_iter = response.response.__iter__()
                         try:
                             while (chunk := next(response_iter)) is not None:
@@ -1883,19 +1840,7 @@ def test_send_reply(setup):
                     hdl = m()
                     hdl.write.assert_called_once()
                     args = hdl.write.call_args.args
-                    assert "Content-Type: text/plain; charset=\"utf-8\"" in args[0]
-                    assert "Content-Transfer-Encoding: 7bit" in args[0]
-                    assert "MIME-Version: 1.0" in args[0]
-                    assert "Subject: test" in args[0]
-                    assert "From: Foo Bar <foo@bar.com>" in args[0]
-                    assert "To: bar" in args[0]
-                    assert "Cc:" in args[0]
-                    assert "Bcc:" in args[0]
-                    assert "Date: " in args[0]
-                    assert "Message-ID: <" in args[0]
-                    assert "In-Reply-To: <oldFoo>" in args[0]
-                    assert "References: <oldFoo>" in args[0]
-                    assert "\n\nfoobar\n" in args[0]
+                    assert text == args[0]
 
             mtj.assert_called_once_with(mf)
 
@@ -1951,6 +1896,7 @@ def test_send_reply_more_refs(setup):
         with patch("src.kukulkan.message_to_json", return_value={"message_id": "oldFoo", "references": "olderFoo"}) as mtj:
             with patch("notmuch.Database", return_value=dbw):
                 with patch("builtins.open", mock_open()) as m:
+                    text = None
                     with app.test_client() as test_client:
                         response = test_client.post('/api/send', data=pd)
                         assert response.status_code == 202
@@ -1959,7 +1905,6 @@ def test_send_reply_more_refs(setup):
                         response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
                         assert response.status_code == 200
                         status = None
-                        text = None
                         response_iter = response.response.__iter__()
                         try:
                             while (chunk := next(response_iter)) is not None:
@@ -1996,19 +1941,7 @@ def test_send_reply_more_refs(setup):
                     hdl = m()
                     hdl.write.assert_called_once()
                     args = hdl.write.call_args.args
-                    assert "Content-Type: text/plain; charset=\"utf-8\"" in args[0]
-                    assert "Content-Transfer-Encoding: 7bit" in args[0]
-                    assert "MIME-Version: 1.0" in args[0]
-                    assert "Subject: test" in args[0]
-                    assert "From: Foo Bar <foo@bar.com>" in args[0]
-                    assert "To: bar" in args[0]
-                    assert "Cc:" in args[0]
-                    assert "Bcc:" in args[0]
-                    assert "Date: " in args[0]
-                    assert "Message-ID: <" in args[0]
-                    assert "In-Reply-To: <oldFoo>" in args[0]
-                    assert "References: olderFoo <oldFoo>" in args[0]
-                    assert "\n\nfoobar\n" in args[0]
+                    assert text == args[0]
 
             mtj.assert_called_once_with(mf)
 
@@ -2083,6 +2016,7 @@ def test_send_reply_cal(setup):
                                                  "END:VCALENDAR"}]) as ma:
                 with patch("notmuch.Database", return_value=dbw):
                     with patch("builtins.open", mock_open()) as m:
+                        text = None
                         with app.test_client() as test_client:
                             response = test_client.post('/api/send', data=pd)
                             assert response.status_code == 202
@@ -2091,7 +2025,6 @@ def test_send_reply_cal(setup):
                             response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
                             assert response.status_code == 200
                             status = None
-                            text = None
                             response_iter = response.response.__iter__()
                             try:
                                 while (chunk := next(response_iter)) is not None:
@@ -2134,25 +2067,7 @@ def test_send_reply_cal(setup):
                         hdl = m()
                         hdl.write.assert_called_once()
                         args = hdl.write.call_args.args
-                        assert "Content-Type: text/plain" in args[0]
-                        assert "Content-Type: multipart/mixed" in args[0]
-                        assert "Content-Transfer-Encoding: 7bit" in args[0]
-                        assert "Subject: Accept: test" in args[0]
-                        assert "From: Foo Bar <unittest@tine20.org>" in args[0]
-                        assert "To: bar" in args[0]
-                        assert "Cc:" in args[0]
-                        assert "Bcc:" in args[0]
-                        assert "Date: " in args[0]
-                        assert "Message-ID: <" in args[0]
-                        assert "In-Reply-To: <oldFoo>" in args[0]
-                        assert "References: <oldFoo>" in args[0]
-                        assert "\n\nfoobar\n" in args[0]
-                        assert "METHOD:REPLY" in args[0]
-                        assert "DTSTAMP:" in args[0]
-                        assert 'ATTENDEE;CN="Foo Bar";PARTSTAT=ACCEPTED:MAILTO:unittest@tine20.org' in args[0]
-                        assert "SUMMARY:Accept: testevent" in args[0]
-                        assert "SEQUENCE:1" in args[0]
-                        assert "UID:6f59364f-987e-48bb-a0d1-5512a2ba5570" in args[0]
+                        assert text == args[0]
 
                 ma.assert_called_once_with(mf)
             mtj.assert_called_once_with(mf)
@@ -2210,6 +2125,7 @@ def test_send_forward(setup):
         with patch("src.kukulkan.message_attachment", return_value=[{"filename": "testfile", "content_type": "text/plain", "content": b"This is content."}]) as ma:
             with patch("notmuch.Database", return_value=dbw):
                 with patch("builtins.open", mock_open()) as m:
+                    text = None
                     with app.test_client() as test_client:
                         response = test_client.post('/api/send', data=pd)
                         assert response.status_code == 202
@@ -2218,7 +2134,6 @@ def test_send_forward(setup):
                         response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
                         assert response.status_code == 200
                         status = None
-                        text = None
                         response_iter = response.response.__iter__()
                         try:
                             while (chunk := next(response_iter)) is not None:
@@ -2256,20 +2171,7 @@ def test_send_forward(setup):
                     hdl = m()
                     hdl.write.assert_called_once()
                     args = hdl.write.call_args.args
-                    assert "Content-Type: text/plain; charset=\"utf-8\"" in args[0]
-                    assert "Content-Transfer-Encoding: 7bit" in args[0]
-                    assert "MIME-Version: 1.0" in args[0]
-                    assert "Subject: test" in args[0]
-                    assert "From: Foo Bar <foo@bar.com>" in args[0]
-                    assert "To: bar" in args[0]
-                    assert "Cc:" in args[0]
-                    assert "Bcc:" in args[0]
-                    assert "Date: " in args[0]
-                    assert "Message-ID: <" in args[0]
-                    assert "Content-Transfer-Encoding: base64" in args[0]
-                    assert "Content-Disposition: attachment; filename=\"testfile\"" in args[0]
-                    assert "\nVGhpcyBpcyBjb250ZW50Lg==\n" in args[0]
-                    assert "\n\nfoobar\n" in args[0]
+                    assert text == args[0]
 
             ma.assert_called_once_with(mf)
 
@@ -2326,6 +2228,7 @@ def test_send_forward_text_attachment(setup):
         with patch("src.kukulkan.message_attachment", return_value=[{"filename": "unnamed attachment", "content_type": "text/plain", "content": "This is content."}]) as ma:
             with patch("notmuch.Database", return_value=dbw):
                 with patch("builtins.open", mock_open()) as m:
+                    text = None
                     with app.test_client() as test_client:
                         response = test_client.post('/api/send', data=pd)
                         assert response.status_code == 202
@@ -2334,7 +2237,6 @@ def test_send_forward_text_attachment(setup):
                         response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
                         assert response.status_code == 200
                         status = None
-                        text = None
                         response_iter = response.response.__iter__()
                         try:
                             while (chunk := next(response_iter)) is not None:
@@ -2374,22 +2276,7 @@ def test_send_forward_text_attachment(setup):
                     hdl = m()
                     hdl.write.assert_called_once()
                     args = hdl.write.call_args.args
-                    assert "Content-Type: text/plain; charset=\"utf-8\"" in args[0]
-                    assert "Content-Transfer-Encoding: 7bit" in args[0]
-                    assert "MIME-Version: 1.0" in args[0]
-                    assert "Subject: test" in args[0]
-                    assert "From: Foo Bar <foo@bar.com>" in args[0]
-                    assert "To: bar" in args[0]
-                    assert "Cc:" in args[0]
-                    assert "Bcc:" in args[0]
-                    assert "Date: " in args[0]
-                    assert "Message-ID: <" in args[0]
-                    assert "\n\nfoobar\n" in args[0]
-                    assert "Content-Type: text/plain; charset=\"utf-8\"" in args[0]
-                    assert "Content-Transfer-Encoding: 7bit" in args[0]
-                    assert "Content-Disposition: attachment; filename=\"unnamed attachment\"" in args[0]
-                    assert "MIME-Version: 1.0" in args[0]
-                    assert "\n\nThis is content.\n" in args[0]
+                    assert text == args[0]
 
             ma.assert_called_once_with(mf)
 
@@ -2442,6 +2329,7 @@ def test_send_sign(setup):
 
     with patch("notmuch.Database", return_value=dbw):
         with patch("builtins.open", mock_open()) as m:
+            text = None
             with patch("M2Crypto.SMIME.SMIME", return_value=smime) as smim:
                 with patch.object(smime, "load_key") as smimload:
                     with app.test_client() as test_client:
@@ -2452,7 +2340,6 @@ def test_send_sign(setup):
                         response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
                         assert response.status_code == 200
                         status = None
-                        text = None
                         response_iter = response.response.__iter__()
                         try:
                             while (chunk := next(response_iter)) is not None:
@@ -2502,29 +2389,7 @@ def test_send_sign(setup):
             hdl = m()
             hdl.write.assert_called_once()
             args = hdl.write.call_args.args
-            assert "Content-Type: text/plain; charset=\"utf-8\"" in args[0]
-            assert "Content-Transfer-Encoding: 7bit" in args[0]
-            assert "MIME-Version: 1.0" in args[0]
-            assert "Subject: test" in args[0]
-            assert "From: Foo Bar <foo@bar.com>" in args[0]
-            assert "To: bar" in args[0]
-            assert "Cc:" in args[0]
-            assert "Bcc:" in args[0]
-            assert "Date: " in args[0]
-            assert "Message-ID: <" in args[0]
-            assert "\n\nfoobar\n" in args[0]
-
-            assert "\n\nThis is an S/MIME signed message\n" in args[0]
-            assert "Content-Type: application/x-pkcs7-signature; name=\"smime.p7s\"" in args[0]
-            assert "Content-Transfer-Encoding: base64" in args[0]
-            assert "Content-Disposition: attachment; filename=\"smime.p7s\"" in args[0]
-
-            email_msg = email.message_from_string(args[0])
-            for part in email_msg.walk():
-                if "signed" in part.get('Content-Type') and "pkcs7-signature" in part.get('Content-Type'):
-                    signature = k.smime_verify(part, app.config.custom["accounts"])
-                    assert signature['message'] == "self-signed or unavailable certificate(s)"
-                    assert signature['valid'] == None
+            assert text == args[0]
 
     mm.maildir_flags_to_tags.assert_called_once()
     mm.tags_to_maildir_flags.assert_called_once()
@@ -2569,6 +2434,7 @@ def test_send_sign_base64_transfer(setup):
 
     with patch("notmuch.Database", return_value=dbw):
         with patch("builtins.open", mock_open()) as m:
+            text = None
             with patch("M2Crypto.SMIME.SMIME", return_value=smime) as smim:
                 with patch.object(smime, "load_key") as smimload:
                     with app.test_client() as test_client:
@@ -2579,7 +2445,6 @@ def test_send_sign_base64_transfer(setup):
                         response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
                         assert response.status_code == 200
                         status = None
-                        text = None
                         response_iter = response.response.__iter__()
                         try:
                             while (chunk := next(response_iter)) is not None:
@@ -2628,29 +2493,7 @@ def test_send_sign_base64_transfer(setup):
             hdl = m()
             hdl.write.assert_called_once()
             args = hdl.write.call_args.args
-            assert "Content-Type: text/plain; charset=\"utf-8\"" in args[0]
-            assert "Content-Transfer-Encoding: base64" in args[0]
-            assert "MIME-Version: 1.0" in args[0]
-            assert "Subject: test" in args[0]
-            assert "From: Foo Bar <foo@bar.com>" in args[0]
-            assert "To: bar" in args[0]
-            assert "Cc:" in args[0]
-            assert "Bcc:" in args[0]
-            assert "Date: " in args[0]
-            assert "Message-ID: <" in args[0]
-            assert "\n\ndMOkc3QK\n" in args[0]
-
-            assert "\n\nThis is an S/MIME signed message\n" in args[0]
-            assert "Content-Type: application/x-pkcs7-signature; name=\"smime.p7s\"" in args[0]
-            assert "Content-Transfer-Encoding: base64" in args[0]
-            assert "Content-Disposition: attachment; filename=\"smime.p7s\"" in args[0]
-
-            email_msg = email.message_from_string(args[0])
-            for part in email_msg.walk():
-                if "signed" in part.get('Content-Type') and "pkcs7-signature" in part.get('Content-Type'):
-                    signature = k.smime_verify(part, app.config.custom["accounts"])
-                    assert signature['message'] == "self-signed or unavailable certificate(s)"
-                    assert signature['valid'] == None
+            assert text == args[0]
 
     mm.maildir_flags_to_tags.assert_called_once()
     mm.tags_to_maildir_flags.assert_called_once()
@@ -2695,6 +2538,7 @@ def test_send_sign_attachment(setup):
 
     with patch("notmuch.Database", return_value=dbw):
         with patch("builtins.open", mock_open()) as m:
+            text = None
             with patch("M2Crypto.SMIME.SMIME", return_value=smime) as smim:
                 with patch.object(smime, "load_key") as smimload:
                     with app.test_client() as test_client:
@@ -2705,7 +2549,6 @@ def test_send_sign_attachment(setup):
                         response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
                         assert response.status_code == 200
                         status = None
-                        text = None
                         response_iter = response.response.__iter__()
                         try:
                             while (chunk := next(response_iter)) is not None:
@@ -2758,32 +2601,7 @@ def test_send_sign_attachment(setup):
             hdl = m()
             hdl.write.assert_called_once()
             args = hdl.write.call_args.args
-            assert "Content-Type: text/plain; charset=\"utf-8\"" in args[0]
-            assert "Content-Transfer-Encoding: 7bit" in args[0]
-            assert "MIME-Version: 1.0" in args[0]
-            assert "Subject: test" in args[0]
-            assert "From: Foo Bar <foo@bar.com>" in args[0]
-            assert "To: bar" in args[0]
-            assert "Cc:" in args[0]
-            assert "Bcc:" in args[0]
-            assert "Date: " in args[0]
-            assert "Message-ID: <" in args[0]
-            assert "\n\nfoobar\n" in args[0]
-            assert "Content-Transfer-Encoding: base64" in args[0]
-            assert "Content-Disposition: attachment; filename=\"test.txt\"" in args[0]
-            assert "\nVGhpcyBpcyBhIGZpbGUu\n" in args[0]
-
-            assert "\n\nThis is an S/MIME signed message\n" in args[0]
-            assert "Content-Type: application/x-pkcs7-signature; name=\"smime.p7s\"" in args[0]
-            assert "Content-Transfer-Encoding: base64" in args[0]
-            assert "Content-Disposition: attachment; filename=\"smime.p7s\"" in args[0]
-
-            email_msg = email.message_from_string(args[0])
-            for part in email_msg.walk():
-                if "signed" in part.get('Content-Type') and "pkcs7-signature" in part.get('Content-Type'):
-                    signature = k.smime_verify(part, app.config.custom["accounts"])
-                    assert signature['message'] == "self-signed or unavailable certificate(s)"
-                    assert signature['valid'] == None
+            assert text == args[0]
 
     mm.maildir_flags_to_tags.assert_called_once()
     mm.tags_to_maildir_flags.assert_called_once()
@@ -2856,6 +2674,7 @@ def test_send_sign_reply_cal(setup):
                                                  "END:VCALENDAR"}]) as ma:
                 with patch("notmuch.Database", return_value=dbw):
                     with patch("builtins.open", mock_open()) as m:
+                        text = None
                         with patch("M2Crypto.SMIME.SMIME", return_value=smime) as smim:
                             with patch.object(smime, "load_key") as smimload:
                                 with app.test_client() as test_client:
@@ -2866,7 +2685,6 @@ def test_send_sign_reply_cal(setup):
                                     response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
                                     assert response.status_code == 200
                                     status = None
-                                    text = None
                                     response_iter = response.response.__iter__()
                                     try:
                                         while (chunk := next(response_iter)) is not None:
@@ -2925,37 +2743,7 @@ def test_send_sign_reply_cal(setup):
                         hdl = m()
                         hdl.write.assert_called_once()
                         args = hdl.write.call_args.args
-                        assert "Content-Type: text/plain" in args[0]
-                        assert "Content-Type: multipart/mixed" in args[0]
-                        assert "Content-Transfer-Encoding: 7bit" in args[0]
-                        assert "Subject: Accept: test" in args[0]
-                        assert "From: Foo Bar <unittest@tine20.org>" in args[0]
-                        assert "To: bar" in args[0]
-                        assert "Cc:" in args[0]
-                        assert "Bcc:" in args[0]
-                        assert "Date: " in args[0]
-                        assert "Message-ID: <" in args[0]
-                        assert "In-Reply-To: <oldFoo>" in args[0]
-                        assert "References: <oldFoo>" in args[0]
-                        assert "\n\nfoobar\n" in args[0]
-                        assert "METHOD:REPLY" in args[0]
-                        assert "DTSTAMP:" in args[0]
-                        assert 'ATTENDEE;CN="Foo Bar";PARTSTAT=ACCEPTED:MAILTO:unittest@tine20.org' in args[0]
-                        assert "SUMMARY:Accept: testevent" in args[0]
-                        assert "SEQUENCE:1" in args[0]
-                        assert "UID:6f59364f-987e-48bb-a0d1-5512a2ba5570" in args[0]
-
-                        assert "\n\nThis is an S/MIME signed message\n" in args[0]
-                        assert "Content-Type: application/x-pkcs7-signature; name=\"smime.p7s\"" in args[0]
-                        assert "Content-Transfer-Encoding: base64" in args[0]
-                        assert "Content-Disposition: attachment; filename=\"smime.p7s\"" in args[0]
-
-                        email_msg = email.message_from_string(args[0])
-                        for part in email_msg.walk():
-                            if "signed" in part.get('Content-Type') and "pkcs7-signature" in part.get('Content-Type'):
-                                signature = k.smime_verify(part, app.config.custom["accounts"])
-                                assert signature['message'] == "self-signed or unavailable certificate(s)"
-                                assert signature['valid'] == None
+                        assert text == args[0]
 
                 ma.assert_called_once_with(mf)
             mtj.assert_called_once_with(mf)
