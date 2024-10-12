@@ -381,7 +381,7 @@ def create_app():
         # claude helped with this
         def worker(send_id):
             sendcmd = account["sendmail"]
-            bytes_msg = msg.as_bytes(policy=policy)
+            bytes_msg = msg.as_string(policy=policy).encode("utf8")
             bytes_total = len(bytes_msg)
             bytes_written = queue.Queue()
             with subprocess.Popen(sendcmd.split(' '), stdin=subprocess.PIPE,

@@ -1481,6 +1481,95 @@ def test_send(setup):
     dbw.close.assert_called_once()
 
 
+def test_send_base64(setup):
+    app, db = setup
+
+    mm = lambda: None
+    mm.maildir_flags_to_tags = MagicMock()
+    mm.add_tag = MagicMock()
+    mm.tags_to_maildir_flags = MagicMock()
+
+    dbw = lambda: None
+    dbw.close = MagicMock()
+    dbw.begin_atomic = MagicMock()
+    dbw.end_atomic = MagicMock()
+    dbw.index_file = MagicMock(return_value=(mm, 0))
+
+    pd = {"from": "foo", "to": "bar", "cc": "", "bcc": "", "subject": "test", "body": "täst", "action": "compose", "tags": "foo,bar"}
+
+    app.config.custom["accounts"] = [{"id": "foo",
+                                      "name": "Foo Bar",
+                                      "email": "foo@bar.com",
+                                      "sendmail": "cat",
+                                      "save_sent_to": "folder",
+                                      "additional_sent_tags": ["test"]}]
+
+    with patch("notmuch.Database", return_value=dbw):
+        with patch("builtins.open", mock_open()) as m:
+            with app.test_client() as test_client:
+                response = test_client.post('/api/send', data=pd)
+                assert response.status_code == 202
+                sid = response.json["send_id"]
+                assert sid != None
+                response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
+                assert response.status_code == 200
+                status = None
+                text = None
+                response_iter = response.response.__iter__()
+                try:
+                    while (chunk := next(response_iter)) is not None:
+                        lines = chunk.decode().strip().split('\n\n')
+                        for line in lines:
+                            if line.startswith('data: '):
+                                data = json.loads(line[6:])
+                                if 'send_status' in data and data['send_status'] != 'sending':
+                                    status = data['send_status']
+                                    text = data['send_output']
+                                    break
+                except StopIteration:
+                    pass
+                assert status == 0
+                assert "Content-Type: text/plain; charset=\"utf-8\"" in text
+                assert "Content-Transfer-Encoding: base64" in text
+                assert "MIME-Version: 1.0" in text
+                assert "Subject: test" in text
+                assert "From: Foo Bar <foo@bar.com>" in text
+                assert "To: bar" in text
+                assert "Cc:" in text
+                assert "Bcc:" in text
+                assert "Date: " in text
+                assert "Message-ID: <" in text
+                assert "\n\ndMOkc3QK\n" in text
+            m.assert_called_once()
+            args = m.call_args.args
+            assert "kukulkan" in args[0]
+            assert "folder" in args[0]
+            assert ":2,S" in args[0]
+            assert args[1] == "w"
+            hdl = m()
+            hdl.write.assert_called_once()
+            args = hdl.write.call_args.args
+            assert "Content-Type: text/plain; charset=\"utf-8\"" in args[0]
+            assert "Content-Transfer-Encoding: base64" in args[0]
+            assert "MIME-Version: 1.0" in args[0]
+            assert "Subject: test" in args[0]
+            assert "From: Foo Bar <foo@bar.com>" in args[0]
+            assert "To: bar" in args[0]
+            assert "Cc:" in args[0]
+            assert "Bcc:" in args[0]
+            assert "Date: " in args[0]
+            assert "Message-ID: <" in args[0]
+            assert "\n\ndMOkc3QK\n" in args[0]
+
+    mm.maildir_flags_to_tags.assert_called_once()
+    mm.tags_to_maildir_flags.assert_called_once()
+    mm.add_tag.assert_has_calls([call("foo"), call("bar"), call("test"), call("sent")])
+
+    dbw.begin_atomic.assert_called_once()
+    dbw.end_atomic.assert_called_once()
+    dbw.close.assert_called_once()
+
+
 def test_send_addresses(setup):
     app, db = setup
 
