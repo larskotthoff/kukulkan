@@ -306,9 +306,9 @@ export const Write = (props) => {
     formData.append('refId', baseMessageId);
     formData.append('action', action);
     formData.append('from', message.from);
-    formData.append('to', message.to.join(', '));
-    formData.append('cc', message.cc.join(', '));
-    formData.append('bcc', message.bcc.join(', '));
+    formData.append('to', message.to.join('\n'));
+    formData.append('cc', message.cc.join('\n'));
+    formData.append('bcc', message.bcc.join('\n'));
     formData.append('subject', message.subject);
     formData.append('tags', message.tags);
     formData.append('body', message.body);

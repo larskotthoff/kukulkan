@@ -967,7 +967,7 @@ test("data assembled correctly for sending new email", async () => {
   expect(options.body.get("refId")).toBe("null");
   expect(options.body.get("action")).toBe("compose");
   expect(options.body.get("from")).toBe("bar");
-  expect(options.body.get("to")).toBe("to@test.com, otherto@test.com");
+  expect(options.body.get("to")).toBe("to@test.com\notherto@test.com");
   expect(options.body.get("cc")).toBe("cc@test.com");
   expect(options.body.get("bcc")).toBe("bcc@test.com");
   expect(options.body.get("tags")).toBe("foobar");
@@ -1051,7 +1051,7 @@ test("data assembled correctly for sending new email w/ template", async () => {
   expect(options.body.get("refId")).toBe("null");
   expect(options.body.get("action")).toBe("compose");
   expect(options.body.get("from")).toBe("bar");
-  expect(options.body.get("to")).toBe("to@test.com, otherto@test.com");
+  expect(options.body.get("to")).toBe("to@test.com\notherto@test.com");
   expect(options.body.get("cc")).toBe("cc@test.com");
   expect(options.body.get("bcc")).toBe("bcc@test.com");
   expect(options.body.get("tags")).toBe("foobar");
@@ -1195,8 +1195,8 @@ test("data assembled correctly for sending reply", async () => {
   expect(options.body.get("refId")).toBe("foo");
   expect(options.body.get("action")).toBe("reply");
   expect(options.body.get("from")).toBe("foo");
-  expect(options.body.get("to")).toBe("bar foo <bar@foo.com>, to@test.com, otherto@test.com");
-  expect(options.body.get("cc")).toBe("test@test.com, cc@test.com");
+  expect(options.body.get("to")).toBe("bar foo <bar@foo.com>\nto@test.com\notherto@test.com");
+  expect(options.body.get("cc")).toBe("test@test.com\ncc@test.com");
   expect(options.body.get("bcc")).toBe("bcc@test.com");
   expect(options.body.get("tags")).toBe("foo,bar,test,foobar");
   expect(options.body.get("subject")).toBe("Re: Test. testsubject");
@@ -1255,7 +1255,7 @@ test("data assembled correctly when retrieving from localStorage w/o editing", a
   expect(options.body.get("refId")).toBe("null");
   expect(options.body.get("action")).toBe("compose");
   expect(options.body.get("from")).toBe("bar");
-  expect(options.body.get("to")).toBe("to@test.com, otherto@test.com");
+  expect(options.body.get("to")).toBe("to@test.com\notherto@test.com");
   expect(options.body.get("cc")).toBe("foo@bar.com");
   expect(options.body.get("bcc")).toBe("");
   expect(options.body.get("tags")).toBe("");
