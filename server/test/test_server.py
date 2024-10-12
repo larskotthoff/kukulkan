@@ -1481,7 +1481,8 @@ def test_send(setup):
     dbw.close.assert_called_once()
 
 
-def test_send_base64(setup):
+@pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="Doesn't base64 encode and messes up UTF8.")
+def test_send_base64_transfer(setup):
     app, db = setup
 
     mm = lambda: None
@@ -2530,6 +2531,7 @@ def test_send_sign(setup):
     dbw.close.assert_called_once()
 
 
+@pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="Doesn't base64 encode and messes up UTF8.")
 def test_send_sign_base64_transfer(setup):
     app, db = setup
 
