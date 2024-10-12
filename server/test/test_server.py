@@ -1588,7 +1588,8 @@ def test_send_addresses(setup):
     dbw.index_file = MagicMock(return_value=(mm, 0))
 
     pd = {"from": "foo", "to": "Foo bar <foo@bar.com>\ntäst <test@bar.com>", "cc": "Föö, Bår <foo@bar.com>",
-          "bcc": "Føø Bär <foo@bar.com>", "subject": "test", "body": "foobar", "action": "compose", "tags": "foo,bar"}
+          "bcc": "Føø Bär <foo@bar.com>\n<test@test.com>\ntest1@test1.com", "subject": "test",
+          "body": "foobar", "action": "compose", "tags": "foo,bar"}
 
     app.config.custom["accounts"] = [{"id": "foo",
                                       "name": "Foo Bar",
@@ -1629,7 +1630,7 @@ def test_send_addresses(setup):
                 assert "From: Foo Bar <foo@bar.com>" in text
                 assert "To: Foo bar <foo@bar.com>, täst <test@bar.com>" in text
                 assert "Cc: \"Föö, Bår\" <foo@bar.com>" in text
-                assert "Bcc: Føø Bär <foo@bar.com>" in text
+                assert "Bcc: Føø Bär <foo@bar.com>, test@test.com, test1@test1.com" in text
                 assert "Date: " in text
                 assert "Message-ID: <" in text
                 assert "\n\nfoobar\n" in text
@@ -1649,7 +1650,7 @@ def test_send_addresses(setup):
             assert "From: Foo Bar <foo@bar.com>" in args[0]
             assert "To: Foo bar <foo@bar.com>, täst <test@bar.com>" in args[0]
             assert "Cc: \"Föö, Bår\" <foo@bar.com>" in args[0]
-            assert "Bcc: Føø Bär <foo@bar.com>" in args[0]
+            assert "Bcc: Føø Bär <foo@bar.com>, test@test.com, test1@test1.com" in args[0]
             assert "Date: " in args[0]
             assert "Message-ID: <" in args[0]
             assert "\n\nfoobar\n" in args[0]
