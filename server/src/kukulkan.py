@@ -79,10 +79,10 @@ def email_header(emails):
     """Encodes email names and addresses as Addresses from list of addresses separated by newline."""
     tmp = []
     # Regular expression to match email address parts
-    pattern = r'^(.*?)\s*<?([-!#$%&\'*+/=?^_`{|}~0-9A-Za-z.]+@[-!#$%&\'*+/=?^_`{|}~0-9A-Za-z.]+)>?$'
+    pattern = r'^(.*?)\s*<?([^<@]+@[^>]+)>?$'
     if len(emails) > 0:
         for email in emails.split('\n'):
-            match = re.match(pattern, email)
+            match = re.match(pattern, email.strip())
             if match:
                 display_name, address = match.groups()
                 local_part, domain = address.rsplit('@', 1)
