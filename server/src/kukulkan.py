@@ -1,14 +1,13 @@
 """Flask web app providing API to notmuch. Based on API from netviel (https://github.com/DavidMStraub/netviel)."""
 
 import email
-import email.policy
+import email.headerregistry
 import email.mime.multipart
 import email.mime.text
-from email.headerregistry import Address
+import email.policy
 
 import datetime
 import io
-import itertools
 import logging
 import os
 import subprocess
@@ -79,16 +78,16 @@ def email_addresses_header(emails):
     """Encodes email names and addresses from list of addresses separated by newline."""
     tmp = []
     if len(emails) > 0:
-        for email in [ x.strip() for x in emails.split('\n') ]:
+        for mail in [x.strip() for x in emails.split('\n')]:
             try:
-                display_name, address = email.rsplit('<', 1)
+                display_name, address = mail.rsplit('<', 1)
                 local_part, domain = address.strip('>').rsplit('@', 1)
                 # strip any surrounding quotes from the display name
                 display_name = display_name.strip('" ')
-                tmp.append(Address(display_name or "", local_part, domain))
+                tmp.append(email.headerregistry.Address(display_name or "", local_part, domain))
             except ValueError:  # only email address, no name
-                local_part, domain = email.rsplit('@', 1)
-                tmp.append(Address("", local_part, domain))
+                local_part, domain = mail.rsplit('@', 1)
+                tmp.append(email.headerregistry.Address("", local_part, domain))
 
     return ", ".join(str(addr) for addr in tmp)
 
@@ -178,7 +177,7 @@ def create_app():
     class Query(Resource):
         def get(self, query_string):
             threads = get_query(query_string).search_threads()
-            return threads_to_json(threads, number=None)
+            return [thread_to_json(t) for t in threads]
 
     class Address(Resource):
         def get(self, query_string):
@@ -473,16 +472,6 @@ def create_app():
         return Response(generate(), mimetype='text/event-stream')
 
     return app
-
-
-def threads_to_json(threads, start=0, number=None):
-    """Converts a list of `notmuch.threads.Threads` instances to a JSON object."""
-    if number is None:
-        stop = None
-    else:
-        stop = start + number
-    my_threads = itertools.islice(threads, start, stop)
-    return [thread_to_json(t) for t in my_threads]
 
 
 def thread_to_json(thread):
