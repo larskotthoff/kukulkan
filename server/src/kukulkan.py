@@ -353,9 +353,9 @@ def create_app():
 
         msg['Subject'] = request.values['subject']
         msg['From'] = f'{account["name"]} <{account["email"]}>'
-        msg['To'] = ", ".join(request.values['to'].split('\n'))
-        msg['Cc'] = ", ".join(request.values['cc'].split('\n'))
-        msg['Bcc'] = ", ".join(request.values['bcc'].split('\n'))
+        msg['To'] = request.values['to']
+        msg['Cc'] = request.values['cc']
+        msg['Bcc'] = request.values['bcc']
         msg['Date'] = email.utils.formatdate(localtime=True)
 
         msg_id = email.utils.make_msgid("kukulkan")
