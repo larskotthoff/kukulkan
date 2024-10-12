@@ -1406,7 +1406,8 @@ def test_send(setup):
     dbw.end_atomic = MagicMock()
     dbw.index_file = MagicMock(return_value=(mm, 0))
 
-    pd = {"from": "foo", "to": "bar", "cc": "", "bcc": "", "subject": "test", "body": "foobar", "action": "compose", "tags": "foo,bar"}
+    pd = {"from": "foo", "to": "bar@bar.com", "cc": "", "bcc": "", "subject": "test",
+          "body": "foobar", "action": "compose", "tags": "foo,bar"}
 
     app.config.custom["accounts"] = [{"id": "foo",
                                       "name": "Foo Bar",
@@ -1496,7 +1497,8 @@ def test_send_base64_transfer(setup):
     dbw.end_atomic = MagicMock()
     dbw.index_file = MagicMock(return_value=(mm, 0))
 
-    pd = {"from": "foo", "to": "bar", "cc": "", "bcc": "", "subject": "test", "body": "täst", "action": "compose", "tags": "foo,bar"}
+    pd = {"from": "foo", "to": "bar@bar.com", "cc": "", "bcc": "", "subject": "test",
+          "body": "täst", "action": "compose", "tags": "foo,bar"}
 
     app.config.custom["accounts"] = [{"id": "foo",
                                       "name": "Foo Bar",
@@ -1585,7 +1587,7 @@ def test_send_addresses(setup):
     dbw.end_atomic = MagicMock()
     dbw.index_file = MagicMock(return_value=(mm, 0))
 
-    pd = {"from": "foo", "to": "Foo bar <foo@bar.com>", "cc": "Föö Bår <foo@bar.com>",
+    pd = {"from": "foo", "to": "Foo bar <foo@bar.com>\ntäst <test@bar.com>", "cc": "Föö Bår <foo@bar.com>",
           "bcc": "Føø Bär <foo@bar.com>", "subject": "test", "body": "foobar", "action": "compose", "tags": "foo,bar"}
 
     app.config.custom["accounts"] = [{"id": "foo",
@@ -1625,7 +1627,7 @@ def test_send_addresses(setup):
                 assert "MIME-Version: 1.0" in text
                 assert "Subject: test" in text
                 assert "From: Foo Bar <foo@bar.com>" in text
-                assert "To: Foo bar <foo@bar.com>" in text
+                assert "To: Foo bar <foo@bar.com>, täst <test@bar.com>" in text
                 assert "Cc: Föö Bår <foo@bar.com>" in text
                 assert "Bcc: Føø Bär <foo@bar.com>" in text
                 assert "Date: " in text
@@ -1645,7 +1647,7 @@ def test_send_addresses(setup):
             assert "MIME-Version: 1.0" in args[0]
             assert "Subject: test" in args[0]
             assert "From: Foo Bar <foo@bar.com>" in args[0]
-            assert "To: Foo bar <foo@bar.com>" in args[0]
+            assert "To: Foo bar <foo@bar.com>, täst <test@bar.com>" in args[0]
             assert "Cc: Föö Bår <foo@bar.com>" in args[0]
             assert "Bcc: Føø Bär <foo@bar.com>" in args[0]
             assert "Date: " in args[0]
@@ -1664,7 +1666,8 @@ def test_send_addresses(setup):
 def test_send_fail(setup):
     app, db = setup
 
-    pd = {"from": "foo", "to": "bar", "cc": "", "bcc": "", "subject": "test", "body": "foobar", "action": "compose", "tags": "foo,bar"}
+    pd = {"from": "foo", "to": "bar@bar.com", "cc": "", "bcc": "", "subject": "test",
+          "body": "foobar", "action": "compose", "tags": "foo,bar"}
 
     app.config.custom["accounts"] = [{"id": "foo",
                                       "name": "Foo Bar",
@@ -1710,7 +1713,7 @@ def test_send_attachment(setup):
     dbw.end_atomic = MagicMock()
     dbw.index_file = MagicMock(return_value=(mm, 0))
 
-    pd = {"from": "foo", "to": "bar", "cc": "", "bcc": "", "subject": "test",
+    pd = {"from": "foo", "to": "bar@bar.com", "cc": "", "bcc": "", "subject": "test",
           "body": "foobar", "action": "compose", "tags": "foo,bar"}
     pd = {key: str(value) for key, value in pd.items()}
     pd['file'] = (io.BytesIO(b"This is a file."), 'test.txt')
@@ -1812,7 +1815,7 @@ def test_send_reply(setup):
     dbw.end_atomic = MagicMock()
     dbw.index_file = MagicMock(return_value=(mm, 0))
 
-    pd = {"from": "foo", "to": "bar", "cc": "", "bcc": "", "subject": "test",
+    pd = {"from": "foo", "to": "bar@bar.com", "cc": "", "bcc": "", "subject": "test",
           "body": "foobar", "action": "reply", "tags": "foo,bar", "refId": "oldFoo"}
 
     app.config.custom["accounts"] = [{"id": "foo",
@@ -1925,7 +1928,7 @@ def test_send_reply_more_refs(setup):
     dbw.end_atomic = MagicMock()
     dbw.index_file = MagicMock(return_value=(mm, 0))
 
-    pd = {"from": "foo", "to": "bar", "cc": "", "bcc": "", "subject": "test",
+    pd = {"from": "foo", "to": "bar@bar.com", "cc": "", "bcc": "", "subject": "test",
           "body": "foobar", "action": "reply", "tags": "foo,bar", "refId": "oldFoo"}
 
     app.config.custom["accounts"] = [{"id": "foo",
@@ -2038,7 +2041,7 @@ def test_send_reply_cal(setup):
     dbw.end_atomic = MagicMock()
     dbw.index_file = MagicMock(return_value=(mm, 0))
 
-    pd = {"from": "foo", "to": "bar", "cc": "", "bcc": "", "subject": "Accept: test",
+    pd = {"from": "foo", "to": "bar@bar.com", "cc": "", "bcc": "", "subject": "Accept: test",
           "body": "foobar", "action": "reply-cal-accept", "tags": "foo,bar",
           "refId": "oldFoo", "attachment-0": "unnamed attachment"}
 
@@ -2183,7 +2186,7 @@ def test_send_forward(setup):
     dbw.end_atomic = MagicMock()
     dbw.index_file = MagicMock(return_value=(mm, 0))
 
-    pd = {"from": "foo", "to": "bar", "cc": "", "bcc": "", "subject": "test",
+    pd = {"from": "foo", "to": "bar@bar.com", "cc": "", "bcc": "", "subject": "test",
           "body": "foobar", "action": "forward", "tags": "foo,bar",
           "refId": "oldFoo", "attachment-0": "testfile"}
 
@@ -2299,7 +2302,7 @@ def test_send_forward_text_attachment(setup):
     dbw.end_atomic = MagicMock()
     dbw.index_file = MagicMock(return_value=(mm, 0))
 
-    pd = {"from": "foo", "to": "bar", "cc": "", "bcc": "", "subject": "test",
+    pd = {"from": "foo", "to": "bar@bar.com", "cc": "", "bcc": "", "subject": "test",
           "body": "foobar", "action": "forward", "tags": "foo,bar",
           "refId": "oldFoo", "attachment-0": "unnamed attachment"}
 
@@ -2419,7 +2422,7 @@ def test_send_sign(setup):
     dbw.end_atomic = MagicMock()
     dbw.index_file = MagicMock(return_value=(mm, 0))
 
-    pd = {"from": "foo", "to": "bar", "cc": "", "bcc": "", "subject": "test",
+    pd = {"from": "foo", "to": "bar@bar.com", "cc": "", "bcc": "", "subject": "test",
           "body": "foobar", "action": "compose", "tags": "foo,bar"}
 
     app.config.custom["accounts"] = [{"id": "foo",
@@ -2546,7 +2549,7 @@ def test_send_sign_base64_transfer(setup):
     dbw.end_atomic = MagicMock()
     dbw.index_file = MagicMock(return_value=(mm, 0))
 
-    pd = {"from": "foo", "to": "bar", "cc": "", "bcc": "", "subject": "test",
+    pd = {"from": "foo", "to": "bar@bar.com", "cc": "", "bcc": "", "subject": "test",
           "body": "täst", "action": "compose", "tags": "foo,bar"}
 
     app.config.custom["accounts"] = [{"id": "foo",
@@ -2671,7 +2674,7 @@ def test_send_sign_attachment(setup):
     dbw.end_atomic = MagicMock()
     dbw.index_file = MagicMock(return_value=(mm, 0))
 
-    pd = {"from": "foo", "to": "bar", "cc": "", "bcc": "", "subject": "test",
+    pd = {"from": "foo", "to": "bar@bar.com", "cc": "", "bcc": "", "subject": "test",
           "body": "foobar", "action": "compose", "tags": "foo,bar"}
     pd['file'] = (io.BytesIO(b"This is a file."), 'test.txt')
 
@@ -2804,7 +2807,7 @@ def test_send_sign_reply_cal(setup):
     dbw.end_atomic = MagicMock()
     dbw.index_file = MagicMock(return_value=(mm, 0))
 
-    pd = {"from": "foo", "to": "bar", "cc": "", "bcc": "", "subject": "Accept: test",
+    pd = {"from": "foo", "to": "bar@bar.com", "cc": "", "bcc": "", "subject": "Accept: test",
           "body": "foobar", "action": "reply-cal-accept", "tags": "foo,bar",
           "refId": "oldFoo", "attachment-0": "unnamed attachment"}
 

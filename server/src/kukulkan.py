@@ -4,6 +4,7 @@ import email
 import email.policy
 import email.mime.multipart
 import email.mime.text
+from email.headerregistry import Address
 
 import datetime
 import io
@@ -71,6 +72,31 @@ def feed_input(process, buffer, bytes_written):
         process.stdin.write(chunk)
         process.stdin.flush()
         bytes_written.put(processed)
+
+
+# claude helped with this as well
+def email_header(emails):
+    """Encodes email names and addresses as Addresses from list of addresses separated by newline."""
+    tmp = []
+    # Regular expression to match email address parts
+    pattern = r'^(.*?)\s*<?([-!#$%&\'*+/=?^_`{|}~0-9A-Za-z.]+@[-!#$%&\'*+/=?^_`{|}~0-9A-Za-z.]+)>?$'
+    if len(emails) > 0:
+        for email in emails.split('\n'):
+            match = re.match(pattern, email)
+            if match:
+                display_name, address = match.groups()
+                local_part, domain = address.rsplit('@', 1)
+
+                # Strip any surrounding quotes from the display name
+                display_name = display_name.strip('" ')
+
+                tmp.append(Address(display_name or "", local_part, domain))
+            else:
+                # If no match, assume the whole string is an email address without a display name
+                local_part, domain = email.rsplit('@', 1)
+                tmp.append(Address("", local_part, domain))
+
+    return ", ".join(str(addr) for addr in tmp)
 
 
 def get_db():
@@ -353,9 +379,9 @@ def create_app():
 
         msg['Subject'] = request.values['subject']
         msg['From'] = f'{account["name"]} <{account["email"]}>'
-        msg['To'] = ", ".join(request.values['to'].split('\n'))
-        msg['Cc'] = ", ".join(request.values['cc'].split('\n'))
-        msg['Bcc'] = ", ".join(request.values['bcc'].split('\n'))
+        msg['To'] = email_header(request.values['to'])
+        msg['Cc'] = email_header(request.values['cc'])
+        msg['Bcc'] = email_header(request.values['bcc'])
         msg['Date'] = email.utils.formatdate(localtime=True)
 
         msg_id = email.utils.make_msgid("kukulkan")
