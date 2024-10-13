@@ -1,12 +1,18 @@
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { cleanup, render, screen } from "@solidjs/testing-library";
 import { userEvent } from "@testing-library/user-event";
 
 import { SearchThreads } from "./SearchThreads.jsx";
 import { renderDateNumThread } from "./utils.js";
 
+beforeEach(() => {
+  localStorage.clear();
+});
+
 afterEach(() => {
+  localStorage.clear();
   cleanup();
+  vi.unstubAllGlobals();
 });
 
 const threads = [{authors: "fooAuthor, barAuthor", subject: "test", tags:
@@ -20,6 +26,37 @@ test("renders components", () => {
   const { container } = render(() => <SearchThreads threads={() => threads} index={() => 0} activeThread={() => 0}
     selectedThreads={() => []} setQuery={() => []}/>);
   expect(container.querySelector("div")).not.toBe(undefined);
+  expect(container.querySelector("#query-box")).not.toBe(undefined);
+});
+
+test("shows completions", async () => {
+  const { container } = render(() => <SearchThreads threads={() => []} index={() => 0} activeThread={() => 0}
+    selectedThreads={() => []} setQuery={() => []}/>);
+  await userEvent.type(container.querySelector("#query-box"), "t");
+  expect(screen.getByText("tag:unread")).toBeInTheDocument();
+  expect(screen.getByText("tag:todo")).toBeInTheDocument();
+
+  container.querySelector("#query-box").value = "";
+  await userEvent.type(container.querySelector("#query-box"), "d");
+  expect(screen.getByText("date:today")).toBeInTheDocument();
+});
+
+test("saves queries for completion", async () => {
+  let { container } = render(() => <SearchThreads threads={() => []} index={() => 0} activeThread={() => 0}
+    selectedThreads={() => []} setQuery={() => []} allTags={() => []}/>);
+  await userEvent.type(container.querySelector("#query-box"), "t");
+  expect(screen.queryByText("tag:foo")).not.toBeInTheDocument();
+  cleanup();
+
+  vi.stubGlobal('location', {
+    ...window.location,
+    search: '?query=tag:foo'
+  });
+  container = render(() => <SearchThreads threads={() => []} index={() => 0} activeThread={() => 0}
+    selectedThreads={() => []} setQuery={() => []} allTags={() => []}/>).container;
+  container.querySelector("#query-box").value = "";
+  await userEvent.type(container.querySelector("#query-box"), "t");
+  expect(screen.getByText("tag:foo")).toBeInTheDocument();
 });
 
 test("shows threads", () => {
