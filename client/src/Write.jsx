@@ -172,10 +172,16 @@ export const Write = (props) => {
       if(!draftKey().endsWith(baseMessage().message_id)) {
         setDraftKey(draftKey() + `-${baseMessage().message_id}`);
       }
-      if(action === "forward" && baseMessage().attachments) {
-        // attach files attached to previous email
-        const newFiles = baseMessage().attachments.map(a => { return { dummy: true, name: a.filename }; });
-        setMessage("files", (prevFiles) => [...prevFiles, ...newFiles ]);
+      if(action === "forward") {
+        if(baseMessage().attachments) {
+          // attach files attached to previous email
+          const newFiles = baseMessage().attachments.map(a => { return { dummy: true, name: a.filename }; });
+          setMessage("files", (prevFiles) => [...prevFiles, ...newFiles ]);
+        }
+        if(baseMessage().body["text/html"]) {
+          // attach HTML part of original email
+          setMessage("files", (prevFiles) => [...prevFiles, ...[{dummy: true, name: "Original HTML message"}] ]);
+        }
       }
       if(action.startsWith("reply-cal-")) {
         const idx = searchParams.get("index"),

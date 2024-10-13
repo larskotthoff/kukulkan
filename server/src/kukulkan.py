@@ -299,17 +299,25 @@ def create_app():
         msg.set_content(request.values['body'])
 
         if request.values['action'] == "forward":
-            # attach attachments from original mail
+            # attach attachments and HTML from original mail
             ref_msg = get_message(request.values['refId'])
             ref_atts = message_attachment(ref_msg)
             for key in request.values.keys():
                 if key.startswith("attachment-") and key not in request.files:
-                    att = [tmp for tmp in ref_atts if tmp["filename"] == request.values[key]][0]
-                    typ = att["content_type"].split('/', 1)
-                    if isinstance(att["content"], bytes):
-                        msg.add_attachment(att["content"], maintype=typ[0], subtype=typ[1], filename=att["filename"])
-                    else:
-                        msg.add_attachment(att["content"], subtype=typ[1], filename=att["filename"])
+                    try:
+                        att = next(tmp for tmp in ref_atts if tmp["filename"] == request.values[key])
+                        typ = att["content_type"].split('/', 1)
+                        if isinstance(att["content"], bytes):
+                            msg.add_attachment(att["content"], maintype=typ[0], subtype=typ[1], filename=att["filename"])
+                        else:
+                            msg.add_attachment(att["content"], subtype=typ[1], filename=att["filename"])
+                    except StopIteration:
+                        # original HTML
+                        email_msg = email_from_notmuch(ref_msg)
+                        for part in email_msg.walk():
+                            if part.get_content_type() == "text/html":
+                                html = part.get_content()
+                                msg.add_attachment(html, subtype="html")
 
         if request.values['action'].startswith("reply-cal-"):
             # create new calendar reply attachment
@@ -711,8 +719,7 @@ def smime_verify(part, accts):
 
 def message_to_json(message):
     """Converts a `notmuch.message.Message` instance to a JSON object."""
-    with open(message.get_filename(), "rb") as f:
-        email_msg = email.message_from_binary_file(f, policy=policy)
+    email_msg = email_from_notmuch(message)
 
     attachments = get_attachments(email_msg)
     body, html_body = get_nested_body(email_msg)
@@ -797,11 +804,17 @@ def message_to_json(message):
 
 def message_attachment(message, num=-1):
     """Returns attachment no. `num` of a `notmuch.message.Message` instance."""
-    with open(message.get_filename(), "rb") as f:
-        email_msg = email.message_from_binary_file(f, policy=policy)
+    email_msg = email_from_notmuch(message)
     attachments = get_attachments(email_msg, True)
     if not attachments or num > len(attachments) - 1:
         return None
     if num == -1:
         return attachments
     return attachments[num]
+
+
+def email_from_notmuch(message):
+    """Returns the email message corresponding to a `notmuch.message.Message` instance."""
+    with open(message.get_filename(), "rb") as f:
+        email_msg = email.message_from_binary_file(f, policy=policy)
+        return email_msg

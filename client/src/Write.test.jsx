@@ -333,6 +333,7 @@ test("base message forward", async () => {
   expect(screen.getByText("bar")).toBeInTheDocument();
   expect(screen.getByText("test")).toBeInTheDocument();
   expect(getByTestId("body").querySelector("textarea").value).toBe(`\n\n\nOn ${msg.date}, ${msg.from} wrote:\n> Test mail`);
+  expect(screen.getByText("Original HTML message")).toBeInTheDocument();
   expect(document.title).toBe("Compose: Fw: Test.");
 });
 
@@ -627,6 +628,7 @@ test("files attachable and editable", async () => {
   // forwarded attachments present
   expect(screen.getByText("foofile")).toBeInTheDocument();
   expect(screen.getByText("barfile")).toBeInTheDocument();
+  expect(screen.getByText("Original HTML message")).toBeInTheDocument();
 
   // remove attachment
   await userEvent.click(screen.getByText("foofile"));
