@@ -1283,6 +1283,45 @@ def test_message_filter_text(setup):
     mq.search_messages.assert_called_once()
 
 
+def test_attachment_mail(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.get_filename = MagicMock(return_value="test/mails/mail_nested.eml")
+
+    mq = lambda: None
+    mq.search_messages = MagicMock(return_value=iter([mf]))
+
+    with patch("notmuch.Query", return_value=mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/attachment_message/foo/0')
+            assert response.status_code == 200
+            msg = json.loads(response.data.decode())
+            assert msg["from"] == "POSTBAN͟K͟ <gxnwgddl@carcarry.de>"
+            assert msg["to"] == "2012gdwu <2012gdwu@web.de>"
+            assert msg["cc"] == ""
+            assert msg["bcc"] == ""
+            assert msg["date"] == "Mon, 20 Jul 2020 02:15:26 +0000"
+            assert msg["subject"] == "BsetSign App : Y7P32-HTXU2-FRDG7"
+            assert msg["message_id"] == "<1M3lHZ-1jyAPt0pTn-000u1I@mrelayeu.kundenserver.de>"
+            assert msg["in_reply_to"] == None
+            assert msg["references"] == None
+            assert msg["reply_to"] == None
+            assert msg["delivered_to"] == "arne.keller@posteo.de"
+
+            assert "Öffnen Sie den unten stehenden Aktivierungslink" in msg["body"]["text/plain"]
+            assert "Öffnen Sie den unten stehenden Aktivierungslink" in msg["body"]["text/html"]
+
+            assert msg["notmuch_id"] == None
+            assert msg["tags"] == []
+            assert msg["attachments"] == []
+            assert msg["signature"] is None
+        q.assert_called_once_with(db, 'id:"foo"')
+
+    mf.get_filename.assert_called_once()
+    mq.search_messages.assert_called_once()
+
+
 def test_thread(setup):
     app, db = setup
 

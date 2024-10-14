@@ -232,6 +232,14 @@ def create_app():
         return send_file(f, mimetype=d["content_type"], as_attachment=False,
                          download_name=d["filename"].replace('\n', ''))
 
+    @app.route("/api/attachment_message/<path:message_id>/<int:num>")
+    def download_attachment_message(message_id, num):
+        msg = get_message(message_id)
+        d = message_attachment(msg, num)
+        if not d:
+            abort(404)
+        return eml_to_json(bytes(d["content"]))
+
     @app.route("/api/message/<path:message_id>")
     def download_message(message_id):
         msg = get_message(message_id)
@@ -715,6 +723,35 @@ def smime_verify(part, accts):
                 return {"valid": False, "message": str(e)}
     except Exception as e:
         return {"valid": False, "message": str(e)}
+
+
+def eml_to_json(message_bytes):
+    """Converts an eml attachment (represented as bytes) to a JSON object."""
+    email_msg = email.message_from_bytes(message_bytes, policy=policy)
+    body, html_body = get_nested_body(email_msg)
+    res = {
+        "from": email_msg["from"].strip().replace('\t', ' ') if "from" in email_msg else "",
+        "to": email_msg["to"].strip().replace('\t', ' ') if "to" in email_msg else "",
+        "cc": email_msg["cc"].strip().replace('\t', ' ') if "cc" in email_msg else "",
+        "bcc": email_msg["bcc"].strip().replace('\t', ' ') if "bcc" in email_msg else "",
+        "date": email_msg["date"].strip() if "date" in email_msg else "",
+        "subject": email_msg["subject"].strip().replace('\t', ' ') if "subject" in email_msg else "",
+        "message_id": email_msg["Message-ID"].strip() if "Message-ID" in email_msg else "",
+        "in_reply_to": email_msg["In-Reply-To"].strip() if "In-Reply-To" in email_msg else None,
+        "references": email_msg["References"].strip() if "References" in email_msg else None,
+        "reply_to": email_msg["Reply-To"].strip() if "Reply-To" in email_msg else None,
+        "forwarded_to": email_msg["X-Forwarded-To"].strip() if "X-Forwarded-To" in email_msg else None,
+        "delivered_to": email_msg["Delivered-To"].strip() if "Delivered-To" in email_msg else None,
+        "body": {
+            "text/plain": body,
+            "text/html": html_body
+        },
+        "attachments": [],
+        "notmuch_id": None,
+        "tags": [],
+        "signature": None
+    }
+    return res
 
 
 def message_to_json(message):

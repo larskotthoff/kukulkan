@@ -73,6 +73,41 @@ test("fetches and renders message", async () => {
   expect(document.title).toBe("Test.");
 });
 
+test("fetches and renders attached message", async () => {
+  vi.stubGlobal('location', {
+    ...window.location,
+    search: '?id=foo&attachNum=0'
+  });
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/tags":
+        return Promise.resolve({ ok: true, json: () => ["foo", "foobar"] });
+      case "http://localhost:5000/api/attachment_message/foo/0":
+        return Promise.resolve({ ok: true, json: () => msg });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
+  render(() => <FetchedMessage/>);
+
+  expect(global.fetch).toHaveBeenCalledTimes(2);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/attachment_message/foo/0");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("Test.")).toBeInTheDocument();
+  });
+  expect(screen.getByText("foo bar <foo@bar.com>")).toBeInTheDocument();
+  expect(screen.getByText("bar foo <bar@foo.com>")).toBeInTheDocument();
+  expect(screen.getByText("test@test.com")).toBeInTheDocument();
+  expect(screen.getByText("Test mail")).toBeInTheDocument();
+  expect(screen.getByText("foo")).toBeInTheDocument();
+  expect(screen.getByText("bar")).toBeInTheDocument();
+  expect(screen.getByText("test")).toBeInTheDocument();
+
+  expect(document.title).toBe("Test.");
+});
+
 test("fetches and renders message in print view", async () => {
   vi.stubGlobal('location', {
     ...window.location,
@@ -165,12 +200,19 @@ test("renders message attachments", () => {
 
   // calendar
   msg.attachments = [ { content_type: "calendar", content_size: 100, filename: "foo.txt",
-    preview: { summary: "foo", location: "bar", start: "start", end: "end", attendees: "attend", recur: "recur" }}];
+    preview: { summary: "foo", location: "bar", start: "start", end: "end", attendees: "attend", recur: "recur" }} ];
   container = render(() => <Message msg={msg} active={true}/>).container;
   expect(container.querySelector("a[href='http://localhost:5000/api/attachment/fo%40o/0']")).not.toBe(null);
   expect(container.querySelector("a[href='https://www.google.com/calendar/render?action=TEMPLATE&text=foo&dates=undefined/undefined&location=bar&ctz=undefined&recur=RRULE:undefined&sf=true&output=xml']")).not.toBe(null);
   expect(screen.getByText("foo.txt (100 Bi, calendar)")).toBeInTheDocument();
   expect(screen.getByText("foo (bar) start — end attend recur")).toBeInTheDocument();
+  cleanup();
+
+  // nested message
+  msg.attachments = [ { content_type: "message/rfc822", content_size: 100, filename: "bar.txt" } ];
+  container = render(() => <Message msg={msg} active={true}/>).container;
+  expect(container.querySelector("a[href='/message?id=fo%40o&attachNum=0']")).not.toBe(null);
+  expect(screen.getByText("bar.txt (100 Bi, message/rfc822)")).toBeInTheDocument();
   cleanup();
 
   // other

@@ -29,6 +29,15 @@ import "./Kukulkan.css";
 import { apiURL, fetchAllTags, formatDate, formatFSz, strip, fetchMessage } from "./utils.js";
 import { mkShortcut } from "./UiUtils.jsx";
 
+async function fetchAttachmentMessage(ids) {
+  const [ id, attachmentNum ] = ids;
+  if(id() === null) return null;
+  if(attachmentNum() === null) return fetchMessage(id());
+  const response = await fetch(apiURL(`api/attachment_message/${encodeURIComponent(id())}/${attachmentNum()}`));
+  if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
+  return response.json();
+}
+
 export const separateQuotedNonQuoted = (text) => {
   let lines = text.split('\n'),
       lastLine = lines.length;
@@ -160,6 +169,10 @@ const handleAttachment = (msg, attachment, index, summary) => {
       </a>
       { calendarAction(msg, attachment, index) }
       </div>);
+  } else if(attachment.content_type.includes("message/rfc822")) {
+    return (<a href={`/message?id=${encodeURIComponent(msg.notmuch_id)}&attachNum=${index}`} target={getSetting("openInTab")} rel="noreferrer"><AttachFile/>{attachment.filename}
+      {summary ? "" : " (" + formatFSz(attachment.content_size) + ", " + attachment.content_type + ")"}
+      </a>);
   } else {
     return (<a href={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}`)} target={getSetting("openInTab")} rel="noreferrer"><AttachFile/>{attachment.filename}
       {summary ? "" : " (" + formatFSz(attachment.content_size) + ", " + attachment.content_type + ")"}
@@ -440,8 +453,9 @@ export const Message = (props) => {
 export const FetchedMessage = () => {
   const [searchParams] = createSignal(window.location.search),
         [messageId] = createSignal((new URLSearchParams(searchParams())).get("id")),
+        [attachNum] = createSignal((new URLSearchParams(searchParams())).get("attachNum")),
         [print] = createSignal((new URLSearchParams(searchParams())).get("print")),
-        [message] = createResource(messageId, fetchMessage),
+        [message] = createResource([messageId, attachNum], fetchAttachmentMessage),
         [allTags] = createResource(fetchAllTags);
 
   return (
