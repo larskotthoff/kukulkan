@@ -106,7 +106,7 @@ function secUrl(id) {
 }
 
 const calUrl = (id, action, index) => {
-  return apiURL(`/write?action=reply-cal-${action}&id=${encodeURIComponent(id)}&index=${index}`);
+  return `/write?action=reply-cal-${action}&id=${encodeURIComponent(id)}&index=${index}`;
 };
 
 const calendarAction = (msg, attachment, index) => {
