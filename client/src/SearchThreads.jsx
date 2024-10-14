@@ -70,17 +70,15 @@ export const SearchThreads = (props) => {
     <Grid container width="95%" class="centered">
       <Grid container item class="centered" width="80%" spacing={2}>
         <Grid item xs={11}><QueryBox/></Grid>
-        <Grid item xs={0.5}>
+        <Grid item xs={1}>
           <a href="/write" target={getSetting("openInTab")} rel="noreferrer">
             <Create/>
           </a>
         </Grid>
-        <Grid item xs={0.5}>
-          <a href="/settings" target={getSetting("openInTab")} rel="noreferrer">
-            <Settings/>
-          </a>
-        </Grid>
       </Grid>
+      <a href="/settings" class="top-right" target={getSetting("openInTab")} rel="noreferrer">
+        <Settings/>
+      </a>
       <Grid item xs={12} align="right">{props.threads().length} thread{props.threads().length === 1 ? "" : "s"}.</Grid>
         <For each={props.threads()}>
           {(thread, index) =>

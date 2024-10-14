@@ -207,3 +207,9 @@ label {
 .settings-box input {
     text-align: center;
 }
+
+.top-right {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+}
