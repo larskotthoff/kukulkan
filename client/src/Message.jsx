@@ -38,7 +38,7 @@ async function fetchAttachmentMessage(ids) {
   return response.json();
 }
 
-export const separateQuotedNonQuoted = (text) => {
+export function separateQuotedNonQuoted(text) {
   let lines = text.split('\n'),
       lastLine = lines.length;
   for(let index = 1; index < lines.length; index++) {
@@ -84,19 +84,19 @@ export const separateQuotedNonQuoted = (text) => {
   return {mainPart, quotedPart};
 }
 
-const formatDateTZ = (date) => {
+function formatDateTZ(date) {
   let ret = date;
   if((new Date()).getTimezoneOffset() !== (date.substring(date.length - 5, date.length - 4) === "+" ? -1 : 1) * (parseInt(date.substring(date.length - 4, date.length - 2), 10) * 60 + parseInt(date.substring(date.length - 2), 10)))
     ret += ` (${(new Date(date)).toLocaleString()})`;
   return ret;
 }
 
-const formatAddrs = (addrs) => {
+function formatAddrs(addrs) {
   // split on , preceded by > or by email address
   return addrs.split(/(?<=>),\s*|(?<=@[^, ]+),\s*/).map((addr) => (
     <ColorChip value={addr}/>
   ));
-};
+}
 
 function printUrl(id) {
   return `/message?id=${encodeURIComponent(id)}&print=true`;
@@ -114,11 +114,11 @@ function secUrl(id) {
   return apiURL(`api/auth_message/${encodeURIComponent(id)}`);
 }
 
-const calUrl = (id, action, index) => {
+function calUrl(id, action, index) {
   return `/write?action=reply-cal-${action}&id=${encodeURIComponent(id)}&index=${index}`;
-};
+}
 
-const calendarAction = (msg, attachment, index) => {
+function calendarAction(msg, attachment, index) {
   if(attachment.preview.method === "REQUEST" && attachment.preview.status === "NEEDS-ACTION") {
     return (<Grid container direction="row" justifyContent="space-around" m={1}>
       <a href={calUrl(msg.notmuch_id, 'accept', index)} target={getSetting("openInTab")} rel="noreferrer">
@@ -138,9 +138,9 @@ const calendarAction = (msg, attachment, index) => {
   } else if(attachment.preview.status === "TENTATIVE") {
       return (<Help fontSize="large" style={{ margin: "8px" }}/>);
   }
-};
+}
 
-const handleAttachment = (msg, attachment, index, summary) => {
+function handleAttachment(msg, attachment, index, summary) {
   if(attachment.content_type.includes("image")) {
     let mw = summary ? "3em" : "30em",
         mh = summary ? "2em" : "20em";
@@ -178,10 +178,10 @@ const handleAttachment = (msg, attachment, index, summary) => {
       {summary ? "" : " (" + formatFSz(attachment.content_size) + ", " + attachment.content_type + ")"}
       </a>);
   }
-};
+}
 
 // claude helped with this
-const ShadowRoot = (props) => {
+function ShadowRoot(props) {
   let containerRef;
 
   onMount(() => {
@@ -197,15 +197,15 @@ const ShadowRoot = (props) => {
   });
 
   return <div ref={containerRef}/>;
-};
+}
 
-const HeaderLine = (props) => {
+function HeaderLine(props) {
   return (
     <Stack direction="row" spacing={.5}><span>{props.left}</span><span>{props.right}</span></Stack>
   );
-};
+}
 
-export const Message = (props) => {
+export function Message(props) {
   const [showQuoted, setShowQuoted] = createSignal(false),
         [html, setHtml] = createSignal(false),
         [open, setOpen] = createSignal(props.active),
@@ -448,9 +448,9 @@ export const Message = (props) => {
       </Show>
     </Paper>
   );
-};
+}
 
-export const FetchedMessage = () => {
+export function FetchedMessage() {
   const [searchParams] = createSignal(window.location.search),
         [messageId] = createSignal((new URLSearchParams(searchParams())).get("id")),
         [attachNum] = createSignal((new URLSearchParams(searchParams())).get("attachNum")),
@@ -465,6 +465,6 @@ export const FetchedMessage = () => {
       </Show>
     </>
   );
-};
+}
 
 // vim: tabstop=2 shiftwidth=2 expandtab

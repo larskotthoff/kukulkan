@@ -4,7 +4,7 @@ import MenuItem from "@suid/material/MenuItem";
 import Select from "@suid/material/Select";
 import TextField from "@suid/material/TextField";
 
-export const getSetting = (setting) => {
+export function getSetting(setting) {
   let val = null;
   switch(setting) {
     case "numQueries":
@@ -28,7 +28,7 @@ export const getSetting = (setting) => {
   }
 }
 
-export const Settings = (props) => {
+export function Settings(props) {
   const [numQueries, setNumQueries] = createSignal(getSetting("numQueries")),
         [openInTab, setOpenInTab] = createSignal(getSetting("openInTab")),
         [showNestedThread, setShowNestedThread] = createSignal(getSetting("showNestedThread")),
@@ -100,6 +100,6 @@ export const Settings = (props) => {
       </Select> quoted text beyond the first level.
     </div>
   </center>);
-};
+}
 
 // vim: tabstop=2 shiftwidth=2 expandtab

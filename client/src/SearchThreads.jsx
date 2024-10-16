@@ -12,7 +12,7 @@ import { getSetting } from "./Settings.jsx";
 import { renderDateNumThread } from "./utils.js";
 import { simulateKeyPress } from "./UiUtils.jsx";
 
-export const SearchThreads = (props) => {
+export function SearchThreads(props) {
   const [searchParams] = createSignal(window.location.search),
         [query] = createSignal((new URLSearchParams(searchParams())).get("query")),
         [searchText, setSearchText] = createSignal(query());
@@ -36,7 +36,7 @@ export const SearchThreads = (props) => {
 
   opts = [...new Set(opts.concat(qs))];
   
-  const QueryBox = () => {
+  function QueryBox() {
     return (
       <Autocomplete
         id="query-box"
@@ -64,7 +64,7 @@ export const SearchThreads = (props) => {
         }}
       />
     );
-  };
+  }
 
   return (
     <Grid container width="95%" class="centered">
@@ -113,6 +113,6 @@ export const SearchThreads = (props) => {
       </For>
     </Grid>
   );
-};
+}
 
 // vim: tabstop=2 shiftwidth=2 expandtab

@@ -17,7 +17,7 @@ function dateFromDue(due) {
   return new Date(year, month, day);
 }
 
-export const sortThreadsByDueDate = (a, b) => {
+export function sortThreadsByDueDate(a, b) {
   const dueA = a.tags.find((tag) => tag.startsWith("due:")),
         dueB = b.tags.find((tag) => tag.startsWith("due:"));
 
@@ -29,9 +29,9 @@ export const sortThreadsByDueDate = (a, b) => {
         dueDateB = dateFromDue(dueB);
 
   return dueDateA - dueDateB;
-};
+}
 
-export const TodoThreads = (props) => {
+export function TodoThreads(props) {
   props.setQuery("tag:todo");
 
   const today = new Date();
@@ -192,6 +192,6 @@ export const TodoThreads = (props) => {
       </Grid>
     </Stack>
   );
-};
+}
 
 // vim: tabstop=2 shiftwidth=2 expandtab

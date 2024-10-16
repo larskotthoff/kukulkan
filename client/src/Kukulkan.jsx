@@ -16,7 +16,7 @@ async function fetchThreads(query) {
   return await response.json();
 }
 
-export const Kukulkan = (props) => {
+export function Kukulkan(props) {
   const [query, setQuery] = createSignal(),
         [threads, { mutate }] = createResource(query, fetchThreads, { initialValue: [] }),
         [activeThread, setActiveThread] = createSignal(0),
@@ -25,24 +25,7 @@ export const Kukulkan = (props) => {
         [showEditingTagModal, setShowEditingTagModal] = createSignal(false),
         [allTags] = createResource(fetchAllTags);
 
-  createEffect(() => {
-    props.sp?.(100 * (1 - (allTags.loading + threads.loading) / 2));
-  });
-
-  createEffect(() => {
-    activeThread();
-    document.getElementsByClassName("thread active")[0]?.scrollIntoView({block: "nearest"});
-  });
-
-  createEffect(() => {
-    if(showEditingTagModal()) document.getElementById("edit-tag-box").focus();
-  });
-
-  createEffect(() => {
-    document.title = query() || "Kukulkan";
-  });
-
-  const makeTagEdits = () => {
+  function makeTagEdits() {
     let affectedThreads = selectedThreads();
     if(affectedThreads.length === 0) affectedThreads = [activeThread()];
     affectedThreads.forEach(affectedThread => {
@@ -66,7 +49,24 @@ export const Kukulkan = (props) => {
       .finally(() => props.sp?.(100));
     });
     setEditingTags("");
-  };
+  }
+
+  createEffect(() => {
+    props.sp?.(100 * (1 - (allTags.loading + threads.loading) / 2));
+  });
+
+  createEffect(() => {
+    activeThread();
+    document.getElementsByClassName("thread active")[0]?.scrollIntoView({block: "nearest"});
+  });
+
+  createEffect(() => {
+    if(showEditingTagModal()) document.getElementById("edit-tag-box").focus();
+  });
+
+  createEffect(() => {
+    document.title = query() || "Kukulkan";
+  });
 
   mkShortcut(["Home"],
     () => setActiveThread(0)
@@ -154,7 +154,7 @@ export const Kukulkan = (props) => {
     true
   );
 
-  const TagEditingModal = () => {
+  function TagEditingModal() {
     return (
       <Modal open={showEditingTagModal()} onClose={() => { setShowEditingTagModal(false); setEditingTags(""); }} BackdropProps={{timeout: 0}}>
         <Autocomplete
@@ -184,7 +184,7 @@ export const Kukulkan = (props) => {
         />
       </Modal>
     );
-  };
+  }
 
   return (
     <Show when={!allTags.loading && !threads.loading}>
@@ -193,6 +193,6 @@ export const Kukulkan = (props) => {
       <TagEditingModal/>
     </Show>
   );
-};
+}
 
 // vim: tabstop=2 shiftwidth=2 expandtab

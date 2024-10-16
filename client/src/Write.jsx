@@ -23,7 +23,7 @@ import { separateQuotedNonQuoted } from "./Message.jsx";
 import { apiURL, fetchAllTags, fetchMessage, filterAdminTags, formatFSz } from "./utils.js";
 import { mkShortcut } from "./UiUtils.jsx";
 
-const Templates = (props) => {
+function Templates(props) {
   return (
     <Grid container spacing={1} class="centered" sx={{ justifyContent: 'center' }}>
       <For each={props.templates}>
@@ -38,9 +38,9 @@ const Templates = (props) => {
       </For>
     </Grid>
   );
-};
+}
 
-const AddrComplete = (props) => {
+function AddrComplete(props) {
   let controller = null,
       debounceTimer = null;
 
@@ -83,7 +83,7 @@ const AddrComplete = (props) => {
       {...props}
     />
   );
-};
+}
 
 async function fetchAccounts() {
   const response = await fetch(apiURL(`api/accounts/`));
@@ -97,7 +97,7 @@ async function fetchCompose() {
   return await response.json();
 }
 
-const makeToCc = (msg, action, accounts, mode) => {
+function makeToCc(msg, action, accounts, mode) {
   if(!msg || !action || !accounts) return [ [], [] ];
 
   let tmpTo = [], tmpCc = [];
@@ -137,9 +137,9 @@ const makeToCc = (msg, action, accounts, mode) => {
     });
   }
   return [ tmpTo, tmpCc ];
-};
+}
 
-export const Write = (props) => {
+export function Write(props) {
   const [sp] = createSignal(window.location.search),
         searchParams = new URLSearchParams(sp()),
         baseMessageId = searchParams.get("id"),
@@ -245,7 +245,7 @@ export const Write = (props) => {
     }
   });
 
-  const quote = (text) => {
+  function quote(text) {
     if(text) {
       let {mainPart, quotedPart} = separateQuotedNonQuoted(text);
       mainPart = mainPart.trim();
@@ -259,9 +259,9 @@ export const Write = (props) => {
       }
       return `\n\n\nOn ${baseMessage().date}, ${baseMessage().from} wrote:\n> ${mainPart}`;
     }
-  };
+  }
 
-  const prefix = (text) => {
+  function prefix(text) {
     if(!text) return "";
     let pre = "";
     if(action === "reply" && !text.toLowerCase().startsWith("re:")) {
@@ -275,9 +275,9 @@ export const Write = (props) => {
       pre = act[0].toUpperCase() + act.slice(1) + ": ";
     }
     return pre + text;
-  };
+  }
 
-  const listenForUpdates = (sendId) => {
+  function listenForUpdates(sendId) {
     const eventSource = new EventSource(apiURL(`api/send_progress/${sendId}`));
 
     eventSource.onmessage = function(message) {
@@ -302,9 +302,9 @@ export const Write = (props) => {
       setStatusMsg(`Error: ${error}`);
       eventSource.close();
     };
-  };
+  }
 
-  const sendMsg = () => {
+  function sendMsg() {
     if(message.to.length === 0) {
       setStatusMsg(`Error: No to address. Not sending.`);
       return;
@@ -335,7 +335,7 @@ export const Write = (props) => {
       .catch((error) => {
         setStatusMsg(`Error: ${JSON.stringify(error)}`);
       });
-  };
+  }
 
   mkShortcut(["a"],
     () => document.getElementById("attach").click()
@@ -499,6 +499,6 @@ export const Write = (props) => {
       </Show>
     </>
   );
-};
+}
 
 // vim: tabstop=2 shiftwidth=2 expandtab

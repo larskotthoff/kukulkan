@@ -18,14 +18,14 @@ async function fetchThread(id) {
   return await response.json();
 }
 
-const getFirstUnread = (thread) => {
+function getFirstUnread(thread) {
   let firstUnread = thread.findIndex((m) => {
     return m.tags.includes("unread");
   });
   return firstUnread > -1 ? firstUnread : thread.length - 1;
 }
 
-const filterThread = (msg, thread) => {
+function filterThread(msg, thread) {
   if(msg === null) {
     msg = thread[getFirstUnread(thread)];
   }
@@ -51,9 +51,9 @@ const filterThread = (msg, thread) => {
       activeIdx = res.findIndex(m => m === msg);
 
   return [res, activeIdx];
-};
+}
 
-export const Thread = (props) => {
+export function Thread(props) {
   const [searchParams] = createSignal(window.location.search),
         [threadId] = createSignal((new URLSearchParams(searchParams())).get("id")),
         [thread] = createResource(threadId, fetchThread),
@@ -116,7 +116,7 @@ export const Thread = (props) => {
     () => setActiveMessage(filteredThread().length - 1)
   );
 
-  const updateActiveDepth = (d) => {
+  function updateActiveDepth(d) {
     let msg = null,
         unread = false;
     thread().forEach(function(m) {
@@ -128,7 +128,7 @@ export const Thread = (props) => {
     let [ft, activeIdx] = filterThread(msg, thread());
     setFilteredThread(ft);
     setActiveMessage(activeIdx);
-  };
+  }
 
   mkShortcut(["h"],
     () => updateActiveDepth(Math.max(0, filteredThread()[activeMessage()].depth - 1))
@@ -151,7 +151,7 @@ export const Thread = (props) => {
     }
   );
 
-  const ThreadNav = () => {
+  function ThreadNav() {
     return (
       <Show when={filteredThread() && filteredThread()[activeMessage()]}>
         <Grid container direction="column" marginTop="1em">
@@ -180,7 +180,7 @@ export const Thread = (props) => {
         </Grid>
       </Show>
     );
-  };
+  }
 
   return (
     <>
@@ -208,6 +208,6 @@ export const Thread = (props) => {
       </Show>
     </>
   );
-};
+}
 
 // vim: tabstop=2 shiftwidth=2 expandtab
