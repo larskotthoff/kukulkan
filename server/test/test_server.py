@@ -30,7 +30,7 @@ def test_accounts(setup):
     with app.test_client() as test_client:
         response = test_client.get('/api/accounts/')
         assert response.status_code == 200
-        assert b'"foo"\n' == response.data
+        assert b'foo' == response.data
 
 
 def test_compose(setup):
@@ -42,7 +42,7 @@ def test_compose(setup):
     with app.test_client() as test_client:
         response = test_client.get('/api/compose/')
         assert response.status_code == 200
-        assert b'{\"templates\": \"foo\", \"external-editor\": \"bar\"}\n' == response.data
+        assert {"external-editor": "bar", "templates": "foo"} == json.loads(response.data.decode())
 
 
 def test_tags(setup):
@@ -52,7 +52,7 @@ def test_tags(setup):
     with app.test_client() as test_client:
         response = test_client.get('/api/tags/')
         assert response.status_code == 200
-        assert b'["foo", "bar"]\n' == response.data
+        assert ["foo", "bar"] == json.loads(response.data.decode())
 
     db.get_all_tags.assert_called_once()
 

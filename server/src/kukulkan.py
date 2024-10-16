@@ -141,8 +141,6 @@ def create_app():
 
     app.logger.setLevel(logging.INFO)
 
-    api = Api(app)
-
     @app.route("/", methods=['GET', 'POST'])
     def send_index():
         return send_from_directory(app.static_folder, "index.html")
@@ -174,53 +172,46 @@ def create_app():
             response.headers["X-Frame-Options"] = "SAMEORIGIN"
         return response
 
-    class Query(Resource):
-        def get(self, query_string):
-            threads = get_query(query_string).search_threads()
-            return [thread_to_json(t) for t in threads]
+    @app.route("/api/query/<path:query_string>")
+    def query(query_string):
+        threads = get_query(query_string).search_threads()
+        return [thread_to_json(t) for t in threads]
 
-    class Address(Resource):
-        def get(self, query_string):
-            # not supported by API...
-            query = quote(query_string.replace('\n\r', '').strip())
-            addrs = os.popen(f"notmuch address --output=sender --output=recipients {query}").read()
-            matches = filter(lambda a: re.search(query_string, a, re.IGNORECASE), addrs.replace('\t', ' ').split('\n'))
-            seen = set()
-            return [s for s in matches if not (s.lower() in seen or seen.add(s.lower()))][:10]
+    @app.route("/api/address/<path:query_string>")
+    def address(query_string):
+        # not supported by API...
+        query = quote(query_string.replace('\n\r', '').strip())
+        addrs = os.popen(f"notmuch address --output=sender --output=recipients {query}").read()
+        matches = filter(lambda a: re.search(query_string, a, re.IGNORECASE), addrs.replace('\t', ' ').split('\n'))
+        seen = set()
+        return [s for s in matches if not (s.lower() in seen or seen.add(s.lower()))][:10]
 
-    class Thread(Resource):
-        def get(self, thread_id):
-            threads = list(get_query(f'thread:"{thread_id}"', exclude=False).search_threads())
-            if not threads:
-                abort(404)
-            if len(threads) > 1:
-                abort(500)
-            messages = threads[0].get_messages()
-            return messages_to_json(messages)
+    @app.route("/api/thread/<path:thread_id>")
+    def thread(thread_id):
+        threads = list(get_query(f'thread:"{thread_id}"', exclude=False).search_threads())
+        if not threads:
+            abort(404)
+        if len(threads) > 1:
+            abort(500)
+        messages = threads[0].get_messages()
+        return messages_to_json(messages)
 
-    class Tags(Resource):
-        def get(self):
-            tags = [tag for tag in get_db().get_all_tags() if tag != "(null)"]
-            return tags
+    @app.route("/api/tags/")
+    def tags():
+        tags = [tag for tag in get_db().get_all_tags() if tag != "(null)"]
+        return tags
 
-    class Accounts(Resource):
-        def get(self):
-            return current_app.config.custom["accounts"]
+    @app.route("/api/accounts/")
+    def accounts():
+        return current_app.config.custom["accounts"]
 
-    class Compose(Resource):
-        def get(self):
-            return current_app.config.custom["compose"]
+    @app.route("/api/compose/")
+    def compose():
+        return current_app.config.custom["compose"]
 
-    # all requests that return lists must be defined this way
-    api.add_resource(Query, "/api/query/<path:query_string>")
-    api.add_resource(Address, "/api/address/<path:query_string>")
-    api.add_resource(Thread, "/api/thread/<path:thread_id>")
-    api.add_resource(Tags, "/api/tags/")
-    api.add_resource(Accounts, "/api/accounts/")
-    api.add_resource(Compose, "/api/compose/")
 
     @app.route("/api/attachment/<path:message_id>/<int:num>")
-    def download_attachment(message_id, num):
+    def attachment(message_id, num):
         msg = get_message(message_id)
         d = message_attachment(msg, num)
         if not d:
@@ -233,7 +224,7 @@ def create_app():
                          download_name=d["filename"].replace('\n', ''))
 
     @app.route("/api/attachment_message/<path:message_id>/<int:num>")
-    def download_attachment_message(message_id, num):
+    def attachment_message(message_id, num):
         msg = get_message(message_id)
         d = message_attachment(msg, num)
         if not d:
@@ -241,12 +232,12 @@ def create_app():
         return eml_to_json(bytes(d["content"]))
 
     @app.route("/api/message/<path:message_id>")
-    def download_message(message_id):
+    def message(message_id):
         msg = get_message(message_id)
         return message_to_json(msg)
 
     @app.route("/api/raw_message/<path:message_id>")
-    def download_raw_message(message_id):
+    def raw_message(message_id):
         msg = get_message(message_id)
         with open(msg.get_filename(), "r", encoding="utf8") as f:
             content = f.read()
