@@ -13,7 +13,6 @@ export default defineConfig({
     solidPlugin(),
     visualizer({
       filename: 'dist/stats.html',
-      open: true,
       gzipSize: true,
       brotliSize: true,
     }),
@@ -23,5 +22,9 @@ export default defineConfig({
   },
   build: {
     target: 'esnext',
+    minify: 'terser',
+    rollupOptions: {
+      treeshake: true
+    }
   },
 });
