@@ -5,14 +5,18 @@ import { userEvent } from "@testing-library/user-event";
 import { SearchThreads } from "./SearchThreads.jsx";
 import { renderDateNumThread } from "./utils.js";
 
+const originalLocation = window.location;
+
 beforeEach(() => {
   localStorage.clear();
+  delete window.location;
+  window.location = { ...originalLocation, search: '' };
 });
 
 afterEach(() => {
   localStorage.clear();
   cleanup();
-  vi.unstubAllGlobals();
+  window.location = originalLocation;
 });
 
 const threads = [{authors: "fooAuthor, barAuthor", subject: "test", tags:
@@ -40,8 +44,6 @@ test("shows completions and allows to select", async () => {
   await userEvent.type(container.querySelector("#query-box"), "d");
   expect(screen.getByText("date:today")).toBeInTheDocument();
 
-  delete window.location;
-  window.location = { search: "" };
   await userEvent.type(container.querySelector("#query-box"), "{enter}{enter}");
   expect(window.location.search).toBe("query=date%3Atoday");
 });

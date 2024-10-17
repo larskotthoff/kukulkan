@@ -5,11 +5,15 @@ import { userEvent } from "@testing-library/user-event";
 import { Kukulkan } from "./Kukulkan.jsx";
 import { SearchThreads } from "./SearchThreads.jsx";
 
+const originalLocation = window.location;
+
 beforeEach(() => {
   localStorage.clear();
   vi.spyOn(window, "open").mockImplementation(() => {});
   global.fetch = vi.fn();
   window.HTMLElement.prototype.scrollIntoView = function() {};
+  delete window.location;
+  window.location = { ...originalLocation, search: '' };
 });
 
 afterEach(() => {
@@ -17,6 +21,7 @@ afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
+  window.location = originalLocation;
 });
 
 test("exports Kukulkan", () => {
@@ -52,12 +57,15 @@ test("sets query and title based on URL", async () => {
   expect(document.title).toBe("foo");
 });
 
-// not implemented yet apparently
-//test("sets query on submit", async () => {
-//  const { container } = render(() => <Kukulkan/>);
-//  const input = container.querySelector("input");
-//  await userEvent.type(input, "foo{enter}{enter}");
-//});
+test("sets query on submit", async () => {
+  const { container } = render(() => <Kukulkan Threads={SearchThreads}/>);
+  await vi.waitFor(() => {
+    expect(container.querySelector("input")).not.toBe(null);
+  });
+  const input = container.querySelector("input");
+  await userEvent.type(input, "foo{enter}{enter}");
+  expect(window.location.search).toBe("query=foo");
+});
 
 test("shows predefined query completions", async () => {
   const { container } = render(() => <Kukulkan Threads={SearchThreads}/>);
