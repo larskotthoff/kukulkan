@@ -29,7 +29,7 @@ test("renders components", () => {
   expect(container.querySelector("#query-box")).not.toBe(undefined);
 });
 
-test("shows completions", async () => {
+test("shows completions and allows to select", async () => {
   const { container } = render(() => <SearchThreads threads={() => []} index={() => 0} activeThread={() => 0}
     selectedThreads={() => []} setQuery={() => []}/>);
   await userEvent.type(container.querySelector("#query-box"), "t");
@@ -39,6 +39,11 @@ test("shows completions", async () => {
   container.querySelector("#query-box").value = "";
   await userEvent.type(container.querySelector("#query-box"), "d");
   expect(screen.getByText("date:today")).toBeInTheDocument();
+
+  delete window.location;
+  window.location = { search: "" };
+  await userEvent.type(container.querySelector("#query-box"), "{enter}{enter}");
+  expect(window.location.search).toBe("query=date%3Atoday");
 });
 
 test("saves queries for completion", async () => {
