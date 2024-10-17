@@ -60,7 +60,7 @@ export function SearchThreads(props) {
         }}
         handleKey={(ev) => {
           if(ev.code === 'Enter') {
-            const sp = new URLSearchParams(searchParams());
+            const sp = new URLSearchParams(searchParams);
             sp.set("query", searchText());
             window.location.search = sp.toString();
           }
