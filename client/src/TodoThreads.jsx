@@ -32,6 +32,7 @@ export function sortThreadsByDueDate(a, b) {
 }
 
 export function TodoThreads(props) {
+  // eslint-disable-next-line solid/reactivity
   props.setQuery("tag:todo");
 
   const today = new Date();
@@ -39,6 +40,7 @@ export function TodoThreads(props) {
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
+  // eslint-disable-next-line solid/reactivity
   const threads = props.threads().sort(sortThreadsByDueDate),
         dueMap = {};
 

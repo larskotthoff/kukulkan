@@ -28,7 +28,7 @@ export function getSetting(setting) {
   }
 }
 
-export function Settings(props) {
+export function Settings() {
   const [numQueries, setNumQueries] = createSignal(getSetting("numQueries")),
         [openInTab, setOpenInTab] = createSignal(getSetting("openInTab")),
         [showNestedThread, setShowNestedThread] = createSignal(getSetting("showNestedThread")),

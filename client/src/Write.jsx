@@ -59,6 +59,7 @@ function AddrComplete(props) {
           localStorage.removeItem(`draft-${props.draftKey()}-${props.addrAttr}`);
         }
       }}
+      // eslint-disable-next-line solid/reactivity
       getOptions={async (text) => {
         if(text.length > 2) {
           return await (new Promise((resolve) => {
@@ -140,11 +141,11 @@ function makeToCc(msg, action, accounts, mode) {
 }
 
 export function Write(props) {
-  const [sp] = createSignal(window.location.search),
-        searchParams = new URLSearchParams(sp()),
-        baseMessageId = searchParams.get("id"),
-        action = searchParams.get("action") || "compose",
-        mode = searchParams.get("mode"),
+  const searchParams = window.location.search,
+        urlSearchParams = new URLSearchParams(searchParams),
+        baseMessageId = urlSearchParams.get("id"),
+        action = urlSearchParams.get("action") || "compose",
+        mode = urlSearchParams.get("mode"),
         [baseMessage] = createResource(baseMessageId, fetchMessage),
         [allTags] = createResource(fetchAllTags),
         [accounts] = createResource(fetchAccounts),
@@ -184,7 +185,7 @@ export function Write(props) {
         }
       }
       if(action.startsWith("reply-cal-")) {
-        const idx = searchParams.get("index"),
+        const idx = urlSearchParams.get("index"),
               calFile = { dummy: true, name: baseMessage().attachments[idx].filename };
         setMessage("files", (prevFiles) => [...prevFiles, calFile]);
       }
@@ -342,10 +343,12 @@ export function Write(props) {
   );
 
   mkShortcut(["y"],
+    // eslint-disable-next-line solid/reactivity
     () => bodyRef().disabled || document.getElementById("send").click()
   );
 
   mkShortcut(["b"],
+    // eslint-disable-next-line solid/reactivity
     () => bodyRef().disabled || bodyRef().focus()
   );
 
@@ -454,6 +457,7 @@ export function Write(props) {
             inputRef={setBodyRef}
             data-testid="body"
             sx={{ marginBottom: ".5em", marginTop: "1em" }}
+            // eslint-disable-next-line solid/reactivity
             onFocus={async (ev) => {
               if(compose()["external-editor"]) {
                 const formData = new FormData();

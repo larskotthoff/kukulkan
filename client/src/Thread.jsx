@@ -54,8 +54,8 @@ function filterThread(msg, thread) {
 }
 
 export function Thread(props) {
-  const [searchParams] = createSignal(window.location.search),
-        [threadId] = createSignal((new URLSearchParams(searchParams())).get("id")),
+  const searchParams = window.location.search,
+        threadId = (new URLSearchParams(searchParams)).get("id"),
         [thread] = createResource(threadId, fetchThread),
         [filteredThread, setFilteredThread] = createSignal(),
         [allTags] = createResource(fetchAllTags),
@@ -98,21 +98,27 @@ export function Thread(props) {
     () => setActiveMessage(0)
   );
   mkShortcut(["k"],
+    // eslint-disable-next-line solid/reactivity
     () => setActiveMessage(Math.max(0, activeMessage() - 1))
   );
   mkShortcut(["Shift", "K"],
+    // eslint-disable-next-line solid/reactivity
     () => setActiveMessage(Math.max(0, activeMessage() - 10))
   );
   mkShortcut(["j"],
+    // eslint-disable-next-line solid/reactivity
     () => setActiveMessage(Math.min(filteredThread().length - 1, activeMessage() + 1))
   );
   mkShortcut(["Shift", "J"],
+    // eslint-disable-next-line solid/reactivity
     () => setActiveMessage(Math.min(filteredThread().length - 1, activeMessage() + 10))
   );
   mkShortcut(["End"],
+    // eslint-disable-next-line solid/reactivity
     () => setActiveMessage(filteredThread().length - 1)
   );
   mkShortcut(["0"],
+    // eslint-disable-next-line solid/reactivity
     () => setActiveMessage(filteredThread().length - 1)
   );
 
@@ -131,14 +137,17 @@ export function Thread(props) {
   }
 
   mkShortcut(["h"],
+    // eslint-disable-next-line solid/reactivity
     () => updateActiveDepth(Math.max(0, filteredThread()[activeMessage()].depth - 1))
   );
   mkShortcut(["l"],
+    // eslint-disable-next-line solid/reactivity
     () => updateActiveDepth(Math.min(filteredThread()[activeMessage()].depth + 1,
                                   Math.max(...thread().map(m => m.depth))))
   );
 
   mkShortcut(["Shift", "F"],
+    // eslint-disable-next-line solid/reactivity
     () => {
       if(filteredThread() === thread()) {
         let [ft, activeIdx] = filterThread(null, thread());

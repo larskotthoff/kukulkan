@@ -13,11 +13,12 @@ import { renderDateNumThread } from "./utils.js";
 import { simulateKeyPress } from "./UiUtils.jsx";
 
 export function SearchThreads(props) {
-  const [searchParams] = createSignal(window.location.search),
-        [query] = createSignal((new URLSearchParams(searchParams())).get("query")),
-        [searchText, setSearchText] = createSignal(query());
+  const searchParams = window.location.search,
+        query = (new URLSearchParams(searchParams)).get("query"),
+        [searchText, setSearchText] = createSignal(query);
 
-  props.setQuery(query());
+  // eslint-disable-next-line solid/reactivity
+  props.setQuery(query);
 
   let opts = ["tag:unread", "tag:todo", "date:today"],
       qs = localStorage.getItem("queries");
@@ -28,7 +29,9 @@ export function SearchThreads(props) {
     qs = [];
   }
 
+  // eslint-disable-next-line solid/reactivity
   if(searchText()) {
+    // eslint-disable-next-line solid/reactivity
     qs.unshift(searchText());
     qs = [...new Set(qs)];
     localStorage.setItem("queries", JSON.stringify(qs.slice(0, getSetting("numQueries"))));

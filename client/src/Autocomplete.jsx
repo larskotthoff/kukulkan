@@ -63,6 +63,7 @@ export function Autocomplete(props) {
            sortedOptions().length > 0;
   });
 
+  // eslint-disable-next-line solid/reactivity
   createEffect(on(props.text, () => {
     setSelected(0);
   }));
@@ -123,6 +124,7 @@ export function ChipComplete(props) {
           </For>
         </>
       }}
+      // eslint-disable-next-line solid/reactivity
       handleKey={async (ev) => {
         if(ev.code === 'Enter' && toAdd()) {
           props.addChip(toAdd());

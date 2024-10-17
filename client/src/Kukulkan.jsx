@@ -41,11 +41,13 @@ export function Kukulkan(props) {
           });
       let done = 0;
       props.sp?.(0);
+      // eslint-disable-next-line solid/reactivity
       Promise.all(urls.map((u) => fetch(u).then((response) => {
         done += 1;
         props.sp?.(100 * done / urls.length);
         if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
       }))).then(() => mutate([...threads().slice(0, affectedThread), thread, ...threads().slice(affectedThread + 1)]))
+      // eslint-disable-next-line solid/reactivity
       .finally(() => props.sp?.(100));
     });
     setEditingTags("");
@@ -72,25 +74,32 @@ export function Kukulkan(props) {
     () => setActiveThread(0)
   );
   mkShortcut(["k"],
+    // eslint-disable-next-line solid/reactivity
     () => setActiveThread(Math.max(0, activeThread() - 1))
   );
   mkShortcut(["Shift", "K"],
+    // eslint-disable-next-line solid/reactivity
     () => setActiveThread(Math.max(0, activeThread() - 10))
   );
   mkShortcut(["j"],
+    // eslint-disable-next-line solid/reactivity
     () => setActiveThread(Math.min(threads().length - 1, activeThread() + 1))
   );
   mkShortcut(["Shift", "J"],
+    // eslint-disable-next-line solid/reactivity
     () => setActiveThread(Math.min(threads().length - 1, activeThread() + 10))
   );
   mkShortcut(["End"],
+    // eslint-disable-next-line solid/reactivity
     () => setActiveThread(threads().length - 1)
   );
   mkShortcut(["0"],
+    // eslint-disable-next-line solid/reactivity
     () => setActiveThread(threads().length - 1)
   );
 
   mkShortcut(["Enter"],
+    // eslint-disable-next-line solid/reactivity
     () => { if(threads()[activeThread()]) window.open(`/thread?id=${encodeURIComponent(threads()[activeThread()].thread_id)}`, getSetting("openInTab")) }
   );
 
@@ -125,11 +134,13 @@ export function Kukulkan(props) {
   );
 
   mkShortcut(["t"],
+    // eslint-disable-next-line solid/reactivity
     () => setShowEditingTagModal(!showEditingTagModal()),
     true
   );
 
   mkShortcut(["Delete"],
+    // eslint-disable-next-line solid/reactivity
     () => {
       setEditingTags("deleted -unread");
       makeTagEdits();
@@ -139,6 +150,7 @@ export function Kukulkan(props) {
   );
 
   mkShortcut(["d"],
+    // eslint-disable-next-line solid/reactivity
     () => {
       let affectedThreads = selectedThreads(),
           edits = "-todo";

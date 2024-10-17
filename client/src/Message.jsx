@@ -31,9 +31,9 @@ import { mkShortcut } from "./UiUtils.jsx";
 
 async function fetchAttachmentMessage(ids) {
   const [ id, attachmentNum ] = ids;
-  if(id() === null) return null;
-  if(attachmentNum() === null) return fetchMessage(id());
-  const response = await fetch(apiURL(`api/attachment_message/${encodeURIComponent(id())}/${attachmentNum()}`));
+  if(id === null) return null;
+  if(attachmentNum === null) return fetchMessage(id);
+  const response = await fetch(apiURL(`api/attachment_message/${encodeURIComponent(id)}/${attachmentNum}`));
   if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
   return response.json();
 }
@@ -208,7 +208,7 @@ function HeaderLine(props) {
 export function Message(props) {
   const [showQuoted, setShowQuoted] = createSignal(false),
         [html, setHtml] = createSignal(false),
-        [open, setOpen] = createSignal(props.active),
+        // eslint-disable-next-line solid/reactivity
         msg = props.msg,
         [tags, setTags] = createSignal(msg.tags.sort()),
         {mainPart, quotedPart} = separateQuotedNonQuoted(msg.body["text/plain"]);
@@ -247,6 +247,7 @@ export function Message(props) {
       sigSev = "error";
     }
     if(msg.signature.message) {
+      // eslint-disable-next-line solid/reactivity
       sigMsg += ` (${props.msg.signature.message})`;
     }
   }
@@ -255,7 +256,6 @@ export function Message(props) {
   const saw = 6 / msg.attachments.length;
 
   createEffect(() => {
-    setOpen(props.active);
     if(props.active) {
       elementTop?.scrollIntoView({block: "nearest"});
       document.title = msg.subject || "Kukulkan";
@@ -268,39 +268,48 @@ export function Message(props) {
   });
 
   mkShortcut(["r"],
+    // eslint-disable-next-line solid/reactivity
     () => { if(props.active) document.querySelector("a[id='reply']")?.click(); }
   );
 
   mkShortcut(["Shift", "r"],
+    // eslint-disable-next-line solid/reactivity
     () => { if(props.active) window.open(replyUrl(msg.notmuch_id, "one"), getSetting("openInTab")); }
   );
 
   mkShortcut(["f"],
+    // eslint-disable-next-line solid/reactivity
     () => { if(props.active) document.querySelector("a[id='forward']")?.click(); }
   );
 
   mkShortcut(["p"],
+    // eslint-disable-next-line solid/reactivity
     () => { if(props.active) document.querySelector("a[id='print']")?.click(); }
   );
 
   mkShortcut(["s"],
+    // eslint-disable-next-line solid/reactivity
     () => { if(props.active) document.querySelector("a[id='security']")?.click(); }
   );
 
   mkShortcut(["w"],
+    // eslint-disable-next-line solid/reactivity
     () => { if(props.active) window.open(apiURL(`api/raw_message/${encodeURIComponent(msg.notmuch_id)}`), getSetting("openInTab")); }
   );
 
   mkShortcut(["t"],
+    // eslint-disable-next-line solid/reactivity
     () => { if(props.active) document.getElementById("editTags")?.focus(); },
     true
   );
 
   mkShortcut(["c"],
+    // eslint-disable-next-line solid/reactivity
     () => { if(props.active) document.querySelector("button.content")?.click(); }
   );
 
   mkShortcut(["Delete"],
+    // eslint-disable-next-line solid/reactivity
     () => {
       if(props.active) {
         removeTag("unread");
@@ -311,6 +320,7 @@ export function Message(props) {
   );
 
   mkShortcut(["Shift", "?"],
+    // eslint-disable-next-line solid/reactivity
     () => { if(props.active) window.open(`/?query=from:"${encodeURIComponent(msg.from)}"`, getSetting("openInTab")); }
   );
 
@@ -322,7 +332,7 @@ export function Message(props) {
         'deleted': msg.tags.includes("deleted")
       }}
       ref={elementTop}>
-      <Show when={open()}>
+      <Show when={props.active}>
         <Box>
           <Show when={msg.from}><HeaderLine left="From:" right={formatAddrs(msg.from)}/></Show>
           <Show when={msg.reply_to}><HeaderLine left="Reply-To:" right={formatAddrs(msg.reply_to)}/></Show>
@@ -423,7 +433,7 @@ export function Message(props) {
         </Show>
       </Show>
 
-      <Show when={!open()}>
+      <Show when={!props.active}>
         <Grid container direction="column">
           <Grid container direction="row" justifyContent="space-between" wrap="nowrap">
             <Grid item>{formatAddrs(msg.from)}</Grid>
@@ -451,17 +461,18 @@ export function Message(props) {
 }
 
 export function FetchedMessage() {
-  const [searchParams] = createSignal(window.location.search),
-        [messageId] = createSignal((new URLSearchParams(searchParams())).get("id")),
-        [attachNum] = createSignal((new URLSearchParams(searchParams())).get("attachNum")),
-        [print] = createSignal((new URLSearchParams(searchParams())).get("print")),
+  const searchParams = window.location.search,
+        urlSearchParams = new URLSearchParams(searchParams),
+        messageId = urlSearchParams.get("id"),
+        attachNum = urlSearchParams.get("attachNum"),
+        print = urlSearchParams.get("print"),
         [message] = createResource([messageId, attachNum], fetchAttachmentMessage),
         [allTags] = createResource(fetchAllTags);
 
   return (
     <>
       <Show when={!allTags.loading && !message.loading}>
-        <Message msg={message()} allTags={allTags()} active={true} print={print()}/>
+        <Message msg={message()} allTags={allTags()} active={true} print={print}/>
       </Show>
     </>
   );

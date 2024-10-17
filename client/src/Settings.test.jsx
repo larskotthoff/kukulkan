@@ -25,7 +25,7 @@ test("gets settings", () => {
 });
 
 test("shows settings", () => {
-  const { container } = render(() => <Settings/>);
+  render(() => <Settings/>);
   expect(screen.getByTestId("numQueries")).toBeInTheDocument();
   expect(screen.getByTestId("openInTab")).toBeInTheDocument();
   expect(screen.getByTestId("showNestedThread")).toBeInTheDocument();
@@ -33,7 +33,7 @@ test("shows settings", () => {
 });
 
 test("allows to change settings", async () => {
-  const { container } = render(() => <Settings/>);
+  render(() => <Settings/>);
   expect(getSetting("numQueries")).toBe(10);
   await userEvent.type(screen.getByTestId("numQueries").querySelector("input"), "1");
   expect(getSetting("numQueries")).toBe(101);
