@@ -45,7 +45,7 @@ body {
     font-family: Fira Mono, Roboto !important;
 
     background-color: var(--bg-color) !important;
-    color: oklch(from var(--bg-color) calc(1 - round(l - 0.1)) 0 0) !important;
+    color: oklch(from var(--bg-color) calc(1 - round(l - 0.15)) 0 0) !important;
 }
 
 .chip span {
