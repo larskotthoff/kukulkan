@@ -510,9 +510,9 @@ def test_message_simple(setup):
             assert response.status_code == 200
             msg = json.loads(response.data.decode())
             assert msg["from"] == "foo bar"
-            assert msg["to"] == "foo bar"
-            assert msg["cc"] == "foo bar"
-            assert msg["bcc"] == "foo bar"
+            assert msg["to"] == ["foo bar"]
+            assert msg["cc"] == ["foo bar"]
+            assert msg["bcc"] == ["foo bar"]
             assert msg["date"] == "foo\tbar"
             assert msg["subject"] == "foo bar"
             assert msg["message_id"] == "foo\tbar"
@@ -1283,7 +1283,7 @@ def test_message_filter_text(setup):
     mq.search_messages.assert_called_once()
 
 
-def test_attachment_mail(setup):
+def test_message_attachment_mail(setup):
     app, db = setup
 
     mf = lambda: None
@@ -1298,9 +1298,9 @@ def test_attachment_mail(setup):
             assert response.status_code == 200
             msg = json.loads(response.data.decode())
             assert msg["from"] == "POSTBAN͟K͟ <gxnwgddl@carcarry.de>"
-            assert msg["to"] == "2012gdwu <2012gdwu@web.de>"
-            assert msg["cc"] == ""
-            assert msg["bcc"] == ""
+            assert msg["to"] == ["2012gdwu <2012gdwu@web.de>"]
+            assert msg["cc"] == []
+            assert msg["bcc"] == []
             assert msg["date"] == "Mon, 20 Jul 2020 02:15:26 +0000"
             assert msg["subject"] == "BsetSign App : Y7P32-HTXU2-FRDG7"
             assert msg["message_id"] == "<1M3lHZ-1jyAPt0pTn-000u1I@mrelayeu.kundenserver.de>"
@@ -1345,9 +1345,9 @@ def test_thread(setup):
             assert len(thread) == 1
             msg = thread[0]
             assert msg["from"] == "foo bar"
-            assert msg["to"] == "foo bar"
-            assert msg["cc"] == "foo bar"
-            assert msg["bcc"] == "foo bar"
+            assert msg["to"] == ["foo bar"]
+            assert msg["cc"] == ["foo bar"]
+            assert msg["bcc"] == ["foo bar"]
             assert msg["date"] == "foo\tbar"
             assert msg["subject"] == "foo bar"
             assert msg["message_id"] == "foo\tbar"

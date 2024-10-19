@@ -7,8 +7,8 @@ import { Thread } from "./Thread.jsx";
 const thread = [
   {
     from: "foo bar <foo@bar.com>",
-    to: "bar foo <bar@foo.com>",
-    cc: "test@test.com",
+    to: ["bar foo <bar@foo.com>"],
+    cc: ["test@test.com"],
     subject: "Test.",
     date: "Thu, 01 Jan 1970 00:00:00 -0000",
     tags: [ "foo", "bar", "test" ],
@@ -22,8 +22,8 @@ const thread = [
   },
   {
     from: "foo2 bar <foo@bar.com>",
-    to: "bar2 foo2 <bar@foo.com>",
-    cc: "test2@test2.com",
+    to: ["bar2 foo2 <bar@foo.com>"],
+    cc: ["test2@test2.com"],
     subject: "Test2.",
     date: "Fri, 02 Jan 1970 00:00:00 -0000",
     tags: [ "foo2", "bar2", "test2" ],
@@ -41,8 +41,8 @@ const thread = [
 const complexThread = thread.slice();
 complexThread.push({
     from: "foo3 bar <foo@bar.com>",
-    to: "bar3 foo3 <bar@foo.com>",
-    cc: "test3@test3.com",
+    to: ["bar3 foo3 <bar@foo.com>"],
+    cc: ["test3@test3.com"],
     subject: "Test3.",
     date: "Sat, 03 Jan 1970 00:00:00 -0000",
     tags: [ "foo3", "bar3", "test3" ],

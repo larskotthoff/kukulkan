@@ -92,6 +92,11 @@ def email_addresses_header(emails):
     return ", ".join(str(addr) for addr in tmp)
 
 
+# and claude wrote this
+def split_email_addresses(header):
+    addresses = re.findall(r'(?:[^,"]|"(?:\\.|[^"])*")+', header.replace('\t', ' '))
+    return [addr.strip() for addr in addresses]
+
 def get_db():
     """Get a new `Database` instance. Called before every request. Cached on first call."""
     if "db" not in g:
@@ -722,9 +727,9 @@ def eml_to_json(message_bytes):
     body, html_body = get_nested_body(email_msg)
     res = {
         "from": email_msg["from"].strip().replace('\t', ' ') if "from" in email_msg else "",
-        "to": email_msg["to"].strip().replace('\t', ' ') if "to" in email_msg else "",
-        "cc": email_msg["cc"].strip().replace('\t', ' ') if "cc" in email_msg else "",
-        "bcc": email_msg["bcc"].strip().replace('\t', ' ') if "bcc" in email_msg else "",
+        "to": split_email_addresses(email_msg["to"]) if "to" in email_msg else [],
+        "cc": split_email_addresses(email_msg["cc"]) if "cc" in email_msg else [],
+        "bcc": split_email_addresses(email_msg["bcc"]) if "bcc" in email_msg else [],
         "date": email_msg["date"].strip() if "date" in email_msg else "",
         "subject": email_msg["subject"].strip().replace('\t', ' ') if "subject" in email_msg else "",
         "message_id": email_msg["Message-ID"].strip() if "Message-ID" in email_msg else "",
@@ -804,9 +809,9 @@ def message_to_json(message):
 
     res = {
         "from": message.get_header("from").strip().replace('\t', ' '),
-        "to": message.get_header("to").strip().replace('\t', ' '),
-        "cc": message.get_header("cc").strip().replace('\t', ' '),
-        "bcc": message.get_header("bcc").strip().replace('\t', ' '),
+        "to": split_email_addresses(message.get_header("to")),
+        "cc": split_email_addresses(message.get_header("cc")),
+        "bcc": split_email_addresses(message.get_header("bcc")),
         "date": message.get_header("date").strip(),
         "subject": message.get_header("subject").strip().replace('\t', ' '),
         "message_id": message.get_header("Message-ID").strip(),

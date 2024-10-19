@@ -13,8 +13,8 @@ beforeEach(() => {
   window.HTMLElement.prototype.scrollIntoView = function() {};
   msg = {
     from: "foo bar <foo@bar.com>",
-    to: "bar foo <bar@foo.com>",
-    cc: "test@test.com",
+    to: ["bar foo <bar@foo.com>"],
+    cc: ["test@test.com"],
     subject: "Test.",
     date: "Thu, 01 Jan 1970 00:00:00 -0000",
     tags: [ "foo", "bar", "test" ],
@@ -163,7 +163,7 @@ test("renders message components", () => {
 test("renders additional message components", () => {
   msg.reply_to = "Reply to";
   msg.forwarded_to = "Forwarded to";
-  msg.bcc = "BCC";
+  msg.bcc = ["BCC"];
 
   render(() => <Message msg={msg} active={true}/>);
   expect(screen.getByText("Reply to")).toBeInTheDocument();

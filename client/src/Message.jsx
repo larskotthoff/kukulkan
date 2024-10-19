@@ -92,10 +92,14 @@ function formatDateTZ(date) {
 }
 
 function formatAddrs(addrs) {
-  // split on , preceded by > or by email address
-  return addrs.split(/(?<=>),\s*|(?<=@[^, ]+),\s*/).map((addr) => (
-    <ColorChip value={addr}/>
-  ));
+  if(addrs) {
+    if(!(addrs instanceof Array)) {
+      addrs = [addrs];
+    }
+    return addrs.map((addr) => (
+      <ColorChip value={addr}/>
+    ));
+  }
 }
 
 function printUrl(id) {
