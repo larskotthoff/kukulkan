@@ -184,12 +184,17 @@ def create_app():
 
     @app.route("/api/address/<path:query_string>")
     def address(query_string):
-        # not supported by API...
-        query = quote(query_string.replace('\n\r', '').strip())
-        addrs = os.popen(f"notmuch address --output=sender --output=recipients {query}").read()
-        matches = filter(lambda a: re.search(query_string, a, re.IGNORECASE), addrs.replace('\t', ' ').split('\n'))
-        seen = set()
-        return [s for s in matches if not (s.lower() in seen or seen.add(s.lower()))][:10]
+        addrs = {}
+        for msg in get_query(query_string).search_messages():
+            for header in ['from', 'to', 'cc', 'bcc']:
+                value = msg.get_header(header)
+                if value:
+                    for addr in split_email_addresses(value):
+                        if re.search(query_string, addr, re.IGNORECASE):
+                            addrs[addr.strip()] = None
+                if len(addrs) > 14:
+                    break
+        return list(dict.fromkeys(addrs))
 
     @app.route("/api/thread/<path:thread_id>")
     def thread(thread_id):
