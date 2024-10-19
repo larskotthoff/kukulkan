@@ -190,7 +190,7 @@ def create_app():
                 value = msg.get_header(header)
                 if value:
                     for addr in split_email_addresses(value):
-                        if re.search(query_string, addr, re.IGNORECASE):
+                        if query_string.casefold() in addr.casefold():
                             addrs[addr.strip()] = None
                 if len(addrs) > 14:
                     break
