@@ -209,6 +209,36 @@ def test_query_exclude_tags(setup):
     db.get_config.assert_called_once_with("search.exclude_tags")
 
 
+def test_address(setup):
+    app, db = setup
+
+    db.get_config = MagicMock(return_value="foo;bar")
+
+    mf = lambda: None
+    mf.get_filename = MagicMock(return_value="test/mails/simple.eml")
+    mf.get_header = MagicMock(return_value="foo@bar.com, \"bar foo\" bar@foo.com")
+    mf.get_message_id = MagicMock(return_value="foo")
+    mf.get_tags = MagicMock(return_value=["foo", "bar"])
+
+    mq = lambda: None
+    mq.search_messages = MagicMock(return_value=iter([mf]))
+    mq.exclude_tag = MagicMock()
+
+    with patch("notmuch.Query", return_value=mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/address/foo')
+            assert response.status_code == 200
+            addrs = json.loads(response.data.decode())
+            assert len(addrs) == 2
+            assert addrs[0] == "foo@bar.com"
+            assert addrs[1] == "\"bar foo\" bar@foo.com"
+
+        q.assert_called_once_with(db, "foo")
+
+    mq.search_messages.assert_called_once()
+    db.get_config.assert_called_once_with("search.exclude_tags")
+
+
 def test_get_message_none(setup):
     app, db = setup
 
