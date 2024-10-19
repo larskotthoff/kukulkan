@@ -191,10 +191,10 @@ def create_app():
                 if value:
                     for addr in split_email_addresses(value):
                         if query_string.casefold() in addr.casefold():
-                            addrs[addr.strip()] = None
+                            addrs[addr.strip().casefold()] = addr.strip()
                 if len(addrs) > 14:
                     break
-        return list(dict.fromkeys(addrs))
+        return list(addrs.values())
 
     @app.route("/api/thread/<path:thread_id>")
     def thread(thread_id):

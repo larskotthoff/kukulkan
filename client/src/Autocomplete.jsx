@@ -15,13 +15,33 @@ export function Autocomplete(props) {
         [inputRef, setInputRef] = createSignal(),
         [sortedOptions, setSortedOptions] = createSignal([]);
 
+  // sort options such that:
+  // - options that start with the search text come first
+  // - options that have the search text at the beginning of a word within the
+  //   option are also ranked highly
+  // - options that don't have the search text come last
+  // - ties are broken such that shorter options are preferred
   function compareToText(a, b) {
-    let re = new RegExp(props.text(), "i"),
-        posa = a.search(re),
-        posb = b.search(re);
-    return posa === posb ?
-           Math.abs(a.length - props.text().length) - Math.abs(b.length - props.text().length) :
-           posa - posb;
+    let posa = a.toLowerCase().indexOf(props.text().toLowerCase()),
+        lima = posa,
+        posb = b.toLowerCase().indexOf(props.text().toLowerCase()),
+        limb = posb;
+    if(posa === 0) {
+      posa = -1;
+    } else {
+      // check if we're at the beginning of a word within the string
+      while(lima > 0 && "\"' <>@,.".indexOf(a[lima-1]) === -1) lima--;
+      posa -= lima;
+      if(posa < 0) posa = a.length;
+    }
+    if(posb === 0) {
+      posb = -1;
+    } else {
+      while(limb > 0 && "\"' <>@,.".indexOf(b[limb-1]) === -1) limb--;
+      posb -= limb;
+      if(posb < 0) posa = b.length;
+    }
+    return posa === posb ? a.length - b.length : posa - posb;
   }
 
   async function getSortedOptions() {
