@@ -40,8 +40,8 @@ const accounts = [{"id": "foo", "name": "foo bar", "email": "foo@bar.com"},
   {"id": "bar", "name": "blurg", "email": "blurg@foo.com", "default": "true"}];
 const msg = {
   from: "bar foo <bar@foo.com>",
-  to: "foo bar <foo@bar.com>",
-  cc: "test@test.com",
+  to: ["foo bar <foo@bar.com>"],
+  cc: ["test@test.com"],
   subject: "Test.",
   date: "Thu, 01 Jan 1970 00:00:00 -0000",
   tags: [ "foo", "bar", "test" ],
@@ -203,7 +203,7 @@ test("base message from default if unclear", async () => {
     search: '?id=foo&action=reply&mode=all'
   });
   const msg1 = JSON.parse(JSON.stringify(msg));
-  msg1.to = "something@test.com";
+  msg1.to = ["something@test.com"];
   global.fetch = vi.fn((url) => {
     switch(url) {
       case "http://localhost:5000/api/tags/":

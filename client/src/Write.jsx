@@ -109,10 +109,10 @@ function makeToCc(msg, action, accounts, mode) {
       tmpTo = [ msg.from ];
     }
     if(mode !== "one" && !action.startsWith("reply-cal-")) {
-      tmpTo = tmpTo.concat(msg.to.split(/(?<=>),\s*|(?<=@[^, ]+),\s*/));
+      tmpTo = tmpTo.concat(msg.to);
 
       if(msg.cc.length > 0) {
-        tmpCc = msg.cc.split(/(?<=>),\s*|(?<=@[^, ]+),\s*/);
+        tmpCc = msg.cc;
         tmpCc = tmpCc.filter(a => {
           return a.length > 0 && !tmpTo.includes(a) && accounts.reduce((cum, acct) => {
             if(cum === false) return false;
@@ -191,15 +191,15 @@ export function Write(props) {
       }
 
       if(!localStorage.getItem(`draft-${draftKey()}-from`)) {
-        let acct = accounts()?.find(a => baseMessage().to.includes(a.email));
+        let acct = accounts()?.find(a => baseMessage().to.some(t => t.includes(a.email)));
         if(!acct) {
           acct = accounts()?.find(a => baseMessage().from.includes(a.email));
         }
         if(!acct && baseMessage().cc) {
-          acct = accounts()?.find(a => baseMessage().cc.includes(a.email));
+          acct = accounts()?.find(a => baseMessage().cc.some(c => c.includes(a.email)));
         }
         if(!acct && baseMessage().bcc) {
-          acct = accounts()?.find(a => baseMessage().bcc.includes(a.email));
+          acct = accounts()?.find(a => baseMessage().bcc.some(b => b.includes(a.email)));
         }
         if(!acct && baseMessage().delivered_to) {
           acct = accounts()?.find(a => baseMessage().delivered_to.includes(a.email));
