@@ -22,10 +22,14 @@ export function Autocomplete(props) {
   // - options that don't have the search text come last
   // - ties are broken such that shorter options are preferred
   function cmp(a, b) {
+    let posa = getPos(a),
+        posb = getPos(b);
+    return posa === posb ? a.length - b.length : posa - posb;
+  }
+
+  function getPos(a) {
     let posa = a.toLowerCase().indexOf(props.text().toLowerCase()),
-        lima = posa,
-        posb = b.toLowerCase().indexOf(props.text().toLowerCase()),
-        limb = posb;
+        lima = posa;
     if(posa === 0) {
       posa = -1;
     } else {
@@ -37,17 +41,7 @@ export function Autocomplete(props) {
         posa -= lima;
       }
     }
-    if(posb === 0) {
-      posb = -1;
-    } else {
-      if(posb < 0) {
-        posb = b.length;
-      } else {
-        while(limb > 0 && "\"' <>@,.".indexOf(b[limb-1]) === -1) limb--;
-        posb -= limb;
-      }
-    }
-    return posa === posb ? a.length - b.length : posa - posb;
+    return posa;
   }
 
   async function getSortedOptions() {
