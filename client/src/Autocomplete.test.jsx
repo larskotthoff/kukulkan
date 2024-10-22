@@ -79,14 +79,19 @@ test("allows to filter completions", async () => {
 
 test("completions sorted correctly", async () => {
   const [testText, setTestText] = createSignal("");
-  const { container } = render(() => <Autocomplete text={testText} setText={setTestText} getOptions={() => ["afoo", "foo"]}/>);
+  const { container } = render(() => <Autocomplete text={testText} setText={setTestText}
+    getOptions={() => ["afoo", "foo", "bar", "bar@foo.com", "foo@bar.com", "bar foo"]}/>);
   const input = container.querySelector("input");
   await userEvent.type(input, "f");
   expect(input.getAttribute("value")).toEqual("f");
 
   const completions = document.querySelector(".MuiList-root").children;
-  expect(completions[0]).toHaveTextContent('foo');
-  expect(completions[1]).toHaveTextContent('afoo');
+  expect(completions[0]).toHaveTextContent("foo");
+  expect(completions[1]).toHaveTextContent("foo@bar.com");
+  expect(completions[2]).toHaveTextContent("bar foo");
+  expect(completions[3]).toHaveTextContent("bar@foo.com");
+  expect(completions[4]).toHaveTextContent("afoo");
+  expect(completions[5]).toHaveTextContent("bar");
 });
 
 test("allows to complete (keyboard)", async () => {

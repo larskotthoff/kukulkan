@@ -21,7 +21,7 @@ export function Autocomplete(props) {
   //   option are also ranked highly
   // - options that don't have the search text come last
   // - ties are broken such that shorter options are preferred
-  function compareToText(a, b) {
+  function cmp(a, b) {
     let posa = a.toLowerCase().indexOf(props.text().toLowerCase()),
         lima = posa,
         posb = b.toLowerCase().indexOf(props.text().toLowerCase()),
@@ -29,24 +29,30 @@ export function Autocomplete(props) {
     if(posa === 0) {
       posa = -1;
     } else {
-      // check if we're at the beginning of a word within the string
-      while(lima > 0 && "\"' <>@,.".indexOf(a[lima-1]) === -1) lima--;
-      posa -= lima;
-      if(posa < 0) posa = a.length;
+      if(posa < 0) {
+        posa = a.length;
+      } else {
+        // check if we're at the beginning of a word within the string
+        while(lima > 0 && "\"' <>@,.".indexOf(a[lima-1]) === -1) lima--;
+        posa -= lima;
+      }
     }
     if(posb === 0) {
       posb = -1;
     } else {
-      while(limb > 0 && "\"' <>@,.".indexOf(b[limb-1]) === -1) limb--;
-      posb -= limb;
-      if(posb < 0) posa = b.length;
+      if(posb < 0) {
+        posb = b.length;
+      } else {
+        while(limb > 0 && "\"' <>@,.".indexOf(b[limb-1]) === -1) limb--;
+        posb -= limb;
+      }
     }
     return posa === posb ? a.length - b.length : posa - posb;
   }
 
   async function getSortedOptions() {
     const options = await props.getOptions(props.text());
-    setSortedOptions(options.sort(compareToText));
+    setSortedOptions(options.sort(cmp));
   }
 
   function handleKeydown(ev) {
