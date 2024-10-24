@@ -415,7 +415,7 @@ test("tag edits with multiple selection work", async () => {
         return Promise.resolve({ ok: true, json: () => [] });
     }
   });
-  render(() => <Kukulkan Threads={SearchThreads}/>);
+  const { container } = render(() => <Kukulkan Threads={SearchThreads}/>);
   await vi.waitFor(() => {
     expect(screen.getByText("2 threads.")).toBeInTheDocument();
   });
@@ -427,6 +427,7 @@ test("tag edits with multiple selection work", async () => {
   await userEvent.type(document.body, " ");
   await userEvent.type(document.body, "j");
   await userEvent.type(document.body, " ");
+  expect(container.querySelectorAll(".thread.selected").length).toBe(2);
 
   await userEvent.type(document.body, "t");
   await userEvent.type(document.querySelector("#edit-tag-box"), "-test1 foobar{enter}");
@@ -439,6 +440,8 @@ test("tag edits with multiple selection work", async () => {
   expect(screen.queryByText("test1")).not.toBeInTheDocument();
   expect(screen.queryByText("test2")).toBeInTheDocument();
   expect(screen.queryAllByText("foobar").length).toBe(2);
+
+  expect(container.querySelectorAll(".thread.selected").length).toBe(0);
 
   expect(window.open).toHaveBeenCalledTimes(0);
 });

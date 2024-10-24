@@ -51,6 +51,7 @@ export function Kukulkan(props) {
       .finally(() => props.sp?.(100));
     });
     setEditingTags("");
+    setSelectedThreads([]);
   }
 
   createEffect(() => {
@@ -108,7 +109,7 @@ export function Kukulkan(props) {
       event.preventDefault();
 
       let curSelThreads = selectedThreads(),
-        idx = curSelThreads.indexOf(activeThread());
+          idx = curSelThreads.indexOf(activeThread());
       if(idx === -1) {
         setSelectedThreads([...curSelThreads, activeThread()]);
       } else {
@@ -161,7 +162,6 @@ export function Kukulkan(props) {
       });
       setEditingTags(edits);
       makeTagEdits();
-      setEditingTags("");
     },
     true
   );
