@@ -118,8 +118,8 @@ test("fetches and renders thread", async () => {
   // thread nav
   const navs = container.querySelectorAll(".threadnav-box");
   expect(navs.length).toBe(2);
-  expect(navs[0].style["left"]).toBe("0em");
-  expect(navs[1].style["left"]).toBe("0em");
+  expect(navs[0].style["margin-left"]).toBe("0em");
+  expect(navs[1].style["margin-left"]).toBe("0em");
   expect(navs[0].style["border-color"]).toBe("white");
   expect(navs[1].style["border-color"]).toBe("black");
 });
@@ -325,9 +325,9 @@ test("thread nav shows and allows to navigate levels", async () => {
   // thread nav
   const navs = container.querySelectorAll(".threadnav-box");
   expect(navs.length).toBe(3);
-  expect(navs[0].style["left"]).toBe("0em");
-  expect(navs[1].style["left"]).toBe("1em");
-  expect(navs[2].style["left"]).toBe("0em");
+  expect(navs[0].style["margin-left"]).toBe("0em");
+  expect(navs[1].style["margin-left"]).toBe("1em");
+  expect(navs[2].style["margin-left"]).toBe("0em");
   expect(navs[0].style["opacity"]).toBe("1");
   expect(navs[1].style["opacity"]).toBe("0.3");
   expect(navs[2].style["opacity"]).toBe("1");
@@ -483,9 +483,9 @@ test("flat view works", async () => {
   // thread nav
   const navs = container.querySelectorAll(".threadnav-box");
   expect(navs.length).toBe(3);
-  expect(navs[0].style["left"]).toBe("0em");
-  expect(navs[1].style["left"]).toBe("1em");
-  expect(navs[2].style["left"]).toBe("0em");
+  expect(navs[0].style["margin-left"]).toBe("0em");
+  expect(navs[1].style["margin-left"]).toBe("1em");
+  expect(navs[2].style["margin-left"]).toBe("0em");
   expect(navs[0].style["opacity"]).toBe("1");
   expect(navs[1].style["opacity"]).toBe("0.3");
   expect(navs[2].style["opacity"]).toBe("1");
@@ -509,9 +509,9 @@ test("flat view works", async () => {
   expect(screen.getByText("bar3")).toBeInTheDocument();
   expect(screen.getByText("test3")).toBeInTheDocument();
 
-  expect(navs[0].style["left"]).toBe("0em");
-  expect(navs[1].style["left"]).toBe("0em");
-  expect(navs[2].style["left"]).toBe("0em");
+  expect(navs[0].style["margin-left"]).toBe("0em");
+  expect(navs[1].style["margin-left"]).toBe("0em");
+  expect(navs[2].style["margin-left"]).toBe("0em");
   expect(navs[0].style["opacity"]).toBe("1");
   expect(navs[1].style["opacity"]).toBe("1");
   expect(navs[2].style["opacity"]).toBe("1");
@@ -536,9 +536,9 @@ test("flat view works", async () => {
   expect(screen.getByText("test3")).toBeInTheDocument();
 
   expect(navs.length).toBe(3);
-  expect(navs[0].style["left"]).toBe("0em");
-  expect(navs[1].style["left"]).toBe("1em");
-  expect(navs[2].style["left"]).toBe("0em");
+  expect(navs[0].style["margin-left"]).toBe("0em");
+  expect(navs[1].style["margin-left"]).toBe("1em");
+  expect(navs[2].style["margin-left"]).toBe("0em");
   expect(navs[0].style["opacity"]).toBe("1");
   expect(navs[1].style["opacity"]).toBe("0.3");
   expect(navs[2].style["opacity"]).toBe("1");
@@ -592,9 +592,9 @@ test("flat view can be set to be default", async () => {
   // thread nav
   let navs = container.querySelectorAll(".threadnav-box");
   expect(navs.length).toBe(3);
-  expect(navs[0].style["left"]).toBe("0em");
-  expect(navs[1].style["left"]).toBe("1em");
-  expect(navs[2].style["left"]).toBe("0em");
+  expect(navs[0].style["margin-left"]).toBe("0em");
+  expect(navs[1].style["margin-left"]).toBe("1em");
+  expect(navs[2].style["margin-left"]).toBe("0em");
   expect(navs[0].style["opacity"]).toBe("1");
   expect(navs[1].style["opacity"]).toBe("0.3");
   expect(navs[2].style["opacity"]).toBe("1");
@@ -628,9 +628,9 @@ test("flat view can be set to be default", async () => {
 
   navs = container.querySelectorAll(".threadnav-box");
   expect(navs.length).toBe(3);
-  expect(navs[0].style["left"]).toBe("0em");
-  expect(navs[1].style["left"]).toBe("0em");
-  expect(navs[2].style["left"]).toBe("0em");
+  expect(navs[0].style["margin-left"]).toBe("0em");
+  expect(navs[1].style["margin-left"]).toBe("0em");
+  expect(navs[2].style["margin-left"]).toBe("0em");
   expect(navs[0].style["opacity"]).toBe("1");
   expect(navs[1].style["opacity"]).toBe("1");
   expect(navs[2].style["opacity"]).toBe("1");
@@ -682,8 +682,8 @@ test("works correctly when msg references are messed up", async () => {
   // thread nav
   const navs = container.querySelectorAll(".threadnav-box");
   expect(navs.length).toBe(2);
-  expect(navs[0].style["left"]).toBe("1em");
-  expect(navs[1].style["left"]).toBe("0em");
+  expect(navs[0].style["margin-left"]).toBe("1em");
+  expect(navs[1].style["margin-left"]).toBe("0em");
   expect(navs[0].style["opacity"]).toBe("0.3");
   expect(navs[1].style["opacity"]).toBe("1");
 });
@@ -740,8 +740,8 @@ test("sets active message based on unread", async () => {
   // thread nav
   const navs = container.querySelectorAll(".threadnav-box");
   expect(navs.length).toBe(2);
-  expect(navs[0].style["left"]).toBe("0em");
-  expect(navs[1].style["left"]).toBe("0em");
+  expect(navs[0].style["margin-left"]).toBe("0em");
+  expect(navs[1].style["margin-left"]).toBe("0em");
   expect(navs[0].style["border-color"]).toBe("black");
   expect(navs[1].style["border-color"]).toBe("white");
   expect(navs[0].style["border-radius"]).toBe("1em");
