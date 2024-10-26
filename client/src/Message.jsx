@@ -361,22 +361,22 @@ export function Message(props) {
                 }}
               />
             </Grid>
-            <Grid item>
+            <Grid item xs={0.25}>
               <a id="reply" href={replyUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
                 <Reply/>
               </a>
             </Grid>
-            <Grid item>
+            <Grid item xs={0.25}>
               <a id="forward" href={fwdUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
                 <Forward/>
               </a>
             </Grid>
-            <Grid item>
+            <Grid item xs={0.25}>
               <a id="print" href={printUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
                 <Print/>
               </a>
             </Grid>
-            <Grid item>
+            <Grid item xs={0.25}>
               <a id="security" href={secUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
                 <Security/>
               </a>

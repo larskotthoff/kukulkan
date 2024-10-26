@@ -85,7 +85,7 @@ export function SearchThreads(props) {
       <Grid item xs={12} align="right">{props.threads().length} thread{props.threads().length === 1 ? "" : "s"}.</Grid>
         <For each={props.threads()}>
           {(thread, index) =>
-            <Grid item container padding={.3} class={{
+            <Grid item container class={{
                 'thread': true,
                 'active': index() === props.activeThread(),
                 'selected': props.selectedThreads().indexOf(index()) !== -1
@@ -94,19 +94,20 @@ export function SearchThreads(props) {
                 props.setActiveThread(index());
                 simulateKeyPress('Enter');
               }}
+              padding={{xs: 2, lg: 0.5}}
             >
               <Grid item xs={12} sm={2} lg={1}>
                 {renderDateNumThread(thread)}
               </Grid>
-              <Grid item xs={12} sm={10} lg={4}>
+              <Grid item xs={12} sm={10} lg={3}>
                 <For each={thread.authors.split(/\s*[,|]\s*/)}>
                   {(author) => <ColorChip value={author}/>}
                 </For>
               </Grid>
-              <Grid item xs={12} sm={9} lg={5}>
+              <Grid item xs={12} sm={8} lg={4}>
                 {thread.subject}
               </Grid>
-              <Grid item xs={12} sm={2}>
+              <Grid item xs={12} sm={4} lg={4}>
                 <For each={thread.tags.sort()}>
                   {(tag) => <ColorChip value={tag}/>}
                 </For>

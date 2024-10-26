@@ -109,12 +109,12 @@ export function TodoThreads(props) {
         years = getIntervalBetweenDates(earliest, endOfYear(latest), "FullYear");
 
   return (
-    <Stack direction="row" class="centered" spacing={2}>
+    <Stack direction="row" class="centered" alignItems="stretch" spacing={1}>
       <Show when={dueDates.length > 0}>
         <Grid container item class="calendar">
           <For each={years}>
             {(year, yi) =>
-              <Grid container item columnSpacing={1}>
+              <Grid container item columnSpacing={2}>
                 <Grid item class="sticky" xs={3}>{year.getFullYear()}</Grid>
                 <Grid container item xs={9}>
                   <For each={getIntervalBetweenDates(yi() === 0 ? year : startOfYear(year), Math.min(endOfYear(year), latest), "Month")}>
@@ -154,7 +154,7 @@ export function TodoThreads(props) {
       <Grid container item style={{'margin-bottom': 'auto'}}>
         <For each={threads}>
           {(thread, index) =>
-            <Grid item container padding={.3} class={{
+            <Grid item container class={{
                 'thread': true,
                 'active': index() === props.activeThread(),
                 'selected': props.selectedThreads().indexOf(index()) !== -1,
@@ -171,21 +171,22 @@ export function TodoThreads(props) {
               onmouseleave={() => {
                 document.getElementsByClassName("calendar-box")[index()]?.classList.remove("highlight");
               }}
+              padding={{xs: 2, lg: 0.5}}
             >
-              <Grid item xs={12} sm={10} lg={4}>
+              <Grid item xs={12} sm={6} lg={4}>
                 <For each={thread.authors.split(/\s*[,|]\s*/)}>
                   {(author) => <ColorChip value={author}/>}
                 </For>
               </Grid>
-              <Grid item xs={12} sm={9} lg={5}>
+              <Grid item xs={12} sm={6} lg={4}>
                 {thread.subject}
               </Grid>
-              <Grid item xs={12} sm={2}>
+              <Grid item xs={12} sm={8} lg={3}>
                 <For each={thread.tags.sort()}>
                   {(tag) => <ColorChip value={tag}/>}
                 </For>
               </Grid>
-              <Grid item xs={12} sm={2} lg={1}>
+              <Grid item xs={12} sm={4} lg={1}>
                 {dues[index()][1]}
               </Grid>
             </Grid>

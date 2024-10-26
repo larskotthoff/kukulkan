@@ -6,7 +6,8 @@ body {
     background-size: auto 25vh;
     background-color: #fff8e1;
 
-    font-family: Roboto;
+    font-family: Fira Code Retina, Roboto, Hack, sans;
+    font-size: small;
 }
 
 .centered {
@@ -21,7 +22,7 @@ body {
     text-align: end;
     white-space: nowrap;
 
-    height: 98vh;
+    height: 100vh;
     max-width: 9em;
 
     overflow-y: scroll;
@@ -40,12 +41,20 @@ body {
 .chip {
     height: auto !important;
     border-radius: 5px !important;
-    margin-right: 3px !important;
+    margin-right: 2px !important;
 
-    font-family: Fira Mono, Roboto !important;
+    font-family: Fira Code Retina, Roboto, Hack, sans !important;
 
     background-color: var(--bg-color) !important;
     color: oklch(from var(--bg-color) calc(1 - round(l - 0.15)) 0 0) !important;
+}
+
+.MuiInputBase-root {
+    font-family: Fira Code Retina, Roboto, Hack, sans !important;
+}
+
+.MuiAlert-message {
+    font-family: Fira Code Retina, Roboto, Hack, sans !important;
 }
 
 .chip span {
@@ -146,10 +155,15 @@ body {
     border: none;
 }
 
+.threadnav-container {
+    margin-top: 0.5em;
+    margin-left: 0.5em;
+}
+
 .threadnav-box {
     position: relative;
-    width: 1em;
-    height: 1em;
+    width: 1.5em;
+    height: 1.5em;
     border: .05em solid white;
 }
 
@@ -212,4 +226,54 @@ label {
     position: fixed;
     top: 10px;
     right: 10px;
+}
+
+/* https://www.joshwcomeau.com/css/custom-css-reset/ */
+
+/* 1. Use a more-intuitive box-sizing model */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* 2. Remove default margin */
+* {
+  margin: 0;
+}
+
+body {
+  /* 3. Add accessible line-height */
+  line-height: 1.5;
+  /* 4. Improve text rendering */
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 5. Improve media defaults */
+img, picture, video, canvas, svg {
+  display: block;
+  max-width: 100%;
+}
+
+/* 6. Inherit fonts for form controls */
+input, button, textarea, select {
+  font: inherit;
+}
+
+/* 7. Avoid text overflows */
+p, h1, h2, h3, h4, h5, h6 {
+  overflow-wrap: break-word;
+}
+
+/* 8. Improve line wrapping */
+p {
+  text-wrap: pretty;
+}
+h1, h2, h3, h4, h5, h6 {
+  text-wrap: balance;
+}
+
+/*
+  9. Create a root stacking context
+*/
+#root, #__next {
+  isolation: isolate;
 }

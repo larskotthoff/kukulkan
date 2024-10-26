@@ -163,7 +163,7 @@ export function Thread(props) {
   function ThreadNav() {
     return (
       <Show when={filteredThread() && filteredThread()[activeMessage()]}>
-        <Grid container direction="column" marginTop="1em">
+        <Grid container direction="column" class="threadnav-container">
           <For each={thread()}>
             {(m, i) =>
               <Box
