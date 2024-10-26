@@ -186,7 +186,7 @@ export function Kukulkan(props) {
               return [];
           }}
           handleKey={(ev) => {
-            if(ev.code === 'Enter') {
+            if(ev.code === 'Enter' || ev.key === 'Enter') {
               setShowEditingTagModal(false);
               // sad, but true
               makeTagEdits();

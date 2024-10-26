@@ -2,6 +2,7 @@ import { createEffect, createSignal, createResource, For, Show } from "solid-js"
 
 import Box from "@suid/material/Box";
 import Grid from "@suid/material/Grid";
+import Stack from "@suid/material/Stack";
 
 import { Message } from "./Message.jsx";
 
@@ -163,7 +164,7 @@ export function Thread(props) {
   function ThreadNav() {
     return (
       <Show when={filteredThread() && filteredThread()[activeMessage()]}>
-        <Grid container direction="column" class="threadnav-container">
+        <Grid container direction="column" class="threadnav-container" width="max-content">
           <For each={thread()}>
             {(m, i) =>
               <Box
@@ -178,7 +179,7 @@ export function Thread(props) {
                 }}
                 class="threadnav-box"
                 style={{
-                  left: (filteredThread() === thread() ? 0 : m.depth) + "em",
+                  'margin-left': (filteredThread() === thread() ? 0 : m.depth) + "em",
                   opacity: filteredThread()?.find((mp) => { return mp.message_id === m.message_id; }) ? 1 : .3,
                   'border-radius': m.tags.includes("unread") ? "1em" : "0em",
                   'border-color': filteredThread()[activeMessage()].message_id === m.message_id ? "black" : "white",
@@ -194,26 +195,22 @@ export function Thread(props) {
   return (
     <>
       <Show when={!allTags.loading && activeMessage() > -1}>
-        <Grid container direction="row" alignItems="flex-start">
-          <Grid item xs="auto" style={{height: '100vh'}}>
-            <ThreadNav/>
+        <Stack direction="row" class="centered" alignItems="stretch" justifyContent="space-around" spacing={1}>
+          <ThreadNav/>
+          <Grid container class="centered" direction="column">
+            <For each={filteredThread()}>
+              {(m, i) => <Message msg={m} allTags={allTags()} active={i() === activeMessage()} sp={props.sp}
+                onClick={(e) => {
+                    if(e.target.tagName.toLowerCase() !== 'a' &&
+                        e.target.tagName.toLowerCase() !== 'input' &&
+                        window.getSelection().toString().length === 0) {
+                      setActiveMessage(i());
+                    }
+                  }}
+                />}
+            </For>
           </Grid>
-          <Grid item xs style={{height: '100vh', 'overflow-y': 'auto'}}>
-            <Grid container direction="column" class="centered">
-              <For each={filteredThread()}>
-                {(m, i) => <Message msg={m} allTags={allTags()} active={i() === activeMessage()} sp={props.sp}
-                  onClick={(e) => {
-                      if(e.target.tagName.toLowerCase() !== 'a' &&
-                          e.target.tagName.toLowerCase() !== 'input' &&
-                          window.getSelection().toString().length === 0) {
-                        setActiveMessage(i());
-                      }
-                    }}
-                  />}
-              </For>
-            </Grid>
-          </Grid>
-        </Grid>
+        </Stack>
       </Show>
     </>
   );

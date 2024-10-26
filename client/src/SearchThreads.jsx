@@ -59,7 +59,7 @@ export function SearchThreads(props) {
           }
         }}
         handleKey={(ev) => {
-          if(ev.code === 'Enter') {
+          if(ev.code === 'Enter' || ev.key === 'Enter') {
             const sp = new URLSearchParams(searchParams);
             sp.set("query", searchText());
             window.location.search = sp.toString();
@@ -96,18 +96,18 @@ export function SearchThreads(props) {
               }}
               padding={{xs: 2, lg: 0.5}}
             >
-              <Grid item xs={12} sm={2} lg={1}>
+              <Grid item sm={12} lg={1}>
                 {renderDateNumThread(thread)}
               </Grid>
-              <Grid item xs={12} sm={10} lg={3}>
+              <Grid item sm={12} lg={3}>
                 <For each={thread.authors.split(/\s*[,|]\s*/)}>
                   {(author) => <ColorChip value={author}/>}
                 </For>
               </Grid>
-              <Grid item xs={12} sm={8} lg={4}>
+              <Grid item sm={12} lg={4}>
                 {thread.subject}
               </Grid>
-              <Grid item xs={12} sm={4} lg={4}>
+              <Grid item sm={12} lg={4}>
                 <For each={thread.tags.sort()}>
                   {(tag) => <ColorChip value={tag}/>}
                 </For>

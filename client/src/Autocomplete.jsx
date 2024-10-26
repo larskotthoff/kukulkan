@@ -55,7 +55,7 @@ export function Autocomplete(props) {
       setSelected(prev => prev === 0 ? (sortedOptions().length - 1) : prev - 1);
     } else if (ev.code === 'ArrowDown') {
       setSelected(prev => prev + 1 === sortedOptions().length ? 0 : prev + 1);
-    } else if (ev.code === 'Enter') {
+    } else if (ev.code === 'Enter' || ev.key === 'Enter') {
       select();
     } else if (ev.code === 'Escape') {
       setShowPopover(false);
@@ -146,10 +146,10 @@ export function ChipComplete(props) {
       }}
       // eslint-disable-next-line solid/reactivity
       handleKey={async (ev) => {
-        if(ev.code === 'Enter' && toAdd()) {
+        if((ev.code === 'Enter' || ev.key === 'Enter') && toAdd()) {
           props.addChip(toAdd());
           setToAdd(null);
-        } else if(ev.code === 'Backspace' && !toAdd()) {
+        } else if((ev.code === 'Backspace' || ev.key === 'Backspace') && !toAdd()) {
           const tmp = JSON.parse(JSON.stringify(props.chips)),
                 chip = tmp.pop();
           props.removeChip(chip);
