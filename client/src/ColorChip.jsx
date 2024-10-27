@@ -3,11 +3,12 @@ import Chip from "@suid/material/Chip";
 import { getColor } from "./utils.js";
 
 export function ColorChip(props) {
+  const { ['class']: clss, ...newProps } = props;
   return (<Chip
     label={props.value}
-    class="chip"
+    class={(clss ? clss + " " : "") + "chip"}
     style={{ '--bg-color': `${getColor(props.value)}` }}
-    {...props}
+    {...newProps}
     />);
 }
 

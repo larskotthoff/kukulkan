@@ -151,7 +151,7 @@ export function TodoThreads(props) {
           </For>
         </Grid>
       </Show>
-      <Grid container item style={{'margin-bottom': 'auto'}}>
+      <Grid container item class="todo-threads">
         <For each={threads}>
           {(thread, index) =>
             <Grid item container class={{
@@ -171,22 +171,22 @@ export function TodoThreads(props) {
               onmouseleave={() => {
                 document.getElementsByClassName("calendar-box")[index()]?.classList.remove("highlight");
               }}
-              padding={{xs: 2, lg: 0.5}}
+              padding={{xs: 2, sm: 0.5}}
             >
-              <Grid item xs={12} sm={6} lg={4}>
+              <Grid item xs={6} sm={4} class="narrow-ellipsis">
                 <For each={thread.authors.split(/\s*[,|]\s*/)}>
-                  {(author) => <ColorChip value={author}/>}
+                  {(author) => <ColorChip value={author} class="author"/>}
                 </For>
               </Grid>
-              <Grid item xs={12} sm={6} lg={4}>
+              <Grid item xs={6} sm={4} class="narrow-ellipsis">
                 {thread.subject}
               </Grid>
-              <Grid item xs={12} sm={8} lg={3}>
+              <Grid item xs={8} sm={3} class="narrow-ellipsis">
                 <For each={thread.tags.sort()}>
-                  {(tag) => <ColorChip value={tag}/>}
+                  {(tag) => <ColorChip value={tag} class="tag"/>}
                 </For>
               </Grid>
-              <Grid item xs={12} sm={4} lg={1}>
+              <Grid item xs={4} sm={1} class="narrow-ellipsis">
                 {dues[index()][1]}
               </Grid>
             </Grid>

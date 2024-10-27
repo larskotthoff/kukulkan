@@ -94,22 +94,22 @@ export function SearchThreads(props) {
                 props.setActiveThread(index());
                 simulateKeyPress('Enter');
               }}
-              padding={{xs: 2, lg: 0.5}}
+              padding={{xs: 2, sm: 0.5}}
             >
-              <Grid item sm={12} lg={1}>
+              <Grid item xs={2} sm={1} class="narrow-ellipsis">
                 {renderDateNumThread(thread)}
               </Grid>
-              <Grid item sm={12} lg={3}>
+              <Grid item xs={10} sm={3} class="narrow-ellipsis">
                 <For each={thread.authors.split(/\s*[,|]\s*/)}>
-                  {(author) => <ColorChip value={author}/>}
+                  {(author) => <ColorChip value={author} class="author"/>}
                 </For>
               </Grid>
-              <Grid item sm={12} lg={4}>
+              <Grid item xs={6} sm={4} class="narrow-ellipsis">
                 {thread.subject}
               </Grid>
-              <Grid item sm={12} lg={4}>
+              <Grid item xs={6} sm={4} class="narrow-ellipsis">
                 <For each={thread.tags.sort()}>
-                  {(tag) => <ColorChip value={tag}/>}
+                  {(tag) => <ColorChip value={tag} class="tag"/>}
                 </For>
               </Grid>
             </Grid>

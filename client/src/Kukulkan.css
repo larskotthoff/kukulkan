@@ -31,20 +31,41 @@ body {
 
     background-color: var(--bg-color) !important;
     color: oklch(from var(--bg-color) calc(1 - round(l - 0.15)) 0 0) !important;
+
+    @media (max-width: 1600px) {
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+    }
+}
+
+.chip span {
+    padding: 3px;
+    width: max-content;
+}
+
+.author span {
+    @media (max-width: 1600px) {
+        max-width: 7em;
+    }
+}
+
+.tag span {
+    @media (max-width: 1600px) {
+        max-width: 4em;
+    }
 }
 
 .MuiInputBase-root {
     font-family: Fira Code Retina, Roboto, Hack, sans !important;
 }
 
-.MuiAlert-message {
+.MuiButton-root {
     font-family: Fira Code Retina, Roboto, Hack, sans !important;
 }
 
-.chip span {
-    padding: 3px;
-    white-space: break-spaces !important;
-    width: max-content;
+.MuiAlert-message {
+    font-family: Fira Code Retina, Roboto, Hack, sans !important;
 }
 
 .message-text {
@@ -80,6 +101,14 @@ body {
 .message.deleted {
     border-color: red;
     border-style: solid;
+}
+
+.narrow-ellipsis {
+    @media (max-width: 1600px) {
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+    }
 }
 
 .thread.active {
@@ -147,9 +176,14 @@ body {
 
 .threadnav-box {
     position: relative;
-    width: 1.5em;
-    height: 1.5em;
+    width: 1.2em;
+    height: 1.2em;
     border: .05em solid white;
+}
+
+.todo-threads {
+    margin-bottom: auto !important;
+    max-width: calc(100% - 10.5em);
 }
 
 .calendar {
@@ -224,9 +258,9 @@ label {
 }
 
 .top-right {
-    position: fixed;
-    top: 10px;
-    right: 10px;
+    position: relative;
+    top: 0px;
+    right: 0px;
 }
 
 /* https://www.joshwcomeau.com/css/custom-css-reset/ */
