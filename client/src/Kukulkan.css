@@ -17,22 +17,6 @@ body {
     align-items: center;
 }
 
-.calendar {
-    align-items: end;
-    text-align: end;
-    white-space: nowrap;
-
-    height: 100vh;
-    max-width: 9em;
-
-    overflow-y: scroll;
-    scrollbar-width: none;
-}
-
-.calendar::-webkit-scrollbar {
-  display: none;
-}
-
 .margin {
     margin-top: 10px !important;
     margin-bottom: 10px !important;
@@ -158,6 +142,7 @@ body {
 .threadnav-container {
     margin-top: 0.5em;
     margin-left: 0.5em;
+    max-width: fit-content;
 }
 
 .threadnav-box {
@@ -165,6 +150,22 @@ body {
     width: 1.5em;
     height: 1.5em;
     border: .05em solid white;
+}
+
+.calendar {
+    align-items: end;
+    text-align: end;
+    white-space: nowrap;
+
+    height: 100vh;
+    max-width: 10.5em;
+
+    overflow-y: scroll;
+    scrollbar-width: none;
+}
+
+.calendar::-webkit-scrollbar {
+  display: none;
 }
 
 .calendar-box {
