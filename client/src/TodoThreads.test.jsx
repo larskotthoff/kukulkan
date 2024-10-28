@@ -28,9 +28,9 @@ test("shows threads", () => {
   expect(container.querySelectorAll(".thread").length).toBe(2);
   expect(container.querySelectorAll(".thread.active").length).toBe(0);
   expect(container.querySelectorAll(".thread.selected").length).toBe(0);
-  expect(container.querySelectorAll(".chip").length).toBe(6);
-  expect(screen.getAllByText("fooAuthor").length).toBe(2);
-  expect(screen.getAllByText("barAuthor").length).toBe(2);
+  expect(container.querySelectorAll(".chip").length).toBe(10);
+  expect(screen.getAllByText("fooAuthor").length).toBe(4);
+  expect(screen.getAllByText("barAuthor").length).toBe(4);
   expect(screen.getAllByText("todo").length).toBe(2);
   expect(screen.getAllByText("test").length).toBe(2);
 });

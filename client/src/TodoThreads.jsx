@@ -168,7 +168,7 @@ export function TodoThreads(props) {
               }}
               onmouseenter={() => {
                 const calElem = document.getElementsByClassName("calendar")[0];
-                prevScrollPos = { left: calElem.scrollLeft, top: calElem.scrollTop };
+                prevScrollPos = { left: calElem?.scrollLeft, top: calElem?.scrollTop };
                 document.getElementsByClassName("calendar-box")[index()]?.classList.add("highlight");
                 document.getElementsByClassName("calendar-box")[index()]?.scrollIntoView({block: "nearest"});
               }}
@@ -176,23 +176,28 @@ export function TodoThreads(props) {
                 if(prevScrollPos) document.getElementsByClassName("calendar")[0].scrollTo(prevScrollPos);
                 document.getElementsByClassName("calendar-box")[index()]?.classList.remove("highlight");
               }}
-              padding={{xs: 2, sm: 0.5}}
+              padding={{xs: 1, sm: 0.5}}
             >
-              <Grid item xs={6} sm={4} class="narrow-ellipsis">
+              <Grid item xs={2} sm={1}>
+                {dues[index()][1]}
+              </Grid>
+              <Grid item sx={{ display: {xs: 'none', lg: 'block'} }} sm={4}>
                 <For each={thread.authors.split(/\s*[,|]\s*/)}>
-                  {(author) => <ColorChip value={author} class="author"/>}
+                  {(author) => <ColorChip value={author}/>}
                 </For>
               </Grid>
-              <Grid item xs={6} sm={4} class="narrow-ellipsis">
+              <Grid item sx={{ display: {xs: 'block', lg: 'none'} }} xs={10} sm={4}>
+                <For each={thread.authors.split(/\s*[,|]\s*/)}>
+                  {(author) => <ColorChip value={author.split(/\s/)[0]}/>}
+                </For>
+              </Grid>
+              <Grid item xs={12} sm={7} xl={5}>
                 {thread.subject}
               </Grid>
-              <Grid item xs={8} sm={3} class="narrow-ellipsis">
+              <Grid item sx={{ display: {xs: 'none', xl: 'block'} }} xl={2}>
                 <For each={thread.tags.sort()}>
-                  {(tag) => <ColorChip value={tag} class="tag"/>}
+                  {(tag) => <ColorChip value={tag}/>}
                 </For>
-              </Grid>
-              <Grid item xs={4} sm={1} class="narrow-ellipsis">
-                {dues[index()][1]}
               </Grid>
             </Grid>
           }

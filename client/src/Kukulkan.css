@@ -48,18 +48,6 @@ body {
     width: max-content;
 }
 
-.author span {
-    @media (max-width: 1600px) {
-        max-width: 7em;
-    }
-}
-
-.tag span {
-    @media (max-width: 1600px) {
-        max-width: 4em;
-    }
-}
-
 .MuiInputBase-root {
     font-family: var(--fonts) !important;
 }
@@ -107,12 +95,10 @@ body {
     border-style: solid;
 }
 
-.narrow-ellipsis {
-    @media (max-width: 1600px) {
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        overflow: hidden;
-    }
+.thread div {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 .thread.active {

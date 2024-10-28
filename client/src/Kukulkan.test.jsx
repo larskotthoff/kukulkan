@@ -140,18 +140,18 @@ test("shows threads", async () => {
   expect(screen.getByText("2 threads.")).toBeInTheDocument();
 
   expect(container.querySelectorAll(".thread").length).toBe(2);
-  expect(container.querySelectorAll(".chip").length).toBe(8);
-  expect(screen.getByText("fooAuthor")).toBeInTheDocument();
-  expect(screen.getByText("barAuthor")).toBeInTheDocument();
-  expect(screen.getByText("fooTag")).toBeInTheDocument();
-  expect(screen.getByText("barTag")).toBeInTheDocument();
-  expect(screen.getByText("test")).toBeInTheDocument();
+  expect(container.querySelectorAll(".chip").length).toBe(12);
+  expect(screen.getAllByText("fooAuthor").length).toBe(2);
+  expect(screen.getAllByText("barAuthor").length).toBe(2);
+  expect(screen.getAllByText("fooTag").length).toBe(1);
+  expect(screen.getAllByText("barTag").length).toBe(1);
+  expect(screen.getAllByText("test").length).toBe(1);
 
-  expect(screen.getByText("test1")).toBeInTheDocument();
-  expect(screen.getByText("test2")).toBeInTheDocument();
-  expect(screen.getByText("unread")).toBeInTheDocument();
-  expect(screen.getByText("new")).toBeInTheDocument();
-  expect(screen.getByText("foobar")).toBeInTheDocument();
+  expect(screen.getAllByText("test1").length).toBe(2);
+  expect(screen.getAllByText("test2").length).toBe(2);
+  expect(screen.getAllByText("unread").length).toBe(1);
+  expect(screen.getAllByText("new").length).toBe(1);
+  expect(screen.getAllByText("foobar").length).toBe(1);
 });
 
 test("opens thread on enter and click", async () => {
