@@ -1,3 +1,7 @@
+:root {
+    --fonts: Fira Sans, Roboto, Hack, sans;
+}
+
 body {
     background-image: url("assets/serpent.webp");
     background-repeat: no-repeat;
@@ -6,8 +10,7 @@ body {
     background-size: auto 25vh;
     background-color: #fff8e1;
 
-    font-family: Fira Code Retina, Roboto, Hack, sans;
-    font-size: small;
+    font-family: var(--fonts);
 }
 
 .centered {
@@ -27,7 +30,8 @@ body {
     border-radius: 5px !important;
     margin-right: 2px !important;
 
-    font-family: Fira Code Retina, Roboto, Hack, sans !important;
+    font-family: var(--fonts) !important;
+    font-size: 0.9rem !important;
 
     background-color: var(--bg-color) !important;
     color: oklch(from var(--bg-color) calc(1 - round(l - 0.15)) 0 0) !important;
@@ -57,15 +61,15 @@ body {
 }
 
 .MuiInputBase-root {
-    font-family: Fira Code Retina, Roboto, Hack, sans !important;
+    font-family: var(--fonts) !important;
 }
 
 .MuiButton-root {
-    font-family: Fira Code Retina, Roboto, Hack, sans !important;
+    font-family: var(--fonts) !important;
 }
 
 .MuiAlert-message {
-    font-family: Fira Code Retina, Roboto, Hack, sans !important;
+    font-family: var(--fonts) !important;
 }
 
 .message-text {
