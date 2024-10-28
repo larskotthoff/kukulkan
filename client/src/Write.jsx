@@ -242,6 +242,7 @@ export function Write(props) {
   createEffect(() => {
     if(useTemplate() && bodyRef().disabled === false) {
       bodyRef().value = useTemplate() + message.bodyDefaultValue;
+      bodyRef().style.height = 'auto';
       setMessage("body", bodyRef().value);
     }
   });
@@ -469,6 +470,7 @@ export function Write(props) {
                 ev.target.disabled = false;
                 localStorage.setItem(`draft-${draftKey()}-body`, ev.target.value);
                 setMessage("body", ev.target.value);
+                ev.target.style.height = 'auto';
               }
             }}
             onChange={(ev) => {
