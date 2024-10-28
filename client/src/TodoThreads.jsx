@@ -108,6 +108,8 @@ export function TodoThreads(props) {
         latest = new Date(Math.max(...dueDates)),
         years = getIntervalBetweenDates(earliest, endOfYear(latest), "FullYear");
 
+  let prevScrollPos = undefined;
+
   return (
     <Stack direction="row" class="centered" alignItems="stretch" spacing={1}>
       <Show when={dueDates.length > 0}>
@@ -165,10 +167,13 @@ export function TodoThreads(props) {
                 simulateKeyPress('Enter');
               }}
               onmouseenter={() => {
+                const calElem = document.getElementsByClassName("calendar")[0];
+                prevScrollPos = { left: calElem.scrollLeft, top: calElem.scrollTop };
                 document.getElementsByClassName("calendar-box")[index()]?.classList.add("highlight");
                 document.getElementsByClassName("calendar-box")[index()]?.scrollIntoView({block: "nearest"});
               }}
               onmouseleave={() => {
+                if(prevScrollPos) document.getElementsByClassName("calendar")[0].scrollTo(prevScrollPos);
                 document.getElementsByClassName("calendar-box")[index()]?.classList.remove("highlight");
               }}
               padding={{xs: 2, sm: 0.5}}
