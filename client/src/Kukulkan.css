@@ -173,7 +173,9 @@ body {
 
 .todo-threads {
     margin-bottom: auto !important;
-    max-width: calc(100% - 10.5em);
+    @media (min-width: 900px) {
+        max-width: calc(100% - 10.5em);
+    }
 }
 
 .calendar {
@@ -182,7 +184,12 @@ body {
     white-space: nowrap;
 
     height: 100vh;
-    max-width: 10.5em;
+    @media (min-width: 900px) {
+        max-width: 10.5em;
+    }
+    @media (max-width: 899px) {
+        display: none;
+    }
 
     overflow-y: scroll;
     scrollbar-width: none;
