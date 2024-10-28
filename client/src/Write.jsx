@@ -249,13 +249,12 @@ export function Write(props) {
   function quote(text) {
     if(text) {
       let {mainPart, quotedPart} = separateQuotedNonQuoted(text);
-      mainPart = mainPart.trim();
       mainPart = mainPart.replace(/&gt;/g, ">").replace(/&lt;/g, "<").split('\n').join("\n> ");
       if(quotedPart) {
-        if(getSetting("abbreviateQuoted")) {
+        if(getSetting("abbreviateQuoted") && action === "reply") {
           mainPart += "\n> [...]";
         } else {
-          mainPart += `\n${quotedPart}`;
+          mainPart += `\n> ${quotedPart.split('\n').join("\n> ")}`;
         }
       }
       return `\n\n\nOn ${baseMessage().date}, ${baseMessage().from} wrote:\n> ${mainPart}`;

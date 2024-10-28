@@ -260,7 +260,7 @@ test("reply includes only main part of base message quoted", async () => {
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
-  expect(getByTestId("body").querySelector("textarea").value).toBe(`\n\n\nOn ${msg.date}, ${msg.from} wrote:\n> Thanks.\n> [...]`);
+  expect(getByTestId("body").querySelector("textarea").value).toBe(`\n\n\nOn ${msg.date}, ${msg.from} wrote:\n> Thanks.\n> \n> [...]`);
 });
 
 test("reply includes entire base message quoted when setting changed", async () => {
@@ -294,7 +294,7 @@ test("reply includes entire base message quoted when setting changed", async () 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
-  expect(getByTestId("body").querySelector("textarea").value).toBe(`\n\n\nOn ${msg.date}, ${msg.from} wrote:\n> Thanks.\nOn bla, blurg wrote:\n> foo\n> bar.`);
+  expect(getByTestId("body").querySelector("textarea").value).toBe(`\n\n\nOn ${msg.date}, ${msg.from} wrote:\n> Thanks.\n> \n> On bla, blurg wrote:\n> > foo\n> > bar.`);
 });
 
 test("base message forward", async () => {
@@ -335,6 +335,40 @@ test("base message forward", async () => {
   expect(getByTestId("body").querySelector("textarea").value).toBe(`\n\n\nOn ${msg.date}, ${msg.from} wrote:\n> Test mail`);
   expect(screen.getByText("Original HTML message")).toBeInTheDocument();
   expect(document.title).toBe("Compose: Fw: Test.");
+});
+
+test("forward includes entire message even if abbreviated reply", async () => {
+  vi.stubGlobal('location', {
+    ...window.location,
+    search: '?id=foo&action=forward'
+  });
+  const msg1 = JSON.parse(JSON.stringify(msg));
+  msg1.body["text/plain"] = "Thanks.\n\nOn bla, blurg wrote:\n> foo\n> bar.";
+  global.fetch = vi.fn((url) => {
+    switch(url) {
+      case "http://localhost:5000/api/tags/":
+        return Promise.resolve({ ok: true, json: () => allTags });
+      case "http://localhost:5000/api/accounts/":
+        return Promise.resolve({ ok: true, json: () => accounts });
+      case "http://localhost:5000/api/message/foo":
+        return Promise.resolve({ ok: true, json: () => msg1 });
+      default:
+        return Promise.resolve({ ok: true, json: () => [] });
+    }
+  });
+  localStorage.setItem("settings-abbreviateQuoted", true);
+  const { getByTestId } = render(() => <Write/>);
+
+  expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("Send")).toBeInTheDocument();
+  });
+  expect(getByTestId("body").querySelector("textarea").value).toBe(`\n\n\nOn ${msg.date}, ${msg.from} wrote:\n> Thanks.\n> \n> On bla, blurg wrote:\n> > foo\n> > bar.`);
 });
 
 test("base message reply filters admin tags", async () => {
