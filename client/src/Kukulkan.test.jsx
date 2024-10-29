@@ -120,8 +120,8 @@ test("shows threads", async () => {
     switch(url) {
       case "http://localhost:5000/api/query/foo":
         return Promise.resolve({ ok: true, json: () => [
-            {authors: "fooAuthor, barAuthor", subject: "test", tags: ["fooTag", "barTag"], total_messages: 2, newest_date: 1000, oldest_date: 100},
-            {authors: "test1, test2", subject: "foobar", tags: ["unread", "new"], total_messages: 1, newest_date: 1000, oldest_date: 100}
+            {authors: ["fooAuthor", "barAuthor"], subject: "test", tags: ["fooTag", "barTag"], total_messages: 2, newest_date: 1000, oldest_date: 100},
+            {authors: ["test1", "test2"], subject: "foobar", tags: ["unread", "new"], total_messages: 1, newest_date: 1000, oldest_date: 100}
         ]});
       case "http://localhost:5000/api/tags":
         return Promise.resolve({ ok: true, json: () => ["foo", "foobar"] });
@@ -163,7 +163,7 @@ test("opens thread on enter and click", async () => {
     switch(url) {
       case "http://localhost:5000/api/query/foo":
         return Promise.resolve({ ok: true, json: () => [
-            {thread_id: "foo", authors: "test", subject: "foobar", tags: ["test"], total_messages: 1, newest_date: 1000, oldest_date: 100}
+            {thread_id: "foo", authors: ["test"], subject: "foobar", tags: ["test"], total_messages: 1, newest_date: 1000, oldest_date: 100}
         ]});
       case "http://localhost:5000/api/tags":
         return Promise.resolve({ ok: true, json: () => ["foo", "foobar"] });
@@ -200,7 +200,7 @@ test("opens thread on enter and click in same tab with config", async () => {
     switch(url) {
       case "http://localhost:5000/api/query/foo":
         return Promise.resolve({ ok: true, json: () => [
-            {thread_id: "foo", authors: "test", subject: "foobar", tags: ["test"], total_messages: 1, newest_date: 1000, oldest_date: 100}
+            {thread_id: "foo", authors: ["test"], subject: "foobar", tags: ["test"], total_messages: 1, newest_date: 1000, oldest_date: 100}
         ]});
       case "http://localhost:5000/api/tags":
         return Promise.resolve({ ok: true, json: () => ["foo", "foobar"] });
@@ -238,8 +238,8 @@ test("navigation and selection shortcuts work", async () => {
     switch(url) {
       case "http://localhost:5000/api/query/foo":
         return Promise.resolve({ ok: true, json: () => [
-            {thread_id: "foo", authors: "test1", subject: "foobar1", tags: ["test1"], total_messages: 1, newest_date: 1000, oldest_date: 100},
-            {thread_id: "bar", authors: "test2", subject: "foobar2", tags: ["test2"], total_messages: 1, newest_date: 1000, oldest_date: 100}
+            {thread_id: "foo", authors: ["test1"], subject: "foobar1", tags: ["test1"], total_messages: 1, newest_date: 1000, oldest_date: 100},
+            {thread_id: "bar", authors: ["test2"], subject: "foobar2", tags: ["test2"], total_messages: 1, newest_date: 1000, oldest_date: 100}
         ]});
       case "http://localhost:5000/api/tags":
         return Promise.resolve({ ok: true, json: () => ["foo", "foobar"] });
@@ -297,7 +297,7 @@ test("delete thread works", async () => {
     switch(url) {
       case "http://localhost:5000/api/query/foo":
         return Promise.resolve({ ok: true, json: () => [
-            {thread_id: "foo", authors: "test", subject: "foobar", tags: ["unread"], total_messages: 1, newest_date: 1000, oldest_date: 100}
+            {thread_id: "foo", authors: ["test"], subject: "foobar", tags: ["unread"], total_messages: 1, newest_date: 1000, oldest_date: 100}
         ]});
       case "http://localhost:5000/api/tags":
         return Promise.resolve({ ok: true, json: () => ["foo", "foobar"] });
@@ -331,7 +331,7 @@ test("mark thread done works", async () => {
     switch(url) {
       case "http://localhost:5000/api/query/foo":
         return Promise.resolve({ ok: true, json: () => [
-            {thread_id: "foo", authors: "test", subject: "foobar", tags: ["todo", "due:1970-01-01"], total_messages: 1, newest_date: 1000, oldest_date: 100}
+            {thread_id: "foo", authors: ["test"], subject: "foobar", tags: ["todo", "due:1970-01-01"], total_messages: 1, newest_date: 1000, oldest_date: 100}
         ]});
       case "http://localhost:5000/api/tags":
         return Promise.resolve({ ok: true, json: () => ["foo", "foobar"] });
@@ -368,7 +368,7 @@ test("tag edits work", async () => {
     switch(url) {
       case "http://localhost:5000/api/query/foo":
         return Promise.resolve({ ok: true, json: () => [
-            {thread_id: "foo", authors: "authors", subject: "subject", tags: ["test"], total_messages: 1, newest_date: 1000, oldest_date: 100}
+            {thread_id: "foo", authors: ["authors"], subject: "subject", tags: ["test"], total_messages: 1, newest_date: 1000, oldest_date: 100}
         ]});
       case "http://localhost:5000/api/tags":
         return Promise.resolve({ ok: true, json: () => ["foo", "foobar"] });
@@ -406,8 +406,8 @@ test("tag edits with multiple selection work", async () => {
     switch(url) {
       case "http://localhost:5000/api/query/foo":
         return Promise.resolve({ ok: true, json: () => [
-            {thread_id: "foo", authors: "authors", subject: "subject", tags: ["test1"], total_messages: 1, newest_date: 1000, oldest_date: 100},
-            {thread_id: "bar", authors: "authors", subject: "subject", tags: ["test2"], total_messages: 1, newest_date: 1000, oldest_date: 100}
+            {thread_id: "foo", authors: ["authors"], subject: "subject", tags: ["test1"], total_messages: 1, newest_date: 1000, oldest_date: 100},
+            {thread_id: "bar", authors: ["authors"], subject: "subject", tags: ["test2"], total_messages: 1, newest_date: 1000, oldest_date: 100}
         ]});
       case "http://localhost:5000/api/tags":
         return Promise.resolve({ ok: true, json: () => ["foo", "foobar"] });

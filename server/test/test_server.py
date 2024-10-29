@@ -72,7 +72,7 @@ def test_query(setup):
 
     mt = lambda: None
     mt.get_messages = MagicMock(return_value=iter([mm1, mm2, mm3]))
-    mt.get_authors = MagicMock(return_value="foo bar")
+    mt.get_authors = MagicMock(return_value="foo bar, bar foo")
     mt.get_matched_messages = MagicMock(return_value=23)
     mt.get_subject = MagicMock(return_value="foosub")
     mt.get_thread_id = MagicMock(return_value="id")
@@ -89,7 +89,7 @@ def test_query(setup):
             assert response.status_code == 200
             thrds = json.loads(response.data.decode())
             assert len(thrds) == 1
-            assert thrds[0]["authors"] == "foo bar"
+            assert thrds[0]["authors"] == ["foo bar", "bar foo"]
             assert thrds[0]["matched_messages"] == 23
             assert thrds[0]["newest_date"] == "foobardate"
             assert thrds[0]["oldest_date"] == "foodate"
@@ -144,7 +144,7 @@ def test_query_empty(setup):
             assert response.status_code == 200
             thrds = json.loads(response.data.decode())
             assert len(thrds) == 1
-            assert thrds[0]["authors"] == "(no author)"
+            assert thrds[0]["authors"] == ["(no author)"]
             assert thrds[0]["matched_messages"] == 23
             assert thrds[0]["newest_date"] == "foodate"
             assert thrds[0]["oldest_date"] == "foodate"

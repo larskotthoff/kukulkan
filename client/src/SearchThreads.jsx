@@ -103,12 +103,12 @@ export function SearchThreads(props) {
                 {renderDateNumThread(thread)}
               </Grid>
               <Grid item sx={{ display: {xs: 'none', lg: 'block'} }} sm={5} xl={3}>
-                <For each={thread.authors.split(/\s*[,|]\s*/)}>
+                <For each={thread.authors}>
                   {(author) => <ColorChip value={author}/>}
                 </For>
               </Grid>
               <Grid item sx={{ display: {xs: 'block', lg: 'none'} }} xs={10} sm={5}>
-                <For each={thread.authors.split(/\s*[,|]\s*/)}>
+                <For each={thread.authors}>
                   {(author) => <ColorChip value={author.split(/\s/)[0]}/>}
                 </For>
               </Grid>

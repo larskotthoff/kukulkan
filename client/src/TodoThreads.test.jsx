@@ -8,7 +8,7 @@ afterEach(() => {
   cleanup();
 });
 
-const threads = [{authors: "fooAuthor, barAuthor", subject: "test",
+const threads = [{authors: ["fooAuthor", "barAuthor"], subject: "test",
   tags: ["todo"], total_messages: 2, newest_date: 1000, oldest_date: 100}];
 
 test("exports TodoThreads", () => {

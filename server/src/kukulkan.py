@@ -499,7 +499,8 @@ def thread_to_json(thread):
     tags = list({tag for msg in messages for tag in msg.get_tags()})
     tags.sort()
     return {
-        "authors": thread.get_authors() if thread.get_authors() else "(no author)",
+        "authors": [ a.strip() for a in thread.get_authors().replace(',', '|').split('|') ]
+            if thread.get_authors() else ["(no author)"],
         "matched_messages": thread.get_matched_messages(),
         "newest_date": messages[-1].get_date(),
         "oldest_date": messages[0].get_date(),
