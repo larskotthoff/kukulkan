@@ -178,7 +178,7 @@ export function TodoThreads(props) {
               }}
               padding={{xs: 1, sm: 0.5}}
             >
-              <Grid item xs={2} sm={1}>
+              <Grid item xs={1} sm={0.5}>
                 {dues[index()][1]}
               </Grid>
               <Grid item sx={{ display: {xs: 'none', lg: 'block'} }} sm={4}>
@@ -186,15 +186,15 @@ export function TodoThreads(props) {
                   {(author) => <ColorChip value={author}/>}
                 </For>
               </Grid>
-              <Grid item sx={{ display: {xs: 'block', lg: 'none'} }} xs={10} sm={4}>
+              <Grid item sx={{ display: {xs: 'block', lg: 'none'} }} xs={11} sm={4}>
                 <For each={thread.authors.split(/\s*[,|]\s*/)}>
                   {(author) => <ColorChip value={author.split(/\s/)[0]}/>}
                 </For>
               </Grid>
-              <Grid item xs={12} sm={7} xl={5}>
+              <Grid item xs={12} sm={7} lg={5.5} xl={5}>
                 {thread.subject}
               </Grid>
-              <Grid item sx={{ display: {xs: 'none', xl: 'block'} }} xl={2}>
+              <Grid item sx={{ display: {xs: 'none', xl: 'block'} }} xl={2.5}>
                 <For each={thread.tags.sort()}>
                   {(tag) => <ColorChip value={tag}/>}
                 </For>
