@@ -117,8 +117,8 @@ export function TodoThreads(props) {
           <For each={years}>
             {(year, yi) =>
               <Grid container item columnSpacing={2}>
-                <Grid item class="sticky" xs={3}>{year.getFullYear()}</Grid>
-                <Grid container item xs={9}>
+                <Grid item class="sticky" xs={2}>{year.getFullYear()}</Grid>
+                <Grid container item xs={10}>
                   <For each={getIntervalBetweenDates(yi() === 0 ? year : startOfYear(year), Math.min(endOfYear(year), latest), "Month")}>
                     {(month, mi) =>
                       <Grid container item columnSpacing={1}>
