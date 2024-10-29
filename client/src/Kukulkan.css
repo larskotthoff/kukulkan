@@ -27,25 +27,19 @@ body {
 
 .chip {
     height: auto !important;
-    border-radius: 5px !important;
-    margin-right: 2px !important;
+    border-radius: 7px !important;
+    margin-right: 3px !important;
 
     font-family: var(--fonts) !important;
     font-size: 0.9rem !important;
 
     background-color: var(--bg-color) !important;
     color: oklch(from var(--bg-color) calc(1 - round(l - 0.15)) 0 0) !important;
-
-    @media (max-width: 1600px) {
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        overflow: hidden;
-    }
 }
 
 .chip span {
-    padding: 3px;
-    width: max-content;
+    padding-left: 3px;
+    padding-right: 3px;
 }
 
 .MuiInputBase-root {

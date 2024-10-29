@@ -112,10 +112,10 @@ export function SearchThreads(props) {
                   {(author) => <ColorChip value={author.split(/\s/)[0]}/>}
                 </For>
               </Grid>
-              <Grid item xs={12} sm={6} xl={4}>
+              <Grid item xs={12} sm={6} xl={5}>
                 {thread.subject}
               </Grid>
-              <Grid item sx={{ display: {xs: 'none', xl: 'block'} }} xl={4}>
+              <Grid item sx={{ display: {xs: 'none', xl: 'block'} }} xl={3}>
                 <For each={thread.tags.sort()}>
                   {(tag) => <ColorChip value={tag}/>}
                 </For>
