@@ -6,7 +6,7 @@ import { Autocomplete } from "./Autocomplete.jsx";
 import { getSetting } from "./Settings.jsx";
 
 import "./Kukulkan.css";
-import { apiURL, fetchAllTags } from "./utils.js";
+import { apiURL } from "./utils.js";
 import { mkShortcut } from "./UiUtils.jsx";
 
 async function fetchThreads(query) {
@@ -22,8 +22,7 @@ export function Kukulkan(props) {
         [activeThread, setActiveThread] = createSignal(0),
         [selectedThreads, setSelectedThreads] = createSignal([]),
         [editingTags, setEditingTags] = createSignal(null),
-        [showEditingTagModal, setShowEditingTagModal] = createSignal(false),
-        [allTags] = createResource(fetchAllTags);
+        [showEditingTagModal, setShowEditingTagModal] = createSignal(false);
 
   function makeTagEdits() {
     let affectedThreads = selectedThreads();
@@ -55,7 +54,7 @@ export function Kukulkan(props) {
   }
 
   createEffect(() => {
-    props.sp?.(100 * (1 - (allTags.loading + threads.loading) / 2));
+    props.sp?.(100 * (1 - threads.loading));
   });
 
   createEffect(() => {
@@ -181,7 +180,7 @@ export function Kukulkan(props) {
             let pts = text.match(/([^ -]+)|[ -]/g),
                 last = pts.pop();
             if(last.length > 0)
-              return allTags().filter((t) => t.startsWith(last)).map((t) => [...pts, t].join(''));
+              return allTags.filter((t) => t.startsWith(last)).map((t) => [...pts, t].join(''));
             else
               return [];
           }}
@@ -199,9 +198,9 @@ export function Kukulkan(props) {
   }
 
   return (
-    <Show when={!allTags.loading && !threads.loading}>
+    <Show when={!threads.loading}>
       <props.Threads threads={threads} activeThread={activeThread} setActiveThread={setActiveThread}
-        selectedThreads={selectedThreads} setQuery={setQuery} allTags={allTags}/>
+        selectedThreads={selectedThreads} setQuery={setQuery}/>
       <TagEditingModal/>
     </Show>
   );

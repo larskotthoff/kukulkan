@@ -23,40 +23,6 @@ def setup():
     db.close.assert_called_once()
 
 
-def test_accounts(setup):
-    app, db = setup
-
-    app.config.custom["accounts"] = "foo"
-    with app.test_client() as test_client:
-        response = test_client.get('/api/accounts/')
-        assert response.status_code == 200
-        assert b'foo' == response.data
-
-
-def test_compose(setup):
-    app, db = setup
-
-    app.config.custom["compose"] = {}
-    app.config.custom["compose"]["templates"] = "foo"
-    app.config.custom["compose"]["external-editor"] = "bar"
-    with app.test_client() as test_client:
-        response = test_client.get('/api/compose/')
-        assert response.status_code == 200
-        assert {"external-editor": "bar", "templates": "foo"} == json.loads(response.data.decode())
-
-
-def test_tags(setup):
-    app, db = setup
-
-    db.get_all_tags = MagicMock(return_value=['foo', 'bar', '(null)'])
-    with app.test_client() as test_client:
-        response = test_client.get('/api/tags/')
-        assert response.status_code == 200
-        assert ["foo", "bar"] == json.loads(response.data.decode())
-
-    db.get_all_tags.assert_called_once()
-
-
 def test_query(setup):
     app, db = setup
 

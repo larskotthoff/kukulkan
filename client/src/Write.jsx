@@ -20,7 +20,7 @@ import { getSetting } from "./Settings.jsx";
 
 import "./Kukulkan.css";
 import { separateQuotedNonQuoted } from "./Message.jsx";
-import { apiURL, fetchAllTags, fetchMessage, filterAdminTags, formatFSz } from "./utils.js";
+import { apiURL, fetchMessage, filterAdminTags, formatFSz } from "./utils.js";
 import { mkShortcut } from "./UiUtils.jsx";
 
 function Templates(props) {
@@ -86,20 +86,8 @@ function AddrComplete(props) {
   );
 }
 
-async function fetchAccounts() {
-  const response = await fetch(apiURL(`api/accounts/`));
-  if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
-  return await response.json();
-}
-
-async function fetchCompose() {
-  const response = await fetch(apiURL(`api/compose/`));
-  if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
-  return await response.json();
-}
-
-function makeToCc(msg, action, accounts, mode) {
-  if(!msg || !action || !accounts) return [ [], [] ];
+function makeToCc(msg, action, mode) {
+  if(!msg || !action) return [ [], [] ];
 
   let tmpTo = [], tmpCc = [];
   if(action === "reply" || action.startsWith("reply-cal-")) {
@@ -147,9 +135,6 @@ export function Write(props) {
         action = urlSearchParams.get("action") || "compose",
         mode = urlSearchParams.get("mode"),
         [baseMessage] = createResource(baseMessageId, fetchMessage),
-        [allTags] = createResource(fetchAllTags),
-        [accounts] = createResource(fetchAccounts),
-        [compose] = createResource(fetchCompose),
         [useTemplate, setUseTemplate] = createSignal(null),
         [bodyRef, setBodyRef] = createSignal(),
         [statusMsg, setStatusMsg] = createSignal(),
@@ -161,10 +146,10 @@ export function Write(props) {
   document.title = "Compose: New Message";
 
   createEffect(() => {
-    props.sp?.(100 * (1 - (allTags.loading + accounts.loading + compose.loading + baseMessage.loading) / 4));
-    if(allTags.loading || accounts.loading || compose.loading || baseMessage.loading) return;
+    props.sp?.(100 * (1 - baseMessage.loading));
+    if(baseMessage.loading) return;
 
-    let defAcct = accounts()?.find(a => a.default),
+    let defAcct = accounts?.find(a => a.default),
         from = defAcct?.id,
         subject = "";
 
@@ -191,21 +176,21 @@ export function Write(props) {
       }
 
       if(!localStorage.getItem(`draft-${draftKey()}-from`)) {
-        let acct = accounts()?.find(a => baseMessage().to.some(t => t.includes(a.email)));
+        let acct = accounts?.find(a => baseMessage().to.some(t => t.includes(a.email)));
         if(!acct) {
-          acct = accounts()?.find(a => baseMessage().from.includes(a.email));
+          acct = accounts?.find(a => baseMessage().from.includes(a.email));
         }
         if(!acct && baseMessage().cc) {
-          acct = accounts()?.find(a => baseMessage().cc.some(c => c.includes(a.email)));
+          acct = accounts?.find(a => baseMessage().cc.some(c => c.includes(a.email)));
         }
         if(!acct && baseMessage().bcc) {
-          acct = accounts()?.find(a => baseMessage().bcc.some(b => b.includes(a.email)));
+          acct = accounts?.find(a => baseMessage().bcc.some(b => b.includes(a.email)));
         }
         if(!acct && baseMessage().delivered_to) {
-          acct = accounts()?.find(a => baseMessage().delivered_to.includes(a.email));
+          acct = accounts?.find(a => baseMessage().delivered_to.includes(a.email));
         }
         if(!acct && baseMessage().forwarded_to) {
-          acct = accounts()?.find(a => baseMessage().forwarded_to.includes(a.email));
+          acct = accounts?.find(a => baseMessage().forwarded_to.includes(a.email));
         }
         from = acct?.id;
       }
@@ -213,7 +198,7 @@ export function Write(props) {
       subject = prefix(baseMessage()?.subject);
       document.title = `Compose: ${subject}`;
 
-      [defTo, defCc] = makeToCc(baseMessage(), action, accounts(), mode);
+      [defTo, defCc] = makeToCc(baseMessage(), action, mode);
     }
 
     if(localStorage.getItem(`draft-${draftKey()}-from`)) {
@@ -354,13 +339,13 @@ export function Write(props) {
 
   return (
     <>
-      <Show when={!allTags.loading && !accounts.loading && !compose.loading && !baseMessage.loading}>
+      <Show when={!baseMessage.loading}>
         <Box width="95%" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <Show when={statusMsg()}>
           <Alert severity={statusMsg().startsWith("Error") ? "error" : "success"}>{statusMsg()}</Alert>
         </Show>
-        <Show when={compose()}>
-          <Templates templates={compose().templates} setTemplate={setUseTemplate}/>
+        <Show when={compose}>
+          <Templates templates={compose.templates} setTemplate={setUseTemplate}/>
         </Show>
         <Paper elevation={3} class="message">
           <Grid container spacing={1} class="input-field-set">
@@ -374,7 +359,7 @@ export function Write(props) {
                   setMessage("from", ev.target.value);
                   localStorage.setItem(`draft-${draftKey()}-from`, ev.target.value);
                 }}>
-                  <For each={accounts()}>
+                  <For each={accounts}>
                     {(acct) =>
                       <MenuItem value={acct.id}>
                         {`${acct.name} <${acct.email}>`}
@@ -431,7 +416,6 @@ export function Write(props) {
             <Grid item xs>
               <TagComplete
                 tags={message.tags}
-                allTags={allTags()}
                 addTag={(tagToAdd) => {
                   setMessage("tags", message.tags.length, tagToAdd);
                   localStorage.setItem(`draft-${draftKey()}-tags`, message.tags.join("\n"));
@@ -459,7 +443,7 @@ export function Write(props) {
             sx={{ marginBottom: ".5em", marginTop: "1em" }}
             // eslint-disable-next-line solid/reactivity
             onFocus={async (ev) => {
-              if(compose()["external-editor"]) {
+              if(compose["external-editor"]) {
                 const formData = new FormData();
                 formData.append('body', ev.target.value);
 

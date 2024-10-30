@@ -26,7 +26,7 @@ import { TagComplete } from "./Autocomplete.jsx";
 import { ColorChip } from "./ColorChip.jsx";
 
 import "./Kukulkan.css";
-import { apiURL, fetchAllTags, formatDate, formatFSz, strip, fetchMessage } from "./utils.js";
+import { apiURL, formatDate, formatFSz, strip, fetchMessage } from "./utils.js";
 import { mkShortcut } from "./UiUtils.jsx";
 
 async function fetchAttachmentMessage(ids) {
@@ -266,7 +266,7 @@ export function Message(props) {
   });
 
   createEffect(() => {
-    props.sp?.(100 * (1 - (props.allTags.loading + msg.loading) / 2));
+    props.sp?.(100 * (1 - msg.loading));
   });
 
   mkShortcut(["r"],
@@ -352,7 +352,6 @@ export function Message(props) {
               <TagComplete
                 id="editTags"
                 tags={tags()}
-                allTags={props.allTags}
                 addTag={(tagToAdd) => {
                   addTag(tagToAdd);
                 }}
@@ -468,13 +467,12 @@ export function FetchedMessage() {
         messageId = urlSearchParams.get("id"),
         attachNum = urlSearchParams.get("attachNum"),
         print = urlSearchParams.get("print"),
-        [message] = createResource([messageId, attachNum], fetchAttachmentMessage),
-        [allTags] = createResource(fetchAllTags);
+        [message] = createResource([messageId, attachNum], fetchAttachmentMessage);
 
   return (
     <>
-      <Show when={!allTags.loading && !message.loading}>
-        <Message msg={message()} allTags={allTags()} active={true} print={print}/>
+      <Show when={!message.loading}>
+        <Message msg={message()} active={true} print={print}/>
       </Show>
     </>
   );

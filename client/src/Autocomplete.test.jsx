@@ -173,9 +173,10 @@ test("ChipComplete works", async () => {
 test("TagComplete works", async () => {
   let tags = ["foo", "test"],
       add = "", remove = "";
+  vi.stubGlobal("allTags", tags.concat("foobar"));
   const { container } = render(() =>
-    <TagComplete tags={tags} allTags={tags.concat("foobar")}
-      addTag={(t) => add = t} removeTag={(t) => remove = t}/>);
+    <TagComplete tags={tags} addTag={(t) => add = t}
+      removeTag={(t) => remove = t}/>);
 
   expect(screen.getByText("foo")).toBeInTheDocument();
   expect(screen.getByText("test")).toBeInTheDocument();

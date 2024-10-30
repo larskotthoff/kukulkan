@@ -5,26 +5,11 @@ import { userEvent } from "@testing-library/user-event";
 
 import { FetchedMessage, Message, separateQuotedNonQuoted } from "./Message.jsx";
 
-let msg;
-
 beforeEach(() => {
   vi.spyOn(window, "open").mockImplementation(() => {});
   global.fetch = vi.fn();
   window.HTMLElement.prototype.scrollIntoView = function() {};
-  msg = {
-    from: "foo bar <foo@bar.com>",
-    to: ["bar foo <bar@foo.com>"],
-    cc: ["test@test.com"],
-    subject: "Test.",
-    date: "Thu, 01 Jan 1970 00:00:00 -0000",
-    tags: [ "foo", "bar", "test" ],
-    notmuch_id: "fo@o",
-    attachments: [],
-    body: {
-      "text/html": "Test mail in HTML",
-      "text/plain": "Test mail"
-    }
-  }
+  vi.stubGlobal("allTags", ["foo", "bar"]);
 });
 
 afterEach(() => {
@@ -32,6 +17,21 @@ afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
+
+const msg = {
+  from: "foo bar <foo@bar.com>",
+  to: ["bar foo <bar@foo.com>"],
+  cc: ["test@test.com"],
+  subject: "Test.",
+  date: "Thu, 01 Jan 1970 00:00:00 -0000",
+  tags: [ "foo", "bar", "test" ],
+  notmuch_id: "fo@o",
+  attachments: [],
+  body: {
+    "text/html": "Test mail in HTML",
+    "text/plain": "Test mail"
+  }
+};
 
 test("exports FetchedMessage and Message", () => {
   expect(FetchedMessage).not.toBe(undefined);
@@ -43,21 +43,11 @@ test("fetches and renders message", async () => {
     ...window.location,
     search: '?id=foo'
   });
-  global.fetch = vi.fn((url) => {
-    switch(url) {
-      case "http://localhost:5000/api/tags":
-        return Promise.resolve({ ok: true, json: () => ["foo", "foobar"] });
-      case "http://localhost:5000/api/message/foo":
-        return Promise.resolve({ ok: true, json: () => msg });
-      default:
-        return Promise.resolve({ ok: true, json: () => [] });
-    }
-  });
+  global.fetch.mockResolvedValue({ ok: true, json: () => msg });
   render(() => <FetchedMessage/>);
 
-  expect(global.fetch).toHaveBeenCalledTimes(2);
+  expect(global.fetch).toHaveBeenCalledTimes(1);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Test.")).toBeInTheDocument();
@@ -78,21 +68,11 @@ test("fetches and renders attached message", async () => {
     ...window.location,
     search: '?id=foo&attachNum=0'
   });
-  global.fetch = vi.fn((url) => {
-    switch(url) {
-      case "http://localhost:5000/api/tags":
-        return Promise.resolve({ ok: true, json: () => ["foo", "foobar"] });
-      case "http://localhost:5000/api/attachment_message/foo/0":
-        return Promise.resolve({ ok: true, json: () => msg });
-      default:
-        return Promise.resolve({ ok: true, json: () => [] });
-    }
-  });
+  global.fetch.mockResolvedValue({ ok: true, json: () => msg });
   render(() => <FetchedMessage/>);
 
-  expect(global.fetch).toHaveBeenCalledTimes(2);
+  expect(global.fetch).toHaveBeenCalledTimes(1);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/attachment_message/foo/0");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Test.")).toBeInTheDocument();
@@ -113,21 +93,11 @@ test("fetches and renders message in print view", async () => {
     ...window.location,
     search: '?id=foo&print=true'
   });
-  global.fetch = vi.fn((url) => {
-    switch(url) {
-      case "http://localhost:5000/api/tags":
-        return Promise.resolve({ ok: true, json: () => ["foo", "foobar"] });
-      case "http://localhost:5000/api/message/foo":
-        return Promise.resolve({ ok: true, json: () => msg });
-      default:
-        return Promise.resolve({ ok: true, json: () => [] });
-    }
-  });
+  global.fetch.mockResolvedValue({ ok: true, json: () => msg });
   render(() => <FetchedMessage/>);
 
-  expect(global.fetch).toHaveBeenCalledTimes(2);
+  expect(global.fetch).toHaveBeenCalledTimes(1);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Test.")).toBeInTheDocument();
@@ -252,13 +222,14 @@ test("smime attachment hidden when collapsed", () => {
   expect(screen.getByText("test.txt")).toBeInTheDocument();
 });
 
-test("links are linikified in text", () => {
-  msg.body = {
+test("links are linkified in text", () => {
+  const msg1 = JSON.parse(JSON.stringify(msg));
+  msg1.body = {
     "text/html": "",
     "text/plain": "http://www.foobar.com"
   };
 
-  const { container } = render(() => <Message msg={msg} active={true}/>);
+  const { container } = render(() => <Message msg={msg1} active={true}/>);
   expect(container.querySelector("a[href='http://www.foobar.com']")).not.toBe(null);
   expect(screen.getByText("http://www.foobar.com")).toBeInTheDocument();
 });
@@ -278,7 +249,7 @@ test("allows to switch between text and HTML", async () => {
 });
 
 test("allows to edit tags", async () => {
-  const { container, getByTestId } = render(() => <Message msg={msg} allTags={["foo", "bar"]} active={true}/>);
+  const { container, getByTestId } = render(() => <Message msg={msg} active={true}/>);
   expect(screen.getByText("foo")).toBeInTheDocument();
   expect(screen.getByText("bar")).toBeInTheDocument();
   expect(screen.getByText("test")).toBeInTheDocument();

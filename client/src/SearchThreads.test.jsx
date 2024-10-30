@@ -20,7 +20,8 @@ afterEach(() => {
 });
 
 const threads = [{authors: ["fooAuthor", "barAuthor"], subject: "test", tags:
-  ["fooTag", "barTag"], total_messages: 2, newest_date: 1000, oldest_date: 100}];
+  ["fooTag", "barTag"], total_messages: 2, newest_date: 1000, oldest_date: 100}],
+      allTags = [];
 
 test("exports SearchThreads", () => {
   expect(SearchThreads).not.toBe(undefined);
@@ -50,7 +51,7 @@ test("shows completions and allows to select", async () => {
 
 test("saves queries for completion", async () => {
   let { container } = render(() => <SearchThreads threads={() => []} index={() => 0} activeThread={() => 0}
-    selectedThreads={() => []} setQuery={() => []} allTags={() => []}/>);
+    selectedThreads={() => []} setQuery={() => []}/>);
   await userEvent.type(container.querySelector("#query-box"), "t");
   expect(screen.queryByText("tag:foo")).not.toBeInTheDocument();
   cleanup();
@@ -60,7 +61,7 @@ test("saves queries for completion", async () => {
     search: '?query=tag:foo'
   });
   container = render(() => <SearchThreads threads={() => []} index={() => 0} activeThread={() => 0}
-    selectedThreads={() => []} setQuery={() => []} allTags={() => []}/>).container;
+    selectedThreads={() => []} setQuery={() => []}/>).container;
   container.querySelector("#query-box").value = "";
   await userEvent.type(container.querySelector("#query-box"), "t");
   expect(screen.getByText("tag:foo")).toBeInTheDocument();

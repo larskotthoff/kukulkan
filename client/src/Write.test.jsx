@@ -26,6 +26,10 @@ beforeEach(() => {
   global.fetch = vi.fn();
   vi.stubGlobal('EventSource', MockEventSource);
   localStorage.clear();
+  vi.stubGlobal("accounts", [{"id": "foo", "name": "foo bar", "email": "foo@bar.com"},
+    {"id": "bar", "name": "blurg", "email": "blurg@foo.com", "default": "true"}]);
+  vi.stubGlobal("allTags", ["foo", "foobar"]);
+  vi.stubGlobal("compose", []);
 });
 
 afterEach(() => {
@@ -35,9 +39,6 @@ afterEach(() => {
   localStorage.clear();
 });
 
-const allTags = ["foo", "foobar"];
-const accounts = [{"id": "foo", "name": "foo bar", "email": "foo@bar.com"},
-  {"id": "bar", "name": "blurg", "email": "blurg@foo.com", "default": "true"}];
 const msg = {
   from: "bar foo <bar@foo.com>",
   to: ["foo bar <foo@bar.com>"],
@@ -59,22 +60,7 @@ test("exports Write", () => {
 });
 
 test("renders", async () => {
-  global.fetch = vi.fn((url) => {
-    switch(url) {
-      case "http://localhost:5000/api/tags/":
-        return Promise.resolve({ ok: true, json: () => allTags });
-      case "http://localhost:5000/api/accounts/":
-        return Promise.resolve({ ok: true, json: () => accounts });
-      default:
-        return Promise.resolve({ ok: true, json: () => [] });
-    }
-  });
   const { getByTestId } = render(() => <Write/>);
-
-  expect(global.fetch).toHaveBeenCalledTimes(3);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -88,22 +74,7 @@ test("renders", async () => {
 });
 
 test("selects default account and lists others", async () => {
-  global.fetch = vi.fn((url) => {
-    switch(url) {
-      case "http://localhost:5000/api/tags/":
-        return Promise.resolve({ ok: true, json: () => allTags });
-      case "http://localhost:5000/api/accounts/":
-        return Promise.resolve({ ok: true, json: () => accounts });
-      default:
-        return Promise.resolve({ ok: true, json: () => [] });
-    }
-  });
   const { container } = render(() => <Write/>);
-
-  expect(global.fetch).toHaveBeenCalledTimes(3);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -124,25 +95,11 @@ test("base message reply all", async () => {
     ...window.location,
     search: '?id=foo&action=reply&mode=all'
   });
-  global.fetch = vi.fn((url) => {
-    switch(url) {
-      case "http://localhost:5000/api/tags/":
-        return Promise.resolve({ ok: true, json: () => allTags });
-      case "http://localhost:5000/api/accounts/":
-        return Promise.resolve({ ok: true, json: () => accounts });
-      case "http://localhost:5000/api/message/foo":
-        return Promise.resolve({ ok: true, json: () => msg });
-      default:
-        return Promise.resolve({ ok: true, json: () => [] });
-    }
-  });
+  global.fetch.mockResolvedValue({ ok: true, json: () => msg });
   const { getByTestId } = render(() => <Write/>);
 
-  expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(global.fetch).toHaveBeenCalledTimes(1);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -163,25 +120,11 @@ test("base message reply one", async () => {
     ...window.location,
     search: '?id=foo&action=reply&mode=one'
   });
-  global.fetch = vi.fn((url) => {
-    switch(url) {
-      case "http://localhost:5000/api/tags/":
-        return Promise.resolve({ ok: true, json: () => allTags });
-      case "http://localhost:5000/api/accounts/":
-        return Promise.resolve({ ok: true, json: () => accounts });
-      case "http://localhost:5000/api/message/foo":
-        return Promise.resolve({ ok: true, json: () => msg });
-      default:
-        return Promise.resolve({ ok: true, json: () => [] });
-    }
-  });
+  global.fetch.mockResolvedValue({ ok: true, json: () => msg });
   const { getByTestId } = render(() => <Write/>);
 
-  expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(global.fetch).toHaveBeenCalledTimes(1);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -204,25 +147,11 @@ test("base message from default if unclear", async () => {
   });
   const msg1 = JSON.parse(JSON.stringify(msg));
   msg1.to = ["something@test.com"];
-  global.fetch = vi.fn((url) => {
-    switch(url) {
-      case "http://localhost:5000/api/tags/":
-        return Promise.resolve({ ok: true, json: () => allTags });
-      case "http://localhost:5000/api/accounts/":
-        return Promise.resolve({ ok: true, json: () => accounts });
-      case "http://localhost:5000/api/message/foo":
-        return Promise.resolve({ ok: true, json: () => msg1 });
-      default:
-        return Promise.resolve({ ok: true, json: () => [] });
-    }
-  });
+  global.fetch.mockResolvedValue({ ok: true, json: () => msg1 });
   const { getByTestId } = render(() => <Write/>);
 
-  expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(global.fetch).toHaveBeenCalledTimes(1);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -237,25 +166,11 @@ test("reply includes only main part of base message quoted", async () => {
   });
   const msg1 = JSON.parse(JSON.stringify(msg));
   msg1.body["text/plain"] = "Thanks.\n\nOn bla, blurg wrote:\n> foo\n> bar.";
-  global.fetch = vi.fn((url) => {
-    switch(url) {
-      case "http://localhost:5000/api/tags/":
-        return Promise.resolve({ ok: true, json: () => allTags });
-      case "http://localhost:5000/api/accounts/":
-        return Promise.resolve({ ok: true, json: () => accounts });
-      case "http://localhost:5000/api/message/foo":
-        return Promise.resolve({ ok: true, json: () => msg1 });
-      default:
-        return Promise.resolve({ ok: true, json: () => [] });
-    }
-  });
+  global.fetch.mockResolvedValue({ ok: true, json: () => msg1 });
   const { getByTestId } = render(() => <Write/>);
 
-  expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(global.fetch).toHaveBeenCalledTimes(1);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -270,26 +185,12 @@ test("reply includes entire base message quoted when setting changed", async () 
   });
   const msg1 = JSON.parse(JSON.stringify(msg));
   msg1.body["text/plain"] = "Thanks.\n\nOn bla, blurg wrote:\n> foo\n> bar.";
-  global.fetch = vi.fn((url) => {
-    switch(url) {
-      case "http://localhost:5000/api/tags/":
-        return Promise.resolve({ ok: true, json: () => allTags });
-      case "http://localhost:5000/api/accounts/":
-        return Promise.resolve({ ok: true, json: () => accounts });
-      case "http://localhost:5000/api/message/foo":
-        return Promise.resolve({ ok: true, json: () => msg1 });
-      default:
-        return Promise.resolve({ ok: true, json: () => [] });
-    }
-  });
+  global.fetch.mockResolvedValue({ ok: true, json: () => msg1 });
   localStorage.setItem("settings-abbreviateQuoted", false);
   const { getByTestId } = render(() => <Write/>);
 
-  expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(global.fetch).toHaveBeenCalledTimes(1);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -302,25 +203,11 @@ test("base message forward", async () => {
     ...window.location,
     search: '?id=foo&action=forward'
   });
-  global.fetch = vi.fn((url) => {
-    switch(url) {
-      case "http://localhost:5000/api/tags/":
-        return Promise.resolve({ ok: true, json: () => allTags });
-      case "http://localhost:5000/api/accounts/":
-        return Promise.resolve({ ok: true, json: () => accounts });
-      case "http://localhost:5000/api/message/foo":
-        return Promise.resolve({ ok: true, json: () => msg });
-      default:
-        return Promise.resolve({ ok: true, json: () => [] });
-    }
-  });
+  global.fetch.mockResolvedValue({ ok: true, json: () => msg });
   const { getByTestId } = render(() => <Write/>);
 
-  expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(global.fetch).toHaveBeenCalledTimes(1);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -344,26 +231,12 @@ test("forward includes entire message even if abbreviated reply", async () => {
   });
   const msg1 = JSON.parse(JSON.stringify(msg));
   msg1.body["text/plain"] = "Thanks.\n\nOn bla, blurg wrote:\n> foo\n> bar.";
-  global.fetch = vi.fn((url) => {
-    switch(url) {
-      case "http://localhost:5000/api/tags/":
-        return Promise.resolve({ ok: true, json: () => allTags });
-      case "http://localhost:5000/api/accounts/":
-        return Promise.resolve({ ok: true, json: () => accounts });
-      case "http://localhost:5000/api/message/foo":
-        return Promise.resolve({ ok: true, json: () => msg1 });
-      default:
-        return Promise.resolve({ ok: true, json: () => [] });
-    }
-  });
+  global.fetch.mockResolvedValue({ ok: true, json: () => msg1 });
   localStorage.setItem("settings-abbreviateQuoted", true);
   const { getByTestId } = render(() => <Write/>);
 
-  expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(global.fetch).toHaveBeenCalledTimes(1);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -378,25 +251,11 @@ test("base message reply filters admin tags", async () => {
   });
   const msg1 = JSON.parse(JSON.stringify(msg));
   msg1.tags.push("signed");
-  global.fetch = vi.fn((url) => {
-    switch(url) {
-      case "http://localhost:5000/api/tags/":
-        return Promise.resolve({ ok: true, json: () => allTags });
-      case "http://localhost:5000/api/accounts/":
-        return Promise.resolve({ ok: true, json: () => accounts });
-      case "http://localhost:5000/api/message/foo":
-        return Promise.resolve({ ok: true, json: () => msg1 });
-      default:
-        return Promise.resolve({ ok: true, json: () => [] });
-    }
-  });
+  global.fetch.mockResolvedValue({ ok: true, json: () => msg1 });
   render(() => <Write/>);
 
-  expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(global.fetch).toHaveBeenCalledTimes(1);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -408,26 +267,9 @@ test("base message reply filters admin tags", async () => {
 });
 
 test("template set", async () => {
-  const compose = {"templates": [{"shortcut": "1", "description": "foo", "template": "bar"},
-                     {"shortcut": "2", "description": "foobar", "template": "blurg"}]};
-  global.fetch = vi.fn((url) => {
-    switch(url) {
-      case "http://localhost:5000/api/tags/":
-        return Promise.resolve({ ok: true, json: () => allTags });
-      case "http://localhost:5000/api/accounts/":
-        return Promise.resolve({ ok: true, json: () => accounts });
-      case "http://localhost:5000/api/compose/":
-        return Promise.resolve({ ok: true, json: () => compose });
-      default:
-        return Promise.resolve({ ok: true, json: () => [] });
-    }
-  });
+  vi.stubGlobal("compose", {"templates": [{"shortcut": "1", "description": "foo", "template": "bar"},
+                     {"shortcut": "2", "description": "foobar", "template": "blurg"}]});
   const { getByTestId } = render(() => <Write/>);
-
-  expect(global.fetch).toHaveBeenCalledTimes(3);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -455,29 +297,13 @@ test("template set with base message", async () => {
     ...window.location,
     search: '?id=foo&action=reply&mode=all'
   });
-  const compose = {"templates": [{"shortcut": "1", "description": "foo", "template": "bar"},
-                     {"shortcut": "2", "description": "foobar", "template": "blurg"}]};
-  global.fetch = vi.fn((url) => {
-    switch(url) {
-      case "http://localhost:5000/api/tags/":
-        return Promise.resolve({ ok: true, json: () => allTags });
-      case "http://localhost:5000/api/accounts/":
-        return Promise.resolve({ ok: true, json: () => accounts });
-      case "http://localhost:5000/api/compose/":
-        return Promise.resolve({ ok: true, json: () => compose });
-      case "http://localhost:5000/api/message/foo":
-        return Promise.resolve({ ok: true, json: () => msg });
-      default:
-        return Promise.resolve({ ok: true, json: () => [] });
-    }
-  });
+  vi.stubGlobal("compose", {"templates": [{"shortcut": "1", "description": "foo", "template": "bar"},
+                     {"shortcut": "2", "description": "foobar", "template": "blurg"}]});
+  global.fetch.mockResolvedValue({ ok: true, json: () => msg });
   const { getByTestId } = render(() => <Write/>);
 
-  expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(global.fetch).toHaveBeenCalledTimes(1);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -501,22 +327,7 @@ test("template set with base message", async () => {
 });
 
 test("addresses editable and complete", async () => {
-  global.fetch = vi.fn((url) => {
-    switch(url) {
-      case "http://localhost:5000/api/tags/":
-        return Promise.resolve({ ok: true, json: () => allTags });
-      case "http://localhost:5000/api/accounts/":
-        return Promise.resolve({ ok: true, json: () => accounts });
-      default:
-        return Promise.resolve({ ok: true, json: () => [] });
-    }
-  });
   const { getByTestId } = render(() => <Write/>);
-
-  expect(global.fetch).toHaveBeenCalledTimes(3);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -529,7 +340,7 @@ test("addresses editable and complete", async () => {
   await vi.waitFor(() => {
     expect(screen.getByText("foo@bar.com")).toBeInTheDocument();
   });
-  expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(global.fetch).toHaveBeenCalledTimes(1);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/foo",
     expect.objectContaining({
       signal: expect.any(AbortSignal),
@@ -544,7 +355,7 @@ test("addresses editable and complete", async () => {
   await vi.waitFor(() => {
     expect(screen.getByText("bar@foo.com")).toBeInTheDocument();
   });
-  expect(global.fetch).toHaveBeenCalledTimes(5);
+  expect(global.fetch).toHaveBeenCalledTimes(2);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/bar",
     expect.objectContaining({
       signal: expect.any(AbortSignal),
@@ -557,7 +368,7 @@ test("addresses editable and complete", async () => {
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
   await userEvent.type(input, "aaa@bar.com{enter}");
   await vi.waitFor(() => {
-    expect(global.fetch).toHaveBeenCalledTimes(6);
+    expect(global.fetch).toHaveBeenCalledTimes(3);
   });
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/aaa%40bar.com",
     expect.objectContaining({
@@ -571,25 +382,11 @@ test("tags editable and complete", async () => {
     ...window.location,
     search: '?id=foo&action=reply&mode=all'
   });
-  global.fetch = vi.fn((url) => {
-    switch(url) {
-      case "http://localhost:5000/api/tags/":
-        return Promise.resolve({ ok: true, json: () => allTags });
-      case "http://localhost:5000/api/accounts/":
-        return Promise.resolve({ ok: true, json: () => accounts });
-      case "http://localhost:5000/api/message/foo":
-        return Promise.resolve({ ok: true, json: () => msg });
-      default:
-        return Promise.resolve({ ok: true, json: () => [] });
-    }
-  });
+  global.fetch.mockResolvedValue({ ok: true, json: () => msg });
   const { getByTestId } = render(() => <Write/>);
 
-  expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(global.fetch).toHaveBeenCalledTimes(1);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -635,25 +432,11 @@ test("files attachable and editable", async () => {
   });
   const msg1 = JSON.parse(JSON.stringify(msg));
   msg1.attachments = [{"filename": "foofile"}, {"filename": "barfile"}];
-  global.fetch = vi.fn((url) => {
-    switch(url) {
-      case "http://localhost:5000/api/tags/":
-        return Promise.resolve({ ok: true, json: () => allTags });
-      case "http://localhost:5000/api/accounts/":
-        return Promise.resolve({ ok: true, json: () => accounts });
-      case "http://localhost:5000/api/message/foo":
-        return Promise.resolve({ ok: true, json: () => msg1 });
-      default:
-        return Promise.resolve({ ok: true, json: () => [] });
-    }
-  });
+  global.fetch.mockResolvedValue({ ok: true, json: () => msg1 });
   const { container } = render(() => <Write/>);
 
-  expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(global.fetch).toHaveBeenCalledTimes(1);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -677,24 +460,11 @@ test("files attachable and editable", async () => {
 });
 
 test("localStorage stores for new email", async () => {
-  global.fetch = vi.fn((url) => {
-    switch(url) {
-      case "http://localhost:5000/api/accounts/":
-        return Promise.resolve({ ok: true, json: () => accounts });
-      default:
-        return Promise.resolve({ ok: true, json: () => [] });
-    }
-  });
   const { container, getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
-  expect(global.fetch).toHaveBeenCalledTimes(3);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
-
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
 
   await userEvent.click(container.querySelector("div[role='button']"));
@@ -721,11 +491,11 @@ test("localStorage stores for new email", async () => {
         signal: expect.any(AbortSignal),
       }));
   });
-  await userEvent.type(getByTestId("tagedit").querySelector("input"), "foobar{enter}");
+  await userEvent.type(getByTestId("tagedit").querySelector("input"), "foobar{enter}{enter}");
   await userEvent.type(getByTestId("subject").querySelector("input"), "testsubject");
   await userEvent.type(getByTestId("body").querySelector("textarea"), "testbody");
 
-  expect(global.fetch).toHaveBeenCalledTimes(6);
+  expect(global.fetch).toHaveBeenCalledTimes(3);
 
   expect(localStorage.getItem("draft-compose-from")).toBe("foo");
   expect(localStorage.getItem("draft-compose-to")).toBe("to@test.com\notherto@test.com");
@@ -737,24 +507,11 @@ test("localStorage stores for new email", async () => {
 });
 
 test("localStorage removes when empty", async () => {
-  global.fetch = vi.fn((url) => {
-    switch(url) {
-      case "http://localhost:5000/api/accounts/":
-        return Promise.resolve({ ok: true, json: () => accounts });
-      default:
-        return Promise.resolve({ ok: true, json: () => [] });
-    }
-  });
   const { container, getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
-  expect(global.fetch).toHaveBeenCalledTimes(3);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
-
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
 
   // set from
@@ -768,9 +525,9 @@ test("localStorage removes when empty", async () => {
         signal: expect.any(AbortSignal),
       }));
   });
-  await userEvent.type(getByTestId("tagedit").querySelector("input"), "foobar{enter}");
+  await userEvent.type(getByTestId("tagedit").querySelector("input"), "foobar{enter}{enter}");
 
-  expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(global.fetch).toHaveBeenCalledTimes(1);
 
   expect(localStorage.getItem("draft-compose-from")).toBe("foo");
   expect(localStorage.getItem("draft-compose-to")).toBe("to@test.com\notherto@test.com");
@@ -790,26 +547,14 @@ test("localStorage stores for reply", async () => {
     ...window.location,
     search: '?id=foo&action=reply&mode=all'
   });
-  global.fetch = vi.fn((url) => {
-    switch(url) {
-      case "http://localhost:5000/api/accounts/":
-        return Promise.resolve({ ok: true, json: () => accounts });
-      case "http://localhost:5000/api/message/foo":
-        return Promise.resolve({ ok: true, json: () => msg });
-      default:
-        return Promise.resolve({ ok: true, json: () => [] });
-    }
-  });
+  global.fetch.mockResolvedValue({ ok: true, json: () => msg });
   const { getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
     expect(getByTestId("from").querySelector("input").value).toBe("foo");
   });
-  expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(global.fetch).toHaveBeenCalledTimes(1);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
 
@@ -834,11 +579,11 @@ test("localStorage stores for reply", async () => {
         signal: expect.any(AbortSignal),
       }));
   });
-  await userEvent.type(getByTestId("tagedit").querySelector("input"), "foobar{enter}");
+  await userEvent.type(getByTestId("tagedit").querySelector("input"), "foobar{enter}{enter}");
   await userEvent.type(getByTestId("subject").querySelector("input"), " testsubject");
   await userEvent.type(getByTestId("body").querySelector("textarea"), "testbody");
 
-  expect(global.fetch).toHaveBeenCalledTimes(7);
+  expect(global.fetch).toHaveBeenCalledTimes(4);
 
   expect(localStorage.getItem("draft-reply-foo-to")).toBe("bar foo <bar@foo.com>\nto@test.com\notherto@test.com");
   expect(localStorage.getItem("draft-reply-foo-cc")).toBe("test@test.com\ncc@test.com");
@@ -849,24 +594,11 @@ test("localStorage stores for reply", async () => {
 });
 
 test("localStorage deletes upon successful send", async () => {
-  global.fetch = vi.fn((url) => {
-    switch(url) {
-      case "http://localhost:5000/api/accounts/":
-        return Promise.resolve({ ok: true, json: () => accounts });
-      default:
-        return Promise.resolve({ ok: true, json: () => [] });
-    }
-  });
   const { getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
-  expect(global.fetch).toHaveBeenCalledTimes(3);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
-
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
 
   await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}otherto@test.com{enter}");
@@ -890,8 +622,8 @@ test("localStorage deletes upon successful send", async () => {
         signal: expect.any(AbortSignal),
       }));
   });
-  expect(global.fetch).toHaveBeenCalledTimes(6);
-  await userEvent.type(getByTestId("tagedit").querySelector("input"), "foobar{enter}");
+  expect(global.fetch).toHaveBeenCalledTimes(3);
+  await userEvent.type(getByTestId("tagedit").querySelector("input"), "foobar{enter}{enter}");
   await userEvent.type(getByTestId("subject").querySelector("input"), "testsubject");
   await userEvent.type(getByTestId("body").querySelector("textarea"), "testbody");
 
@@ -914,6 +646,7 @@ test("localStorage deletes upon successful send", async () => {
       method: 'POST',
       body: expect.any(FormData),
     }));
+  expect(global.fetch).toHaveBeenCalledTimes(4);
   eventSourceInstance.simulateMessage({send_status: 0, send_output: ""});
 
   expect(screen.getByText("Message sent.")).toBeInTheDocument();
@@ -927,55 +660,28 @@ test("localStorage deletes upon successful send", async () => {
 });
 
 test("errors when attempting to send incomplete mail", async () => {
-  global.fetch = vi.fn((url) => {
-    switch(url) {
-      case "http://localhost:5000/api/accounts/":
-        return Promise.resolve({ ok: true, json: () => accounts });
-      default:
-        return Promise.resolve({ ok: true, json: () => [] });
-    }
-  });
   const { getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
 
-  expect(global.fetch).toHaveBeenCalledTimes(3);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
-
   await userEvent.click(screen.getByText("Send"));
 
-  expect(global.fetch).toHaveBeenCalledTimes(3);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
+  expect(global.fetch).toHaveBeenCalledTimes(0);
+  expect(global.fetch).not.toHaveBeenCalledWith("http://localhost:5000/api/send");
   expect(screen.getByText("Error: No to address. Not sending.")).toBeInTheDocument();
 
   await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}");
   await userEvent.click(screen.getByText("Send"));
 
-  expect(global.fetch).toHaveBeenCalledTimes(3);
+  expect(global.fetch).toHaveBeenCalledTimes(0);
   expect(global.fetch).not.toHaveBeenCalledWith("http://localhost:5000/api/send");
   expect(screen.getByText("Error: No subject. Not sending.")).toBeInTheDocument();
 });
 
 test("data assembled correctly for sending new email", async () => {
-  global.fetch = vi.fn((url) => {
-    switch(url) {
-      case "http://localhost:5000/api/accounts/":
-        return Promise.resolve({ ok: true, json: () => accounts });
-      default:
-        return Promise.resolve({ ok: true, json: () => [] });
-    }
-  });
   const { container, getByTestId } = render(() => <Write/>);
-  expect(global.fetch).toHaveBeenCalledTimes(3);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -1008,10 +714,10 @@ test("data assembled correctly for sending new email", async () => {
         signal: expect.any(AbortSignal),
       }));
   });
-  await userEvent.type(getByTestId("tagedit").querySelector("input"), "foobar{enter}");
+  await userEvent.type(getByTestId("tagedit").querySelector("input"), "foobar{enter}{enter}");
   await userEvent.type(getByTestId("subject").querySelector("input"), "testsubject");
   await userEvent.type(getByTestId("body").querySelector("textarea"), "testbody");
-  expect(global.fetch).toHaveBeenCalledTimes(7);
+  expect(global.fetch).toHaveBeenCalledTimes(4);
 
   const file = new File(['test content'], 'test.txt', { type: 'text/plain' });
   await fireEvent.change(container.querySelector("input[type=file]"), { target: { files: [file] } });
@@ -1049,23 +755,9 @@ test("data assembled correctly for sending new email", async () => {
 });
 
 test("data assembled correctly for sending new email w/ template", async () => {
-  const compose = {"templates": [{"shortcut": "1", "description": "foo", "template": "bar"},
-                     {"shortcut": "2", "description": "foobar", "template": "blurg"}]};
-  global.fetch = vi.fn((url) => {
-    switch(url) {
-      case "http://localhost:5000/api/accounts/":
-        return Promise.resolve({ ok: true, json: () => accounts });
-      case "http://localhost:5000/api/compose/":
-        return Promise.resolve({ ok: true, json: () => compose });
-      default:
-        return Promise.resolve({ ok: true, json: () => [] });
-    }
-  });
+  vi.stubGlobal("compose", {"templates": [{"shortcut": "1", "description": "foo", "template": "bar"},
+                     {"shortcut": "2", "description": "foobar", "template": "blurg"}]});
   const { getByTestId } = render(() => <Write/>);
-  expect(global.fetch).toHaveBeenCalledTimes(3);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -1094,11 +786,11 @@ test("data assembled correctly for sending new email w/ template", async () => {
         signal: expect.any(AbortSignal),
       }));
   });
-  await userEvent.type(getByTestId("tagedit").querySelector("input"), "foobar{enter}");
+  await userEvent.type(getByTestId("tagedit").querySelector("input"), "foobar{enter}{enter}");
   await userEvent.type(getByTestId("subject").querySelector("input"), "testsubject");
   await userEvent.type(document.body, "1");
   expect(getByTestId("body").querySelector("textarea").value).toBe("bar");
-  expect(global.fetch).toHaveBeenCalledTimes(6);
+  expect(global.fetch).toHaveBeenCalledTimes(3);
 
   const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
       json: () => Promise.resolve({send_id: 0})
@@ -1136,25 +828,13 @@ test("data assembled correctly for sending reply w/o editing", async () => {
     ...window.location,
     search: '?id=foo&action=reply&mode=all'
   });
-  global.fetch = vi.fn((url) => {
-    switch(url) {
-      case "http://localhost:5000/api/accounts/":
-        return Promise.resolve({ ok: true, json: () => accounts });
-      case "http://localhost:5000/api/message/foo":
-        return Promise.resolve({ ok: true, json: () => msg });
-      default:
-        return Promise.resolve({ ok: true, json: () => [] });
-    }
-  });
+  global.fetch.mockResolvedValue({ ok: true, json: () => msg });
   render(() => <Write/>);
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
-  expect(global.fetch).toHaveBeenCalledTimes(4);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
+  expect(global.fetch).toHaveBeenCalledTimes(1);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
 
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
@@ -1195,25 +875,13 @@ test("data assembled correctly for sending reply", async () => {
     ...window.location,
     search: '?id=foo&action=reply&mode=all'
   });
-  global.fetch = vi.fn((url) => {
-    switch(url) {
-      case "http://localhost:5000/api/accounts/":
-        return Promise.resolve({ ok: true, json: () => accounts });
-      case "http://localhost:5000/api/message/foo":
-        return Promise.resolve({ ok: true, json: () => msg });
-      default:
-        return Promise.resolve({ ok: true, json: () => [] });
-    }
-  });
+  global.fetch.mockResolvedValue({ ok: true, json: () => msg });
   const { getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
-  expect(global.fetch).toHaveBeenCalledTimes(4);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
+  expect(global.fetch).toHaveBeenCalledTimes(1);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
 
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
@@ -1239,10 +907,10 @@ test("data assembled correctly for sending reply", async () => {
         signal: expect.any(AbortSignal),
       }));
   });
-  await userEvent.type(getByTestId("tagedit").querySelector("input"), "foobar{enter}");
+  await userEvent.type(getByTestId("tagedit").querySelector("input"), "foobar{enter}{enter}");
   await userEvent.type(getByTestId("subject").querySelector("input"), " testsubject");
   await userEvent.type(getByTestId("body").querySelector("textarea"), "testbody");
-  expect(global.fetch).toHaveBeenCalledTimes(7);
+  expect(global.fetch).toHaveBeenCalledTimes(4);
 
   const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
       json: () => Promise.resolve({send_id: 0})
@@ -1282,25 +950,11 @@ test("data assembled correctly when retrieving from localStorage w/o editing", a
   localStorage.setItem("draft-compose-subject", "testsubject");
   localStorage.setItem("draft-compose-body", "testbody");
 
-  global.fetch = vi.fn((url) => {
-    switch(url) {
-      case "http://localhost:5000/api/accounts/":
-        return Promise.resolve({ ok: true, json: () => accounts });
-      default:
-        return Promise.resolve({ ok: true, json: () => [] });
-    }
-  });
   render(() => <Write/>);
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
-  expect(global.fetch).toHaveBeenCalledTimes(3);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
-
-  global.fetch.mockResolvedValue({ ok: true, json: () => [] });
 
   const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
       json: () => Promise.resolve({send_id: 0})
@@ -1336,24 +990,11 @@ test("data assembled correctly when retrieving from localStorage w/o editing", a
 });
 
 test("error when mail cannot be sent", async () => {
-  global.fetch = vi.fn((url) => {
-    switch(url) {
-      case "http://localhost:5000/api/accounts/":
-        return Promise.resolve({ ok: true, json: () => accounts });
-      default:
-        return Promise.resolve({ ok: true, json: () => [] });
-    }
-  });
   const { getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
-  expect(global.fetch).toHaveBeenCalledTimes(3);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
-
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
 
   await userEvent.type(getByTestId("to").querySelector("input"), "otherto@test.com{enter}");
@@ -1363,7 +1004,7 @@ test("error when mail cannot be sent", async () => {
         signal: expect.any(AbortSignal),
       }));
   });
-  expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(global.fetch).toHaveBeenCalledTimes(1);
   await userEvent.type(getByTestId("subject").querySelector("input"), "testsubject");
 
   const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
@@ -1388,33 +1029,19 @@ test("error when mail cannot be sent", async () => {
 });
 
 test("external editing", async () => {
-  const compose = {"external-editor": "foo"};
-  global.fetch = vi.fn((url) => {
-    switch(url) {
-      case "http://localhost:5000/api/compose/":
-        return Promise.resolve({ ok: true, json: () => compose });
-      case "http://localhost:5000/api/accounts/":
-        return Promise.resolve({ ok: true, json: () => accounts });
-      default:
-        return Promise.resolve({ ok: true, json: () => [] });
-    }
-  });
+  vi.stubGlobal("compose", {"external-editor": "foo"});
   const { getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
-  expect(global.fetch).toHaveBeenCalledTimes(3);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   global.fetch.mockResolvedValue({ ok: true, text: () => "foobar" });
 
   expect(getByTestId("body").querySelector("textarea").value).toBe("");
 
   await fireEvent.focus(getByTestId("body").querySelector("textarea"));
-  expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(global.fetch).toHaveBeenCalledTimes(1);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/edit_external",
     expect.objectContaining({
       method: 'POST',
@@ -1436,7 +1063,7 @@ test("external editing", async () => {
         signal: expect.any(AbortSignal),
       }));
   });
-  expect(global.fetch).toHaveBeenCalledTimes(5);
+  expect(global.fetch).toHaveBeenCalledTimes(2);
   await userEvent.type(getByTestId("subject").querySelector("input"), " testsubject");
 
   const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
@@ -1463,27 +1090,13 @@ test("external editing", async () => {
 });
 
 test("shortcuts disabled while editing externally", async () => {
-  const compose = {"external-editor": "foo", "templates": [{"shortcut": "1", "description": "foo", "template": "bar"},
-                     {"shortcut": "2", "description": "foobar", "template": "blurg"}]};
-  global.fetch = vi.fn((url) => {
-    switch(url) {
-      case "http://localhost:5000/api/compose/":
-        return Promise.resolve({ ok: true, json: () => compose });
-      case "http://localhost:5000/api/accounts/":
-        return Promise.resolve({ ok: true, json: () => accounts });
-      default:
-        return Promise.resolve({ ok: true, json: () => [] });
-    }
-  });
+  vi.stubGlobal("compose", {"external-editor": "foo", "templates": [{"shortcut": "1", "description": "foo", "template": "bar"},
+                     {"shortcut": "2", "description": "foobar", "template": "blurg"}]});
   const { getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
-  expect(global.fetch).toHaveBeenCalledTimes(3);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tags/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/accounts/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/compose/");
 
   // required fields
   await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}");
@@ -1493,7 +1106,7 @@ test("shortcuts disabled while editing externally", async () => {
         signal: expect.any(AbortSignal),
       }));
   });
-  expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(global.fetch).toHaveBeenCalledTimes(1);
   await userEvent.type(getByTestId("subject").querySelector("input"), " testsubject");
 
   global.fetch.mockImplementation(() => {
@@ -1507,7 +1120,7 @@ test("shortcuts disabled while editing externally", async () => {
   expect(getByTestId("body").querySelector("textarea").value).toBe("");
 
   await fireEvent.focus(getByTestId("body").querySelector("textarea"));
-  expect(global.fetch).toHaveBeenCalledTimes(5);
+  expect(global.fetch).toHaveBeenCalledTimes(2);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/edit_external",
     expect.objectContaining({
       method: 'POST',

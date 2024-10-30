@@ -3,7 +3,6 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
     <link rel="shortcut icon" type="image/ico" href="/src/assets/favicon.ico" />
     <title>Kukulkan</title>
   </head>
@@ -11,6 +10,11 @@
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
 
+    <script type="text/javascript">
+        const accounts = {{ data.accounts|tojson }},
+              allTags = {{ data.allTags|tojson }},
+              compose = {{ data.compose|tojson }};
+    </script>
     <script src="/src/index.jsx" type="module"></script>
   </body>
 </html>

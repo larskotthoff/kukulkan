@@ -21,7 +21,7 @@ from tempfile import mkstemp, NamedTemporaryFile
 from shlex import quote
 
 import notmuch
-from flask import Flask, Response, abort, current_app, g, send_file, send_from_directory, request
+from flask import Flask, Response, abort, current_app, g, render_template, request, send_file, send_from_directory
 from markupsafe import escape
 from werkzeug.utils import safe_join
 from flask_restful import Api, Resource
@@ -131,9 +131,19 @@ def close_db(e=None):
     g.db.close()
 
 
+def get_globals():
+    accts = current_app.config.custom["accounts"]
+    tags = [tag for tag in get_db().get_all_tags() if tag != "(null)"]
+    cmp = current_app.config.custom["compose"]
+    return {"accounts": accts, "allTags": tags, "compose": cmp}
+
+
 def create_app():
     """Flask application factory."""
-    app = Flask(__name__, static_folder="static")
+    if os.getenv("FLASK_DEBUG"):
+        app = Flask(__name__, static_folder="static", template_folder="../../client/")
+    else:
+        app = Flask(__name__, static_folder="static", template_folder="static")
     app.config["PROPAGATE_EXCEPTIONS"] = True
 
     config_path = os.getenv("XDG_CONFIG_HOME") if os.getenv("XDG_CONFIG_HOME") else os.getenv("HOME") + os.path.sep + ".config"
@@ -146,21 +156,21 @@ def create_app():
 
     app.logger.setLevel(logging.INFO)
 
-    @app.route("/", methods=['GET', 'POST'])
-    def send_index():
-        return send_from_directory(app.static_folder, "index.html")
-
-    @app.route("/<path:path>", methods=['GET', 'POST'])
-    def send_js(path):
-        if path and os.path.exists(safe_join(app.static_folder, path)):
-            return send_from_directory(app.static_folder, path)
-        return send_from_directory(app.static_folder, "index.html")
-
     @app.before_request
     def before_request():
         get_db()
 
     app.teardown_appcontext(close_db)
+
+    @app.route("/", methods=['GET', 'POST'])
+    def send_index():
+        return render_template("index.html", data=get_globals())
+
+    @app.route("/<path:path>", methods=['GET', 'POST'])
+    def send_js(path):
+        if path and os.path.exists(safe_join(app.static_folder, path)):
+            return send_from_directory(app.static_folder, path)
+        return render_template("index.html", data=get_globals())
 
     @app.after_request
     def security_headers(response):
@@ -205,20 +215,6 @@ def create_app():
             abort(500)
         messages = threads[0].get_messages()
         return messages_to_json(messages)
-
-    @app.route("/api/tags/")
-    def tags():
-        tags = [tag for tag in get_db().get_all_tags() if tag != "(null)"]
-        return tags
-
-    @app.route("/api/accounts/")
-    def accounts():
-        return current_app.config.custom["accounts"]
-
-    @app.route("/api/compose/")
-    def compose():
-        return current_app.config.custom["compose"]
-
 
     @app.route("/api/attachment/<path:message_id>/<int:num>")
     def attachment(message_id, num):

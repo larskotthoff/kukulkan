@@ -96,13 +96,6 @@ export function formatFSz(size) {
   return (size / Math.pow(1024, i)).toFixed(2) * 1 + ' ' + ['Bi', 'kiB', 'MiB', 'GiB', 'TiB'][i];
 }
 
-export async function fetchAllTags() {
-  const response = await fetch(apiURL(`api/tags/`));
-  if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
-  const retval = await response.json();
-  return filterAdminTags(retval);
-}
-
 export async function fetchMessage(id) {
   if(id === null) return null;
   const response = await fetch(apiURL(`api/message/${encodeURIComponent(id)}`));

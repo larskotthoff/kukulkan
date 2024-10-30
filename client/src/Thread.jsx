@@ -9,7 +9,7 @@ import { Message } from "./Message.jsx";
 import { getSetting } from "./Settings.jsx";
 
 import "./Kukulkan.css";
-import { apiURL, extractEmailsSort, fetchAllTags, filterSubjectColor, filterAdminTags, getColor } from "./utils.js";
+import { apiURL, extractEmailsSort, filterSubjectColor, filterAdminTags, getColor } from "./utils.js";
 import { mkShortcut } from "./UiUtils.jsx";
 
 async function fetchThread(id) {
@@ -59,7 +59,6 @@ export function Thread(props) {
         threadId = (new URLSearchParams(searchParams)).get("id"),
         [thread] = createResource(threadId, fetchThread),
         [filteredThread, setFilteredThread] = createSignal(),
-        [allTags] = createResource(fetchAllTags),
         [activeMessage, setActiveMessage] = createSignal();
 
   createEffect(() => {
@@ -89,7 +88,7 @@ export function Thread(props) {
   });
 
   createEffect(() => {
-    props.sp?.(100 * (1 - (allTags.loading + thread.loading) / 2));
+    props.sp?.(100 * (1 - thread.loading));
   });
 
   mkShortcut(["Home"],
@@ -194,12 +193,12 @@ export function Thread(props) {
 
   return (
     <>
-      <Show when={!allTags.loading && activeMessage() > -1}>
+      <Show when={activeMessage() > -1}>
         <Stack direction="row" class="centered" alignItems="stretch" justifyContent="space-around" spacing={1}>
           <ThreadNav/>
           <Grid container class="centered" direction="column">
             <For each={filteredThread()}>
-              {(m, i) => <Message msg={m} allTags={allTags()} active={i() === activeMessage()} sp={props.sp}
+              {(m, i) => <Message msg={m} active={i() === activeMessage()} sp={props.sp}
                 onClick={(e) => {
                     if(e.target.tagName.toLowerCase() !== 'a' &&
                         e.target.tagName.toLowerCase() !== 'input' &&
