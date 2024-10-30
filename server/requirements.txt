@@ -1,7 +1,6 @@
 asn1crypto
 beautifulsoup4
 Flask
-Flask_RESTful
 icalendar
 lxml
 lxml_html_clean
