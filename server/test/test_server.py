@@ -23,6 +23,22 @@ def setup():
     db.close.assert_called_once()
 
 
+def test_globals(setup):
+    app, db = setup
+
+    db.get_all_tags = MagicMock(return_value=['foo', 'bar', '(null)'])
+
+    app.config.custom["accounts"] = "foo"
+    app.config.custom["compose"] = {}
+    app.config.custom["compose"]["templates"] = "foo"
+    app.config.custom["compose"]["external-editor"] = "bar"
+
+    globs = k.get_globals()
+    assert "foo" == globs["accounts"]
+    assert {"external-editor": "bar", "templates": "foo"} == globs["compose"]
+    assert ["foo", "bar"] == globs["allTags"]
+
+
 def test_query(setup):
     app, db = setup
 
