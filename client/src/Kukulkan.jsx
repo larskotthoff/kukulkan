@@ -180,6 +180,7 @@ export function Kukulkan(props) {
             let pts = text.match(/([^ -]+)|[ -]/g),
                 last = pts.pop();
             if(last.length > 0)
+              // eslint-disable-next-line no-undef
               return allTags.filter((t) => t.startsWith(last)).map((t) => [...pts, t].join(''));
             else
               return [];

@@ -102,6 +102,7 @@ function makeToCc(msg, action, mode) {
       if(msg.cc.length > 0) {
         tmpCc = msg.cc;
         tmpCc = tmpCc.filter(a => {
+          // eslint-disable-next-line no-undef
           return a.length > 0 && !tmpTo.includes(a) && accounts.reduce((cum, acct) => {
             if(cum === false) return false;
 
@@ -115,6 +116,7 @@ function makeToCc(msg, action, mode) {
     }
 
     tmpTo = tmpTo.filter(a => {
+      // eslint-disable-next-line no-undef
       return a.length > 0 && accounts.reduce((cum, acct) => {
         if(cum === false) return false;
 
@@ -149,6 +151,7 @@ export function Write(props) {
     props.sp?.(100 * (1 - baseMessage.loading));
     if(baseMessage.loading) return;
 
+    // eslint-disable-next-line no-undef
     let defAcct = accounts?.find(a => a.default),
         from = defAcct?.id,
         subject = "";
@@ -176,20 +179,26 @@ export function Write(props) {
       }
 
       if(!localStorage.getItem(`draft-${draftKey()}-from`)) {
+        // eslint-disable-next-line no-undef
         let acct = accounts?.find(a => baseMessage().to.some(t => t.includes(a.email)));
         if(!acct) {
+          // eslint-disable-next-line no-undef
           acct = accounts?.find(a => baseMessage().from.includes(a.email));
         }
         if(!acct && baseMessage().cc) {
+          // eslint-disable-next-line no-undef
           acct = accounts?.find(a => baseMessage().cc.some(c => c.includes(a.email)));
         }
         if(!acct && baseMessage().bcc) {
+          // eslint-disable-next-line no-undef
           acct = accounts?.find(a => baseMessage().bcc.some(b => b.includes(a.email)));
         }
         if(!acct && baseMessage().delivered_to) {
+          // eslint-disable-next-line no-undef
           acct = accounts?.find(a => baseMessage().delivered_to.includes(a.email));
         }
         if(!acct && baseMessage().forwarded_to) {
+          // eslint-disable-next-line no-undef
           acct = accounts?.find(a => baseMessage().forwarded_to.includes(a.email));
         }
         from = acct?.id;
@@ -344,7 +353,9 @@ export function Write(props) {
         <Show when={statusMsg()}>
           <Alert severity={statusMsg().startsWith("Error") ? "error" : "success"}>{statusMsg()}</Alert>
         </Show>
+        { /* eslint-disable-next-line no-undef */ }
         <Show when={compose}>
+          { /* eslint-disable-next-line no-undef */ }
           <Templates templates={compose.templates} setTemplate={setUseTemplate}/>
         </Show>
         <Paper elevation={3} class="message">
@@ -359,6 +370,7 @@ export function Write(props) {
                   setMessage("from", ev.target.value);
                   localStorage.setItem(`draft-${draftKey()}-from`, ev.target.value);
                 }}>
+                  { /* eslint-disable-next-line no-undef */ }
                   <For each={accounts}>
                     {(acct) =>
                       <MenuItem value={acct.id}>
@@ -443,6 +455,7 @@ export function Write(props) {
             sx={{ marginBottom: ".5em", marginTop: "1em" }}
             // eslint-disable-next-line solid/reactivity
             onFocus={async (ev) => {
+              // eslint-disable-next-line no-undef
               if(compose["external-editor"]) {
                 const formData = new FormData();
                 formData.append('body', ev.target.value);

@@ -3,6 +3,7 @@ import Chip from "@suid/material/Chip";
 import { getColor } from "./utils.js";
 
 export function ColorChip(props) {
+  // eslint-disable-next-line solid/reactivity
   const { ['class']: clss, ...newProps } = props;
   return (<Chip
     label={props.value}

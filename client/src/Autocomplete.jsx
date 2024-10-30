@@ -167,6 +167,7 @@ export function TagComplete(props) {
       addChip={props.addTag}
       removeChip={props.removeTag}
       getOptions={(text) => {
+        // eslint-disable-next-line no-undef
         return allTags.filter((t) => t.includes(text));
       }}
       {...props}

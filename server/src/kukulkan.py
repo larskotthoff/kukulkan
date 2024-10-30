@@ -18,13 +18,11 @@ import json
 import re
 
 from tempfile import mkstemp, NamedTemporaryFile
-from shlex import quote
 
 import notmuch
 from flask import Flask, Response, abort, current_app, g, render_template, request, send_file, send_from_directory
 from markupsafe import escape
 from werkzeug.utils import safe_join
-from flask_restful import Api, Resource
 
 import icalendar
 from dateutil import tz

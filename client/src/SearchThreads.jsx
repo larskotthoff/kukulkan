@@ -53,6 +53,7 @@ export function SearchThreads(props) {
               last = pts.pop();
           if(pts.length > 0 && pts[pts.length - 1].endsWith("tag") && last.length > 0) {
             // autocomplete possible tag
+            // eslint-disable-next-line no-undef
             return allTags.filter((t) => t.startsWith(last)).map((t) => [...pts, t].join(':'));
           } else {
             return opts.filter((t) => t.includes(text));
