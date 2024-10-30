@@ -346,6 +346,12 @@ export function Write(props) {
     () => bodyRef().disabled || bodyRef().focus()
   );
 
+  mkShortcut(["d"],
+    // eslint-disable-next-line solid/reactivity
+    () => Object.keys(localStorage).filter(k => k.startsWith(`draft-${draftKey()}`))
+            .map(k => localStorage.removeItem(k))
+  );
+
   return (
     <>
       <Show when={!baseMessage.loading}>

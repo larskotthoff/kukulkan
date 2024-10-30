@@ -506,7 +506,7 @@ test("localStorage stores for new email", async () => {
   expect(localStorage.getItem("draft-compose-body")).toBe("testbody");
 });
 
-test("localStorage removes when empty", async () => {
+test("localStorage removes empty items", async () => {
   const { container, getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
@@ -650,6 +650,57 @@ test("localStorage deletes upon successful send", async () => {
   eventSourceInstance.simulateMessage({send_status: 0, send_output: ""});
 
   expect(screen.getByText("Message sent.")).toBeInTheDocument();
+
+  expect(localStorage.getItem("draft-compose-to")).toBe(null);
+  expect(localStorage.getItem("draft-compose-cc")).toBe(null);
+  expect(localStorage.getItem("draft-compose-bcc")).toBe(null);
+  expect(localStorage.getItem("draft-compose-tags")).toBe(null);
+  expect(localStorage.getItem("draft-compose-subject")).toBe(null);
+  expect(localStorage.getItem("draft-compose-body")).toBe(null);
+});
+
+test("localStorage deleted with shortcut d", async () => {
+  const { getByTestId } = render(() => <Write/>);
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("Send")).toBeInTheDocument();
+  });
+  global.fetch.mockResolvedValue({ ok: true, json: () => [] });
+
+  await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}otherto@test.com{enter}");
+  await vi.waitFor(() => {
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/otherto%40test.com",
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      }));
+  });
+  await userEvent.type(getByTestId("cc").querySelector("input"), "cc@test.com{enter}");
+  await vi.waitFor(() => {
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/cc%40test.com",
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      }));
+  });
+  await userEvent.type(getByTestId("bcc").querySelector("input"), "bcc@test.com{enter}");
+  await vi.waitFor(() => {
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/bcc%40test.com",
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      }));
+  });
+  expect(global.fetch).toHaveBeenCalledTimes(3);
+  await userEvent.type(getByTestId("tagedit").querySelector("input"), "foobar{enter}{enter}");
+  await userEvent.type(getByTestId("subject").querySelector("input"), "testsubject");
+  await userEvent.type(getByTestId("body").querySelector("textarea"), "testbody");
+
+  expect(localStorage.getItem("draft-compose-to")).toBe("to@test.com\notherto@test.com");
+  expect(localStorage.getItem("draft-compose-cc")).toBe("cc@test.com");
+  expect(localStorage.getItem("draft-compose-bcc")).toBe("bcc@test.com");
+  expect(localStorage.getItem("draft-compose-tags")).toBe("foobar");
+  expect(localStorage.getItem("draft-compose-subject")).toBe("testsubject");
+  expect(localStorage.getItem("draft-compose-body")).toBe("testbody");
+
+  await userEvent.type(document.body, "d");
 
   expect(localStorage.getItem("draft-compose-to")).toBe(null);
   expect(localStorage.getItem("draft-compose-cc")).toBe(null);
