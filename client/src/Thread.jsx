@@ -101,11 +101,19 @@ export function Thread(props) {
     // eslint-disable-next-line solid/reactivity
     () => setActiveMessage(Math.max(0, activeMessage() - 1))
   );
+  mkShortcut(["ArrowUp"],
+    // eslint-disable-next-line solid/reactivity
+    () => setActiveMessage(Math.max(0, activeMessage() - 1))
+  );
   mkShortcut(["Shift", "K"],
     // eslint-disable-next-line solid/reactivity
     () => setActiveMessage(Math.max(0, activeMessage() - 10))
   );
   mkShortcut(["j"],
+    // eslint-disable-next-line solid/reactivity
+    () => setActiveMessage(Math.min(filteredThread().length - 1, activeMessage() + 1))
+  );
+  mkShortcut(["ArrowDown"],
     // eslint-disable-next-line solid/reactivity
     () => setActiveMessage(Math.min(filteredThread().length - 1, activeMessage() + 1))
   );
@@ -140,7 +148,16 @@ export function Thread(props) {
     // eslint-disable-next-line solid/reactivity
     () => updateActiveDepth(Math.max(0, filteredThread()[activeMessage()].depth - 1))
   );
+  mkShortcut(["ArrowLeft"],
+    // eslint-disable-next-line solid/reactivity
+    () => updateActiveDepth(Math.max(0, filteredThread()[activeMessage()].depth - 1))
+  );
   mkShortcut(["l"],
+    // eslint-disable-next-line solid/reactivity
+    () => updateActiveDepth(Math.min(filteredThread()[activeMessage()].depth + 1,
+                                  Math.max(...thread().map(m => m.depth))))
+  );
+  mkShortcut(["ArrowRight"],
     // eslint-disable-next-line solid/reactivity
     () => updateActiveDepth(Math.min(filteredThread()[activeMessage()].depth + 1,
                                   Math.max(...thread().map(m => m.depth))))

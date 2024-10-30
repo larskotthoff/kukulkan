@@ -187,6 +187,54 @@ test("changing active message works", async () => {
   expect(navs[0].style["border-color"]).toBe("white");
   expect(navs[1].style["border-color"]).toBe("black");
 
+  await userEvent.type(document.body, "{ArrowUp}");
+  // expanded email
+  expect(screen.getByText("foo bar <foo@bar.com>")).toBeInTheDocument();
+  expect(screen.getByText("bar foo <bar@foo.com>")).toBeInTheDocument();
+  expect(screen.getByText("test@test.com")).toBeInTheDocument();
+  expect(screen.getByText("foo.txt (100 Bi, text)")).toBeInTheDocument();
+  expect(screen.getByText("foo")).toBeInTheDocument();
+  expect(screen.getByText("bar")).toBeInTheDocument();
+  expect(screen.getByText("test")).toBeInTheDocument();
+  expect(screen.getByText("Test mail")).toBeInTheDocument();
+
+  // collapsed email
+  expect(screen.getByText("foo2 bar <foo@bar.com>")).toBeInTheDocument();
+  expect(screen.queryByText("bar2 foo2 <bar@foo.com>")).not.toBeInTheDocument();
+  expect(screen.queryByText("test2@test2.com")).not.toBeInTheDocument();
+  expect(screen.getByText("Test mail2")).toBeInTheDocument();
+  expect(screen.queryByText("foo2")).not.toBeInTheDocument();
+  expect(screen.queryByText("bar2")).not.toBeInTheDocument();
+  expect(screen.queryByText("test2")).not.toBeInTheDocument();
+
+  expect(document.title).toBe("Test.");
+
+  expect(navs[0].style["border-color"]).toBe("black");
+  expect(navs[1].style["border-color"]).toBe("white");
+
+  await userEvent.type(document.body, "{ArrowDown}");
+  // collapsed email
+  expect(screen.getByText("foo bar <foo@bar.com>")).toBeInTheDocument();
+  expect(screen.queryByText("bar foo <bar@foo.com>")).not.toBeInTheDocument();
+  expect(screen.queryByText("test@test.com")).not.toBeInTheDocument();
+  expect(screen.getByText("foo.txt")).toBeInTheDocument();
+  expect(screen.queryByText("foo")).not.toBeInTheDocument();
+  expect(screen.queryByText("bar")).not.toBeInTheDocument();
+  expect(screen.queryByText("test")).not.toBeInTheDocument();
+  expect(screen.getByText("Test mail")).toBeInTheDocument();
+
+  // expanded email
+  expect(screen.getByText("foo2 bar <foo@bar.com>")).toBeInTheDocument();
+  expect(screen.getByText("bar2 foo2 <bar@foo.com>")).toBeInTheDocument();
+  expect(screen.getByText("test2@test2.com")).toBeInTheDocument();
+  expect(screen.getByText("Test mail2")).toBeInTheDocument();
+  expect(screen.getByText("foo2")).toBeInTheDocument();
+  expect(screen.getByText("bar2")).toBeInTheDocument();
+  expect(screen.getByText("test2")).toBeInTheDocument();
+
+  expect(navs[0].style["border-color"]).toBe("white");
+  expect(navs[1].style["border-color"]).toBe("black");
+
   await userEvent.click(container.querySelector(".message:not(.active)"));
   // expanded email
   expect(screen.getByText("foo bar <foo@bar.com>")).toBeInTheDocument();
@@ -354,7 +402,59 @@ test("thread nav shows and allows to navigate levels", async () => {
   expect(navs[1].style["opacity"]).toBe("0.3");
   expect(navs[2].style["opacity"]).toBe("1");
 
+  // move level higher
+  await userEvent.type(document.body, "{ArrowRight}");
+  // collapsed email
+  expect(screen.getByText("foo bar <foo@bar.com>")).toBeInTheDocument();
+  expect(screen.getByText("foo.txt")).toBeInTheDocument();
+  expect(screen.getByText("Test mail")).toBeInTheDocument();
+
+  // hidden
+  expect(screen.queryByText("foo3 bar3 <foo@bar.com>")).not.toBeInTheDocument();
+  expect(screen.queryByText("Test mail3")).not.toBeInTheDocument();
+
+  // expanded email
+  expect(screen.getByText("foo2 bar <foo@bar.com>")).toBeInTheDocument();
+  expect(screen.getByText("bar2 foo2 <bar@foo.com>")).toBeInTheDocument();
+  expect(screen.getByText("test2@test2.com")).toBeInTheDocument();
+  expect(screen.getByText("Test mail2")).toBeInTheDocument();
+  expect(screen.getByText("foo2")).toBeInTheDocument();
+  expect(screen.getByText("bar2")).toBeInTheDocument();
+  expect(screen.getByText("test2")).toBeInTheDocument();
+
+  expect(document.title).toBe("Test2.");
+
+  expect(navs[0].style["opacity"]).toBe("1");
+  expect(navs[1].style["opacity"]).toBe("1");
+  expect(navs[2].style["opacity"]).toBe("0.3");
+
+  // move back to lower level
+  await userEvent.type(document.body, "{ArrowLeft}");
+  // collapsed email
+  expect(screen.getByText("foo bar <foo@bar.com>")).toBeInTheDocument();
+  expect(screen.getByText("foo.txt")).toBeInTheDocument();
+  expect(screen.getByText("Test mail")).toBeInTheDocument();
+
+  // hidden again
+  expect(screen.queryByText("foo2 bar <foo@bar.com>")).not.toBeInTheDocument();
+  expect(screen.queryByText("Test mail2")).not.toBeInTheDocument();
+
+  // expanded email
+  expect(screen.getByText("foo3 bar <foo@bar.com>")).toBeInTheDocument();
+  expect(screen.getByText("bar3 foo3 <bar@foo.com>")).toBeInTheDocument();
+  expect(screen.getByText("test3@test3.com")).toBeInTheDocument();
+  expect(screen.getByText("Test mail3")).toBeInTheDocument();
+  expect(screen.getByText("foo3")).toBeInTheDocument();
+  expect(screen.getByText("bar3")).toBeInTheDocument();
+  expect(screen.getByText("test3")).toBeInTheDocument();
+
+  expect(document.title).toBe("Test3.");
+
+  expect(navs[0].style["opacity"]).toBe("1");
+  expect(navs[1].style["opacity"]).toBe("0.3");
+  expect(navs[2].style["opacity"]).toBe("1");
   await userEvent.click(navs[1]);
+
   // collapsed email
   expect(screen.getByText("foo bar <foo@bar.com>")).toBeInTheDocument();
   expect(screen.getByText("foo.txt")).toBeInTheDocument();

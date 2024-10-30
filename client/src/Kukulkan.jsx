@@ -77,11 +77,19 @@ export function Kukulkan(props) {
     // eslint-disable-next-line solid/reactivity
     () => setActiveThread(Math.max(0, activeThread() - 1))
   );
+  mkShortcut(["ArrowUp"],
+    // eslint-disable-next-line solid/reactivity
+    () => setActiveThread(Math.max(0, activeThread() - 1))
+  );
   mkShortcut(["Shift", "K"],
     // eslint-disable-next-line solid/reactivity
     () => setActiveThread(Math.max(0, activeThread() - 10))
   );
   mkShortcut(["j"],
+    // eslint-disable-next-line solid/reactivity
+    () => setActiveThread(Math.min(threads().length - 1, activeThread() + 1))
+  );
+  mkShortcut(["ArrowDown"],
     // eslint-disable-next-line solid/reactivity
     () => setActiveThread(Math.min(threads().length - 1, activeThread() + 1))
   );

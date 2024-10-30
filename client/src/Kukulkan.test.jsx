@@ -223,6 +223,11 @@ test("navigation and selection shortcuts work", async () => {
   await userEvent.type(document.body, "k");
   expect(container.querySelector(".thread.active").querySelector(".MuiChip-label").textContent).toBe("test1");
 
+  await userEvent.type(document.body, "{ArrowDown}");
+  expect(container.querySelector(".thread.active").querySelector(".MuiChip-label").textContent).toBe("test2");
+  await userEvent.type(document.body, "{ArrowUp}");
+  expect(container.querySelector(".thread.active").querySelector(".MuiChip-label").textContent).toBe("test1");
+
   await userEvent.type(document.body, "J");
   expect(container.querySelector(".thread.active").querySelector(".MuiChip-label").textContent).toBe("test2");
   await userEvent.type(document.body, "K");
