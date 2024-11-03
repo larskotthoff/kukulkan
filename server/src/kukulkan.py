@@ -192,16 +192,25 @@ def create_app():
 
     @app.route("/api/address/<path:query_string>")
     def address(query_string):
+        qs = query_string.casefold()
         addrs = {}
-        for msg in get_query(query_string).search_messages():
+        i = 0
+        for msg in get_query(f"from:{query_string} or to:{query_string}").search_messages():
             for header in ['from', 'to', 'cc', 'bcc']:
                 value = msg.get_header(header)
-                if value:
+                if value and qs in value.casefold():
                     for addr in split_email_addresses(value):
-                        if query_string.casefold() in addr.casefold():
-                            addrs[addr.strip().casefold()] = addr.strip()
-                if len(addrs) > 14:
-                    break
+                        acf = addr.casefold()
+                        if qs in acf:
+                            email = re.search(r'[^ <>]+@[^ >]+', acf).group()
+                            # keep first one (i.e. most recent)
+                            try:
+                                addrs[email]
+                            except KeyError:
+                                addrs[email] = addr
+            if i > 1000 or len(addrs) > 14:
+                break
+            i += 1
         return list(addrs.values())
 
     @app.route("/api/thread/<path:thread_id>")

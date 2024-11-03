@@ -198,7 +198,7 @@ def test_address(setup):
 
     mf = lambda: None
     mf.get_filename = MagicMock(return_value="test/mails/simple.eml")
-    mf.get_header = MagicMock(return_value="foo@bar.com, \"bar foo\" bar@foo.com")
+    mf.get_header = MagicMock(return_value="foo@bar.com, \"bar foo\" bar@foo.com, bar@foo.com")
     mf.get_message_id = MagicMock(return_value="foo")
     mf.get_tags = MagicMock(return_value=["foo", "bar"])
 
@@ -215,7 +215,7 @@ def test_address(setup):
             assert addrs[0] == "foo@bar.com"
             assert addrs[1] == "\"bar foo\" bar@foo.com"
 
-        q.assert_called_once_with(db, "foo")
+        q.assert_called_once_with(db, "from:foo or to:foo")
 
     mq.search_messages.assert_called_once()
     db.get_config.assert_called_once_with("search.exclude_tags")
