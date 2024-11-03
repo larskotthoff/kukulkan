@@ -462,13 +462,16 @@ export function Write(props) {
             // eslint-disable-next-line solid/reactivity
             onFocus={async (ev) => {
               // eslint-disable-next-line no-undef
-              if(compose["external-editor"]) {
+              if((getSetting("externalCompose") === -1 && compose["external-editor"]) || (getSetting("externalCompose") === true)) {
                 const formData = new FormData();
                 formData.append('body', ev.target.value);
 
                 ev.target.disabled = true;
                 ev.target.value = "[Editing externally...]";
-                const response = await fetch(apiURL("api/edit_external"), { method: 'POST', body: formData });
+                const url = getSetting("externalCompose") === true ?
+                  `${window.location.protocol}//localhost:${window.location.port}/api/edit_external` :
+                  apiURL("api/edit_external");
+                const response = await fetch(url, { method: 'POST', body: formData });
                 ev.target.value = await response.text();
                 ev.target.disabled = false;
                 localStorage.setItem(`draft-${draftKey()}-body`, ev.target.value);

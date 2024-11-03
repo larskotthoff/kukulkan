@@ -18,6 +18,15 @@ export function getSetting(setting) {
       } else {
         return val === "true";
       }
+    case "externalCompose":
+      val = localStorage.getItem("settings-externalCompose");
+      if(val === null) {
+        return -1;
+      } else if(val === "-1") {
+        return -1;
+      } else {
+        return val === "true";
+      }
     case "abbreviateQuoted":
       val = localStorage.getItem("settings-abbreviateQuoted");
       if(val === null) {
@@ -32,6 +41,7 @@ export function Settings() {
   const [numQueries, setNumQueries] = createSignal(getSetting("numQueries")),
         [openInTab, setOpenInTab] = createSignal(getSetting("openInTab")),
         [showNestedThread, setShowNestedThread] = createSignal(getSetting("showNestedThread")),
+        [externalCompose, setExternalCompose] = createSignal(getSetting("externalCompose")),
         [abbreviateQuoted, setAbbreviateQuoted] = createSignal(getSetting("abbreviateQuoted"));
 
   document.title = "Kukulkan Settings";
@@ -71,7 +81,7 @@ export function Settings() {
         data-testid="showNestedThread"
         value={showNestedThread()}
         onChange={(ev) => {
-          setShowNestedThread(ev.target.value === "true");
+          setShowNestedThread(ev.target.value);
           localStorage.setItem("settings-showNestedThread", showNestedThread());
         }}>
         <MenuItem value={true}>
@@ -83,12 +93,32 @@ export function Settings() {
       </Select> thread on thread page.
     </div>
     <div class="margin">
+      When composing, use <Select
+        class="select-margin"
+        data-testid="externalCompose"
+        value={externalCompose()}
+        onChange={(ev) => {
+          setExternalCompose(ev.target.value);
+          localStorage.setItem("settings-externalCompose", externalCompose());
+        }}>
+        <MenuItem value={-1}>
+          backend configuration
+        </MenuItem>
+        <MenuItem value={false}>
+          internal browser editor
+        </MenuItem>
+        <MenuItem value={true}>
+          external editor on localhost
+        </MenuItem>
+      </Select>.
+    </div>
+    <div class="margin">
       When replying, <Select
         class="select-margin"
         data-testid="abbreviateQuoted"
         value={abbreviateQuoted()}
         onChange={(ev) => {
-          setAbbreviateQuoted(ev.target.value === "true");
+          setAbbreviateQuoted(ev.target.value);
           localStorage.setItem("settings-abbreviateQuoted", abbreviateQuoted());
         }}>
         <MenuItem value={true}>

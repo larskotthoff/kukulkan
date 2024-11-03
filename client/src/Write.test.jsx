@@ -1140,6 +1140,75 @@ test("external editing", async () => {
   expect(screen.getByText("Message sent.")).toBeInTheDocument();
 });
 
+test("external editing w/ client config override internal", async () => {
+  vi.stubGlobal("compose", {"external-editor": "foo"});
+  const { getByTestId } = render(() => <Write/>);
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("Send")).toBeInTheDocument();
+  });
+
+  global.fetch.mockResolvedValue({ ok: true, text: () => "foobar" });
+
+  expect(getByTestId("body").querySelector("textarea").value).toBe("");
+
+  await fireEvent.focus(getByTestId("body").querySelector("textarea"));
+  expect(global.fetch).toHaveBeenCalledTimes(1);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/edit_external",
+    expect.objectContaining({
+      method: 'POST',
+      body: expect.any(FormData),
+    }));
+
+  expect(getByTestId("body").querySelector("textarea").value).toBe("[Editing externally...]");
+
+  await vi.waitFor(() => {
+    expect(getByTestId("body").querySelector("textarea").value).toBe("foobar");
+  });
+  expect(localStorage.getItem("draft-compose-body")).toBe("foobar");
+
+  localStorage.setItem("settings-externalCompose", false);
+  await fireEvent.focus(getByTestId("body").querySelector("textarea"));
+  await userEvent.type(getByTestId("body").querySelector("textarea"), "foobar");
+  expect(getByTestId("body").querySelector("textarea").value).toBe("foobarfoobar");
+  expect(localStorage.getItem("draft-compose-body")).toBe("foobarfoobar");
+  expect(global.fetch).toHaveBeenCalledTimes(1);
+});
+
+test("external editing w/ client config override external", async () => {
+  const { getByTestId } = render(() => <Write/>);
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("Send")).toBeInTheDocument();
+  });
+
+  expect(getByTestId("body").querySelector("textarea").value).toBe("");
+
+  await fireEvent.focus(getByTestId("body").querySelector("textarea"));
+  await userEvent.type(getByTestId("body").querySelector("textarea"), "bar");
+  expect(getByTestId("body").querySelector("textarea").value).toBe("bar");
+  expect(global.fetch).toHaveBeenCalledTimes(0);
+
+  localStorage.setItem("settings-externalCompose", true);
+
+  global.fetch.mockResolvedValue({ ok: true, text: () => "foobar" });
+
+  await fireEvent.focus(getByTestId("body").querySelector("textarea"));
+  expect(global.fetch).toHaveBeenCalledTimes(1);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:3000/api/edit_external",
+    expect.objectContaining({
+      method: 'POST',
+      body: expect.any(FormData),
+    }));
+
+  expect(getByTestId("body").querySelector("textarea").value).toBe("[Editing externally...]");
+
+  await vi.waitFor(() => {
+    expect(getByTestId("body").querySelector("textarea").value).toBe("foobar");
+  });
+  expect(localStorage.getItem("draft-compose-body")).toBe("foobar");
+});
+
 test("shortcuts disabled while editing externally", async () => {
   vi.stubGlobal("compose", {"external-editor": "foo", "templates": [{"shortcut": "1", "description": "foo", "template": "bar"},
                      {"shortcut": "2", "description": "foobar", "template": "blurg"}]});

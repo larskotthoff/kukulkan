@@ -21,6 +21,7 @@ test("gets settings", () => {
   expect(getSetting("numQueries")).toBe(10);
   expect(getSetting("openInTab")).toBe("_blank");
   expect(getSetting("showNestedThread")).toBe(true);
+  expect(getSetting("externalCompose")).toBe(-1);
   expect(getSetting("abbreviateQuoted")).toBe(true);
 });
 
@@ -29,6 +30,7 @@ test("shows settings", () => {
   expect(screen.getByTestId("numQueries")).toBeInTheDocument();
   expect(screen.getByTestId("openInTab")).toBeInTheDocument();
   expect(screen.getByTestId("showNestedThread")).toBeInTheDocument();
+  expect(screen.getByTestId("externalCompose")).toBeInTheDocument();
   expect(screen.getByTestId("abbreviateQuoted")).toBeInTheDocument();
 });
 
@@ -47,6 +49,14 @@ test("allows to change settings", async () => {
   await userEvent.click(screen.getByTestId("showNestedThread").querySelector("div[role='button']"));
   await userEvent.click(screen.getByText("flattened"));
   expect(getSetting("showNestedThread")).toBe(false);
+
+  expect(getSetting("externalCompose")).toBe(-1);
+  await userEvent.click(screen.getByTestId("externalCompose").querySelector("div[role='button']"));
+  await userEvent.click(screen.getByText("internal browser editor"));
+  expect(getSetting("externalCompose")).toBe(false);
+  await userEvent.click(screen.getByTestId("externalCompose").querySelector("div[role='button']"));
+  await userEvent.click(screen.getByText("external editor on localhost"));
+  expect(getSetting("externalCompose")).toBe(true);
 
   expect(getSetting("abbreviateQuoted")).toBe(true);
   await userEvent.click(screen.getByTestId("abbreviateQuoted").querySelector("div[role='button']"));
