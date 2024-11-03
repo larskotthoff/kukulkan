@@ -169,8 +169,11 @@ body {
     opacity: 0.3;
 }
 
-.threadnav-box.active {
+.threadnav-box.active-thread {
     opacity: 1;
+}
+
+.threadnav-box.active {
     border-color: black;
 }
 

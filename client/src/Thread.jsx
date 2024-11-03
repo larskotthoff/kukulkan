@@ -196,7 +196,8 @@ export function Thread(props) {
                 }}
                 class={{
                   'threadnav-box': true,
-                  'active': filteredThread()[activeMessage()].message_id === m.message_id
+                  'active': filteredThread()[activeMessage()].message_id === m.message_id,
+                  'active-thread': filteredThread()?.find((mp) => { return mp.message_id === m.message_id; })
                 }}
                 style={{
                   'margin-left': (filteredThread() === thread() ? 0 : m.depth) + "em",

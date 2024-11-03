@@ -110,8 +110,8 @@ test("fetches and renders thread", async () => {
   expect(navs.length).toBe(2);
   expect(navs[0].style["margin-left"]).toBe("0em");
   expect(navs[1].style["margin-left"]).toBe("0em");
-  expect(navs[0].style["border-color"]).toBe("white");
-  expect(navs[1].style["border-color"]).toBe("black");
+  expect(navs[0].classList).not.toContain("active");
+  expect(navs[1].classList).toContain("active");
 });
 
 test("changing active message works", async () => {
@@ -136,8 +136,8 @@ test("changing active message works", async () => {
   });
 
   const navs = container.querySelectorAll(".threadnav-box");
-  expect(navs[0].style["border-color"]).toBe("white");
-  expect(navs[1].style["border-color"]).toBe("black");
+  expect(navs[0].classList).not.toContain("active");
+  expect(navs[1].classList).toContain("active");
 
   await userEvent.type(document.body, "k");
   // expanded email
@@ -161,8 +161,8 @@ test("changing active message works", async () => {
 
   expect(document.title).toBe("Test.");
 
-  expect(navs[0].style["border-color"]).toBe("black");
-  expect(navs[1].style["border-color"]).toBe("white");
+  expect(navs[0].classList).toContain("active");
+  expect(navs[1].classList).not.toContain("active");
 
   await userEvent.type(document.body, "j");
   // collapsed email
@@ -184,8 +184,8 @@ test("changing active message works", async () => {
   expect(screen.getByText("bar2")).toBeInTheDocument();
   expect(screen.getByText("test2")).toBeInTheDocument();
 
-  expect(navs[0].style["border-color"]).toBe("white");
-  expect(navs[1].style["border-color"]).toBe("black");
+  expect(navs[0].classList).not.toContain("active");
+  expect(navs[1].classList).toContain("active");
 
   await userEvent.type(document.body, "{ArrowUp}");
   // expanded email
@@ -209,8 +209,8 @@ test("changing active message works", async () => {
 
   expect(document.title).toBe("Test.");
 
-  expect(navs[0].style["border-color"]).toBe("black");
-  expect(navs[1].style["border-color"]).toBe("white");
+  expect(navs[0].classList).toContain("active");
+  expect(navs[1].classList).not.toContain("active");
 
   await userEvent.type(document.body, "{ArrowDown}");
   // collapsed email
@@ -232,8 +232,8 @@ test("changing active message works", async () => {
   expect(screen.getByText("bar2")).toBeInTheDocument();
   expect(screen.getByText("test2")).toBeInTheDocument();
 
-  expect(navs[0].style["border-color"]).toBe("white");
-  expect(navs[1].style["border-color"]).toBe("black");
+  expect(navs[0].classList).not.toContain("active");
+  expect(navs[1].classList).toContain("active");
 
   await userEvent.click(container.querySelector(".message:not(.active)"));
   // expanded email
@@ -255,8 +255,8 @@ test("changing active message works", async () => {
   expect(screen.queryByText("bar2")).not.toBeInTheDocument();
   expect(screen.queryByText("test2")).not.toBeInTheDocument();
 
-  expect(navs[0].style["border-color"]).toBe("black");
-  expect(navs[1].style["border-color"]).toBe("white");
+  expect(navs[0].classList).toContain("active");
+  expect(navs[1].classList).not.toContain("active");
 
   await userEvent.click(navs[1]);
   // collapsed email
@@ -278,8 +278,8 @@ test("changing active message works", async () => {
   expect(screen.getByText("bar2")).toBeInTheDocument();
   expect(screen.getByText("test2")).toBeInTheDocument();
 
-  expect(navs[0].style["border-color"]).toBe("white");
-  expect(navs[1].style["border-color"]).toBe("black");
+  expect(navs[0].classList).not.toContain("active");
+  expect(navs[1].classList).toContain("active");
 
   await userEvent.click(navs[0]);
   // expanded email
@@ -301,8 +301,8 @@ test("changing active message works", async () => {
   expect(screen.queryByText("bar2")).not.toBeInTheDocument();
   expect(screen.queryByText("test2")).not.toBeInTheDocument();
 
-  expect(navs[0].style["border-color"]).toBe("black");
-  expect(navs[1].style["border-color"]).toBe("white");
+  expect(navs[0].classList).toContain("active");
+  expect(navs[1].classList).not.toContain("active");
 });
 
 test("thread nav shows and allows to navigate levels", async () => {
@@ -346,9 +346,12 @@ test("thread nav shows and allows to navigate levels", async () => {
   expect(navs[0].style["margin-left"]).toBe("0em");
   expect(navs[1].style["margin-left"]).toBe("1em");
   expect(navs[2].style["margin-left"]).toBe("0em");
-  expect(navs[0].style["opacity"]).toBe("1");
-  expect(navs[1].style["opacity"]).toBe("0.3");
-  expect(navs[2].style["opacity"]).toBe("1");
+  expect(navs[0].classList).not.toContain("active");
+  expect(navs[1].classList).not.toContain("active");
+  expect(navs[2].classList).toContain("active");
+  expect(navs[0].classList).toContain("active-thread");
+  expect(navs[1].classList).not.toContain("active-thread");
+  expect(navs[2].classList).toContain("active-thread");
 
   // move level higher
   await userEvent.type(document.body, "l");
@@ -372,9 +375,9 @@ test("thread nav shows and allows to navigate levels", async () => {
 
   expect(document.title).toBe("Test2.");
 
-  expect(navs[0].style["opacity"]).toBe("1");
-  expect(navs[1].style["opacity"]).toBe("1");
-  expect(navs[2].style["opacity"]).toBe("0.3");
+  expect(navs[0].classList).toContain("active-thread");
+  expect(navs[1].classList).toContain("active-thread");
+  expect(navs[2].classList).not.toContain("active-thread");
 
   // move back to lower level
   await userEvent.type(document.body, "h");
@@ -398,9 +401,9 @@ test("thread nav shows and allows to navigate levels", async () => {
 
   expect(document.title).toBe("Test3.");
 
-  expect(navs[0].style["opacity"]).toBe("1");
-  expect(navs[1].style["opacity"]).toBe("0.3");
-  expect(navs[2].style["opacity"]).toBe("1");
+  expect(navs[0].classList).toContain("active-thread");
+  expect(navs[1].classList).not.toContain("active-thread");
+  expect(navs[2].classList).toContain("active-thread");
 
   // move level higher
   await userEvent.type(document.body, "{ArrowRight}");
@@ -424,9 +427,9 @@ test("thread nav shows and allows to navigate levels", async () => {
 
   expect(document.title).toBe("Test2.");
 
-  expect(navs[0].style["opacity"]).toBe("1");
-  expect(navs[1].style["opacity"]).toBe("1");
-  expect(navs[2].style["opacity"]).toBe("0.3");
+  expect(navs[0].classList).toContain("active-thread");
+  expect(navs[1].classList).toContain("active-thread");
+  expect(navs[2].classList).not.toContain("active-thread");
 
   // move back to lower level
   await userEvent.type(document.body, "{ArrowLeft}");
@@ -450,9 +453,10 @@ test("thread nav shows and allows to navigate levels", async () => {
 
   expect(document.title).toBe("Test3.");
 
-  expect(navs[0].style["opacity"]).toBe("1");
-  expect(navs[1].style["opacity"]).toBe("0.3");
-  expect(navs[2].style["opacity"]).toBe("1");
+  expect(navs[0].classList).toContain("active-thread");
+  expect(navs[1].classList).not.toContain("active-thread");
+  expect(navs[2].classList).toContain("active-thread");
+
   await userEvent.click(navs[1]);
 
   // collapsed email
@@ -475,9 +479,9 @@ test("thread nav shows and allows to navigate levels", async () => {
 
   expect(document.title).toBe("Test2.");
 
-  expect(navs[0].style["opacity"]).toBe("1");
-  expect(navs[1].style["opacity"]).toBe("1");
-  expect(navs[2].style["opacity"]).toBe("0.3");
+  expect(navs[0].classList).toContain("active-thread");
+  expect(navs[1].classList).toContain("active-thread");
+  expect(navs[2].classList).not.toContain("active-thread");
 
   await userEvent.click(navs[2]);
   // collapsed email
@@ -500,9 +504,9 @@ test("thread nav shows and allows to navigate levels", async () => {
 
   expect(document.title).toBe("Test3.");
 
-  expect(navs[0].style["opacity"]).toBe("1");
-  expect(navs[1].style["opacity"]).toBe("0.3");
-  expect(navs[2].style["opacity"]).toBe("1");
+  expect(navs[0].classList).toContain("active-thread");
+  expect(navs[1].classList).not.toContain("active-thread");
+  expect(navs[2].classList).toContain("active-thread");
 });
 
 test("flat view works", async () => {
@@ -546,9 +550,9 @@ test("flat view works", async () => {
   expect(navs[0].style["margin-left"]).toBe("0em");
   expect(navs[1].style["margin-left"]).toBe("1em");
   expect(navs[2].style["margin-left"]).toBe("0em");
-  expect(navs[0].style["opacity"]).toBe("1");
-  expect(navs[1].style["opacity"]).toBe("0.3");
-  expect(navs[2].style["opacity"]).toBe("1");
+  expect(navs[0].classList).toContain("active-thread");
+  expect(navs[1].classList).not.toContain("active-thread");
+  expect(navs[2].classList).toContain("active-thread");
 
   await userEvent.type(document.body, "{shift>}f{/shift}");
   // collapsed email
@@ -572,9 +576,9 @@ test("flat view works", async () => {
   expect(navs[0].style["margin-left"]).toBe("0em");
   expect(navs[1].style["margin-left"]).toBe("0em");
   expect(navs[2].style["margin-left"]).toBe("0em");
-  expect(navs[0].style["opacity"]).toBe("1");
-  expect(navs[1].style["opacity"]).toBe("1");
-  expect(navs[2].style["opacity"]).toBe("1");
+  expect(navs[0].classList).toContain("active-thread");
+  expect(navs[1].classList).toContain("active-thread");
+  expect(navs[2].classList).toContain("active-thread");
 
   await userEvent.type(document.body, "{shift>}f{/shift}");
   // collapsed email
@@ -599,9 +603,9 @@ test("flat view works", async () => {
   expect(navs[0].style["margin-left"]).toBe("0em");
   expect(navs[1].style["margin-left"]).toBe("1em");
   expect(navs[2].style["margin-left"]).toBe("0em");
-  expect(navs[0].style["opacity"]).toBe("1");
-  expect(navs[1].style["opacity"]).toBe("0.3");
-  expect(navs[2].style["opacity"]).toBe("1");
+  expect(navs[0].classList).toContain("active-thread");
+  expect(navs[1].classList).not.toContain("active-thread");
+  expect(navs[2].classList).toContain("active-thread");
 });
 
 test("flat view can be set to be default", async () => {
@@ -645,9 +649,9 @@ test("flat view can be set to be default", async () => {
   expect(navs[0].style["margin-left"]).toBe("0em");
   expect(navs[1].style["margin-left"]).toBe("1em");
   expect(navs[2].style["margin-left"]).toBe("0em");
-  expect(navs[0].style["opacity"]).toBe("1");
-  expect(navs[1].style["opacity"]).toBe("0.3");
-  expect(navs[2].style["opacity"]).toBe("1");
+  expect(navs[0].classList).toContain("active-thread");
+  expect(navs[1].classList).not.toContain("active-thread");
+  expect(navs[2].classList).toContain("active-thread");
 
   cleanup();
   localStorage.setItem("settings-showNestedThread", false);
@@ -681,9 +685,9 @@ test("flat view can be set to be default", async () => {
   expect(navs[0].style["margin-left"]).toBe("0em");
   expect(navs[1].style["margin-left"]).toBe("0em");
   expect(navs[2].style["margin-left"]).toBe("0em");
-  expect(navs[0].style["opacity"]).toBe("1");
-  expect(navs[1].style["opacity"]).toBe("1");
-  expect(navs[2].style["opacity"]).toBe("1");
+  expect(navs[0].classList).toContain("active-thread");
+  expect(navs[1].classList).toContain("active-thread");
+  expect(navs[2].classList).toContain("active-thread");
 });
 
 test("works correctly when msg references are messed up", async () => {
@@ -724,8 +728,8 @@ test("works correctly when msg references are messed up", async () => {
   expect(navs.length).toBe(2);
   expect(navs[0].style["margin-left"]).toBe("1em");
   expect(navs[1].style["margin-left"]).toBe("0em");
-  expect(navs[0].style["opacity"]).toBe("0.3");
-  expect(navs[1].style["opacity"]).toBe("1");
+  expect(navs[0].classList).not.toContain("active-thread");
+  expect(navs[1].classList).toContain("active-thread");
 });
 
 test("sets active message based on unread", async () => {
@@ -772,10 +776,10 @@ test("sets active message based on unread", async () => {
   expect(navs.length).toBe(2);
   expect(navs[0].style["margin-left"]).toBe("0em");
   expect(navs[1].style["margin-left"]).toBe("0em");
-  expect(navs[0].style["border-color"]).toBe("black");
-  expect(navs[1].style["border-color"]).toBe("white");
   expect(navs[0].style["border-radius"]).toBe("1em");
   expect(navs[1].style["border-radius"]).toBe("1em");
+  expect(navs[0].classList).toContain("active");
+  expect(navs[1].classList).not.toContain("active");
 });
 
 // vim: tabstop=2 shiftwidth=2 expandtab
