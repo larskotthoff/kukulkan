@@ -63,6 +63,19 @@ test("formatDuration", () => {
     .toBe("2年");
 });
 
+test("renderDateNumThread", () => {
+  const now = (new Date()) / 1000,
+        thread = { total_messages: 1, newest_date: now, oldest_date: now - (24 * 60 * 60) };
+
+  expect(utils.renderDateNumThread(thread)).toMatch(/[0-9]{2}:[0-9]{2}/);
+
+  thread.total_messages = 2;
+  expect(utils.renderDateNumThread(thread)).toMatch(/[0-9]{2}:[0-9]{2} \(2\/24時\)/);
+
+  expect(utils.renderDateNumThread(thread, false)).not.toMatch(/[0-9]{2}:[0-9]{2} \(2\/24時\)/);
+  expect(utils.renderDateNumThread(thread, false)).toMatch(/[0-9]{2}:[0-9]{2}/);
+});
+
 test("apiURL", () => {
   expect(utils.apiURL("foo")).toBe("http://localhost:5000/foo");
 
