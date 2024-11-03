@@ -348,7 +348,7 @@ export function Message(props) {
 
         <Show when={!props.print}>
           <Grid container justifyContent="space-between" direction="row" style={{ 'min-height': "3.5em" }} class="centered">
-            <Grid item xs={11}>
+            <Grid item xs>
               <TagComplete
                 id="editTags"
                 tags={tags()}
@@ -360,22 +360,22 @@ export function Message(props) {
                 }}
               />
             </Grid>
-            <Grid item xs={0.25}>
+            <Grid item>
               <a id="reply" href={replyUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
                 <Reply/>
               </a>
             </Grid>
-            <Grid item xs={0.25}>
+            <Grid item>
               <a id="forward" href={fwdUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
                 <Forward/>
               </a>
             </Grid>
-            <Grid item xs={0.25}>
+            <Grid item>
               <a id="print" href={printUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
                 <Print/>
               </a>
             </Grid>
-            <Grid item xs={0.25}>
+            <Grid item>
               <a id="security" href={secUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
                 <Security/>
               </a>

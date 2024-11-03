@@ -73,8 +73,8 @@ export function SearchThreads(props) {
   return (
     <Grid container width="95%" class="centered">
       <Grid container item class="centered" width="80%" spacing={2}>
-        <Grid item xs={11}><QueryBox/></Grid>
-        <Grid item xs={1}>
+        <Grid item xs><QueryBox/></Grid>
+        <Grid item>
           <a href="/write" target={getSetting("openInTab")} rel="noreferrer">
             <Create/>
           </a>
