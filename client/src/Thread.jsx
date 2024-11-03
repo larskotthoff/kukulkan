@@ -142,6 +142,7 @@ export function Thread(props) {
     let [ft, activeIdx] = filterThread(msg, thread());
     setFilteredThread(ft);
     setActiveMessage(activeIdx);
+    document.querySelector(".threadnav-box.active")?.scrollIntoView({inline: "center"});
   }
 
   mkShortcut(["h"],
@@ -193,12 +194,13 @@ export function Thread(props) {
                     setActiveMessage(activeIdx);
                   }
                 }}
-                class="threadnav-box"
+                class={{
+                  'threadnav-box': true,
+                  'active': filteredThread()[activeMessage()].message_id === m.message_id
+                }}
                 style={{
                   'margin-left': (filteredThread() === thread() ? 0 : m.depth) + "em",
-                  opacity: filteredThread()?.find((mp) => { return mp.message_id === m.message_id; }) ? 1 : .3,
                   'border-radius': m.tags.includes("unread") ? "1em" : "0em",
-                  'border-color': filteredThread()[activeMessage()].message_id === m.message_id ? "black" : "white",
                   'background-color': getColor(filterSubjectColor(m.subject) + filterAdminTags(m.tags) + extractEmailsSort(m.from + m.to + m.cc))
                 }}
               />}

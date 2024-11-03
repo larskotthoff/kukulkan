@@ -157,7 +157,8 @@ body {
 .threadnav-container {
     margin-top: 0.5em;
     margin-left: 0.5em;
-    max-width: fit-content;
+    max-width: 10%;
+    overflow: auto;
 }
 
 .threadnav-box {
@@ -165,6 +166,12 @@ body {
     width: 1.2em;
     height: 1.2em;
     border: .05em solid white;
+    opacity: 0.3;
+}
+
+.threadnav-box.active {
+    opacity: 1;
+    border-color: black;
 }
 
 .todo-threads {
