@@ -96,11 +96,4 @@ export function formatFSz(size) {
   return (size / Math.pow(1024, i)).toFixed(2) * 1 + ' ' + ['Bi', 'kiB', 'MiB', 'GiB', 'TiB'][i];
 }
 
-export async function fetchMessage(id) {
-  if(id === null) return null;
-  const response = await fetch(apiURL(`api/message/${encodeURIComponent(id)}`));
-  if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
-  return response.json();
-}
-
 // vim: tabstop=2 shiftwidth=2 expandtab

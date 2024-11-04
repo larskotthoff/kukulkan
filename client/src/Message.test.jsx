@@ -5,19 +5,6 @@ import { userEvent } from "@testing-library/user-event";
 
 import { FetchedMessage, Message, separateQuotedNonQuoted } from "./Message.jsx";
 
-beforeEach(() => {
-  vi.spyOn(window, "open").mockImplementation(() => {});
-  global.fetch = vi.fn();
-  window.HTMLElement.prototype.scrollIntoView = function() {};
-  vi.stubGlobal("allTags", ["foo", "bar"]);
-});
-
-afterEach(() => {
-  cleanup();
-  vi.restoreAllMocks();
-  vi.unstubAllGlobals();
-});
-
 const msg = {
   from: "foo bar <foo@bar.com>",
   to: ["bar foo <bar@foo.com>"],
@@ -33,6 +20,21 @@ const msg = {
   }
 };
 
+const tags = ["foo", "bar"];
+
+beforeEach(() => {
+  vi.spyOn(window, "open").mockImplementation(() => {});
+  global.fetch = vi.fn();
+  window.HTMLElement.prototype.scrollIntoView = function() {};
+  vi.stubGlobal("data", {"allTags": tags, "message": msg});
+});
+
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
+
 test("exports FetchedMessage and Message", () => {
   expect(FetchedMessage).not.toBe(undefined);
   expect(Message).not.toBe(undefined);
@@ -43,11 +45,7 @@ test("fetches and renders message", async () => {
     ...window.location,
     search: '?id=foo'
   });
-  global.fetch.mockResolvedValue({ ok: true, json: () => msg });
   render(() => <FetchedMessage/>);
-
-  expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Test.")).toBeInTheDocument();
@@ -68,11 +66,7 @@ test("fetches and renders attached message", async () => {
     ...window.location,
     search: '?id=foo&attachNum=0'
   });
-  global.fetch.mockResolvedValue({ ok: true, json: () => msg });
   render(() => <FetchedMessage/>);
-
-  expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/attachment_message/foo/0");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Test.")).toBeInTheDocument();
@@ -93,11 +87,7 @@ test("fetches and renders message in print view", async () => {
     ...window.location,
     search: '?id=foo&print=true'
   });
-  global.fetch.mockResolvedValue({ ok: true, json: () => msg });
   render(() => <FetchedMessage/>);
-
-  expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Test.")).toBeInTheDocument();

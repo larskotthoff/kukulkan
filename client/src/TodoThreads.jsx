@@ -40,9 +40,7 @@ export function TodoThreads(props) {
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
-  // eslint-disable-next-line solid/reactivity
-  const threads = props.threads().sort(sortThreadsByDueDate),
-        dueMap = {};
+  const dueMap = {};
 
   function processDueDate(thread, index) {
     const due = thread.tags.find((tag) => tag.startsWith("due:"));
@@ -102,7 +100,8 @@ export function TodoThreads(props) {
     return retval;
   }
 
-  const dues = threads.map(processDueDate),
+  // eslint-disable-next-line solid/reactivity
+  const dues = props.threads().sort(sortThreadsByDueDate).map(processDueDate),
         dueDates = dues.map(d => d[0]).filter(x => x),
         earliest = new Date(Math.min(...(dueDates.concat(today)))),
         latest = new Date(Math.max(...dueDates)),
@@ -154,7 +153,7 @@ export function TodoThreads(props) {
         </Grid>
       </Show>
       <Grid container item class="todo-threads">
-        <For each={threads}>
+        <For each={props.threads().sort(sortThreadsByDueDate)}>
           {(thread, index) =>
             <Grid item container class={{
                 'thread': true,

@@ -11,9 +11,7 @@
     <div id="root"></div>
 
     <script type="text/javascript">
-        const accounts = {{ data.accounts|tojson }},
-              allTags = {{ data.allTags|tojson }},
-              compose = {{ data.compose|tojson }};
+        const data = {{ data|tojson }};
     </script>
     <script src="/src/index.jsx" type="module"></script>
   </body>

@@ -79,11 +79,8 @@ test("fetches and renders thread", async () => {
     ...window.location,
     search: '?id=foo'
   });
-  global.fetch.mockResolvedValue({ ok: true, json: () => thread });
+  vi.stubGlobal("data", {"thread": thread});
   const { container } = render(() => <Thread/>);
-
-  expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/thread/foo");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Test2.")).toBeInTheDocument();
@@ -119,11 +116,8 @@ test("changing active message works", async () => {
     ...window.location,
     search: '?id=foo'
   });
-  global.fetch.mockResolvedValue({ ok: true, json: () => thread });
+  vi.stubGlobal("data", {"thread": thread});
   const { container } = render(() => <Thread/>);
-
-  expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/thread/foo");
 
   expect(screen.queryByText("bar foo <bar@foo.com>")).not.toBeInTheDocument();
   expect(screen.queryByText("test@test.com")).not.toBeInTheDocument();
@@ -310,11 +304,8 @@ test("thread nav shows and allows to navigate levels", async () => {
     ...window.location,
     search: '?id=foo'
   });
-  global.fetch.mockResolvedValue({ ok: true, json: () => complexThread });
+  vi.stubGlobal("data", {"thread": complexThread});
   const { container } = render(() => <Thread/>);
-
-  expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/thread/foo");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Test3.")).toBeInTheDocument();
@@ -514,11 +505,8 @@ test("flat view works", async () => {
     ...window.location,
     search: '?id=foo'
   });
-  global.fetch.mockResolvedValue({ ok: true, json: () => complexThread });
+  vi.stubGlobal("data", {"thread": complexThread});
   const { container } = render(() => <Thread/>);
-
-  expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/thread/foo");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Test3.")).toBeInTheDocument();
@@ -613,11 +601,8 @@ test("flat view can be set to be default", async () => {
     ...window.location,
     search: '?id=foo'
   });
-  global.fetch.mockResolvedValue({ ok: true, json: () => complexThread });
+  vi.stubGlobal("data", {"thread": complexThread});
   let { container } = render(() => <Thread/>);
-
-  expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/thread/foo");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Test3.")).toBeInTheDocument();
@@ -656,7 +641,6 @@ test("flat view can be set to be default", async () => {
   cleanup();
   localStorage.setItem("settings-showNestedThread", false);
   container = render(() => <Thread/>).container;
-  expect(global.fetch).toHaveBeenCalledTimes(2);
 
   await vi.waitFor(() => {
     expect(screen.getByText("Test3.")).toBeInTheDocument();
@@ -697,11 +681,8 @@ test("works correctly when msg references are messed up", async () => {
   });
   const tmp = JSON.parse(JSON.stringify(thread));
   tmp[1].in_reply_to = "<doesnotexist>";
-  global.fetch.mockResolvedValue({ ok: true, json: () => tmp });
+  vi.stubGlobal("data", {"thread": tmp});
   const { container } = render(() => <Thread/>);
-
-  expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/thread/foo");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Test2.")).toBeInTheDocument();
@@ -740,11 +721,8 @@ test("sets active message based on unread", async () => {
   const tmp = JSON.parse(JSON.stringify(thread));
   tmp[0].tags.push("unread");
   tmp[1].tags.push("unread");
-  global.fetch.mockResolvedValue({ ok: true, json: () => tmp });
+  vi.stubGlobal("data", {"thread": tmp});
   const { container } = render(() => <Thread/>);
-
-  expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/thread/foo");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Test.")).toBeInTheDocument();

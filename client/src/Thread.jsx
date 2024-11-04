@@ -1,4 +1,4 @@
-import { createEffect, createSignal, createResource, For, Show } from "solid-js";
+import { createSignal, For, Show } from "solid-js";
 
 import Box from "@suid/material/Box";
 import Grid from "@suid/material/Grid";
@@ -9,15 +9,8 @@ import { Message } from "./Message.jsx";
 import { getSetting } from "./Settings.jsx";
 
 import "./Kukulkan.css";
-import { apiURL, extractEmailsSort, filterSubjectColor, filterAdminTags, getColor } from "./utils.js";
+import { extractEmailsSort, filterSubjectColor, filterAdminTags, getColor } from "./utils.js";
 import { mkShortcut } from "./UiUtils.jsx";
-
-async function fetchThread(id) {
-  if(id === null) return null;
-  const response = await fetch(apiURL(`api/thread/${encodeURIComponent(id)}`));
-  if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
-  return await response.json();
-}
 
 function getFirstUnread(thread) {
   let firstUnread = thread.findIndex((m) => {
@@ -55,41 +48,34 @@ function filterThread(msg, thread) {
 }
 
 export function Thread(props) {
-  const searchParams = window.location.search,
-        threadId = (new URLSearchParams(searchParams)).get("id"),
-        [thread] = createResource(threadId, fetchThread),
-        [filteredThread, setFilteredThread] = createSignal(),
+  const [filteredThread, setFilteredThread] = createSignal(),
         [activeMessage, setActiveMessage] = createSignal();
 
-  createEffect(() => {
-    if(thread()) {
-      let tmp = thread().slice();
+  // eslint-disable-next-line no-undef
+  let tmp = data.thread.slice();
 
-      let depth = 0;
-      while(tmp.length > 0) {
-        let cur = tmp.pop();
-        while(cur) {
-          cur.depth = depth;
-          cur = tmp.find(i => { return '<' + i.message_id + '>' === cur.in_reply_to; });
-          tmp = tmp.filter(i => { return i !== cur; });
-        }
-        depth++;
-      }
-
-      if(getSetting("showNestedThread")) {
-        let [ft, activeIdx] = filterThread(null, thread());
-        setFilteredThread(ft);
-        setActiveMessage(activeIdx);
-      } else {
-        setFilteredThread(thread());
-        setActiveMessage(getFirstUnread(thread()));
-      }
+  let depth = 0;
+  while(tmp.length > 0) {
+    let cur = tmp.pop();
+    while(cur) {
+      cur.depth = depth;
+      cur = tmp.find(i => { return '<' + i.message_id + '>' === cur.in_reply_to; });
+      tmp = tmp.filter(i => { return i !== cur; });
     }
-  });
+    depth++;
+  }
 
-  createEffect(() => {
-    props.sp?.(100 * (1 - thread.loading));
-  });
+  if(getSetting("showNestedThread")) {
+    // eslint-disable-next-line no-undef
+    let [ft, activeIdx] = filterThread(null, data.thread);
+    setFilteredThread(ft);
+    setActiveMessage(activeIdx);
+  } else {
+    // eslint-disable-next-line no-undef
+    setFilteredThread(data.thread);
+    // eslint-disable-next-line no-undef
+    setActiveMessage(getFirstUnread(data.thread));
+  }
 
   mkShortcut(["Home"],
     () => setActiveMessage(0)
@@ -133,13 +119,15 @@ export function Thread(props) {
   function updateActiveDepth(d) {
     let msg = null,
         unread = false;
-    thread().forEach(function(m) {
+    // eslint-disable-next-line no-undef
+    data.thread.forEach(function(m) {
       if(!unread && m.depth === d) {
         unread = m.tags.includes("unread");
         msg = m;
       }
     });
-    let [ft, activeIdx] = filterThread(msg, thread());
+    // eslint-disable-next-line no-undef
+    let [ft, activeIdx] = filterThread(msg, data.thread);
     setFilteredThread(ft);
     setActiveMessage(activeIdx);
     document.querySelector(".threadnav-box.active")?.scrollIntoView({inline: "center"});
@@ -156,24 +144,30 @@ export function Thread(props) {
   mkShortcut(["l"],
     // eslint-disable-next-line solid/reactivity
     () => updateActiveDepth(Math.min(filteredThread()[activeMessage()].depth + 1,
-                                  Math.max(...thread().map(m => m.depth))))
+      // eslint-disable-next-line no-undef
+                                  Math.max(...data.thread.map(m => m.depth))))
   );
   mkShortcut(["ArrowRight"],
     // eslint-disable-next-line solid/reactivity
     () => updateActiveDepth(Math.min(filteredThread()[activeMessage()].depth + 1,
-                                  Math.max(...thread().map(m => m.depth))))
+      // eslint-disable-next-line no-undef
+                                  Math.max(...data.thread.map(m => m.depth))))
   );
 
   mkShortcut(["Shift", "F"],
     // eslint-disable-next-line solid/reactivity
     () => {
-      if(filteredThread() === thread()) {
-        let [ft, activeIdx] = filterThread(null, thread());
+      // eslint-disable-next-line no-undef
+      if(filteredThread() === data.thread) {
+        // eslint-disable-next-line no-undef
+        let [ft, activeIdx] = filterThread(null, data.thread);
         setFilteredThread(ft);
         setActiveMessage(activeIdx);
       } else {
-        setFilteredThread(thread());
-        setActiveMessage(getFirstUnread(thread()));
+        // eslint-disable-next-line no-undef
+        setFilteredThread(data.thread);
+        // eslint-disable-next-line no-undef
+        setActiveMessage(getFirstUnread(data.thread));
       }
     }
   );
@@ -182,14 +176,17 @@ export function Thread(props) {
     return (
       <Show when={filteredThread() && filteredThread()[activeMessage()]}>
         <Grid container direction="column" class="threadnav-container sticky">
-          <For each={thread()}>
+          { /* eslint-disable-next-line no-undef */ }
+          <For each={data.thread}>
             {(m, i) =>
               <Box
                 onClick={() => {
-                  if(filteredThread() === thread()) {
+                  // eslint-disable-next-line no-undef
+                  if(filteredThread() === data.thread) {
                     setActiveMessage(i);
                   } else {
-                    let [ft, activeIdx] = filterThread(m, thread());
+                    // eslint-disable-next-line no-undef
+                    let [ft, activeIdx] = filterThread(m, data.thread);
                     setFilteredThread(ft);
                     setActiveMessage(activeIdx);
                   }
@@ -200,7 +197,8 @@ export function Thread(props) {
                   'active-thread': filteredThread()?.find((mp) => { return mp.message_id === m.message_id; })
                 }}
                 style={{
-                  'margin-left': (filteredThread() === thread() ? 0 : m.depth) + "em",
+                  // eslint-disable-next-line no-undef
+                  'margin-left': (filteredThread() === data.thread ? 0 : m.depth) + "em",
                   'border-radius': m.tags.includes("unread") ? "1em" : "0em",
                   'background-color': getColor(filterSubjectColor(m.subject) + filterAdminTags(m.tags) + extractEmailsSort(m.from + m.to + m.cc))
                 }}

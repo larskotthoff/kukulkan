@@ -22,23 +22,6 @@ class MockEventSource {
   }
 }
 
-beforeEach(() => {
-  global.fetch = vi.fn();
-  vi.stubGlobal('EventSource', MockEventSource);
-  localStorage.clear();
-  vi.stubGlobal("accounts", [{"id": "foo", "name": "foo bar", "email": "foo@bar.com"},
-    {"id": "bar", "name": "blurg", "email": "blurg@foo.com", "default": "true"}]);
-  vi.stubGlobal("allTags", ["foo", "foobar"]);
-  vi.stubGlobal("compose", []);
-});
-
-afterEach(() => {
-  cleanup();
-  vi.restoreAllMocks();
-  vi.unstubAllGlobals();
-  localStorage.clear();
-});
-
 const msg = {
   from: "bar foo <bar@foo.com>",
   to: ["foo bar <foo@bar.com>"],
@@ -54,6 +37,25 @@ const msg = {
     "text/plain": "Test mail"
   }
 };
+
+const accts = [{"id": "foo", "name": "foo bar", "email": "foo@bar.com"},
+  {"id": "bar", "name": "blurg", "email": "blurg@foo.com", "default": "true"}];
+
+const tags = ["foo", "foobar"];
+
+beforeEach(() => {
+  global.fetch = vi.fn();
+  vi.stubGlobal('EventSource', MockEventSource);
+  localStorage.clear();
+  vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": []});
+});
+
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+  localStorage.clear();
+});
 
 test("exports Write", () => {
   expect(Write).not.toBe(undefined);
@@ -95,11 +97,8 @@ test("base message reply all", async () => {
     ...window.location,
     search: '?id=foo&action=reply&mode=all'
   });
-  global.fetch.mockResolvedValue({ ok: true, json: () => msg });
+  vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": [], "baseMessage": msg});
   const { getByTestId } = render(() => <Write/>);
-
-  expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -120,11 +119,8 @@ test("base message reply one", async () => {
     ...window.location,
     search: '?id=foo&action=reply&mode=one'
   });
-  global.fetch.mockResolvedValue({ ok: true, json: () => msg });
+  vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": [], "baseMessage": msg});
   const { getByTestId } = render(() => <Write/>);
-
-  expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -147,11 +143,8 @@ test("base message from default if unclear", async () => {
   });
   const msg1 = JSON.parse(JSON.stringify(msg));
   msg1.to = ["something@test.com"];
-  global.fetch.mockResolvedValue({ ok: true, json: () => msg1 });
+  vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": [], "baseMessage": msg1});
   const { getByTestId } = render(() => <Write/>);
-
-  expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -166,11 +159,8 @@ test("reply includes only main part of base message quoted", async () => {
   });
   const msg1 = JSON.parse(JSON.stringify(msg));
   msg1.body["text/plain"] = "Thanks.\n\nOn bla, blurg wrote:\n> foo\n> bar.";
-  global.fetch.mockResolvedValue({ ok: true, json: () => msg1 });
+  vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": [], "baseMessage": msg1});
   const { getByTestId } = render(() => <Write/>);
-
-  expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -185,12 +175,9 @@ test("reply includes entire base message quoted when setting changed", async () 
   });
   const msg1 = JSON.parse(JSON.stringify(msg));
   msg1.body["text/plain"] = "Thanks.\n\nOn bla, blurg wrote:\n> foo\n> bar.";
-  global.fetch.mockResolvedValue({ ok: true, json: () => msg1 });
+  vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": [], "baseMessage": msg1});
   localStorage.setItem("settings-abbreviateQuoted", false);
   const { getByTestId } = render(() => <Write/>);
-
-  expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -203,11 +190,8 @@ test("base message forward", async () => {
     ...window.location,
     search: '?id=foo&action=forward'
   });
-  global.fetch.mockResolvedValue({ ok: true, json: () => msg });
+  vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": [], "baseMessage": msg});
   const { getByTestId } = render(() => <Write/>);
-
-  expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -231,12 +215,9 @@ test("forward includes entire message even if abbreviated reply", async () => {
   });
   const msg1 = JSON.parse(JSON.stringify(msg));
   msg1.body["text/plain"] = "Thanks.\n\nOn bla, blurg wrote:\n> foo\n> bar.";
-  global.fetch.mockResolvedValue({ ok: true, json: () => msg1 });
+  vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": [], "baseMessage": msg1});
   localStorage.setItem("settings-abbreviateQuoted", true);
   const { getByTestId } = render(() => <Write/>);
-
-  expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -251,11 +232,8 @@ test("base message reply filters admin tags", async () => {
   });
   const msg1 = JSON.parse(JSON.stringify(msg));
   msg1.tags.push("signed");
-  global.fetch.mockResolvedValue({ ok: true, json: () => msg1 });
+  vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": [], "baseMessage": msg1});
   render(() => <Write/>);
-
-  expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -267,8 +245,9 @@ test("base message reply filters admin tags", async () => {
 });
 
 test("template set", async () => {
-  vi.stubGlobal("compose", {"templates": [{"shortcut": "1", "description": "foo", "template": "bar"},
-                     {"shortcut": "2", "description": "foobar", "template": "blurg"}]});
+  const cmp = {"templates": [{"shortcut": "1", "description": "foo", "template": "bar"},
+                     {"shortcut": "2", "description": "foobar", "template": "blurg"}]};
+  vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": cmp});
   const { getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
@@ -297,13 +276,10 @@ test("template set with base message", async () => {
     ...window.location,
     search: '?id=foo&action=reply&mode=all'
   });
-  vi.stubGlobal("compose", {"templates": [{"shortcut": "1", "description": "foo", "template": "bar"},
-                     {"shortcut": "2", "description": "foobar", "template": "blurg"}]});
-  global.fetch.mockResolvedValue({ ok: true, json: () => msg });
+  const cmp = {"templates": [{"shortcut": "1", "description": "foo", "template": "bar"},
+                     {"shortcut": "2", "description": "foobar", "template": "blurg"}]};
+  vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": cmp, "baseMessage": msg});
   const { getByTestId } = render(() => <Write/>);
-
-  expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -382,11 +358,8 @@ test("tags editable and complete", async () => {
     ...window.location,
     search: '?id=foo&action=reply&mode=all'
   });
-  global.fetch.mockResolvedValue({ ok: true, json: () => msg });
+  vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": [], "baseMessage": msg});
   const { getByTestId } = render(() => <Write/>);
-
-  expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -432,11 +405,8 @@ test("files attachable and editable", async () => {
   });
   const msg1 = JSON.parse(JSON.stringify(msg));
   msg1.attachments = [{"filename": "foofile"}, {"filename": "barfile"}];
-  global.fetch.mockResolvedValue({ ok: true, json: () => msg1 });
+  vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": [], "baseMessage": msg1});
   const { container } = render(() => <Write/>);
-
-  expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -547,15 +517,12 @@ test("localStorage stores for reply", async () => {
     ...window.location,
     search: '?id=foo&action=reply&mode=all'
   });
-  global.fetch.mockResolvedValue({ ok: true, json: () => msg });
+  vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": [], "baseMessage": msg});
   const { getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
     expect(getByTestId("from").querySelector("input").value).toBe("foo");
   });
-  expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
-
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
 
   await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}otherto@test.com{enter}");
@@ -583,7 +550,7 @@ test("localStorage stores for reply", async () => {
   await userEvent.type(getByTestId("subject").querySelector("input"), " testsubject");
   await userEvent.type(getByTestId("body").querySelector("textarea"), "testbody");
 
-  expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(global.fetch).toHaveBeenCalledTimes(3);
 
   expect(localStorage.getItem("draft-reply-foo-to")).toBe("bar foo <bar@foo.com>\nto@test.com\notherto@test.com");
   expect(localStorage.getItem("draft-reply-foo-cc")).toBe("test@test.com\ncc@test.com");
@@ -806,8 +773,9 @@ test("data assembled correctly for sending new email", async () => {
 });
 
 test("data assembled correctly for sending new email w/ template", async () => {
-  vi.stubGlobal("compose", {"templates": [{"shortcut": "1", "description": "foo", "template": "bar"},
-                     {"shortcut": "2", "description": "foobar", "template": "blurg"}]});
+  const cmp = {"templates": [{"shortcut": "1", "description": "foo", "template": "bar"},
+                     {"shortcut": "2", "description": "foobar", "template": "blurg"}]};
+  vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": cmp});
   const { getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
@@ -879,14 +847,12 @@ test("data assembled correctly for sending reply w/o editing", async () => {
     ...window.location,
     search: '?id=foo&action=reply&mode=all'
   });
-  global.fetch.mockResolvedValue({ ok: true, json: () => msg });
+  vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": [], "baseMessage": msg});
   render(() => <Write/>);
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
-  expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
 
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
 
@@ -926,15 +892,12 @@ test("data assembled correctly for sending reply", async () => {
     ...window.location,
     search: '?id=foo&action=reply&mode=all'
   });
-  global.fetch.mockResolvedValue({ ok: true, json: () => msg });
+  vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": [], "baseMessage": msg});
   const { getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
-  expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message/foo");
-
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
 
   await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}otherto@test.com{enter}");
@@ -961,7 +924,7 @@ test("data assembled correctly for sending reply", async () => {
   await userEvent.type(getByTestId("tagedit").querySelector("input"), "foobar{enter}{enter}");
   await userEvent.type(getByTestId("subject").querySelector("input"), " testsubject");
   await userEvent.type(getByTestId("body").querySelector("textarea"), "testbody");
-  expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(global.fetch).toHaveBeenCalledTimes(3);
 
   const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
       json: () => Promise.resolve({send_id: 0})
@@ -1080,7 +1043,7 @@ test("error when mail cannot be sent", async () => {
 });
 
 test("external editing", async () => {
-  vi.stubGlobal("compose", {"external-editor": "foo"});
+  vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": {"external-editor": "foo"}});
   const { getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
@@ -1141,7 +1104,7 @@ test("external editing", async () => {
 });
 
 test("external editing w/ client config override internal", async () => {
-  vi.stubGlobal("compose", {"external-editor": "foo"});
+  vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": {"external-editor": "foo"}});
   const { getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
@@ -1210,8 +1173,9 @@ test("external editing w/ client config override external", async () => {
 });
 
 test("shortcuts disabled while editing externally", async () => {
-  vi.stubGlobal("compose", {"external-editor": "foo", "templates": [{"shortcut": "1", "description": "foo", "template": "bar"},
-                     {"shortcut": "2", "description": "foobar", "template": "blurg"}]});
+  const cmp = {"external-editor": "foo", "templates": [{"shortcut": "1", "description": "foo", "template": "bar"},
+                     {"shortcut": "2", "description": "foobar", "template": "blurg"}]};
+  vi.stubGlobal("data", {"accounts": accts, "allTags": ["foo", "foobar"], "compose": cmp});
   const { getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {

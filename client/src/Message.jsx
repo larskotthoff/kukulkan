@@ -1,4 +1,4 @@
-import { createEffect, createSignal, createResource, For, onMount, Show } from "solid-js";
+import { createEffect, createSignal, For, onMount, Show } from "solid-js";
 
 import Alert from "@suid/material/Alert";
 import Box from "@suid/material/Box";
@@ -26,17 +26,8 @@ import { TagComplete } from "./Autocomplete.jsx";
 import { ColorChip } from "./ColorChip.jsx";
 
 import "./Kukulkan.css";
-import { apiURL, formatDate, formatFSz, strip, fetchMessage } from "./utils.js";
+import { apiURL, formatDate, formatFSz, strip } from "./utils.js";
 import { mkShortcut } from "./UiUtils.jsx";
-
-async function fetchAttachmentMessage(ids) {
-  const [ id, attachmentNum ] = ids;
-  if(id === null) return null;
-  if(attachmentNum === null) return fetchMessage(id);
-  const response = await fetch(apiURL(`api/attachment_message/${encodeURIComponent(id)}/${attachmentNum}`));
-  if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
-  return response.json();
-}
 
 export function separateQuotedNonQuoted(text) {
   let lines = text.split('\n'),
@@ -464,16 +455,12 @@ export function Message(props) {
 export function FetchedMessage() {
   const searchParams = window.location.search,
         urlSearchParams = new URLSearchParams(searchParams),
-        messageId = urlSearchParams.get("id"),
-        attachNum = urlSearchParams.get("attachNum"),
-        print = urlSearchParams.get("print"),
-        [message] = createResource([messageId, attachNum], fetchAttachmentMessage);
+        print = urlSearchParams.get("print");
 
   return (
     <>
-      <Show when={!message.loading}>
-        <Message msg={message()} active={true} print={print}/>
-      </Show>
+      { /* eslint-disable-next-line no-undef */ }
+      <Message msg={data.message} active={true} print={print}/>
     </>
   );
 }

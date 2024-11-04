@@ -162,13 +162,30 @@ def create_app():
 
     @app.route("/", methods=['GET', 'POST'])
     def send_index():
-        return render_template("index.html", data=get_globals())
+        globs = get_globals()
+        if(query_string := request.args.get("query")):
+            globs["threads"] = query(query_string)
+        return render_template("index.html", data=globs)
 
     @app.route("/<path:path>", methods=['GET', 'POST'])
     def send_js(path):
         if path and os.path.exists(safe_join(app.static_folder, path)):
             return send_from_directory(app.static_folder, path)
-        return render_template("index.html", data=get_globals())
+        globs = get_globals()
+        if path == "todo":
+            globs["threads"] = query("tag:todo")
+        elif path == "thread":
+            globs["thread"] = thread(request.args.get("id"))
+        elif path == "message":
+            if(attachNum := request.args.get("attachNum")):
+                globs["message"] = attachment_message(request.args.get("id"),
+                                                      attachNum)
+            else:
+                globs["message"] = message(request.args.get("id"))
+        elif path == "write":
+            if(id := request.args.get("id")):
+                globs["baseMessage"] = message(id)
+        return render_template("index.html", data=globs)
 
     @app.after_request
     def security_headers(response):

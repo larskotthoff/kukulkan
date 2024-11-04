@@ -1,4 +1,4 @@
-import { createEffect, createSignal, createResource, For, Show } from "solid-js";
+import { createEffect, createSignal, For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 
 import Alert from "@suid/material/Alert";
@@ -20,7 +20,7 @@ import { getSetting } from "./Settings.jsx";
 
 import "./Kukulkan.css";
 import { separateQuotedNonQuoted } from "./Message.jsx";
-import { apiURL, fetchMessage, filterAdminTags, formatFSz } from "./utils.js";
+import { apiURL, filterAdminTags, formatFSz } from "./utils.js";
 import { mkShortcut } from "./UiUtils.jsx";
 
 function Templates(props) {
@@ -49,14 +49,14 @@ function AddrComplete(props) {
       chips={props.message[props.addrAttr]}
       addChip={(addr) => {
         props.setMessage(props.addrAttr, props.message[props.addrAttr].length, addr);
-        localStorage.setItem(`draft-${props.draftKey()}-${props.addrAttr}`, props.message[props.addrAttr].join("\n"));
+        localStorage.setItem(`draft-${props.draftKey}-${props.addrAttr}`, props.message[props.addrAttr].join("\n"));
       }}
       removeChip={(addr) => {
         props.setMessage(props.addrAttr, props.message[props.addrAttr].filter(a => a !== addr));
         if(props.message[props.addrAttr].length > 0) {
-          localStorage.setItem(`draft-${props.draftKey()}-${props.addrAttr}`, props.message[props.addrAttr].join("\n"));
+          localStorage.setItem(`draft-${props.draftKey}-${props.addrAttr}`, props.message[props.addrAttr].join("\n"));
         } else {
-          localStorage.removeItem(`draft-${props.draftKey()}-${props.addrAttr}`);
+          localStorage.removeItem(`draft-${props.draftKey}-${props.addrAttr}`);
         }
       }}
       // eslint-disable-next-line solid/reactivity
@@ -103,7 +103,7 @@ function makeToCc(msg, action, mode) {
         tmpCc = msg.cc;
         tmpCc = tmpCc.filter(a => {
           // eslint-disable-next-line no-undef
-          return a.length > 0 && !tmpTo.includes(a) && accounts.reduce((cum, acct) => {
+          return a.length > 0 && !tmpTo.includes(a) && data.accounts.reduce((cum, acct) => {
             if(cum === false) return false;
 
             if(a.includes(acct.email)) {
@@ -117,7 +117,7 @@ function makeToCc(msg, action, mode) {
 
     tmpTo = tmpTo.filter(a => {
       // eslint-disable-next-line no-undef
-      return a.length > 0 && accounts.reduce((cum, acct) => {
+      return a.length > 0 && data.accounts.reduce((cum, acct) => {
         if(cum === false) return false;
 
         if(a.includes(acct.email)) {
@@ -136,98 +136,111 @@ export function Write(props) {
         baseMessageId = urlSearchParams.get("id"),
         action = urlSearchParams.get("action") || "compose",
         mode = urlSearchParams.get("mode"),
-        [baseMessage] = createResource(baseMessageId, fetchMessage),
         [useTemplate, setUseTemplate] = createSignal(null),
         [bodyRef, setBodyRef] = createSignal(),
         [statusMsg, setStatusMsg] = createSignal(),
-        [draftKey, setDraftKey] = createSignal(action),
         [message, setMessage] = createStore({});
   let defTo = [],
-      defCc = [];
+      defCc = [],
+      draftKey = action;
 
   document.title = "Compose: New Message";
 
-  createEffect(() => {
-    props.sp?.(100 * (1 - baseMessage.loading));
-    if(baseMessage.loading) return;
+  // eslint-disable-next-line no-undef
+  let defAcct = data.accounts?.find(a => a.default),
+      from = defAcct?.id,
+      subject = "";
+
+  setMessage("files", []);
+  // eslint-disable-next-line no-undef
+  if(data.baseMessage) {
+    // eslint-disable-next-line no-undef
+    if(!draftKey.endsWith(data.baseMessage.message_id)) {
+      // eslint-disable-next-line no-undef
+      draftKey += `-${data.baseMessage.message_id}`;
+    }
+    if(action === "forward") {
+      // eslint-disable-next-line no-undef
+      if(data.baseMessage.attachments) {
+        // attach files attached to previous email
+        // eslint-disable-next-line no-undef
+        const newFiles = data.baseMessage.attachments.map(a => { return { dummy: true, name: a.filename }; });
+        setMessage("files", (prevFiles) => [...prevFiles, ...newFiles ]);
+      }
+      // eslint-disable-next-line no-undef
+      if(data.baseMessage.body["text/html"]) {
+        // attach HTML part of original email
+        setMessage("files", (prevFiles) => [...prevFiles, ...[{dummy: true, name: "Original HTML message"}] ]);
+      }
+    }
+    if(action.startsWith("reply-cal-")) {
+      const idx = urlSearchParams.get("index"),
+            // eslint-disable-next-line no-undef
+            calFile = { dummy: true, name: data.baseMessage.attachments[idx].filename };
+      setMessage("files", (prevFiles) => [...prevFiles, calFile]);
+    }
+
+    if(!localStorage.getItem(`draft-${draftKey}-from`)) {
+      // eslint-disable-next-line no-undef
+      let acct = data.accounts?.find(a => data.baseMessage.to.some(t => t.includes(a.email)));
+      if(!acct) {
+        // eslint-disable-next-line no-undef
+        acct = data.accounts?.find(a => data.baseMessage.from.includes(a.email));
+      }
+      // eslint-disable-next-line no-undef
+      if(!acct && data.baseMessage.cc) {
+        // eslint-disable-next-line no-undef
+        acct = data.accounts?.find(a => data.baseMessage.cc.some(c => c.includes(a.email)));
+      }
+      // eslint-disable-next-line no-undef
+      if(!acct && data.baseMessage.bcc) {
+        // eslint-disable-next-line no-undef
+        acct = data.accounts?.find(a => data.baseMessage.bcc.some(b => b.includes(a.email)));
+      }
+      // eslint-disable-next-line no-undef
+      if(!acct && data.baseMessage.delivered_to) {
+        // eslint-disable-next-line no-undef
+        acct = data.accounts?.find(a => data.baseMessage.delivered_to.includes(a.email));
+      }
+      // eslint-disable-next-line no-undef
+      if(!acct && data.baseMessage.forwarded_to) {
+        // eslint-disable-next-line no-undef
+        acct = data.accounts?.find(a => data.baseMessage.forwarded_to.includes(a.email));
+      }
+      from = acct?.id;
+    }
 
     // eslint-disable-next-line no-undef
-    let defAcct = accounts?.find(a => a.default),
-        from = defAcct?.id,
-        subject = "";
+    subject = prefix(data.baseMessage?.subject);
+    document.title = `Compose: ${subject}`;
 
-    setMessage("files", []);
-    if(baseMessage()) {
-      if(!draftKey().endsWith(baseMessage().message_id)) {
-        setDraftKey(draftKey() + `-${baseMessage().message_id}`);
-      }
-      if(action === "forward") {
-        if(baseMessage().attachments) {
-          // attach files attached to previous email
-          const newFiles = baseMessage().attachments.map(a => { return { dummy: true, name: a.filename }; });
-          setMessage("files", (prevFiles) => [...prevFiles, ...newFiles ]);
-        }
-        if(baseMessage().body["text/html"]) {
-          // attach HTML part of original email
-          setMessage("files", (prevFiles) => [...prevFiles, ...[{dummy: true, name: "Original HTML message"}] ]);
-        }
-      }
-      if(action.startsWith("reply-cal-")) {
-        const idx = urlSearchParams.get("index"),
-              calFile = { dummy: true, name: baseMessage().attachments[idx].filename };
-        setMessage("files", (prevFiles) => [...prevFiles, calFile]);
-      }
+    // eslint-disable-next-line no-undef
+    [defTo, defCc] = makeToCc(data.baseMessage, action, mode);
+  }
 
-      if(!localStorage.getItem(`draft-${draftKey()}-from`)) {
-        // eslint-disable-next-line no-undef
-        let acct = accounts?.find(a => baseMessage().to.some(t => t.includes(a.email)));
-        if(!acct) {
-          // eslint-disable-next-line no-undef
-          acct = accounts?.find(a => baseMessage().from.includes(a.email));
-        }
-        if(!acct && baseMessage().cc) {
-          // eslint-disable-next-line no-undef
-          acct = accounts?.find(a => baseMessage().cc.some(c => c.includes(a.email)));
-        }
-        if(!acct && baseMessage().bcc) {
-          // eslint-disable-next-line no-undef
-          acct = accounts?.find(a => baseMessage().bcc.some(b => b.includes(a.email)));
-        }
-        if(!acct && baseMessage().delivered_to) {
-          // eslint-disable-next-line no-undef
-          acct = accounts?.find(a => baseMessage().delivered_to.includes(a.email));
-        }
-        if(!acct && baseMessage().forwarded_to) {
-          // eslint-disable-next-line no-undef
-          acct = accounts?.find(a => baseMessage().forwarded_to.includes(a.email));
-        }
-        from = acct?.id;
-      }
+  if(localStorage.getItem(`draft-${draftKey}-from`)) {
+    from = localStorage.getItem(`draft-${draftKey}-from`);
+  } else if(!from) {
+    from = defAcct?.id;
+  }
+  setMessage("from", from);
+  if(localStorage.getItem(`draft-${draftKey}-subject`)) {
+    subject = localStorage.getItem(`draft-${draftKey}-subject`);
+    document.title = `Compose: ${subject}`;
+  }
+  setMessage("subject", subject);
+  setMessage("from", from);
+  setMessage("to", localStorage.getItem(`draft-${draftKey}-to`)?.split('\n') || defTo);
+  setMessage("cc", localStorage.getItem(`draft-${draftKey}-cc`)?.split('\n') || defCc);
+  setMessage("bcc", localStorage.getItem(`draft-${draftKey}-bcc`)?.split('\n') || []);
+  // eslint-disable-next-line no-undef
+  setMessage("tags", localStorage.getItem(`draft-${draftKey}-tags`)?.split('\n') || filterAdminTags(data.baseMessage?.tags) || []);
+  // eslint-disable-next-line no-undef
+  setMessage("bodyDefaultValue", localStorage.getItem(`draft-${draftKey}-body`) || quote(data.baseMessage?.body["text/plain"]) || "");
+  // eslint-disable-next-line solid/reactivity
+  setMessage("body", message.bodyDefaultValue);
 
-      subject = prefix(baseMessage()?.subject);
-      document.title = `Compose: ${subject}`;
-
-      [defTo, defCc] = makeToCc(baseMessage(), action, mode);
-    }
-
-    if(localStorage.getItem(`draft-${draftKey()}-from`)) {
-      from = localStorage.getItem(`draft-${draftKey()}-from`);
-    } else if(!from) {
-      from = defAcct?.id;
-    }
-    setMessage("from", from);
-    if(localStorage.getItem(`draft-${draftKey()}-subject`)) {
-      subject = localStorage.getItem(`draft-${draftKey()}-subject`);
-      document.title = `Compose: ${subject}`;
-    }
-    setMessage("subject", subject);
-    setMessage("from", from);
-    setMessage("to", localStorage.getItem(`draft-${draftKey()}-to`)?.split('\n') || defTo);
-    setMessage("cc", localStorage.getItem(`draft-${draftKey()}-cc`)?.split('\n') || defCc);
-    setMessage("bcc", localStorage.getItem(`draft-${draftKey()}-bcc`)?.split('\n') || []);
-    setMessage("tags", localStorage.getItem(`draft-${draftKey()}-tags`)?.split('\n') || filterAdminTags(baseMessage()?.tags) || []);
-    setMessage("bodyDefaultValue", localStorage.getItem(`draft-${draftKey()}-body`) || quote(baseMessage()?.body["text/plain"]) || "");
-    setMessage("body", message.bodyDefaultValue);
+  createEffect(() => {
     if(bodyRef()) {
       bodyRef().value = message.bodyDefaultValue;
     }
@@ -252,7 +265,8 @@ export function Write(props) {
           mainPart += `\n> ${quotedPart.split('\n').join("\n> ")}`;
         }
       }
-      return `\n\n\nOn ${baseMessage().date}, ${baseMessage().from} wrote:\n> ${mainPart}`;
+      // eslint-disable-next-line no-undef
+      return `\n\n\nOn ${data.baseMessage.date}, ${data.baseMessage.from} wrote:\n> ${mainPart}`;
     }
   }
 
@@ -284,7 +298,7 @@ export function Write(props) {
         if(data.send_status === 0) {
           props.sp?.(100);
           setStatusMsg("Message sent.");
-          Object.keys(localStorage).filter(k => k.startsWith(`draft-${draftKey()}`))
+          Object.keys(localStorage).filter(k => k.startsWith(`draft-${draftKey}`))
             .map(k => localStorage.removeItem(k));
         } else {
           setStatusMsg(`Error sending message: ${data.send_output}`);
@@ -348,166 +362,164 @@ export function Write(props) {
 
   mkShortcut(["d"],
     // eslint-disable-next-line solid/reactivity
-    () => Object.keys(localStorage).filter(k => k.startsWith(`draft-${draftKey()}`))
+    () => Object.keys(localStorage).filter(k => k.startsWith(`draft-${draftKey}`))
             .map(k => localStorage.removeItem(k))
   );
 
   return (
     <>
-      <Show when={!baseMessage.loading}>
-        <Box width="95%" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <Show when={statusMsg()}>
-          <Alert severity={statusMsg().startsWith("Error") ? "error" : "success"}>{statusMsg()}</Alert>
-        </Show>
-        { /* eslint-disable-next-line no-undef */ }
-        <Show when={compose}>
-          { /* eslint-disable-next-line no-undef */ }
-          <Templates templates={compose.templates} setTemplate={setUseTemplate}/>
-        </Show>
-        <Paper elevation={3} class="message">
-          <Grid container spacing={1} class="input-field-set">
-            <Grid item>From:</Grid>
-            <Grid item>
-              <Select
-                class="select-margin"
-                data-testid="from"
-                value={message.from || ""}
-                onChange={(ev) => {
-                  setMessage("from", ev.target.value);
-                  localStorage.setItem(`draft-${draftKey()}-from`, ev.target.value);
-                }}>
-                  { /* eslint-disable-next-line no-undef */ }
-                  <For each={accounts}>
-                    {(acct) =>
-                      <MenuItem value={acct.id}>
-                        {`${acct.name} <${acct.email}>`}
-                      </MenuItem>
-                    }
-                  </For>
-              </Select>
-            </Grid>
-          </Grid>
-          <Grid container spacing={1} class="input-field-set">
-            <Grid item>To:</Grid>
-            <Grid item xs>
-              <AddrComplete addrAttr="to" message={message} setMessage={setMessage}
-                draftKey={draftKey}
-                data-testid="to"
-                sp={props.sp}/>
-            </Grid>
-          </Grid>
-          <Grid container spacing={1} class="input-field-set">
-            <Grid item>CC:</Grid>
-            <Grid item xs>
-              <AddrComplete addrAttr="cc" message={message} setMessage={setMessage}
-                draftKey={draftKey}
-                data-testid="cc"
-                sp={props.sp}/>
-            </Grid>
-          </Grid>
-          <Grid container spacing={1} class="input-field-set">
-            <Grid item>BCC:</Grid>
-            <Grid item xs>
-              <AddrComplete addrAttr="bcc" message={message} setMessage={setMessage}
-                draftKey={draftKey}
-                data-testid="bcc"
-                sp={props.sp}/>
-            </Grid>
-          </Grid>
-          <Grid container spacing={1} class="input-field-set">
-            <Grid item>Subject:</Grid>
-            <Grid item xs><TextField
-              variant="standard"
-              value={message.subject || ""}
-              data-testid="subject"
-              onChange={(ev) => {
-                setMessage("subject", ev.target.value);
-                localStorage.setItem(`draft-${draftKey()}-subject`, message.subject);
-                document.title = `Compose: ${message.subject}`;
-              }}
-              fullWidth/>
-            </Grid>
-          </Grid>
-
-          <Grid container spacing={1} class="input-field-set">
-            <Grid item>Tags:</Grid>
-            <Grid item xs>
-              <TagComplete
-                tags={message.tags}
-                addTag={(tagToAdd) => {
-                  setMessage("tags", message.tags.length, tagToAdd);
-                  localStorage.setItem(`draft-${draftKey()}-tags`, message.tags.join("\n"));
-                }}
-                removeTag={(tagToRemove) => {
-                  setMessage("tags", message.tags.filter(t => t !== tagToRemove));
-                  if(message.tags.length > 0) {
-                    localStorage.setItem(`draft-${draftKey()}-tags`, message.tags.join("\n"));
-                  } else {
-                    localStorage.removeItem(`draft-${draftKey()}-tags`);
-                  }
-                }}
-                data-testid="tagedit"
-              />
-            </Grid>
-          </Grid>
-
-          <TextField
-            multiline
-            minRows={10}
-            maxRows={window.innerHeight / parseFloat(window.getComputedStyle(document.getElementsByTagName("body")[0]).getPropertyValue("line-height")) - 18}
-            fullWidth
-            inputRef={setBodyRef}
-            data-testid="body"
-            sx={{ marginBottom: ".5em", marginTop: "1em" }}
-            // eslint-disable-next-line solid/reactivity
-            onFocus={async (ev) => {
-              // eslint-disable-next-line no-undef
-              if((getSetting("externalCompose") === -1 && compose["external-editor"]) || (getSetting("externalCompose") === true)) {
-                const formData = new FormData();
-                formData.append('body', ev.target.value);
-
-                ev.target.disabled = true;
-                ev.target.value = "[Editing externally...]";
-                const url = getSetting("externalCompose") === true ?
-                  `${window.location.protocol}//localhost:${window.location.port}/api/edit_external` :
-                  apiURL("api/edit_external");
-                const response = await fetch(url, { method: 'POST', body: formData });
-                ev.target.value = await response.text();
-                ev.target.disabled = false;
-                localStorage.setItem(`draft-${draftKey()}-body`, ev.target.value);
-                setMessage("body", ev.target.value);
-                ev.target.style.height = 'auto';
-              }
-            }}
-            onChange={(ev) => {
-              localStorage.setItem(`draft-${draftKey()}-body`, ev.target.value);
-              setMessage("body", ev.target.value);
-            }}/>
-          <For each={message.files}>
-            {(f) => <ColorChip value={`${f.name}` + (f.size ? ` (${formatFSz(f.size)})` : ``)} onClick={(e) => {
-                setMessage("files", message.files.filter(fi => fi !== f));
-                e.stopPropagation();
-              }}/>
-            }
-          </For>
-          <Grid container sx={{ marginTop: ".5em" }}>
-            <Grid item xs>
-              <Button id="attach" startIcon={<AttachFile/>} variant="outlined" component="label">
-                Attach
-                <input type="file" multiple hidden onChange={(ev) => {
-                  setMessage("files", (prevFiles) => [...prevFiles, ...Array.from(ev.target.files)]);
-                  // not storing these in localStorage as we would have to
-                  // encode/decode them and contents would become stale
-                }}/>
-              </Button>
-            </Grid>
-            <Grid item>
-              <Button id="send" startIcon={<Send/>} variant="outlined" onClick={sendMsg}>Send</Button>
-            </Grid>
-          </Grid>
-        </Paper>
-        </Box>
+      <Box width="95%" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <Show when={statusMsg()}>
+        <Alert severity={statusMsg().startsWith("Error") ? "error" : "success"}>{statusMsg()}</Alert>
       </Show>
+      { /* eslint-disable-next-line no-undef */ }
+      <Show when={data.compose}>
+        { /* eslint-disable-next-line no-undef */ }
+        <Templates templates={data.compose.templates} setTemplate={setUseTemplate}/>
+      </Show>
+      <Paper elevation={3} class="message">
+        <Grid container spacing={1} class="input-field-set">
+          <Grid item>From:</Grid>
+          <Grid item>
+            <Select
+              class="select-margin"
+              data-testid="from"
+              value={message.from || ""}
+              onChange={(ev) => {
+                setMessage("from", ev.target.value);
+                localStorage.setItem(`draft-${draftKey}-from`, ev.target.value);
+              }}>
+                { /* eslint-disable-next-line no-undef */ }
+                <For each={data.accounts}>
+                  {(acct) =>
+                    <MenuItem value={acct.id}>
+                      {`${acct.name} <${acct.email}>`}
+                    </MenuItem>
+                  }
+                </For>
+            </Select>
+          </Grid>
+        </Grid>
+        <Grid container spacing={1} class="input-field-set">
+          <Grid item>To:</Grid>
+          <Grid item xs>
+            <AddrComplete addrAttr="to" message={message} setMessage={setMessage}
+              draftKey={draftKey}
+              data-testid="to"
+              sp={props.sp}/>
+          </Grid>
+        </Grid>
+        <Grid container spacing={1} class="input-field-set">
+          <Grid item>CC:</Grid>
+          <Grid item xs>
+            <AddrComplete addrAttr="cc" message={message} setMessage={setMessage}
+              draftKey={draftKey}
+              data-testid="cc"
+              sp={props.sp}/>
+          </Grid>
+        </Grid>
+        <Grid container spacing={1} class="input-field-set">
+          <Grid item>BCC:</Grid>
+          <Grid item xs>
+            <AddrComplete addrAttr="bcc" message={message} setMessage={setMessage}
+              draftKey={draftKey}
+              data-testid="bcc"
+              sp={props.sp}/>
+          </Grid>
+        </Grid>
+        <Grid container spacing={1} class="input-field-set">
+          <Grid item>Subject:</Grid>
+          <Grid item xs><TextField
+            variant="standard"
+            value={message.subject || ""}
+            data-testid="subject"
+            onChange={(ev) => {
+              setMessage("subject", ev.target.value);
+              localStorage.setItem(`draft-${draftKey}-subject`, message.subject);
+              document.title = `Compose: ${message.subject}`;
+            }}
+            fullWidth/>
+          </Grid>
+        </Grid>
+
+        <Grid container spacing={1} class="input-field-set">
+          <Grid item>Tags:</Grid>
+          <Grid item xs>
+            <TagComplete
+              tags={message.tags}
+              addTag={(tagToAdd) => {
+                setMessage("tags", message.tags.length, tagToAdd);
+                localStorage.setItem(`draft-${draftKey}-tags`, message.tags.join("\n"));
+              }}
+              removeTag={(tagToRemove) => {
+                setMessage("tags", message.tags.filter(t => t !== tagToRemove));
+                if(message.tags.length > 0) {
+                  localStorage.setItem(`draft-${draftKey}-tags`, message.tags.join("\n"));
+                } else {
+                  localStorage.removeItem(`draft-${draftKey}-tags`);
+                }
+              }}
+              data-testid="tagedit"
+            />
+          </Grid>
+        </Grid>
+
+        <TextField
+          multiline
+          minRows={10}
+          maxRows={window.innerHeight / parseFloat(window.getComputedStyle(document.getElementsByTagName("body")[0]).getPropertyValue("line-height")) - 18}
+          fullWidth
+          inputRef={setBodyRef}
+          data-testid="body"
+          sx={{ marginBottom: ".5em", marginTop: "1em" }}
+          // eslint-disable-next-line solid/reactivity
+          onFocus={async (ev) => {
+            // eslint-disable-next-line no-undef
+            if((getSetting("externalCompose") === -1 && data.compose["external-editor"]) || (getSetting("externalCompose") === true)) {
+              const formData = new FormData();
+              formData.append('body', ev.target.value);
+
+              ev.target.disabled = true;
+              ev.target.value = "[Editing externally...]";
+              const url = getSetting("externalCompose") === true ?
+                `${window.location.protocol}//localhost:${window.location.port}/api/edit_external` :
+                apiURL("api/edit_external");
+              const response = await fetch(url, { method: 'POST', body: formData });
+              ev.target.value = await response.text();
+              ev.target.disabled = false;
+              localStorage.setItem(`draft-${draftKey}-body`, ev.target.value);
+              setMessage("body", ev.target.value);
+              ev.target.style.height = 'auto';
+            }
+          }}
+          onChange={(ev) => {
+            localStorage.setItem(`draft-${draftKey}-body`, ev.target.value);
+            setMessage("body", ev.target.value);
+          }}/>
+        <For each={message.files}>
+          {(f) => <ColorChip value={`${f.name}` + (f.size ? ` (${formatFSz(f.size)})` : ``)} onClick={(e) => {
+              setMessage("files", message.files.filter(fi => fi !== f));
+              e.stopPropagation();
+            }}/>
+          }
+        </For>
+        <Grid container sx={{ marginTop: ".5em" }}>
+          <Grid item xs>
+            <Button id="attach" startIcon={<AttachFile/>} variant="outlined" component="label">
+              Attach
+              <input type="file" multiple hidden onChange={(ev) => {
+                setMessage("files", (prevFiles) => [...prevFiles, ...Array.from(ev.target.files)]);
+                // not storing these in localStorage as we would have to
+                // encode/decode them and contents would become stale
+              }}/>
+            </Button>
+          </Grid>
+          <Grid item>
+            <Button id="send" startIcon={<Send/>} variant="outlined" onClick={sendMsg}>Send</Button>
+          </Grid>
+        </Grid>
+      </Paper>
+      </Box>
     </>
   );
 }

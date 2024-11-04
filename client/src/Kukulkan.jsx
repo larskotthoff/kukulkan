@@ -1,4 +1,4 @@
-import { createEffect, createSignal, createResource, Show } from "solid-js";
+import { createEffect, createSignal } from "solid-js";
 
 import Modal from "@suid/material/Modal";
 import { Autocomplete } from "./Autocomplete.jsx";
@@ -9,35 +9,29 @@ import "./Kukulkan.css";
 import { apiURL } from "./utils.js";
 import { mkShortcut } from "./UiUtils.jsx";
 
-async function fetchThreads(query) {
-  if(query === null) return [];
-  const response = await fetch(apiURL(`api/query/${encodeURIComponent(query)}`));
-  if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
-  return await response.json();
-}
-
 export function Kukulkan(props) {
   const [query, setQuery] = createSignal(),
-        [threads, { mutate }] = createResource(query, fetchThreads, { initialValue: [] }),
         [activeThread, setActiveThread] = createSignal(0),
         [selectedThreads, setSelectedThreads] = createSignal([]),
         [editingTags, setEditingTags] = createSignal(null),
-        [showEditingTagModal, setShowEditingTagModal] = createSignal(false);
+        [showEditingTagModal, setShowEditingTagModal] = createSignal(false),
+        // eslint-disable-next-line no-undef
+        [threads, setThreads] = createSignal(data.threads || []);
 
   function makeTagEdits() {
     let affectedThreads = selectedThreads();
     if(affectedThreads.length === 0) affectedThreads = [activeThread()];
     affectedThreads.forEach(affectedThread => {
-      let thread = JSON.parse(JSON.stringify(threads()[affectedThread])),
-          urls = editingTags().split(' ').map((edit) => {
-            if(edit[0] === '-') {
-              thread.tags = thread.tags.filter(t => t !== edit.substring(1));
-              return apiURL(`api/tag/remove/thread/${encodeURIComponent(thread.thread_id)}/${encodeURIComponent(edit.substring(1))}`);
-            } else {
-              if(thread.tags.indexOf(edit) === -1) thread.tags.push(edit);
-              return apiURL(`api/tag/add/thread/${encodeURIComponent(thread.thread_id)}/${encodeURIComponent(edit)}`);
-            }
-          });
+      const thread = JSON.parse(JSON.stringify(threads()[affectedThread])),
+            urls = editingTags().split(' ').map((edit) => {
+              if(edit[0] === '-') {
+                thread.tags = thread.tags.filter(t => t !== edit.substring(1));
+                return apiURL(`api/tag/remove/thread/${encodeURIComponent(thread.thread_id)}/${encodeURIComponent(edit.substring(1))}`);
+              } else {
+                if(thread.tags.indexOf(edit) === -1) thread.tags.push(edit);
+                return apiURL(`api/tag/add/thread/${encodeURIComponent(thread.thread_id)}/${encodeURIComponent(edit)}`);
+              }
+            });
       let done = 0;
       props.sp?.(0);
       // eslint-disable-next-line solid/reactivity
@@ -45,17 +39,14 @@ export function Kukulkan(props) {
         done += 1;
         props.sp?.(100 * done / urls.length);
         if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
-      }))).then(() => mutate([...threads().slice(0, affectedThread), thread, ...threads().slice(affectedThread + 1)]))
+      // eslint-disable-next-line solid/reactivity
+      }))).then(() => setThreads([...threads().slice(0, affectedThread), thread, ...threads().slice(affectedThread + 1)]))
       // eslint-disable-next-line solid/reactivity
       .finally(() => props.sp?.(100));
     });
     setEditingTags("");
     setSelectedThreads([]);
   }
-
-  createEffect(() => {
-    props.sp?.(100 * (1 - threads.loading));
-  });
 
   createEffect(() => {
     activeThread();
@@ -160,8 +151,8 @@ export function Kukulkan(props) {
   mkShortcut(["d"],
     // eslint-disable-next-line solid/reactivity
     () => {
-      let affectedThreads = selectedThreads(),
-          edits = "-todo";
+      let edits = "-todo",
+          affectedThreads = selectedThreads();
       if(affectedThreads.length === 0) affectedThreads = [activeThread()];
       affectedThreads.forEach(affectedThread => {
         let due = threads()[affectedThread].tags.find((tag) => tag.startsWith("due:"));
@@ -189,7 +180,7 @@ export function Kukulkan(props) {
                 last = pts.pop();
             if(last.length > 0)
               // eslint-disable-next-line no-undef
-              return allTags.filter((t) => t.startsWith(last)).map((t) => [...pts, t].join(''));
+              return data.allTags.filter((t) => t.startsWith(last)).map((t) => [...pts, t].join(''));
             else
               return [];
           }}
@@ -207,11 +198,11 @@ export function Kukulkan(props) {
   }
 
   return (
-    <Show when={!threads.loading}>
+    <>
       <props.Threads threads={threads} activeThread={activeThread} setActiveThread={setActiveThread}
         selectedThreads={selectedThreads} setQuery={setQuery}/>
       <TagEditingModal/>
-    </Show>
+    </>
   );
 }
 

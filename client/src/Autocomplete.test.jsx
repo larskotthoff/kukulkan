@@ -173,7 +173,7 @@ test("ChipComplete works", async () => {
 test("TagComplete works", async () => {
   let tags = ["foo", "test"],
       add = "", remove = "";
-  vi.stubGlobal("allTags", tags.concat("foobar"));
+  vi.stubGlobal("data", { "allTags": tags.concat("foobar") });
   const { container } = render(() =>
     <TagComplete tags={tags} addTag={(t) => add = t}
       removeTag={(t) => remove = t}/>);
