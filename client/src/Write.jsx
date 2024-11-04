@@ -2,11 +2,9 @@ import { createEffect, createSignal, For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 
 import Alert from "@suid/material/Alert";
-import Box from "@suid/material/Box";
 import Button from "@suid/material/Button";
 import Grid from "@suid/material/Grid";
 import MenuItem from "@suid/material/MenuItem";
-import Paper from "@suid/material/Paper";
 import Select from "@suid/material/Select";
 import TextField from "@suid/material/TextField";
 
@@ -25,7 +23,7 @@ import { mkShortcut } from "./UiUtils.jsx";
 
 function Templates(props) {
   return (
-    <Grid container spacing={1} class="centered" sx={{ justifyContent: 'center' }}>
+    <Grid container spacing={1} class="centered" sx={{ justifyContent: 'center', width: 'fit-content' }}>
       <For each={props.templates}>
         {(template) => {
           mkShortcut([template.shortcut],
@@ -368,7 +366,6 @@ export function Write(props) {
 
   return (
     <>
-      <Box width="95%" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <Show when={statusMsg()}>
         <Alert severity={statusMsg().startsWith("Error") ? "error" : "success"}>{statusMsg()}</Alert>
       </Show>
@@ -377,7 +374,7 @@ export function Write(props) {
         { /* eslint-disable-next-line no-undef */ }
         <Templates templates={data.compose.templates} setTemplate={setUseTemplate}/>
       </Show>
-      <Paper elevation={3} class="message">
+      <div class="paper message centered">
         <Grid container spacing={1} class="input-field-set">
           <Grid item>From:</Grid>
           <Grid item>
@@ -518,8 +515,7 @@ export function Write(props) {
             <Button id="send" startIcon={<Send/>} variant="outlined" onClick={sendMsg}>Send</Button>
           </Grid>
         </Grid>
-      </Paper>
-      </Box>
+      </div>
     </>
   );
 }

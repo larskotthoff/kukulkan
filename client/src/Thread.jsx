@@ -1,6 +1,5 @@
 import { createSignal, For, Show } from "solid-js";
 
-import Box from "@suid/material/Box";
 import Grid from "@suid/material/Grid";
 import Stack from "@suid/material/Stack";
 
@@ -179,7 +178,7 @@ export function Thread(props) {
           { /* eslint-disable-next-line no-undef */ }
           <For each={data.thread}>
             {(m, i) =>
-              <Box
+              <div
                 onClick={() => {
                   // eslint-disable-next-line no-undef
                   if(filteredThread() === data.thread) {
@@ -191,7 +190,7 @@ export function Thread(props) {
                     setActiveMessage(activeIdx);
                   }
                 }}
-                class={{
+                classList={{
                   'threadnav-box': true,
                   'active': filteredThread()[activeMessage()].message_id === m.message_id,
                   'active-thread': filteredThread()?.find((mp) => { return mp.message_id === m.message_id; })

@@ -1,11 +1,8 @@
 import { createEffect, createSignal, For, onMount, Show } from "solid-js";
 
 import Alert from "@suid/material/Alert";
-import Box from "@suid/material/Box";
 import Button from "@suid/material/Button";
-import Divider from "@suid/material/Divider";
 import Grid from "@suid/material/Grid";
-import Paper from "@suid/material/Paper";
 import Stack from "@suid/material/Stack";
 
 import AttachFile from "@suid/icons-material/AttachFile";
@@ -154,11 +151,11 @@ function handleAttachment(msg, attachment, index, summary) {
           "&ctz=" + encodeURIComponent(attachment.preview.tz) +
           (attachment.preview.rrule !== null ? ("&recur=RRULE:" + encodeURIComponent(attachment.preview.rrule)) : "") +
           "&sf=true&output=xml"}>
-        <Paper elevation={3} class="cal-preview">
+        <div class="cal-preview paper">
           { attachment.preview.summary + " (" + attachment.preview.location + ")\n" +
             attachment.preview.start + " — " + attachment.preview.end + "\n" +
             attachment.preview.attendees + "\n" + attachment.preview.recur }
-        </Paper>
+        </div>
       </a>
       { calendarAction(msg, attachment, index) }
       </div>);
@@ -318,15 +315,17 @@ export function Message(props) {
   );
 
   return (
-    <Paper elevation={props.active ? 20 : 3} onClick={props.onClick}
-      class={{
+    // eslint-disable-next-line solid/reactivity
+    <div onClick={props.onClick}
+      classList={{
         'message': true,
+        'paper': true,
         'active': props.active,
         'deleted': msg.tags.includes("deleted")
       }}
       ref={elementTop}>
       <Show when={props.active}>
-        <Box>
+        <div>
           <Show when={msg.from}><HeaderLine left="From:" right={formatAddrs(msg.from)}/></Show>
           <Show when={msg.reply_to}><HeaderLine left="Reply-To:" right={formatAddrs(msg.reply_to)}/></Show>
           <Show when={msg.to && msg.to.length > 0}><HeaderLine left="To:" right={formatAddrs(msg.to)}/></Show>
@@ -335,7 +334,7 @@ export function Message(props) {
           <Show when={msg.bcc && msg.bcc.length > 0}><HeaderLine left="BCC:" right={formatAddrs(msg.bcc)}/></Show>
           <HeaderLine left="Date:" right={formatDateTZ(msg.date)}/>
           <HeaderLine left="Subject:" right={msg.subject}/>
-        </Box>
+        </div>
 
         <Show when={!props.print}>
           <Grid container justifyContent="space-between" direction="row" style={{ 'min-height': "3.5em" }} class="centered">
@@ -390,9 +389,7 @@ export function Message(props) {
           </Show>
         </Show>
 
-        <Divider class="margin"/>
-
-        <Grid container justifyContent="flex-end">
+        <Grid container justifyContent="flex-end" class="margin">
           <Show when={msg.body["text/html"]}>
             <Button variant="outlined" class="content" data-testid={html() ? "Text" : "HTML"} onClick={(e) => {
                 setHtml(!html());
@@ -404,11 +401,11 @@ export function Message(props) {
           <ShadowRoot html={msg.body["text/html"]}/>
         </Show>
         <Show when={!html()}>
-          <Box class="message-text"
+          <div class="message-text"
             // eslint-disable-next-line solid/no-innerhtml
             innerHTML={linkifyUrlsToHtml(mainPart, linkifyOpts)}/>
           <Show when={quotedPart}>
-            <Box class={{
+            <div classList={{
                 'message-text': true,
                 'text-preview': !showQuoted()
               }}
@@ -440,7 +437,7 @@ export function Message(props) {
             </For>
             <Grid item>{formatDate(new Date(msg.date))}</Grid>
           </Grid>
-          <Box class={{
+          <div classList={{
               'message-text': true,
               'text-preview': true
             }}
@@ -448,7 +445,7 @@ export function Message(props) {
             innerHTML={linkifyUrlsToHtml(mainPart, linkifyOpts)}/>
         </Grid>
       </Show>
-    </Paper>
+    </div>
   );
 }
 
