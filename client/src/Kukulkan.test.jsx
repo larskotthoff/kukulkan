@@ -209,29 +209,29 @@ test("navigation and selection shortcuts work", async () => {
 
   expect(screen.getByText("2 threads.")).toBeInTheDocument();
 
-  expect(container.querySelector(".thread.active").querySelector(".MuiChip-label").textContent).toBe("test1");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test1");
 
   await userEvent.type(document.body, "j");
-  expect(container.querySelector(".thread.active").querySelector(".MuiChip-label").textContent).toBe("test2");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test2");
   await userEvent.type(document.body, "k");
-  expect(container.querySelector(".thread.active").querySelector(".MuiChip-label").textContent).toBe("test1");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test1");
 
   await userEvent.type(document.body, "{ArrowDown}");
-  expect(container.querySelector(".thread.active").querySelector(".MuiChip-label").textContent).toBe("test2");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test2");
   await userEvent.type(document.body, "{ArrowUp}");
-  expect(container.querySelector(".thread.active").querySelector(".MuiChip-label").textContent).toBe("test1");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test1");
 
   await userEvent.type(document.body, "J");
-  expect(container.querySelector(".thread.active").querySelector(".MuiChip-label").textContent).toBe("test2");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test2");
   await userEvent.type(document.body, "K");
-  expect(container.querySelector(".thread.active").querySelector(".MuiChip-label").textContent).toBe("test1");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test1");
 
   await userEvent.type(document.body, "0");
-  expect(container.querySelector(".thread.active").querySelector(".MuiChip-label").textContent).toBe("test2");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test2");
   await userEvent.type(document.body, "{home}");
-  expect(container.querySelector(".thread.active").querySelector(".MuiChip-label").textContent).toBe("test1");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test1");
   await userEvent.type(document.body, "{end}");
-  expect(container.querySelector(".thread.active").querySelector(".MuiChip-label").textContent).toBe("test2");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test2");
 
   await userEvent.type(document.body, " ");
   expect(container.querySelectorAll(".thread.selected").length).toBe(1);

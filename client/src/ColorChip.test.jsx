@@ -21,8 +21,8 @@ test("sets color", () => {
   expect(element).toBeDefined();
   expect(window.getComputedStyle(element).getPropertyValue('--bg-color'))
     .toBe('#c70579');
-  expect(window.getComputedStyle(element).getPropertyValue('color'))
-    .toBe('rgba(0, 0, 0, 0.87)');
+  expect(window.getComputedStyle(element).getPropertyValue('background-color'))
+    .toBe('rgba(0, 0, 0, 0)');
 });
 
 // vim: tabstop=2 shiftwidth=2 expandtab

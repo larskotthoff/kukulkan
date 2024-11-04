@@ -26,18 +26,14 @@ body {
 }
 
 .chip {
-    height: auto !important;
+    display: inline-flex;
+
     border-radius: 7px !important;
     margin-right: 3px !important;
 
-    font-family: var(--fonts) !important;
-    font-size: 0.9rem !important;
-
     background-color: var(--bg-color) !important;
     color: oklch(from var(--bg-color) calc(1 - round(l - 0.15)) 0 0) !important;
-}
 
-.chip span {
     padding-left: 3px;
     padding-right: 3px;
 }
