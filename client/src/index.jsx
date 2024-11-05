@@ -3,9 +3,9 @@ import { Route, Router } from "@solidjs/router";
 
 import { createSignal, ErrorBoundary, Show } from "solid-js";
 
-import Alert from "@suid/material/Alert";
 import LinearProgress from "@suid/material/LinearProgress";
 
+import { Alert } from "./Alert.jsx";
 import { FetchedMessage } from "./Message.jsx";
 import { Kukulkan } from "./Kukulkan.jsx";
 import { SearchThreads } from "./SearchThreads.jsx";

@@ -1,6 +1,5 @@
 import { createEffect, createSignal, For, onMount, Show } from "solid-js";
 
-import Alert from "@suid/material/Alert";
 import Button from "@suid/material/Button";
 import Grid from "@suid/material/Grid";
 import Stack from "@suid/material/Stack";
@@ -19,8 +18,9 @@ import { getSetting } from "./Settings.jsx";
 import { linkifyUrlsToHtml } from "linkify-urls";
 const linkifyOpts = { attributes: { target: getSetting("openInTab"), rel: "nofollow" } };
 
-import { TagComplete } from "./Autocomplete.jsx";
+import { Alert } from "./Alert.jsx";
 import { ColorChip } from "./ColorChip.jsx";
+import { TagComplete } from "./Autocomplete.jsx";
 
 import "./Kukulkan.css";
 import { apiURL, formatDate, formatFSz, strip } from "./utils.js";
@@ -385,7 +385,7 @@ export function Message(props) {
           </Show>
 
           <Show when={msg.signature}>
-            <Alert width="100%" severity={sigSev}>{sigMsg}</Alert>
+            <Alert severity={sigSev}>{sigMsg}</Alert>
           </Show>
         </Show>
 

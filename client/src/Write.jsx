@@ -1,7 +1,6 @@
 import { createEffect, createSignal, For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 
-import Alert from "@suid/material/Alert";
 import Button from "@suid/material/Button";
 import Grid from "@suid/material/Grid";
 import MenuItem from "@suid/material/MenuItem";
@@ -11,6 +10,7 @@ import TextField from "@suid/material/TextField";
 import AttachFile from "@suid/icons-material/AttachFile";
 import Send from "@suid/icons-material/Send";
 
+import { Alert } from "./Alert.jsx";
 import { ChipComplete, TagComplete } from "./Autocomplete.jsx";
 import { ColorChip } from "./ColorChip.jsx";
 

@@ -135,19 +135,19 @@ test("renders message signature", () => {
   msg.signature = { valid: true, message: "" };
   let { container } = render(() => <Message msg={msg} active={true}/>);
   expect(screen.getByText("Signature verified.")).toBeInTheDocument();
-  expect(container.querySelector(".MuiAlert-standardSuccess")).not.toBe(null);
+  expect(container.querySelector(".alert")).not.toBe(null);
   cleanup();
 
   msg.signature = { valid: null, message: "unknown cert" };
   container = render(() => <Message msg={msg} active={true}/>).container;
   expect(screen.getByText("Signature could not be verified (unknown cert).")).toBeInTheDocument();
-  expect(container.querySelector(".MuiAlert-standardWarning")).not.toBe(null);
+  expect(container.querySelector(".alert")).not.toBe(null);
   cleanup();
 
   msg.signature = { valid: false, message: "checksum failure" };
   container = render(() => <Message msg={msg} active={true}/>).container;
   expect(screen.getByText("Signature verification failed (checksum failure).")).toBeInTheDocument();
-  expect(container.querySelector(".MuiAlert-standardError")).not.toBe(null);
+  expect(container.querySelector(".alert")).not.toBe(null);
 });
 
 test("renders message attachments", () => {

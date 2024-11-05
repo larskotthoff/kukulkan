@@ -101,6 +101,15 @@ body {
     background-color: rgba(85, 139, 47, 0.4);
 }
 
+.alert {
+    padding: .5em;
+    display: flex;
+}
+
+.alert > span {
+    padding-left: .5em;
+}
+
 .message {
     background-color: #f0f4c3 !important;
     padding: 8px;
