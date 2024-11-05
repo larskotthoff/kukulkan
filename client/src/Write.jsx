@@ -3,8 +3,6 @@ import { createStore } from "solid-js/store";
 
 import Button from "@suid/material/Button";
 import Grid from "@suid/material/Grid";
-import MenuItem from "@suid/material/MenuItem";
-import Select from "@suid/material/Select";
 import TextField from "@suid/material/TextField";
 
 import AttachFile from "@suid/icons-material/AttachFile";
@@ -378,8 +376,8 @@ export function Write(props) {
         <Grid container spacing={1} class="input-field-set">
           <Grid item>From:</Grid>
           <Grid item>
-            <Select
-              class="select-margin"
+            <select
+              class="compose-from"
               data-testid="from"
               value={message.from || ""}
               onChange={(ev) => {
@@ -389,12 +387,12 @@ export function Write(props) {
                 { /* eslint-disable-next-line no-undef */ }
                 <For each={data.accounts}>
                   {(acct) =>
-                    <MenuItem value={acct.id}>
+                    <option value={acct.id}>
                       {`${acct.name} <${acct.email}>`}
-                    </MenuItem>
+                    </option>
                   }
                 </For>
-            </Select>
+            </select>
           </Grid>
         </Grid>
         <Grid container spacing={1} class="input-field-set">

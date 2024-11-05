@@ -82,14 +82,12 @@ test("selects default account and lists others", async () => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
 
-  expect(screen.getByText("blurg <blurg@foo.com>")).toBeInTheDocument();
+  expect(screen.getByText("blurg <blurg@foo.com>").selected).toBe(true);
 
-  await userEvent.click(container.querySelector("div[role='button']"));
+  screen.getByText("foo bar <foo@bar.com>").selected = true;
+  await fireEvent.change(screen.getByTestId("from"));
   expect(screen.getByText("foo bar <foo@bar.com>")).toBeInTheDocument();
-
-  await userEvent.click(screen.getByText("foo bar <foo@bar.com>"));
-  expect(screen.getByText("foo bar <foo@bar.com>")).toBeInTheDocument();
-  expect(screen.queryByText("blurg <blurg@foo.com>")).not.toBeInTheDocument();
+  expect(screen.getByText("blurg <blurg@foo.com>").selected).toBe(false);
 });
 
 test("base message reply all", async () => {
@@ -149,7 +147,7 @@ test("base message from default if unclear", async () => {
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
-  expect(getByTestId("from").querySelector("input").value).toBe("bar");
+  expect(getByTestId("from").value).toBe("bar");
 });
 
 test("reply includes only main part of base message quoted", async () => {
@@ -437,8 +435,8 @@ test("localStorage stores for new email", async () => {
   });
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
 
-  await userEvent.click(container.querySelector("div[role='button']"));
-  await userEvent.click(screen.getByText("foo bar <foo@bar.com>"));
+  screen.getByText("foo bar <foo@bar.com>").selected = true;
+  await fireEvent.change(screen.getByTestId("from"));
 
   await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}otherto@test.com{enter}");
   await vi.waitFor(() => {
@@ -485,8 +483,8 @@ test("localStorage removes empty items", async () => {
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
 
   // set from
-  await userEvent.click(container.querySelector("div[role='button']"));
-  await userEvent.click(screen.getByText("foo bar <foo@bar.com>"));
+  screen.getByText("foo bar <foo@bar.com>").selected = true;
+  await fireEvent.change(screen.getByTestId("from"));
 
   await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}otherto@test.com{enter}");
   await vi.waitFor(() => {
@@ -521,7 +519,7 @@ test("localStorage stores for reply", async () => {
   const { getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
-    expect(getByTestId("from").querySelector("input").value).toBe("foo");
+    expect(getByTestId("from").value).toBe("foo");
   });
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
 

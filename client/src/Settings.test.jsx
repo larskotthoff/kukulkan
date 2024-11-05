@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, test, expect } from "vitest";
-import { cleanup, render, screen } from "@solidjs/testing-library";
+import { cleanup, fireEvent, render, screen } from "@solidjs/testing-library";
 import { userEvent } from "@testing-library/user-event";
 
 import { getSetting, Settings } from "./Settings.jsx";
@@ -41,26 +41,26 @@ test("allows to change settings", async () => {
   expect(getSetting("numQueries")).toBe(101);
 
   expect(getSetting("openInTab")).toBe("_blank");
-  await userEvent.click(screen.getByTestId("openInTab").querySelector("div[role='button']"));
-  await userEvent.click(screen.getByText("same"));
+  screen.getByText("same").selected = true;
+  await fireEvent.change(screen.getByTestId("openInTab"));
   expect(getSetting("openInTab")).toBe("_self");
 
   expect(getSetting("showNestedThread")).toBe(true);
-  await userEvent.click(screen.getByTestId("showNestedThread").querySelector("div[role='button']"));
-  await userEvent.click(screen.getByText("flattened"));
+  screen.getByText("flattened").selected = true;
+  await fireEvent.change(screen.getByTestId("showNestedThread"));
   expect(getSetting("showNestedThread")).toBe(false);
 
   expect(getSetting("externalCompose")).toBe(-1);
-  await userEvent.click(screen.getByTestId("externalCompose").querySelector("div[role='button']"));
-  await userEvent.click(screen.getByText("internal browser editor"));
+  screen.getByText("internal browser editor").selected = true;
+  await fireEvent.change(screen.getByTestId("externalCompose"));
   expect(getSetting("externalCompose")).toBe(false);
-  await userEvent.click(screen.getByTestId("externalCompose").querySelector("div[role='button']"));
-  await userEvent.click(screen.getByText("external editor on localhost"));
+  screen.getByText("external editor on localhost").selected = true;
+  await fireEvent.change(screen.getByTestId("externalCompose"));
   expect(getSetting("externalCompose")).toBe(true);
 
   expect(getSetting("abbreviateQuoted")).toBe(true);
-  await userEvent.click(screen.getByTestId("abbreviateQuoted").querySelector("div[role='button']"));
-  await userEvent.click(screen.getByText("show in full"));
+  screen.getByText("show in full").selected = true;
+  await fireEvent.change(screen.getByTestId("abbreviateQuoted"));
   expect(getSetting("abbreviateQuoted")).toBe(false);
 });
 

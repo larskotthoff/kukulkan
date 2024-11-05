@@ -13,6 +13,17 @@ body {
     font-family: var(--fonts);
 }
 
+select {
+    background-color: #fff8e1;
+    border: 1px solid;
+    border-radius: 5px;
+    padding: 3px;
+}
+
+select.compose-from {
+    background-color: #f0f4c3;
+}
+
 .centered {
     margin-left: auto !important;
     margin-right: auto !important;
@@ -246,10 +257,6 @@ body {
 }
 .calendar-box.highlight {
     background-color: red;
-}
-
-.select-margin div {
-    padding: 10px;
 }
 
 .input-field-set {

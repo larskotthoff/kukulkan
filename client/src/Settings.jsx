@@ -1,7 +1,5 @@
 import { createSignal } from 'solid-js';
 
-import MenuItem from "@suid/material/MenuItem";
-import Select from "@suid/material/Select";
 import TextField from "@suid/material/TextField";
 
 export function getSetting(setting) {
@@ -59,75 +57,71 @@ export function Settings() {
         }}/> most recent search queries for autocomplete.
     </div>
     <div class="margin">
-      Open everything in <Select
-        class="select-margin"
+      Open everything in <select
         data-testid="openInTab"
         value={openInTab()}
         onChange={(ev) => {
           setOpenInTab(ev.target.value);
           localStorage.setItem("settings-openInTab", openInTab());
         }}>
-        <MenuItem value="_blank">
+        <option value="_blank">
           new
-        </MenuItem>
-        <MenuItem value="_self">
+        </option>
+        <option value="_self">
           same
-        </MenuItem>
-      </Select> tab.
+        </option>
+      </select> tab.
     </div>
     <div class="margin">
-      Show <Select
-        class="select-margin"
+      Show <select
         data-testid="showNestedThread"
         value={showNestedThread()}
         onChange={(ev) => {
           setShowNestedThread(ev.target.value);
           localStorage.setItem("settings-showNestedThread", showNestedThread());
         }}>
-        <MenuItem value={true}>
+        <option value={true}>
           nested
-        </MenuItem>
-        <MenuItem value={false}>
+        </option>
+        <option value={false}>
           flattened
-        </MenuItem>
-      </Select> thread on thread page.
+        </option>
+      </select> thread on thread page.
     </div>
     <div class="margin">
-      When composing, use <Select
-        class="select-margin"
+      When composing, use <select
         data-testid="externalCompose"
         value={externalCompose()}
         onChange={(ev) => {
           setExternalCompose(ev.target.value);
           localStorage.setItem("settings-externalCompose", externalCompose());
         }}>
-        <MenuItem value={-1}>
+        <option value={-1}>
           backend configuration
-        </MenuItem>
-        <MenuItem value={false}>
+        </option>
+        <option value={false}>
           internal browser editor
-        </MenuItem>
-        <MenuItem value={true}>
+        </option>
+        <option value={true}>
           external editor on localhost
-        </MenuItem>
-      </Select>.
+        </option>
+      </select>.
     </div>
     <div class="margin">
-      When replying, <Select
-        class="select-margin"
+      When replying, <select
         data-testid="abbreviateQuoted"
         value={abbreviateQuoted()}
         onChange={(ev) => {
           setAbbreviateQuoted(ev.target.value);
           localStorage.setItem("settings-abbreviateQuoted", abbreviateQuoted());
         }}>
-        <MenuItem value={true}>
+        <option value={true}>
           abbreviate with [...]
-        </MenuItem>
-        <MenuItem value={false}>
+        </option>
+        <option value={false}>
           show in full
-        </MenuItem>
-      </Select> quoted text beyond the first level.
+        </option>
+      </select> quoted text beyond the first level.
     </div>
   </center>);
 }
