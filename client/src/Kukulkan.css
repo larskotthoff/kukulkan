@@ -24,6 +24,22 @@ select.compose-from {
     background-color: #f0f4c3;
 }
 
+button {
+    background-color: #fff8e1;
+    border: 1px solid;
+    border-radius: 5px;
+    padding: 3px 5px 3px 5px;
+    display: flex;
+}
+
+button > span {
+    padding-left: .2em;
+}
+
+button.content {
+    background-color: #f0f4c3;
+}
+
 .centered {
     margin-left: auto !important;
     margin-right: auto !important;

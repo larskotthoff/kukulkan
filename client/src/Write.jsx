@@ -1,7 +1,6 @@
 import { createEffect, createSignal, For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 
-import Button from "@suid/material/Button";
 import Grid from "@suid/material/Grid";
 import TextField from "@suid/material/TextField";
 
@@ -28,7 +27,7 @@ function Templates(props) {
             () => document.getElementById(`template-${template.shortcut}`).click()
           );
           return (<Grid item>
-            <Button id={`template-${template.shortcut}`} variant="outlined" onClick={() => props.setTemplate(template.template) }>{template.description} ({template.shortcut})</Button>
+            <button id={`template-${template.shortcut}`} onClick={() => props.setTemplate(template.template) }>{template.description} ({template.shortcut})</button>
           </Grid>);
         }}
       </For>
@@ -500,17 +499,18 @@ export function Write(props) {
         </For>
         <Grid container sx={{ marginTop: ".5em" }}>
           <Grid item xs>
-            <Button id="attach" startIcon={<AttachFile/>} variant="outlined" component="label">
-              Attach
-              <input type="file" multiple hidden onChange={(ev) => {
+            <button class="content" onClick={() => document.getElementById("attach").click()}>
+              <AttachFile/>
+              <span>Attach</span>
+              <input type="file" id="attach" multiple hidden onChange={(ev) => {
                 setMessage("files", (prevFiles) => [...prevFiles, ...Array.from(ev.target.files)]);
                 // not storing these in localStorage as we would have to
                 // encode/decode them and contents would become stale
               }}/>
-            </Button>
+            </button>
           </Grid>
           <Grid item>
-            <Button id="send" startIcon={<Send/>} variant="outlined" onClick={sendMsg}>Send</Button>
+            <button id="send" class="content" onClick={sendMsg}><Send/><span>Send</span></button>
           </Grid>
         </Grid>
       </div>

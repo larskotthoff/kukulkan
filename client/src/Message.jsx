@@ -1,6 +1,5 @@
 import { createEffect, createSignal, For, onMount, Show } from "solid-js";
 
-import Button from "@suid/material/Button";
 import Grid from "@suid/material/Grid";
 import Stack from "@suid/material/Stack";
 
@@ -391,10 +390,10 @@ export function Message(props) {
 
         <Grid container justifyContent="flex-end" class="margin">
           <Show when={msg.body["text/html"]}>
-            <Button variant="outlined" class="content" data-testid={html() ? "Text" : "HTML"} onClick={(e) => {
+            <button class="content" data-testid={html() ? "Text" : "HTML"} onClick={(e) => {
                 setHtml(!html());
                 e.stopPropagation();
-              }}>{html() ? "Text" : "HTML"}</Button>
+              }}>{html() ? "Text" : "HTML"}</button>
           </Show>
         </Grid>
         <Show when={html()}>
