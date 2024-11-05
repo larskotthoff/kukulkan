@@ -85,7 +85,7 @@ test("completions sorted correctly", async () => {
   await userEvent.type(input, "f");
   expect(input.getAttribute("value")).toEqual("f");
 
-  const completions = document.querySelector(".MuiList-root").children;
+  const completions = document.querySelector(".autocomplete-popup").children;
   expect(completions[0]).toHaveTextContent("foo");
   expect(completions[1]).toHaveTextContent("foo@bar.com");
   expect(completions[2]).toHaveTextContent("bar foo");
@@ -118,7 +118,7 @@ test("allows to complete (mouse)", async () => {
   await userEvent.type(input, "f");
   expect(input.getAttribute("value")).toEqual("f");
 
-  let completions = document.querySelector(".MuiList-root").children;
+  let completions = document.querySelector(".autocomplete-popup").children;
   expect(completions[0]).toHaveTextContent('foo');
   expect(completions[1]).toHaveTextContent('foobar');
 
@@ -128,7 +128,7 @@ test("allows to complete (mouse)", async () => {
   await setTestText("");
   await userEvent.type(input, "f");
   expect(input.getAttribute("value")).toEqual("f");
-  completions = document.querySelector(".MuiList-root").children;
+  completions = document.querySelector(".autocomplete-popup").children;
   await userEvent.click(completions[1]);
   expect(input.getAttribute("value")).toEqual("foobar");
 });
@@ -161,7 +161,7 @@ test("ChipComplete works", async () => {
   const input = container.querySelector("input");
   await userEvent.type(input, "f");
   expect(input.getAttribute("value")).toEqual("f");
-  const completions = document.querySelector(".MuiList-root").children;
+  const completions = document.querySelector(".autocomplete-popup").children;
   expect(completions[0]).toHaveTextContent('foobar');
 
   expect(add).toBe("");
@@ -188,7 +188,7 @@ test("TagComplete works", async () => {
   const input = container.querySelector("input");
   await userEvent.type(input, "f");
   expect(input.getAttribute("value")).toEqual("f");
-  let completions = document.querySelector(".MuiList-root").children;
+  let completions = document.querySelector(".autocomplete-popup").children;
   expect(completions.length).toBe(2);
   expect(completions[0]).toHaveTextContent('foo');
   expect(completions[1]).toHaveTextContent('foobar');
@@ -200,7 +200,7 @@ test("TagComplete works", async () => {
 
   await userEvent.type(input, "b");
   expect(input.getAttribute("value")).toEqual("b");
-  completions = document.querySelector(".MuiList-root").children;
+  completions = document.querySelector(".autocomplete-popup").children;
   expect(completions.length).toBe(1);
   expect(completions[0]).toHaveTextContent('foobar');
 

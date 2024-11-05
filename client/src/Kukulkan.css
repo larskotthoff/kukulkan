@@ -81,6 +81,24 @@ body {
 
 .autocomplete-popup {
     background-color: #f0f4c3;
+    z-index: 10;
+    position: absolute;
+    padding: .5em;
+    cursor: pointer;
+
+    display: none;
+}
+
+.autocomplete-popup.visible {
+    display: block;
+}
+
+.autocomplete-popup > div {
+    padding: 2px;
+}
+
+.autocomplete-popup > .selected {
+    background-color: rgba(85, 139, 47, 0.4);
 }
 
 .message {

@@ -134,7 +134,7 @@ export function TodoThreads(props) {
                               <Grid item xs={8} data-testid={`${day.toDateString()}-boxes`} style={{'text-align': 'left'}}>
                                 <For each={dueMap[day]}>
                                   {dueindex =>
-                                    <div class="calendar-box" onmouseover={() => props.setActiveThread(dueindex)}/>
+                                    <div class="calendar-box" onMouseOver={() => props.setActiveThread(dueindex)}/>
                                   }
                                 </For>
                               </Grid>

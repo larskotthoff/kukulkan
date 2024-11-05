@@ -1,10 +1,6 @@
 // based on https://stackoverflow.com/questions/75751029/how-to-create-an-autocomplete-element
-import { createEffect, createMemo, createSignal, For, Index, on } from 'solid-js';
+import { createEffect, createSignal, For, Index, on } from 'solid-js';
 
-import List from "@suid/material/List";
-import ListItemButton from "@suid/material/ListItemButton";
-import ListItemText from "@suid/material/ListItemText";
-import Popover from "@suid/material/Popover";
 import TextField from "@suid/material/TextField";
 
 import { ColorChip } from "./ColorChip.jsx";
@@ -53,8 +49,10 @@ export function Autocomplete(props) {
     let wasVisible = isVisible();
     if (ev.code === 'ArrowUp') {
       setSelected(prev => prev === 0 ? (sortedOptions().length - 1) : prev - 1);
+      ev.preventDefault();
     } else if (ev.code === 'ArrowDown') {
       setSelected(prev => prev + 1 === sortedOptions().length ? 0 : prev + 1);
+      ev.preventDefault();
     } else if (ev.code === 'Enter' || ev.key === 'Enter') {
       select();
     } else if (ev.code === 'Escape') {
@@ -77,16 +75,20 @@ export function Autocomplete(props) {
     }
   }
 
-  const isVisible = createMemo(() => {
+  function isVisible() {
     return showPopover() &&
            props.text() &&
            sortedOptions().length > 0;
-  });
+  }
 
   // eslint-disable-next-line solid/reactivity
   createEffect(on(props.text, () => {
     setSelected(0);
   }));
+
+  createEffect(() => {
+    document.querySelector(".autocomplete-popup").style.marginLeft = inputRef().offsetLeft + "px";
+  });
 
   return (
     <>
@@ -101,25 +103,22 @@ export function Autocomplete(props) {
         autoComplete="off"
         {...props}
       />
-      <Popover
-        open={isVisible()}
-        anchorEl={inputRef()}
-        anchorOrigin={{
-          vertical: "bottom",
-          horizontal: "left",
+      <div classList={{
+          'autocomplete-popup': true,
+          'paper': true,
+          'visible': isVisible()
         }}>
-        <List class="autocomplete-popup">
-          <Index each={sortedOptions()}>
-            {(item, i) =>
-              <ListItemButton
-                  selected={selected() === i}
-                  onClick={() => { select(i) }}>
-                <ListItemText primary={item()}/>
-              </ListItemButton>
-            }
-          </Index>
-        </List>
-      </Popover>
+        <Index each={isVisible() ? sortedOptions() : []}>
+          {(item, i) =>
+            <div classList={{
+                'selected': selected() === i
+              }}
+              onClick={() => select(i) }>
+              {item()}
+            </div>
+          }
+        </Index>
+      </div>
     </>
   );
 }
