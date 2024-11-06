@@ -220,7 +220,6 @@ export function Write(props) {
   createEffect(() => {
     if(useTemplate() && bodyRef().disabled === false) {
       bodyRef().value = useTemplate() + message.bodyDefaultValue;
-      bodyRef().style.height = 'auto';
       setMessage("body", bodyRef().value);
     }
   });
@@ -339,7 +338,7 @@ export function Write(props) {
   return (
     <>
       <Show when={statusMsg()}>
-        <Alert width="fit-content" class="centered" severity={statusMsg().startsWith("Error") ? "error" : "success"}>{statusMsg()}</Alert>
+        <Alert class="centered fit-content" severity={statusMsg().startsWith("Error") ? "error" : "success"}>{statusMsg()}</Alert>
       </Show>
       <Show when={data.compose}>
         <Templates templates={data.compose.templates} setTemplate={setUseTemplate}/>

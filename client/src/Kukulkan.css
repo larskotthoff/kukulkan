@@ -82,6 +82,10 @@ button > span {
     align-items: center;
 }
 
+.fit-content {
+    width: fit-content;
+}
+
 .margin {
     margin-top: 10px !important;
     margin-bottom: 10px !important;
@@ -200,11 +204,8 @@ button > span {
 
 .chip-edit-autocomplete {
     display: flex;
+    flex-flow: wrap;
     align-items: baseline;
-}
-
-.chip-edit-autocomplete input {
-    width: inherit;
 }
 
 #query-box {

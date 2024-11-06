@@ -10,6 +10,13 @@ import src.kukulkan as k
 
 IN_GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"
 
+def test_split_email_addresses():
+    assert ["foo@bar.com"] == k.split_email_addresses("foo@bar.com")
+    assert ["foo@bar.com", "bar@foo.com"] == k.split_email_addresses("foo@bar.com, bar@foo.com")
+    assert ["Foo Bar <foo@bar.com>", "Bar Foo <bar@foo.com>"] == k.split_email_addresses("Foo Bar <foo@bar.com>, Bar Foo <bar@foo.com>")
+    assert ["\"Bar, Foo\" <foo@bar.com>", "\"Foo, Bar\" <bar@foo.com>"] == k.split_email_addresses("\"Bar, Foo\" <foo@bar.com>, \"Foo, Bar\" <bar@foo.com>")
+    assert ["Bar, Foo <foo@bar.com>", "Foo, Bar <bar@foo.com>"] == k.split_email_addresses("Bar, Foo <foo@bar.com>, Foo, Bar <bar@foo.com>")
+
 @pytest.fixture
 def setup():
     flask_app = k.create_app()
@@ -509,7 +516,7 @@ def test_message_simple(setup):
 
     mf = lambda: None
     mf.get_filename = MagicMock(return_value="test/mails/simple.eml")
-    mf.get_header = MagicMock(return_value="  foo\tbar  ")
+    mf.get_header = MagicMock(return_value="  foo@bar  ")
     mf.get_message_id = MagicMock(return_value="foo")
     mf.get_tags = MagicMock(return_value=["foo", "bar"])
 
@@ -521,17 +528,17 @@ def test_message_simple(setup):
             response = test_client.get('/api/message/foo')
             assert response.status_code == 200
             msg = json.loads(response.data.decode())
-            assert msg["from"] == "foo bar"
-            assert msg["to"] == ["foo bar"]
-            assert msg["cc"] == ["foo bar"]
-            assert msg["bcc"] == ["foo bar"]
-            assert msg["date"] == "foo\tbar"
-            assert msg["subject"] == "foo bar"
-            assert msg["message_id"] == "foo\tbar"
-            assert msg["in_reply_to"] == "foo\tbar"
-            assert msg["references"] == "foo\tbar"
-            assert msg["reply_to"] == "foo\tbar"
-            assert msg["delivered_to"] == "foo\tbar"
+            assert msg["from"] == "foo@bar"
+            assert msg["to"] == ["foo@bar"]
+            assert msg["cc"] == ["foo@bar"]
+            assert msg["bcc"] == ["foo@bar"]
+            assert msg["date"] == "foo@bar"
+            assert msg["subject"] == "foo@bar"
+            assert msg["message_id"] == "foo@bar"
+            assert msg["in_reply_to"] == "foo@bar"
+            assert msg["references"] == "foo@bar"
+            assert msg["reply_to"] == "foo@bar"
+            assert msg["delivered_to"] == "foo@bar"
 
             assert "With the new notmuch_message_get_flags() function" in msg["body"]["text/plain"]
             assert msg["body"]["text/html"] == ''
@@ -1339,7 +1346,7 @@ def test_thread(setup):
 
     mf = lambda: None
     mf.get_filename = MagicMock(return_value="test/mails/simple.eml")
-    mf.get_header = MagicMock(return_value="  foo\tbar  ")
+    mf.get_header = MagicMock(return_value="  foo@bar  ")
     mf.get_message_id = MagicMock(return_value="foo")
     mf.get_tags = MagicMock(return_value=["foo", "bar"])
 
@@ -1356,16 +1363,16 @@ def test_thread(setup):
             thread = json.loads(response.data.decode())
             assert len(thread) == 1
             msg = thread[0]
-            assert msg["from"] == "foo bar"
-            assert msg["to"] == ["foo bar"]
-            assert msg["cc"] == ["foo bar"]
-            assert msg["bcc"] == ["foo bar"]
-            assert msg["date"] == "foo\tbar"
-            assert msg["subject"] == "foo bar"
-            assert msg["message_id"] == "foo\tbar"
-            assert msg["in_reply_to"] == "foo\tbar"
-            assert msg["references"] == "foo\tbar"
-            assert msg["reply_to"] == "foo\tbar"
+            assert msg["from"] == "foo@bar"
+            assert msg["to"] == ["foo@bar"]
+            assert msg["cc"] == ["foo@bar"]
+            assert msg["bcc"] == ["foo@bar"]
+            assert msg["date"] == "foo@bar"
+            assert msg["subject"] == "foo@bar"
+            assert msg["message_id"] == "foo@bar"
+            assert msg["in_reply_to"] == "foo@bar"
+            assert msg["references"] == "foo@bar"
+            assert msg["reply_to"] == "foo@bar"
 
             assert "With the new notmuch_message_get_flags() function" in msg["body"]["text/plain"]
             assert msg["body"]["text/html"] == ''

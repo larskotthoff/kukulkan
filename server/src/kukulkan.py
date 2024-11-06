@@ -90,10 +90,9 @@ def email_addresses_header(emails):
     return ", ".join(str(addr) for addr in tmp)
 
 
-# and claude wrote this
 def split_email_addresses(header):
-    addresses = re.findall(r'(?:[^,"]|"(?:\\.|[^"])*")+', header.replace('\t', ' '))
-    return [addr.strip() for addr in addresses]
+    addresses = re.findall(r'([^@]+@[^,]+)', header.replace('\t', ' '))
+    return [re.sub('^,', '', addr).strip() for addr in addresses]
 
 def get_db():
     """Get a new `Database` instance. Called before every request. Cached on first call."""

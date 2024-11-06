@@ -7,7 +7,8 @@ export function Autocomplete(props) {
   const [showPopover, setShowPopover] = createSignal(false),
         [selected, setSelected] = createSignal(0),
         [inputRef, setInputRef] = createSignal(),
-        [sortedOptions, setSortedOptions] = createSignal([]);
+        [sortedOptions, setSortedOptions] = createSignal([]),
+        {text, setText, getOptions, handleKey, children, onBlur, setWidth, ...spreadProps} = props;
 
   // sort options such that:
   // - options that start with the search text come first
@@ -22,7 +23,7 @@ export function Autocomplete(props) {
   }
 
   function getPos(a) {
-    let posa = a.toLowerCase().indexOf(props.text().toLowerCase()),
+    let posa = a.toLowerCase().indexOf(text().toLowerCase()),
         lima = posa;
     if(posa === 0) {
       posa = -1;
@@ -39,7 +40,7 @@ export function Autocomplete(props) {
   }
 
   async function getSortedOptions() {
-    const options = await props.getOptions(props.text());
+    const options = await getOptions(text());
     setSortedOptions(options.sort(cmp));
   }
 
@@ -60,41 +61,55 @@ export function Autocomplete(props) {
       setShowPopover(true);
     }
 
-    if(!wasVisible && props.handleKey) props.handleKey(ev);
+    if(!wasVisible && handleKey) handleKey(ev);
   }
 
   function select(i) {
     if(isVisible()) {
       if(i) setSelected(i);
-      props.setText(sortedOptions()[selected()]);
+      setText(sortedOptions()[selected()]);
       setShowPopover(false);
       inputRef().focus();
-      inputRef().setSelectionRange(props.text().length, props.text().length);
+      inputRef().setSelectionRange(text().length, text().length);
     }
   }
 
   function isVisible() {
     return showPopover() &&
-           props.text() &&
+           text() &&
            sortedOptions().length > 0;
   }
 
   // eslint-disable-next-line solid/reactivity
-  createEffect(on(props.text, () => {
+  createEffect(on(text, () => {
     setSelected(0);
   }));
 
+  createEffect(() => {
+    if(inputRef()) {
+      const siblings = Array.from(inputRef().parentNode.children).filter(
+                        (s) => s.tagName.toLowerCase() !== 'input');
+      if(siblings.length > 0) {
+        const last = siblings.at(-1),
+              rightPos = last.offsetLeft + last.offsetWidth;
+        inputRef().style.width = `calc(${(1 - (rightPos - inputRef().parentNode.offsetLeft) / inputRef().parentNode.offsetWidth) * 100}% - 3px)`;
+      } else {
+        inputRef().style.width = "100%";
+      }
+    }
+  });
+
   return (
-    <div {...props}>
-      {props.children}
+    <div {...spreadProps}>
+      {children}
       <input
         type="text"
         ref={setInputRef}
-        value={props.text() || ""}
+        value={text() || ""}
         // eslint-disable-next-line solid/reactivity
-        onBlur={props.onBlur}
+        onBlur={onBlur}
         onInput={(ev) => {
-          props.setText(ev.target.value);
+          setText(ev.target.value);
           getSortedOptions();
         }}
         onKeyDown={handleKeydown}
@@ -105,7 +120,7 @@ export function Autocomplete(props) {
           'left': `${inputRef().getBoundingClientRect().left}px`,
           'top': `${inputRef().getBoundingClientRect().bottom}px`
         }}>
-          <Index each={isVisible() ? sortedOptions() : []}>
+          <Index each={sortedOptions()}>
             {(item, i) =>
               <div classList={{
                   'selected': selected() === i
@@ -129,6 +144,7 @@ export function ChipComplete(props) {
       class="input-wide chip-edit-autocomplete"
       text={toAdd}
       setText={setToAdd}
+      setWidth={true}
       // eslint-disable-next-line solid/reactivity
       handleKey={async (ev) => {
         if((ev.code === 'Enter' || ev.key === 'Enter') && toAdd()) {
