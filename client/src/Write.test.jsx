@@ -675,7 +675,7 @@ test("localStorage deleted with shortcut d", async () => {
   expect(localStorage.getItem("draft-compose-body")).toBe(null);
 });
 
-test("errors when attempting to send incomplete mail", async () => {
+test("errors when attempting to send w/o to address", async () => {
   const { getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
@@ -687,6 +687,14 @@ test("errors when attempting to send incomplete mail", async () => {
   expect(global.fetch).toHaveBeenCalledTimes(0);
   expect(global.fetch).not.toHaveBeenCalledWith("http://localhost:5000/api/send");
   expect(screen.getByText("Error: No to address. Not sending.")).toBeInTheDocument();
+});
+
+test("errors when attempting to send w/o subject", async () => {
+  const { getByTestId } = render(() => <Write/>);
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("Send")).toBeInTheDocument();
+  });
 
   await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}");
   await userEvent.click(screen.getByText("Send"));

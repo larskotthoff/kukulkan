@@ -3,15 +3,16 @@ import WarningAmber from "@suid/icons-material/WarningAmber";
 import ErrorOutline from "@suid/icons-material/ErrorOutline";
 
 export function Alert(props) {
-  const cols = { 'success': 'green', 'warning': 'yellow', 'error': 'red' };
+  const cols = { 'success': 'green', 'warning': 'yellow', 'error': 'red' },
+        {['class']: clss, severity, children, ...spreadProps} = props;
   return (<div
-        class="alert"
-        style={{ 'border': `3px solid ${cols[props.severity]}` }}
-        {...props}>
-      {props.severity === "success" && <TaskAlt/>}
-      {props.severity === "warning" && <WarningAmber/>}
-      {props.severity === "error" && <ErrorOutline/>}
-      <span>{props.children}</span>
+        class={`alert ${clss}`}
+        style={{ 'border': `3px solid ${cols[severity]}` }}
+        {...spreadProps}>
+      {severity === "success" && <TaskAlt/>}
+      {severity === "warning" && <WarningAmber/>}
+      {severity === "error" && <ErrorOutline/>}
+      <span>{children}</span>
     </div>);
 }
 

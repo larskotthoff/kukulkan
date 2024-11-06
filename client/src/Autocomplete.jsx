@@ -92,7 +92,7 @@ export function Autocomplete(props) {
       if(siblings.length > 0) {
         const last = siblings.at(-1),
               rightPos = last.offsetLeft + last.offsetWidth;
-        inputRef().style.width = `calc(${(1 - (rightPos - inputRef().parentNode.offsetLeft) / inputRef().parentNode.offsetWidth) * 100}% - 3px)`;
+        inputRef().style.width = `calc(${(1 - (rightPos - inputRef().parentNode.offsetLeft) / inputRef().parentNode.offsetWidth) * 100}% - 6px)`;
       } else {
         inputRef().style.width = "100%";
       }
