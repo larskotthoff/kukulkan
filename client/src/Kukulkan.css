@@ -14,7 +14,7 @@ body {
 }
 
 select, input, textarea {
-    border: 1px solid;
+    border: 1px solid #999;
     border-radius: 5px;
     padding: 3px;
 
@@ -25,7 +25,7 @@ select, input, textarea {
 div.input-wide {
     border-radius: 0px;
     border: none;
-    border-bottom: 1px solid;
+    border-bottom: 1px solid #999;
     outline: none;
 
     width: 100%;
@@ -34,14 +34,14 @@ div.input-wide {
 input.input-wide {
     border-radius: 0px;
     border: none;
-    border-bottom: 1px solid;
+    border-bottom: 1px solid #999;
     outline: none;
 
     width: 100%;
 }
 
 textarea.input-wide {
-    border: 1px solid;
+    border: 1px solid #999;
     outline: none;
 
     width: 100%;
@@ -140,6 +140,10 @@ button > span {
     position: absolute;
     padding: .5em;
     cursor: pointer;
+
+    max-height: 10%;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .autocomplete-popup > div {
