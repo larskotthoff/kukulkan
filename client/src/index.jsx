@@ -50,6 +50,8 @@ render(() => {
     <div style={{
       "width": "100%",
       "height": "5px",
+      "position": "sticky",
+      "top": "0",
       "background": `linear-gradient(to right, rgba(85, 139, 47, 0.7) ${progress() * 100}%, #fff8e1 ${(1 - progress()) * 100}%)`
     }}/>
     <ErrorBoundary fallback={(error) => <Alert severity="error">Error: {error}<pre>{error.stack}</pre></Alert>}>

@@ -255,7 +255,7 @@ button > span {
     text-align: end;
     white-space: nowrap;
 
-    height: 100vh;
+    height: 99vh;
     @media (min-width: 900px) {
         max-width: 10.5em;
     }
@@ -303,7 +303,7 @@ label {
 }
 
 .sticky {
-    top: 0;
+    top: 0.5em;
     position: sticky;
     height: fit-content;
 }

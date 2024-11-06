@@ -173,7 +173,7 @@ export function Thread(props) {
       <Show when={activeMessage() > -1}>
         <Stack direction="row" class="centered" alignItems="stretch" justifyContent="space-around" spacing={1}>
           <ThreadNav/>
-          <Grid container class="centered" direction="column">
+          <Grid container width="auto" class="centered" direction="column">
             <For each={filteredThread()}>
               {(m, i) => <Message msg={m} active={i() === activeMessage()} sp={props.sp}
                 onClick={(e) => {
