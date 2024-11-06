@@ -1,12 +1,14 @@
 import { createShortcut } from "@solid-primitives/keyboard";
 
-export function mkShortcut(keys, func, preventDefault = false) {
-  createShortcut(keys, (e) => {
-    if(["INPUT", "TEXTAREA"].includes(document.activeElement.tagName) === false) {
-      func();
-      if(preventDefault) e.preventDefault();
-    }
-  }, { preventDefault: false });
+export function mkShortcut(keysList, func, preventDefault = false) {
+  keysList.forEach((keys) => {
+    createShortcut(keys, (e) => {
+      if(["INPUT", "TEXTAREA"].includes(document.activeElement.tagName) === false) {
+        func();
+        if(preventDefault) e.preventDefault();
+      }
+    }, { preventDefault: false });
+  });
 }
 
 // claude wrote this specifically to work with SolidJS createShortcut

@@ -45,7 +45,7 @@ test("sets query and title based on URL", async () => {
   await vi.waitFor(() => {
     expect(container.querySelector("input")).not.toBe(null);
   });
-  expect(container.querySelector("input").getAttribute("value")).toEqual("");
+  expect(container.querySelector("input").value).toEqual("");
 
   vi.stubGlobal('location', {
     ...window.location,
@@ -55,7 +55,7 @@ test("sets query and title based on URL", async () => {
   await vi.waitFor(() => {
     expect(container.querySelector("input")).not.toBe(null);
   });
-  expect(container.querySelector("input").getAttribute("value")).toEqual("foo");
+  expect(container.querySelector("input").value).toEqual("foo");
 
   expect(document.title).toBe("foo");
 });
@@ -77,7 +77,7 @@ test("shows predefined query completions", async () => {
   });
   const input = container.querySelector("input");
   await userEvent.type(input, "t");
-  expect(input.getAttribute("value")).toEqual("t");
+  expect(input.value).toEqual("t");
   expect(screen.getByText("tag:unread")).toBeInTheDocument();
   expect(screen.getByText("tag:todo")).toBeInTheDocument();
   expect(screen.getByText("date:today")).toBeInTheDocument();
@@ -106,7 +106,7 @@ test("provides tag completions", async () => {
 
   const input = container.querySelector("input");
   await userEvent.type(input, "tag:f");
-  expect(input.getAttribute("value")).toEqual("tag:f");
+  expect(input.value).toEqual("tag:f");
   expect(screen.getByText("tag:foo")).toBeInTheDocument();
   expect(screen.getByText("tag:foobar")).toBeInTheDocument();
 });
@@ -307,7 +307,7 @@ test("tag edits work", async () => {
   });
 
   await userEvent.type(document.body, "t");
-  await userEvent.type(document.querySelector("#edit-tag-box"), "-test foobar{enter}{enter}");
+  await userEvent.type(document.querySelector("#edit-tag-box > input"), "-test foobar{enter}{enter}");
 
   expect(global.fetch).toHaveBeenCalledTimes(2);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/remove/thread/foo/test");
@@ -339,7 +339,7 @@ test("tag edits with multiple selection work", async () => {
   expect(container.querySelectorAll(".thread.selected").length).toBe(2);
 
   await userEvent.type(document.body, "t");
-  await userEvent.type(document.querySelector("#edit-tag-box"), "-test1 foobar{enter}{enter}");
+  await userEvent.type(document.querySelector("#edit-tag-box > input"), "-test1 foobar{enter}{enter}");
 
   expect(global.fetch).toHaveBeenCalledTimes(4);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/remove/thread/foo/test1");

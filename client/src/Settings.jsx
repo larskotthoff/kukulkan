@@ -1,7 +1,5 @@
 import { createSignal } from 'solid-js';
 
-import TextField from "@suid/material/TextField";
-
 export function getSetting(setting) {
   let val = null;
   switch(setting) {
@@ -46,8 +44,8 @@ export function Settings() {
 
   return (<center>
     <div class="margin">
-      Save <TextField
-        variant="standard"
+      Save <input
+        type="text"
         value={numQueries()}
         data-testid="numQueries"
         class="settings-box"

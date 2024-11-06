@@ -15,7 +15,7 @@ test("exports Autocomplete, ChipComplete, TagComplete", () => {
 
 test("sets text", () => {
   const { container } = render(() => <Autocomplete text={() => "foo"}/>);
-  expect(container.querySelector("input").getAttribute("value")).toEqual("foo");
+  expect(container.querySelector("input").value).toEqual("foo");
 });
 
 test("shows completions", async () => {
@@ -23,7 +23,7 @@ test("shows completions", async () => {
   const { container } = render(() => <Autocomplete text={testText} setText={setTestText} getOptions={() => ["foo", "foobar"]}/>);
   const input = container.querySelector("input");
   await userEvent.type(input, "f");
-  expect(input.getAttribute("value")).toEqual("f");
+  expect(input.value).toEqual("f");
   expect(screen.getByText("foo")).toBeInTheDocument();
   expect(screen.getByText("foobar")).toBeInTheDocument();
 });
@@ -49,7 +49,7 @@ test("shows completions with async completion function", async () => {
 
   const input = container.querySelector("input");
   await userEvent.type(input, "f");
-  expect(input.getAttribute("value")).toEqual("f");
+  expect(input.value).toEqual("f");
 
   await vi.waitFor(() => {
     expect(screen.getByText("foo")).toBeInTheDocument();
@@ -67,12 +67,12 @@ test("allows to filter completions", async () => {
   const { container } = render(() => <Autocomplete text={testText} setText={setTestText} getOptions={(text) => ["foo", "foobar"].filter(t => t.startsWith(text))}/>);
   const input = container.querySelector("input");
   await userEvent.type(input, "f");
-  expect(input.getAttribute("value")).toEqual("f");
+  expect(input.value).toEqual("f");
   expect(screen.getByText("foo")).toBeInTheDocument();
   expect(screen.getByText("foobar")).toBeInTheDocument();
 
   await userEvent.type(input, "oob");
-  expect(input.getAttribute("value")).toEqual("foob");
+  expect(input.value).toEqual("foob");
   expect(screen.queryByText("foo")).not.toBeInTheDocument();
   expect(screen.getByText("foobar")).toBeInTheDocument();
 });
@@ -83,7 +83,7 @@ test("completions sorted correctly", async () => {
     getOptions={() => ["afoo", "foo", "bar", "bar@foo.com", "foo@bar.com", "bar foo"]}/>);
   const input = container.querySelector("input");
   await userEvent.type(input, "f");
-  expect(input.getAttribute("value")).toEqual("f");
+  expect(input.value).toEqual("f");
 
   const completions = document.querySelector(".autocomplete-popup").children;
   expect(completions[0]).toHaveTextContent("foo");
@@ -99,16 +99,16 @@ test("allows to complete (keyboard)", async () => {
   const { container } = render(() => <Autocomplete text={testText} setText={setTestText} getOptions={() => ["foo", "foobar"]}/>);
   const input = container.querySelector("input");
   await userEvent.type(input, "f");
-  expect(input.getAttribute("value")).toEqual("f");
+  expect(input.value).toEqual("f");
   await userEvent.type(input, "{enter}");
-  expect(input.getAttribute("value")).toEqual("foo");
+  expect(input.value).toEqual("foo");
 
   await setTestText("");
   await userEvent.type(input, "f");
-  expect(input.getAttribute("value")).toEqual("f");
+  expect(input.value).toEqual("f");
   await userEvent.type(input, "{arrowdown}");
   await userEvent.type(input, "{enter}");
-  expect(input.getAttribute("value")).toEqual("foobar");
+  expect(input.value).toEqual("foobar");
 });
 
 test("allows to complete (mouse)", async () => {
@@ -116,21 +116,21 @@ test("allows to complete (mouse)", async () => {
   const { container } = render(() => <Autocomplete text={testText} setText={setTestText} getOptions={() => ["foo", "foobar"]}/>);
   const input = container.querySelector("input");
   await userEvent.type(input, "f");
-  expect(input.getAttribute("value")).toEqual("f");
+  expect(input.value).toEqual("f");
 
   let completions = document.querySelector(".autocomplete-popup").children;
   expect(completions[0]).toHaveTextContent('foo');
   expect(completions[1]).toHaveTextContent('foobar');
 
   await userEvent.click(completions[0]);
-  expect(input.getAttribute("value")).toEqual("foo");
+  expect(input.value).toEqual("foo");
 
   await setTestText("");
   await userEvent.type(input, "f");
-  expect(input.getAttribute("value")).toEqual("f");
+  expect(input.value).toEqual("f");
   completions = document.querySelector(".autocomplete-popup").children;
   await userEvent.click(completions[1]);
-  expect(input.getAttribute("value")).toEqual("foobar");
+  expect(input.value).toEqual("foobar");
 });
 
 test("allows to set custom key handler", async () => {
@@ -160,7 +160,7 @@ test("ChipComplete works", async () => {
 
   const input = container.querySelector("input");
   await userEvent.type(input, "f");
-  expect(input.getAttribute("value")).toEqual("f");
+  expect(input.value).toEqual("f");
   const completions = document.querySelector(".autocomplete-popup").children;
   expect(completions[0]).toHaveTextContent('foobar');
 
@@ -187,7 +187,7 @@ test("TagComplete works", async () => {
 
   const input = container.querySelector("input");
   await userEvent.type(input, "f");
-  expect(input.getAttribute("value")).toEqual("f");
+  expect(input.value).toEqual("f");
   let completions = document.querySelector(".autocomplete-popup").children;
   expect(completions.length).toBe(2);
   expect(completions[0]).toHaveTextContent('foo');
@@ -199,7 +199,7 @@ test("TagComplete works", async () => {
   expect(add).toBe("foobar");
 
   await userEvent.type(input, "b");
-  expect(input.getAttribute("value")).toEqual("b");
+  expect(input.value).toEqual("b");
   completions = document.querySelector(".autocomplete-popup").children;
   expect(completions.length).toBe(1);
   expect(completions[0]).toHaveTextContent('foobar');

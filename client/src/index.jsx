@@ -1,9 +1,7 @@
 import { render } from "solid-js/web";
 import { Route, Router } from "@solidjs/router";
 
-import { createSignal, ErrorBoundary, Show } from "solid-js";
-
-import LinearProgress from "@suid/material/LinearProgress";
+import { createSignal, ErrorBoundary } from "solid-js";
 
 import { Alert } from "./Alert.jsx";
 import { FetchedMessage } from "./Message.jsx";
@@ -43,15 +41,17 @@ function setCacheHeaders() {
 
 
 render(() => {
-  const [progress, setProgress] = createSignal(100);
+  const [progress, setProgress] = createSignal(1);
 
   setCacheHeaders();
 
   return (
   <>
-    <Show when={progress() < 100}>
-      <LinearProgress variant="determinate" value={progress()} spacing={1}/>
-    </Show>
+    <div style={{
+      "width": "100%",
+      "height": "5px",
+      "background": `linear-gradient(to right, rgba(85, 139, 47, 0.7) ${progress() * 100}%, #fff8e1 ${(1 - progress()) * 100}%)`
+    }}/>
     <ErrorBoundary fallback={(error) => <Alert severity="error">Error: {error}<pre>{error.stack}</pre></Alert>}>
       <Router>
         <Route path="/" component={() => <Kukulkan Threads={SearchThreads} sp={setProgress}/>}/>

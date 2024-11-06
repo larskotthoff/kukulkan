@@ -71,12 +71,12 @@ test("renders", async () => {
   // default from
   expect(screen.getByText("blurg <blurg@foo.com>")).toBeInTheDocument();
   expect(screen.getByText("Attach")).toBeInTheDocument();
-  expect(getByTestId("subject").querySelector("input").value).toBe("");
+  expect(getByTestId("subject").value).toBe("");
   expect(document.title).toBe("Compose: New Message");
 });
 
 test("selects default account and lists others", async () => {
-  const { container } = render(() => <Write/>);
+  render(() => <Write/>);
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -104,11 +104,11 @@ test("base message reply all", async () => {
   expect(screen.getByText("foo bar <foo@bar.com>")).toBeInTheDocument();
   expect(screen.getByText("bar foo <bar@foo.com>")).toBeInTheDocument();
   expect(screen.getByText("test@test.com")).toBeInTheDocument();
-  expect(getByTestId("subject").querySelector("input").value).toBe("Re: Test.");
+  expect(getByTestId("subject").value).toBe("Re: Test.");
   expect(screen.getByText("foo")).toBeInTheDocument();
   expect(screen.getByText("bar")).toBeInTheDocument();
   expect(screen.getByText("test")).toBeInTheDocument();
-  expect(getByTestId("body").querySelector("textarea").value).toBe(`\n\n\nOn ${msg.date}, ${msg.from} wrote:\n> Test mail`);
+  expect(getByTestId("body").value).toBe(`\n\n\nOn ${msg.date}, ${msg.from} wrote:\n> Test mail`);
   expect(document.title).toBe("Compose: Re: Test.");
 });
 
@@ -126,11 +126,11 @@ test("base message reply one", async () => {
   expect(screen.getByText("foo bar <foo@bar.com>")).toBeInTheDocument();
   expect(screen.getByText("bar foo <bar@foo.com>")).toBeInTheDocument();
   expect(screen.queryByText("test@test.com")).not.toBeInTheDocument();
-  expect(getByTestId("subject").querySelector("input").value).toBe("Re: Test.");
+  expect(getByTestId("subject").value).toBe("Re: Test.");
   expect(screen.getByText("foo")).toBeInTheDocument();
   expect(screen.getByText("bar")).toBeInTheDocument();
   expect(screen.getByText("test")).toBeInTheDocument();
-  expect(getByTestId("body").querySelector("textarea").value).toBe(`\n\n\nOn ${msg.date}, ${msg.from} wrote:\n> Test mail`);
+  expect(getByTestId("body").value).toBe(`\n\n\nOn ${msg.date}, ${msg.from} wrote:\n> Test mail`);
   expect(document.title).toBe("Compose: Re: Test.");
 });
 
@@ -163,7 +163,7 @@ test("reply includes only main part of base message quoted", async () => {
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
-  expect(getByTestId("body").querySelector("textarea").value).toBe(`\n\n\nOn ${msg.date}, ${msg.from} wrote:\n> Thanks.\n> \n> [...]`);
+  expect(getByTestId("body").value).toBe(`\n\n\nOn ${msg.date}, ${msg.from} wrote:\n> Thanks.\n> \n> [...]`);
 });
 
 test("reply includes entire base message quoted when setting changed", async () => {
@@ -180,7 +180,7 @@ test("reply includes entire base message quoted when setting changed", async () 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
-  expect(getByTestId("body").querySelector("textarea").value).toBe(`\n\n\nOn ${msg.date}, ${msg.from} wrote:\n> Thanks.\n> \n> On bla, blurg wrote:\n> > foo\n> > bar.`);
+  expect(getByTestId("body").value).toBe(`\n\n\nOn ${msg.date}, ${msg.from} wrote:\n> Thanks.\n> \n> On bla, blurg wrote:\n> > foo\n> > bar.`);
 });
 
 test("base message forward", async () => {
@@ -197,11 +197,11 @@ test("base message forward", async () => {
   expect(screen.getByText("foo bar <foo@bar.com>")).toBeInTheDocument();
   expect(screen.queryByText("bar foo <bar@foo.com>")).not.toBeInTheDocument();
   expect(screen.queryByText("test@test.com")).not.toBeInTheDocument();
-  expect(getByTestId("subject").querySelector("input").value).toBe("Fw: Test.");
+  expect(getByTestId("subject").value).toBe("Fw: Test.");
   expect(screen.getByText("foo")).toBeInTheDocument();
   expect(screen.getByText("bar")).toBeInTheDocument();
   expect(screen.getByText("test")).toBeInTheDocument();
-  expect(getByTestId("body").querySelector("textarea").value).toBe(`\n\n\nOn ${msg.date}, ${msg.from} wrote:\n> Test mail`);
+  expect(getByTestId("body").value).toBe(`\n\n\nOn ${msg.date}, ${msg.from} wrote:\n> Test mail`);
   expect(screen.getByText("Original HTML message")).toBeInTheDocument();
   expect(document.title).toBe("Compose: Fw: Test.");
 });
@@ -220,7 +220,7 @@ test("forward includes entire message even if abbreviated reply", async () => {
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
-  expect(getByTestId("body").querySelector("textarea").value).toBe(`\n\n\nOn ${msg.date}, ${msg.from} wrote:\n> Thanks.\n> \n> On bla, blurg wrote:\n> > foo\n> > bar.`);
+  expect(getByTestId("body").value).toBe(`\n\n\nOn ${msg.date}, ${msg.from} wrote:\n> Thanks.\n> \n> On bla, blurg wrote:\n> > foo\n> > bar.`);
 });
 
 test("base message reply filters admin tags", async () => {
@@ -254,19 +254,19 @@ test("template set", async () => {
 
   expect(screen.getByText("foo (1)")).toBeInTheDocument();
   expect(screen.getByText("foobar (2)")).toBeInTheDocument();
-  expect(getByTestId("body").querySelector("textarea").value).toBe("");
+  expect(getByTestId("body").value).toBe("");
 
   await userEvent.click(screen.getByText("foo (1)"));
-  expect(getByTestId("body").querySelector("textarea").value).toBe("bar");
+  expect(getByTestId("body").value).toBe("bar");
 
   await userEvent.click(screen.getByText("foobar (2)"));
-  expect(getByTestId("body").querySelector("textarea").value).toBe("blurg");
+  expect(getByTestId("body").value).toBe("blurg");
 
   await userEvent.type(document.body, "1");
-  expect(getByTestId("body").querySelector("textarea").value).toBe("bar");
+  expect(getByTestId("body").value).toBe("bar");
 
   await userEvent.type(document.body, "2");
-  expect(getByTestId("body").querySelector("textarea").value).toBe("blurg");
+  expect(getByTestId("body").value).toBe("blurg");
 });
 
 test("template set with base message", async () => {
@@ -285,19 +285,19 @@ test("template set with base message", async () => {
 
   expect(screen.getByText("foo (1)")).toBeInTheDocument();
   expect(screen.getByText("foobar (2)")).toBeInTheDocument();
-  expect(getByTestId("body").querySelector("textarea").value).toBe(`\n\n\nOn ${msg.date}, ${msg.from} wrote:\n> Test mail`);
+  expect(getByTestId("body").value).toBe(`\n\n\nOn ${msg.date}, ${msg.from} wrote:\n> Test mail`);
 
   await userEvent.click(screen.getByText("foo (1)"));
-  expect(getByTestId("body").querySelector("textarea").value).toBe(`bar\n\n\nOn ${msg.date}, ${msg.from} wrote:\n> Test mail`);
+  expect(getByTestId("body").value).toBe(`bar\n\n\nOn ${msg.date}, ${msg.from} wrote:\n> Test mail`);
 
   await userEvent.click(screen.getByText("foobar (2)"));
-  expect(getByTestId("body").querySelector("textarea").value).toBe(`blurg\n\n\nOn ${msg.date}, ${msg.from} wrote:\n> Test mail`);
+  expect(getByTestId("body").value).toBe(`blurg\n\n\nOn ${msg.date}, ${msg.from} wrote:\n> Test mail`);
 
   await userEvent.type(document.body, "1");
-  expect(getByTestId("body").querySelector("textarea").value).toBe(`bar\n\n\nOn ${msg.date}, ${msg.from} wrote:\n> Test mail`);
+  expect(getByTestId("body").value).toBe(`bar\n\n\nOn ${msg.date}, ${msg.from} wrote:\n> Test mail`);
 
   await userEvent.type(document.body, "2");
-  expect(getByTestId("body").querySelector("textarea").value).toBe(`blurg\n\n\nOn ${msg.date}, ${msg.from} wrote:\n> Test mail`);
+  expect(getByTestId("body").value).toBe(`blurg\n\n\nOn ${msg.date}, ${msg.from} wrote:\n> Test mail`);
 });
 
 test("addresses editable and complete", async () => {
@@ -428,7 +428,7 @@ test("files attachable and editable", async () => {
 });
 
 test("localStorage stores for new email", async () => {
-  const { container, getByTestId } = render(() => <Write/>);
+  const { getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -460,8 +460,8 @@ test("localStorage stores for new email", async () => {
       }));
   });
   await userEvent.type(getByTestId("tagedit").querySelector("input"), "foobar{enter}{enter}");
-  await userEvent.type(getByTestId("subject").querySelector("input"), "testsubject");
-  await userEvent.type(getByTestId("body").querySelector("textarea"), "testbody");
+  await userEvent.type(getByTestId("subject"), "testsubject");
+  await userEvent.type(getByTestId("body"), "testbody");
 
   expect(global.fetch).toHaveBeenCalledTimes(3);
 
@@ -475,7 +475,7 @@ test("localStorage stores for new email", async () => {
 });
 
 test("localStorage removes empty items", async () => {
-  const { container, getByTestId } = render(() => <Write/>);
+  const { getByTestId } = render(() => <Write/>);
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -545,8 +545,8 @@ test("localStorage stores for reply", async () => {
       }));
   });
   await userEvent.type(getByTestId("tagedit").querySelector("input"), "foobar{enter}{enter}");
-  await userEvent.type(getByTestId("subject").querySelector("input"), " testsubject");
-  await userEvent.type(getByTestId("body").querySelector("textarea"), "testbody");
+  await userEvent.type(getByTestId("subject"), " testsubject");
+  await userEvent.type(getByTestId("body"), "testbody");
 
   expect(global.fetch).toHaveBeenCalledTimes(3);
 
@@ -589,8 +589,8 @@ test("localStorage deletes upon successful send", async () => {
   });
   expect(global.fetch).toHaveBeenCalledTimes(3);
   await userEvent.type(getByTestId("tagedit").querySelector("input"), "foobar{enter}{enter}");
-  await userEvent.type(getByTestId("subject").querySelector("input"), "testsubject");
-  await userEvent.type(getByTestId("body").querySelector("textarea"), "testbody");
+  await userEvent.type(getByTestId("subject"), "testsubject");
+  await userEvent.type(getByTestId("body"), "testbody");
 
   expect(localStorage.getItem("draft-compose-to")).toBe("to@test.com\notherto@test.com");
   expect(localStorage.getItem("draft-compose-cc")).toBe("cc@test.com");
@@ -655,8 +655,8 @@ test("localStorage deleted with shortcut d", async () => {
   });
   expect(global.fetch).toHaveBeenCalledTimes(3);
   await userEvent.type(getByTestId("tagedit").querySelector("input"), "foobar{enter}{enter}");
-  await userEvent.type(getByTestId("subject").querySelector("input"), "testsubject");
-  await userEvent.type(getByTestId("body").querySelector("textarea"), "testbody");
+  await userEvent.type(getByTestId("subject"), "testsubject");
+  await userEvent.type(getByTestId("body"), "testbody");
 
   expect(localStorage.getItem("draft-compose-to")).toBe("to@test.com\notherto@test.com");
   expect(localStorage.getItem("draft-compose-cc")).toBe("cc@test.com");
@@ -731,8 +731,8 @@ test("data assembled correctly for sending new email", async () => {
       }));
   });
   await userEvent.type(getByTestId("tagedit").querySelector("input"), "foobar{enter}{enter}");
-  await userEvent.type(getByTestId("subject").querySelector("input"), "testsubject");
-  await userEvent.type(getByTestId("body").querySelector("textarea"), "testbody");
+  await userEvent.type(getByTestId("subject"), "testsubject");
+  await userEvent.type(getByTestId("body"), "testbody");
   expect(global.fetch).toHaveBeenCalledTimes(4);
 
   const file = new File(['test content'], 'test.txt', { type: 'text/plain' });
@@ -804,9 +804,9 @@ test("data assembled correctly for sending new email w/ template", async () => {
       }));
   });
   await userEvent.type(getByTestId("tagedit").querySelector("input"), "foobar{enter}{enter}");
-  await userEvent.type(getByTestId("subject").querySelector("input"), "testsubject");
+  await userEvent.type(getByTestId("subject"), "testsubject");
   await userEvent.type(document.body, "1");
-  expect(getByTestId("body").querySelector("textarea").value).toBe("bar");
+  expect(getByTestId("body").value).toBe("bar");
   expect(global.fetch).toHaveBeenCalledTimes(3);
 
   const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
@@ -920,8 +920,8 @@ test("data assembled correctly for sending reply", async () => {
       }));
   });
   await userEvent.type(getByTestId("tagedit").querySelector("input"), "foobar{enter}{enter}");
-  await userEvent.type(getByTestId("subject").querySelector("input"), " testsubject");
-  await userEvent.type(getByTestId("body").querySelector("textarea"), "testbody");
+  await userEvent.type(getByTestId("subject"), " testsubject");
+  await userEvent.type(getByTestId("body"), "testbody");
   expect(global.fetch).toHaveBeenCalledTimes(3);
 
   const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
@@ -1017,7 +1017,7 @@ test("error when mail cannot be sent", async () => {
       }));
   });
   expect(global.fetch).toHaveBeenCalledTimes(1);
-  await userEvent.type(getByTestId("subject").querySelector("input"), "testsubject");
+  await userEvent.type(getByTestId("subject"), "testsubject");
 
   const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
       json: () => Promise.resolve({send_id: 0})
@@ -1050,9 +1050,9 @@ test("external editing", async () => {
 
   global.fetch.mockResolvedValue({ ok: true, text: () => "foobar" });
 
-  expect(getByTestId("body").querySelector("textarea").value).toBe("");
+  expect(getByTestId("body").value).toBe("");
 
-  await fireEvent.focus(getByTestId("body").querySelector("textarea"));
+  await fireEvent.focus(getByTestId("body"));
   expect(global.fetch).toHaveBeenCalledTimes(1);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/edit_external",
     expect.objectContaining({
@@ -1060,10 +1060,10 @@ test("external editing", async () => {
       body: expect.any(FormData),
     }));
 
-  expect(getByTestId("body").querySelector("textarea").value).toBe("[Editing externally...]");
+  expect(getByTestId("body").value).toBe("[Editing externally...]");
 
   await vi.waitFor(() => {
-    expect(getByTestId("body").querySelector("textarea").value).toBe("foobar");
+    expect(getByTestId("body").value).toBe("foobar");
   });
   expect(localStorage.getItem("draft-compose-body")).toBe("foobar");
 
@@ -1076,7 +1076,7 @@ test("external editing", async () => {
       }));
   });
   expect(global.fetch).toHaveBeenCalledTimes(2);
-  await userEvent.type(getByTestId("subject").querySelector("input"), " testsubject");
+  await userEvent.type(getByTestId("subject"), " testsubject");
 
   const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
       json: () => Promise.resolve({send_id: 0})
@@ -1111,9 +1111,9 @@ test("external editing w/ client config override internal", async () => {
 
   global.fetch.mockResolvedValue({ ok: true, text: () => "foobar" });
 
-  expect(getByTestId("body").querySelector("textarea").value).toBe("");
+  expect(getByTestId("body").value).toBe("");
 
-  await fireEvent.focus(getByTestId("body").querySelector("textarea"));
+  await fireEvent.focus(getByTestId("body"));
   expect(global.fetch).toHaveBeenCalledTimes(1);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/edit_external",
     expect.objectContaining({
@@ -1121,17 +1121,17 @@ test("external editing w/ client config override internal", async () => {
       body: expect.any(FormData),
     }));
 
-  expect(getByTestId("body").querySelector("textarea").value).toBe("[Editing externally...]");
+  expect(getByTestId("body").value).toBe("[Editing externally...]");
 
   await vi.waitFor(() => {
-    expect(getByTestId("body").querySelector("textarea").value).toBe("foobar");
+    expect(getByTestId("body").value).toBe("foobar");
   });
   expect(localStorage.getItem("draft-compose-body")).toBe("foobar");
 
   localStorage.setItem("settings-externalCompose", false);
-  await fireEvent.focus(getByTestId("body").querySelector("textarea"));
-  await userEvent.type(getByTestId("body").querySelector("textarea"), "foobar");
-  expect(getByTestId("body").querySelector("textarea").value).toBe("foobarfoobar");
+  await fireEvent.focus(getByTestId("body"));
+  await userEvent.type(getByTestId("body"), "foobar");
+  expect(getByTestId("body").value).toBe("foobarfoobar");
   expect(localStorage.getItem("draft-compose-body")).toBe("foobarfoobar");
   expect(global.fetch).toHaveBeenCalledTimes(1);
 });
@@ -1143,18 +1143,18 @@ test("external editing w/ client config override external", async () => {
     expect(screen.getByText("Send")).toBeInTheDocument();
   });
 
-  expect(getByTestId("body").querySelector("textarea").value).toBe("");
+  expect(getByTestId("body").value).toBe("");
 
-  await fireEvent.focus(getByTestId("body").querySelector("textarea"));
-  await userEvent.type(getByTestId("body").querySelector("textarea"), "bar");
-  expect(getByTestId("body").querySelector("textarea").value).toBe("bar");
+  await fireEvent.focus(getByTestId("body"));
+  await userEvent.type(getByTestId("body"), "bar");
+  expect(getByTestId("body").value).toBe("bar");
   expect(global.fetch).toHaveBeenCalledTimes(0);
 
   localStorage.setItem("settings-externalCompose", true);
 
   global.fetch.mockResolvedValue({ ok: true, text: () => "foobar" });
 
-  await fireEvent.focus(getByTestId("body").querySelector("textarea"));
+  await fireEvent.focus(getByTestId("body"));
   expect(global.fetch).toHaveBeenCalledTimes(1);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:3000/api/edit_external",
     expect.objectContaining({
@@ -1162,10 +1162,10 @@ test("external editing w/ client config override external", async () => {
       body: expect.any(FormData),
     }));
 
-  expect(getByTestId("body").querySelector("textarea").value).toBe("[Editing externally...]");
+  expect(getByTestId("body").value).toBe("[Editing externally...]");
 
   await vi.waitFor(() => {
-    expect(getByTestId("body").querySelector("textarea").value).toBe("foobar");
+    expect(getByTestId("body").value).toBe("foobar");
   });
   expect(localStorage.getItem("draft-compose-body")).toBe("foobar");
 });
@@ -1189,7 +1189,7 @@ test("shortcuts disabled while editing externally", async () => {
       }));
   });
   expect(global.fetch).toHaveBeenCalledTimes(1);
-  await userEvent.type(getByTestId("subject").querySelector("input"), " testsubject");
+  await userEvent.type(getByTestId("subject"), " testsubject");
 
   global.fetch.mockImplementation(() => {
     return new Promise((resolve) => {
@@ -1199,9 +1199,9 @@ test("shortcuts disabled while editing externally", async () => {
     });
   });
 
-  expect(getByTestId("body").querySelector("textarea").value).toBe("");
+  expect(getByTestId("body").value).toBe("");
 
-  await fireEvent.focus(getByTestId("body").querySelector("textarea"));
+  await fireEvent.focus(getByTestId("body"));
   expect(global.fetch).toHaveBeenCalledTimes(2);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/edit_external",
     expect.objectContaining({
@@ -1209,16 +1209,16 @@ test("shortcuts disabled while editing externally", async () => {
       body: expect.any(FormData),
     }));
 
-  expect(getByTestId("body").querySelector("textarea").value).toBe("[Editing externally...]");
+  expect(getByTestId("body").value).toBe("[Editing externally...]");
 
   const fetchSpy = vi.spyOn(global, 'fetch');
   await userEvent.type(document.body, "1");
-  expect(getByTestId("body").querySelector("textarea").value).toBe("[Editing externally...]");
+  expect(getByTestId("body").value).toBe("[Editing externally...]");
   await userEvent.type(document.body, "y");
   expect(fetchSpy).toHaveBeenCalledTimes(0);
 
   await vi.waitFor(() => {
-    expect(getByTestId("body").querySelector("textarea").value).toBe("foobar");
+    expect(getByTestId("body").value).toBe("foobar");
   });
   expect(localStorage.getItem("draft-compose-body")).toBe("foobar");
 });

@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, test, expect } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@solidjs/testing-library";
-import { userEvent } from "@testing-library/user-event";
 
 import { getSetting, Settings } from "./Settings.jsx";
 
@@ -37,8 +36,9 @@ test("shows settings", () => {
 test("allows to change settings", async () => {
   render(() => <Settings/>);
   expect(getSetting("numQueries")).toBe(10);
-  await userEvent.type(screen.getByTestId("numQueries").querySelector("input"), "1");
-  expect(getSetting("numQueries")).toBe(101);
+  screen.getByTestId("numQueries").value = 1;
+  await fireEvent.change(screen.getByTestId("numQueries"));
+  expect(getSetting("numQueries")).toBe(1);
 
   expect(getSetting("openInTab")).toBe("_blank");
   screen.getByText("same").selected = true;

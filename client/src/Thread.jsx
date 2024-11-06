@@ -50,7 +50,6 @@ export function Thread(props) {
   const [filteredThread, setFilteredThread] = createSignal(),
         [activeMessage, setActiveMessage] = createSignal();
 
-  // eslint-disable-next-line no-undef
   let tmp = data.thread.slice();
 
   let depth = 0;
@@ -65,52 +64,34 @@ export function Thread(props) {
   }
 
   if(getSetting("showNestedThread")) {
-    // eslint-disable-next-line no-undef
     let [ft, activeIdx] = filterThread(null, data.thread);
     setFilteredThread(ft);
     setActiveMessage(activeIdx);
   } else {
-    // eslint-disable-next-line no-undef
     setFilteredThread(data.thread);
-    // eslint-disable-next-line no-undef
     setActiveMessage(getFirstUnread(data.thread));
   }
 
-  mkShortcut(["Home"],
+  mkShortcut([["Home"], ["1"]],
     () => setActiveMessage(0)
   );
-  mkShortcut(["1"],
-    () => setActiveMessage(0)
-  );
-  mkShortcut(["k"],
+  mkShortcut([["k"], ["ArrowUp"]],
     // eslint-disable-next-line solid/reactivity
     () => setActiveMessage(Math.max(0, activeMessage() - 1))
   );
-  mkShortcut(["ArrowUp"],
-    // eslint-disable-next-line solid/reactivity
-    () => setActiveMessage(Math.max(0, activeMessage() - 1))
-  );
-  mkShortcut(["Shift", "K"],
+  mkShortcut([["Shift", "K"]],
     // eslint-disable-next-line solid/reactivity
     () => setActiveMessage(Math.max(0, activeMessage() - 10))
   );
-  mkShortcut(["j"],
+  mkShortcut([["j"], ["ArrowDown"]],
     // eslint-disable-next-line solid/reactivity
     () => setActiveMessage(Math.min(filteredThread().length - 1, activeMessage() + 1))
   );
-  mkShortcut(["ArrowDown"],
-    // eslint-disable-next-line solid/reactivity
-    () => setActiveMessage(Math.min(filteredThread().length - 1, activeMessage() + 1))
-  );
-  mkShortcut(["Shift", "J"],
+  mkShortcut([["Shift", "J"]],
     // eslint-disable-next-line solid/reactivity
     () => setActiveMessage(Math.min(filteredThread().length - 1, activeMessage() + 10))
   );
-  mkShortcut(["End"],
-    // eslint-disable-next-line solid/reactivity
-    () => setActiveMessage(filteredThread().length - 1)
-  );
-  mkShortcut(["0"],
+  mkShortcut([["End"], ["0"]],
     // eslint-disable-next-line solid/reactivity
     () => setActiveMessage(filteredThread().length - 1)
   );
@@ -118,54 +99,37 @@ export function Thread(props) {
   function updateActiveDepth(d) {
     let msg = null,
         unread = false;
-    // eslint-disable-next-line no-undef
     data.thread.forEach(function(m) {
       if(!unread && m.depth === d) {
         unread = m.tags.includes("unread");
         msg = m;
       }
     });
-    // eslint-disable-next-line no-undef
     let [ft, activeIdx] = filterThread(msg, data.thread);
     setFilteredThread(ft);
     setActiveMessage(activeIdx);
     document.querySelector(".threadnav-box.active")?.scrollIntoView({inline: "center"});
   }
 
-  mkShortcut(["h"],
+  mkShortcut([["h"], ["ArrowLeft"]],
     // eslint-disable-next-line solid/reactivity
     () => updateActiveDepth(Math.max(0, filteredThread()[activeMessage()].depth - 1))
   );
-  mkShortcut(["ArrowLeft"],
-    // eslint-disable-next-line solid/reactivity
-    () => updateActiveDepth(Math.max(0, filteredThread()[activeMessage()].depth - 1))
-  );
-  mkShortcut(["l"],
+  mkShortcut([["l"], ["ArrowRight"]],
     // eslint-disable-next-line solid/reactivity
     () => updateActiveDepth(Math.min(filteredThread()[activeMessage()].depth + 1,
-      // eslint-disable-next-line no-undef
-                                  Math.max(...data.thread.map(m => m.depth))))
-  );
-  mkShortcut(["ArrowRight"],
-    // eslint-disable-next-line solid/reactivity
-    () => updateActiveDepth(Math.min(filteredThread()[activeMessage()].depth + 1,
-      // eslint-disable-next-line no-undef
                                   Math.max(...data.thread.map(m => m.depth))))
   );
 
-  mkShortcut(["Shift", "F"],
+  mkShortcut([["Shift", "F"]],
     // eslint-disable-next-line solid/reactivity
     () => {
-      // eslint-disable-next-line no-undef
       if(filteredThread() === data.thread) {
-        // eslint-disable-next-line no-undef
         let [ft, activeIdx] = filterThread(null, data.thread);
         setFilteredThread(ft);
         setActiveMessage(activeIdx);
       } else {
-        // eslint-disable-next-line no-undef
         setFilteredThread(data.thread);
-        // eslint-disable-next-line no-undef
         setActiveMessage(getFirstUnread(data.thread));
       }
     }
@@ -175,16 +139,13 @@ export function Thread(props) {
     return (
       <Show when={filteredThread() && filteredThread()[activeMessage()]}>
         <Grid container direction="column" class="threadnav-container sticky">
-          { /* eslint-disable-next-line no-undef */ }
           <For each={data.thread}>
             {(m, i) =>
               <div
                 onClick={() => {
-                  // eslint-disable-next-line no-undef
                   if(filteredThread() === data.thread) {
                     setActiveMessage(i);
                   } else {
-                    // eslint-disable-next-line no-undef
                     let [ft, activeIdx] = filterThread(m, data.thread);
                     setFilteredThread(ft);
                     setActiveMessage(activeIdx);
@@ -196,7 +157,6 @@ export function Thread(props) {
                   'active-thread': filteredThread()?.find((mp) => { return mp.message_id === m.message_id; })
                 }}
                 style={{
-                  // eslint-disable-next-line no-undef
                   'margin-left': (filteredThread() === data.thread ? 0 : m.depth) + "em",
                   'border-radius': m.tags.includes("unread") ? "1em" : "0em",
                   'background-color': getColor(filterSubjectColor(m.subject) + filterAdminTags(m.tags) + extractEmailsSort(m.from + m.to + m.cc))

@@ -18,7 +18,7 @@ test("mkShortcut works", async () => {
     createRoot(async (dispose) => {
       render(() => <div/>);
       let tmp = 0;
-      mkShortcut(["a"], () => tmp += 1);
+      mkShortcut([["a"]], () => tmp += 1);
       expect(tmp).toBe(0);
       await userEvent.type(document.body, "a");
       expect(tmp).toBe(1);
@@ -34,7 +34,7 @@ test("mkShortcut doesn't trigger inside input-likes", async () => {
     createRoot(async (dispose) => {
       let { container } = render(() => <><input type="text"/><textarea/></>),
           tmp = 0;
-      mkShortcut(["a"], () => tmp += 1);
+      mkShortcut([["a"]], () => tmp += 1);
       expect(tmp).toBe(0);
       await userEvent.type(document.body, "a");
       expect(tmp).toBe(1);

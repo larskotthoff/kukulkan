@@ -24,7 +24,7 @@ test("success works", () => {
 
   expect(window.getComputedStyle(element).getPropertyValue('border'))
     .toBe('3px solid green');
-  expect(screen.getByTestId("CheckCircleOutlineIcon")).toBeInTheDocument();
+  expect(screen.getByTestId("TaskAltIcon")).toBeInTheDocument();
 });
 
 test("warning works", () => {

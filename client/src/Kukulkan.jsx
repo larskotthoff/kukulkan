@@ -1,6 +1,5 @@
-import { createEffect, createSignal } from "solid-js";
+import { createEffect, createSignal, Show } from "solid-js";
 
-import Modal from "@suid/material/Modal";
 import { Autocomplete } from "./Autocomplete.jsx";
 
 import { getSetting } from "./Settings.jsx";
@@ -15,7 +14,6 @@ export function Kukulkan(props) {
         [selectedThreads, setSelectedThreads] = createSignal([]),
         [editingTags, setEditingTags] = createSignal(null),
         [showEditingTagModal, setShowEditingTagModal] = createSignal(false),
-        // eslint-disable-next-line no-undef
         [threads, setThreads] = createSignal(data.threads || []);
 
   function makeTagEdits() {
@@ -37,12 +35,12 @@ export function Kukulkan(props) {
       // eslint-disable-next-line solid/reactivity
       Promise.all(urls.map((u) => fetch(u).then((response) => {
         done += 1;
-        props.sp?.(100 * done / urls.length);
+        props.sp?.(done / urls.length);
         if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
       // eslint-disable-next-line solid/reactivity
       }))).then(() => setThreads([...threads().slice(0, affectedThread), thread, ...threads().slice(affectedThread + 1)]))
       // eslint-disable-next-line solid/reactivity
-      .finally(() => props.sp?.(100));
+      .finally(() => props.sp?.(1));
     });
     setEditingTags("");
     setSelectedThreads([]);
@@ -54,50 +52,34 @@ export function Kukulkan(props) {
   });
 
   createEffect(() => {
-    if(showEditingTagModal()) document.getElementById("edit-tag-box").focus();
-  });
-
-  createEffect(() => {
     document.title = query() || "Kukulkan";
   });
 
-  mkShortcut(["Home"],
+  mkShortcut([["Home"]],
     () => setActiveThread(0)
   );
-  mkShortcut(["k"],
+  mkShortcut([["k"], ["ArrowUp"]],
     // eslint-disable-next-line solid/reactivity
     () => setActiveThread(Math.max(0, activeThread() - 1))
   );
-  mkShortcut(["ArrowUp"],
-    // eslint-disable-next-line solid/reactivity
-    () => setActiveThread(Math.max(0, activeThread() - 1))
-  );
-  mkShortcut(["Shift", "K"],
+  mkShortcut([["Shift", "K"]],
     // eslint-disable-next-line solid/reactivity
     () => setActiveThread(Math.max(0, activeThread() - 10))
   );
-  mkShortcut(["j"],
+  mkShortcut([["j"], ["ArrowDown"]],
     // eslint-disable-next-line solid/reactivity
     () => setActiveThread(Math.min(threads().length - 1, activeThread() + 1))
   );
-  mkShortcut(["ArrowDown"],
-    // eslint-disable-next-line solid/reactivity
-    () => setActiveThread(Math.min(threads().length - 1, activeThread() + 1))
-  );
-  mkShortcut(["Shift", "J"],
+  mkShortcut([["Shift", "J"]],
     // eslint-disable-next-line solid/reactivity
     () => setActiveThread(Math.min(threads().length - 1, activeThread() + 10))
   );
-  mkShortcut(["End"],
-    // eslint-disable-next-line solid/reactivity
-    () => setActiveThread(threads().length - 1)
-  );
-  mkShortcut(["0"],
+  mkShortcut([["End"], ["0"]],
     // eslint-disable-next-line solid/reactivity
     () => setActiveThread(threads().length - 1)
   );
 
-  mkShortcut(["Enter"],
+  mkShortcut([["Enter"]],
     // eslint-disable-next-line solid/reactivity
     () => { if(threads()[activeThread()]) window.open(`/thread?id=${encodeURIComponent(threads()[activeThread()].thread_id)}`, getSetting("openInTab")) }
   );
@@ -116,29 +98,29 @@ export function Kukulkan(props) {
     }
   });
 
-  mkShortcut(["c"],
+  mkShortcut([["c"]],
     () => window.open('/write', getSetting("openInTab"))
   );
 
-  mkShortcut(["s"],
+  mkShortcut([["s"]],
     () => window.open('/settings', getSetting("openInTab"))
   );
 
-  mkShortcut(["/"],
+  mkShortcut([["/"]],
     () => {
-      document.getElementById("query-box")?.focus();
-      document.getElementById("query-box")?.select();
+      document.querySelector("#query-box > input")?.focus();
+      document.querySelector("#query-box > input")?.select();
     },
     true
   );
 
-  mkShortcut(["t"],
+  mkShortcut([["t"]],
     // eslint-disable-next-line solid/reactivity
     () => setShowEditingTagModal(!showEditingTagModal()),
     true
   );
 
-  mkShortcut(["Delete"],
+  mkShortcut([["Delete"]],
     // eslint-disable-next-line solid/reactivity
     () => {
       setEditingTags("deleted -unread");
@@ -148,7 +130,7 @@ export function Kukulkan(props) {
     true
   );
 
-  mkShortcut(["d"],
+  mkShortcut([["d"]],
     // eslint-disable-next-line solid/reactivity
     () => {
       let edits = "-todo",
@@ -164,22 +146,28 @@ export function Kukulkan(props) {
     true
   );
 
+  createEffect(() => {
+    if(showEditingTagModal()) document.querySelector("#edit-tag-box > input").focus();
+  });
+
   function TagEditingModal() {
     return (
-      <Modal open={showEditingTagModal()} onClose={() => { setShowEditingTagModal(false); setEditingTags(""); }} BackdropProps={{timeout: 0}}>
+      <Show when={showEditingTagModal()}>
         <Autocomplete
           id="edit-tag-box"
           name="editTags"
-          variant="standard"
-          fullWidth
+          class="input-wide centered"
           text={editingTags}
           setText={setEditingTags}
+          onBlur={() => {
+            setShowEditingTagModal(false);
+            setEditingTags("");
+          }}
           getOptions={(text) => {
             // claude helped with this
             let pts = text.match(/([^ -]+)|[ -]/g),
                 last = pts.pop();
             if(last.length > 0)
-              // eslint-disable-next-line no-undef
               return data.allTags.filter((t) => t.startsWith(last)).map((t) => [...pts, t].join(''));
             else
               return [];
@@ -193,15 +181,15 @@ export function Kukulkan(props) {
             }
           }}
         />
-      </Modal>
+      </Show>
     );
   }
 
   return (
     <>
+      <TagEditingModal/>
       <props.Threads threads={threads} activeThread={activeThread} setActiveThread={setActiveThread}
         selectedThreads={selectedThreads} setQuery={setQuery}/>
-      <TagEditingModal/>
     </>
   );
 }

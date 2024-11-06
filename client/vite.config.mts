@@ -21,7 +21,7 @@ export default defineConfig({
     port: 3000,
     proxy: {
       // Proxy everything except assets to Flask
-      '^(?!/src|/node_modules|/@vite|/@id|/@fs).*': {
+      '^(?!/src|/node_modules|/@vite|/@id|/@fs|/@solid).*': {
         target: 'http://localhost:5000',
         changeOrigin: true,
         secure: false,

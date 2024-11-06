@@ -31,27 +31,28 @@ test("renders components", () => {
     selectedThreads={() => []} setQuery={() => []}/>);
   expect(container.querySelector("div")).not.toBe(undefined);
   expect(container.querySelector("#query-box")).not.toBe(undefined);
+  expect(container.querySelector("#query-box > input")).not.toBe(undefined);
 });
 
 test("shows completions and allows to select", async () => {
   const { container } = render(() => <SearchThreads threads={() => []} index={() => 0} activeThread={() => 0}
     selectedThreads={() => []} setQuery={() => []}/>);
-  await userEvent.type(container.querySelector("#query-box"), "t");
+  await userEvent.type(container.querySelector("#query-box > input"), "t");
   expect(screen.getByText("tag:unread")).toBeInTheDocument();
   expect(screen.getByText("tag:todo")).toBeInTheDocument();
 
-  container.querySelector("#query-box").value = "";
-  await userEvent.type(container.querySelector("#query-box"), "d");
+  container.querySelector("#query-box > input").value = "";
+  await userEvent.type(container.querySelector("#query-box > input"), "d");
   expect(screen.getByText("date:today")).toBeInTheDocument();
 
-  await userEvent.type(container.querySelector("#query-box"), "{enter}{enter}");
+  await userEvent.type(container.querySelector("#query-box > input"), "{enter}{enter}");
   expect(window.location.search).toBe("query=date%3Atoday");
 });
 
 test("saves queries for completion", async () => {
   let { container } = render(() => <SearchThreads threads={() => []} index={() => 0} activeThread={() => 0}
     selectedThreads={() => []} setQuery={() => []}/>);
-  await userEvent.type(container.querySelector("#query-box"), "t");
+  await userEvent.type(container.querySelector("#query-box > input"), "t");
   expect(screen.queryByText("tag:foo")).not.toBeInTheDocument();
   cleanup();
 
@@ -61,8 +62,8 @@ test("saves queries for completion", async () => {
   });
   container = render(() => <SearchThreads threads={() => []} index={() => 0} activeThread={() => 0}
     selectedThreads={() => []} setQuery={() => []}/>).container;
-  container.querySelector("#query-box").value = "";
-  await userEvent.type(container.querySelector("#query-box"), "t");
+  container.querySelector("#query-box > input").value = "";
+  await userEvent.type(container.querySelector("#query-box > input"), "t");
   expect(screen.getByText("tag:foo")).toBeInTheDocument();
 });
 

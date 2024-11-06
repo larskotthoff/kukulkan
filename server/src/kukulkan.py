@@ -744,7 +744,8 @@ def smime_verify(part, accts):
             else:
                 return {"valid": False, "message": str(e)}
     except Exception as e:
-        return {"valid": False, "message": str(e)}
+        current_app.logger.error("Exception in smime_verify: %s", str(e))
+        return {"valid": False, "message": "An internal error has occurred."}
 
 
 def eml_to_json(message_bytes):
@@ -829,7 +830,8 @@ def message_to_json(message):
                         else:
                             signature = {"valid": False, "message": verified.trust_text}
                 except Exception as e:
-                    signature = {"valid": False, "message": str(e)}
+                    current_app.logger.error("Exception in gpg_verify: %s", str(e))
+                    signature = {"valid": False, "message": "An internal error has occurred."}
                 finally:
                     os.unlink(path)
 

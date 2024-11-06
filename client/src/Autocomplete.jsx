@@ -1,7 +1,5 @@
 // based on https://stackoverflow.com/questions/75751029/how-to-create-an-autocomplete-element
-import { createEffect, createSignal, For, Index, on } from 'solid-js';
-
-import TextField from "@suid/material/TextField";
+import { createEffect, createSignal, For, Index, on, Show } from 'solid-js';
 
 import { ColorChip } from "./ColorChip.jsx";
 
@@ -86,40 +84,40 @@ export function Autocomplete(props) {
     setSelected(0);
   }));
 
-  createEffect(() => {
-    document.querySelector(".autocomplete-popup").style.marginLeft = inputRef().offsetLeft + "px";
-  });
-
   return (
-    <>
-      <TextField
-        inputRef={setInputRef}
+    <div {...props}>
+      {props.children}
+      <input
+        type="text"
+        ref={setInputRef}
         value={props.text() || ""}
-        onChange={(ev, value) => {
-          props.setText(value);
+        // eslint-disable-next-line solid/reactivity
+        onBlur={props.onBlur}
+        onInput={(ev) => {
+          props.setText(ev.target.value);
           getSortedOptions();
         }}
         onKeyDown={handleKeydown}
         autoComplete="off"
-        {...props}
       />
-      <div classList={{
-          'autocomplete-popup': true,
-          'paper': true,
-          'visible': isVisible()
+      <Show when={isVisible()}>
+        <div class="autocomplete-popup paper" style={{
+          'left': `${inputRef().getBoundingClientRect().left}px`,
+          'top': `${inputRef().getBoundingClientRect().bottom}px`
         }}>
-        <Index each={isVisible() ? sortedOptions() : []}>
-          {(item, i) =>
-            <div classList={{
-                'selected': selected() === i
-              }}
-              onClick={() => select(i) }>
-              {item()}
-            </div>
-          }
-        </Index>
-      </div>
-    </>
+          <Index each={isVisible() ? sortedOptions() : []}>
+            {(item, i) =>
+              <div classList={{
+                  'selected': selected() === i
+                }}
+                onClick={() => select(i) }>
+                {item()}
+              </div>
+            }
+          </Index>
+        </div>
+      </Show>
+    </div>
   );
 }
 
@@ -128,21 +126,9 @@ export function ChipComplete(props) {
 
   return (
     <Autocomplete
-      class="chip-edit-autocomplete"
-      variant="standard"
-      fullWidth
+      class="input-wide chip-edit-autocomplete"
       text={toAdd}
       setText={setToAdd}
-      InputProps={{
-        startAdornment: <>
-          <For each={props.chips}>
-            {(chip) => <ColorChip data-testid={chip} value={chip} onClick={(e) => {
-                props.removeChip(chip);
-                e.stopPropagation();
-              }}/>}
-          </For>
-        </>
-      }}
       // eslint-disable-next-line solid/reactivity
       handleKey={async (ev) => {
         if((ev.code === 'Enter' || ev.key === 'Enter') && toAdd()) {
@@ -154,8 +140,14 @@ export function ChipComplete(props) {
           props.removeChip(chip);
         }
       }}
-      {...props}
-    />
+      {...props}>
+      <For each={props.chips}>
+        {(chip) => <ColorChip data-testid={chip} value={chip} onClick={(e) => {
+            props.removeChip(chip);
+            e.stopPropagation();
+          }}/>}
+      </For>
+    </Autocomplete>
   );
 }
 
@@ -166,7 +158,6 @@ export function TagComplete(props) {
       addChip={props.addTag}
       removeChip={props.removeTag}
       getOptions={(text) => {
-        // eslint-disable-next-line no-undef
         return data.allTags.filter((t) => t.includes(text));
       }}
       {...props}

@@ -2,7 +2,6 @@ import { createEffect, createSignal, For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 
 import Grid from "@suid/material/Grid";
-import TextField from "@suid/material/TextField";
 
 import AttachFile from "@suid/icons-material/AttachFile";
 import Send from "@suid/icons-material/Send";
@@ -23,7 +22,7 @@ function Templates(props) {
     <Grid container spacing={1} class="centered" sx={{ justifyContent: 'center', width: 'fit-content' }}>
       <For each={props.templates}>
         {(template) => {
-          mkShortcut([template.shortcut],
+          mkShortcut([[template.shortcut]],
             () => document.getElementById(`template-${template.shortcut}`).click()
           );
           return (<Grid item>
@@ -65,9 +64,10 @@ function AddrComplete(props) {
               try {
                 props.sp?.(0);
                 const response = await fetch(apiURL(`api/address/${encodeURIComponent(text)}`), { signal: controller.signal });
-                props.sp?.(100);
+                props.sp?.(1);
                 if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
                 resolve(response.json());
+              // eslint-disable-next-line no-unused-vars
               } catch(_) {
                 // this is fine, previous aborted completion request
               }
@@ -97,7 +97,6 @@ function makeToCc(msg, action, mode) {
       if(msg.cc.length > 0) {
         tmpCc = msg.cc;
         tmpCc = tmpCc.filter(a => {
-          // eslint-disable-next-line no-undef
           return a.length > 0 && !tmpTo.includes(a) && data.accounts.reduce((cum, acct) => {
             if(cum === false) return false;
 
@@ -111,7 +110,6 @@ function makeToCc(msg, action, mode) {
     }
 
     tmpTo = tmpTo.filter(a => {
-      // eslint-disable-next-line no-undef
       return a.length > 0 && data.accounts.reduce((cum, acct) => {
         if(cum === false) return false;
 
@@ -141,28 +139,21 @@ export function Write(props) {
 
   document.title = "Compose: New Message";
 
-  // eslint-disable-next-line no-undef
   let defAcct = data.accounts?.find(a => a.default),
       from = defAcct?.id,
       subject = "";
 
   setMessage("files", []);
-  // eslint-disable-next-line no-undef
   if(data.baseMessage) {
-    // eslint-disable-next-line no-undef
     if(!draftKey.endsWith(data.baseMessage.message_id)) {
-      // eslint-disable-next-line no-undef
       draftKey += `-${data.baseMessage.message_id}`;
     }
     if(action === "forward") {
-      // eslint-disable-next-line no-undef
       if(data.baseMessage.attachments) {
         // attach files attached to previous email
-        // eslint-disable-next-line no-undef
         const newFiles = data.baseMessage.attachments.map(a => { return { dummy: true, name: a.filename }; });
         setMessage("files", (prevFiles) => [...prevFiles, ...newFiles ]);
       }
-      // eslint-disable-next-line no-undef
       if(data.baseMessage.body["text/html"]) {
         // attach HTML part of original email
         setMessage("files", (prevFiles) => [...prevFiles, ...[{dummy: true, name: "Original HTML message"}] ]);
@@ -170,46 +161,33 @@ export function Write(props) {
     }
     if(action.startsWith("reply-cal-")) {
       const idx = urlSearchParams.get("index"),
-            // eslint-disable-next-line no-undef
             calFile = { dummy: true, name: data.baseMessage.attachments[idx].filename };
       setMessage("files", (prevFiles) => [...prevFiles, calFile]);
     }
 
     if(!localStorage.getItem(`draft-${draftKey}-from`)) {
-      // eslint-disable-next-line no-undef
       let acct = data.accounts?.find(a => data.baseMessage.to.some(t => t.includes(a.email)));
       if(!acct) {
-        // eslint-disable-next-line no-undef
         acct = data.accounts?.find(a => data.baseMessage.from.includes(a.email));
       }
-      // eslint-disable-next-line no-undef
       if(!acct && data.baseMessage.cc) {
-        // eslint-disable-next-line no-undef
         acct = data.accounts?.find(a => data.baseMessage.cc.some(c => c.includes(a.email)));
       }
-      // eslint-disable-next-line no-undef
       if(!acct && data.baseMessage.bcc) {
-        // eslint-disable-next-line no-undef
         acct = data.accounts?.find(a => data.baseMessage.bcc.some(b => b.includes(a.email)));
       }
-      // eslint-disable-next-line no-undef
       if(!acct && data.baseMessage.delivered_to) {
-        // eslint-disable-next-line no-undef
         acct = data.accounts?.find(a => data.baseMessage.delivered_to.includes(a.email));
       }
-      // eslint-disable-next-line no-undef
       if(!acct && data.baseMessage.forwarded_to) {
-        // eslint-disable-next-line no-undef
         acct = data.accounts?.find(a => data.baseMessage.forwarded_to.includes(a.email));
       }
       from = acct?.id;
     }
 
-    // eslint-disable-next-line no-undef
     subject = prefix(data.baseMessage?.subject);
     document.title = `Compose: ${subject}`;
 
-    // eslint-disable-next-line no-undef
     [defTo, defCc] = makeToCc(data.baseMessage, action, mode);
   }
 
@@ -228,9 +206,7 @@ export function Write(props) {
   setMessage("to", localStorage.getItem(`draft-${draftKey}-to`)?.split('\n') || defTo);
   setMessage("cc", localStorage.getItem(`draft-${draftKey}-cc`)?.split('\n') || defCc);
   setMessage("bcc", localStorage.getItem(`draft-${draftKey}-bcc`)?.split('\n') || []);
-  // eslint-disable-next-line no-undef
   setMessage("tags", localStorage.getItem(`draft-${draftKey}-tags`)?.split('\n') || filterAdminTags(data.baseMessage?.tags) || []);
-  // eslint-disable-next-line no-undef
   setMessage("bodyDefaultValue", localStorage.getItem(`draft-${draftKey}-body`) || quote(data.baseMessage?.body["text/plain"]) || "");
   // eslint-disable-next-line solid/reactivity
   setMessage("body", message.bodyDefaultValue);
@@ -260,7 +236,6 @@ export function Write(props) {
           mainPart += `\n> ${quotedPart.split('\n').join("\n> ")}`;
         }
       }
-      // eslint-disable-next-line no-undef
       return `\n\n\nOn ${data.baseMessage.date}, ${data.baseMessage.from} wrote:\n> ${mainPart}`;
     }
   }
@@ -288,10 +263,10 @@ export function Write(props) {
       const data = JSON.parse(message.data);
 
       if(data.send_status === "sending") {
-        props.sp?.(Math.min(data.progress * 100, 99.9));
+        props.sp?.(Math.min(data.progress, 0.99));
       } else {
         if(data.send_status === 0) {
-          props.sp?.(100);
+          props.sp?.(1);
           setStatusMsg("Message sent.");
           Object.keys(localStorage).filter(k => k.startsWith(`draft-${draftKey}`))
             .map(k => localStorage.removeItem(k));
@@ -341,22 +316,22 @@ export function Write(props) {
       });
   }
 
-  mkShortcut(["a"],
+  mkShortcut([["a"]],
     () => document.getElementById("attach").click()
   );
 
-  mkShortcut(["y"],
+  mkShortcut([["y"]],
     // eslint-disable-next-line solid/reactivity
     () => bodyRef().disabled || document.getElementById("send").click()
   );
 
-  mkShortcut(["b"],
+  mkShortcut([["b"]],
     // eslint-disable-next-line solid/reactivity
-    () => bodyRef().disabled || bodyRef().focus()
+    () => bodyRef().disabled || bodyRef().focus(),
+    true
   );
 
-  mkShortcut(["d"],
-    // eslint-disable-next-line solid/reactivity
+  mkShortcut([["d"]],
     () => Object.keys(localStorage).filter(k => k.startsWith(`draft-${draftKey}`))
             .map(k => localStorage.removeItem(k))
   );
@@ -364,11 +339,9 @@ export function Write(props) {
   return (
     <>
       <Show when={statusMsg()}>
-        <Alert severity={statusMsg().startsWith("Error") ? "error" : "success"}>{statusMsg()}</Alert>
+        <Alert width="fit-content" class="centered" severity={statusMsg().startsWith("Error") ? "error" : "success"}>{statusMsg()}</Alert>
       </Show>
-      { /* eslint-disable-next-line no-undef */ }
       <Show when={data.compose}>
-        { /* eslint-disable-next-line no-undef */ }
         <Templates templates={data.compose.templates} setTemplate={setUseTemplate}/>
       </Show>
       <div class="paper message centered">
@@ -376,14 +349,12 @@ export function Write(props) {
           <Grid item>From:</Grid>
           <Grid item>
             <select
-              class="compose-from"
               data-testid="from"
               value={message.from || ""}
               onChange={(ev) => {
                 setMessage("from", ev.target.value);
                 localStorage.setItem(`draft-${draftKey}-from`, ev.target.value);
               }}>
-                { /* eslint-disable-next-line no-undef */ }
                 <For each={data.accounts}>
                   {(acct) =>
                     <option value={acct.id}>
@@ -423,16 +394,16 @@ export function Write(props) {
         </Grid>
         <Grid container spacing={1} class="input-field-set">
           <Grid item>Subject:</Grid>
-          <Grid item xs><TextField
-            variant="standard"
+          <Grid item xs><input
+            type="text"
+            class="input-wide"
             value={message.subject || ""}
             data-testid="subject"
-            onChange={(ev) => {
+            onInput={(ev) => {
               setMessage("subject", ev.target.value);
               localStorage.setItem(`draft-${draftKey}-subject`, message.subject);
               document.title = `Compose: ${message.subject}`;
-            }}
-            fullWidth/>
+            }}/>
           </Grid>
         </Grid>
 
@@ -458,17 +429,12 @@ export function Write(props) {
           </Grid>
         </Grid>
 
-        <TextField
-          multiline
-          minRows={10}
-          maxRows={window.innerHeight / parseFloat(window.getComputedStyle(document.getElementsByTagName("body")[0]).getPropertyValue("line-height")) - 18}
-          fullWidth
-          inputRef={setBodyRef}
+        <textarea
+          class="input-wide"
+          rows={window.innerHeight / parseFloat(window.getComputedStyle(document.getElementsByTagName("body")[0]).getPropertyValue("line-height")) - 18}
+          ref={setBodyRef}
           data-testid="body"
-          sx={{ marginBottom: ".5em", marginTop: "1em" }}
-          // eslint-disable-next-line solid/reactivity
           onFocus={async (ev) => {
-            // eslint-disable-next-line no-undef
             if((getSetting("externalCompose") === -1 && data.compose["external-editor"]) || (getSetting("externalCompose") === true)) {
               const formData = new FormData();
               formData.append('body', ev.target.value);
@@ -483,10 +449,9 @@ export function Write(props) {
               ev.target.disabled = false;
               localStorage.setItem(`draft-${draftKey}-body`, ev.target.value);
               setMessage("body", ev.target.value);
-              ev.target.style.height = 'auto';
             }
           }}
-          onChange={(ev) => {
+          onInput={(ev) => {
             localStorage.setItem(`draft-${draftKey}-body`, ev.target.value);
             setMessage("body", ev.target.value);
           }}/>
@@ -499,7 +464,7 @@ export function Write(props) {
         </For>
         <Grid container sx={{ marginTop: ".5em" }}>
           <Grid item xs>
-            <button class="content" onClick={() => document.getElementById("attach").click()}>
+            <button onClick={() => document.getElementById("attach").click()}>
               <AttachFile/>
               <span>Attach</span>
               <input type="file" id="attach" multiple hidden onChange={(ev) => {
@@ -510,7 +475,7 @@ export function Write(props) {
             </button>
           </Grid>
           <Grid item>
-            <button id="send" class="content" onClick={sendMsg}><Send/><span>Send</span></button>
+            <button id="send" onClick={sendMsg}><Send/><span>Send</span></button>
           </Grid>
         </Grid>
       </div>

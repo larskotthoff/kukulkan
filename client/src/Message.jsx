@@ -206,7 +206,7 @@ export function Message(props) {
   async function removeTag(tag) {
     props.sp?.(0);
     const response = await fetch(apiURL(`api/tag/remove/message/${encodeURIComponent(msg.notmuch_id)}/${encodeURIComponent(tag)}`));
-    props.sp?.(100);
+    props.sp?.(1);
     if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
     setTags(tags().filter((t) => t !== tag));
     msg.tags = tags();
@@ -215,7 +215,7 @@ export function Message(props) {
   async function addTag(tag) {
     props.sp?.(0);
     const response = await fetch(apiURL(`api/tag/add/message/${encodeURIComponent(msg.notmuch_id)}/${encodeURIComponent(tag)}`));
-    props.sp?.(100);
+    props.sp?.(1);
     if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
     const tmp = tags().concat(tag);
     setTags(tmp.sort());
@@ -252,52 +252,48 @@ export function Message(props) {
     }
   });
 
-  createEffect(() => {
-    props.sp?.(100 * (1 - msg.loading));
-  });
-
-  mkShortcut(["r"],
+  mkShortcut([["r"]],
     // eslint-disable-next-line solid/reactivity
     () => { if(props.active) document.querySelector("a[id='reply']")?.click(); }
   );
 
-  mkShortcut(["Shift", "r"],
+  mkShortcut([["Shift", "r"]],
     // eslint-disable-next-line solid/reactivity
     () => { if(props.active) window.open(replyUrl(msg.notmuch_id, "one"), getSetting("openInTab")); }
   );
 
-  mkShortcut(["f"],
+  mkShortcut([["f"]],
     // eslint-disable-next-line solid/reactivity
     () => { if(props.active) document.querySelector("a[id='forward']")?.click(); }
   );
 
-  mkShortcut(["p"],
+  mkShortcut([["p"]],
     // eslint-disable-next-line solid/reactivity
     () => { if(props.active) document.querySelector("a[id='print']")?.click(); }
   );
 
-  mkShortcut(["s"],
+  mkShortcut([["s"]],
     // eslint-disable-next-line solid/reactivity
     () => { if(props.active) document.querySelector("a[id='security']")?.click(); }
   );
 
-  mkShortcut(["w"],
+  mkShortcut([["w"]],
     // eslint-disable-next-line solid/reactivity
     () => { if(props.active) window.open(apiURL(`api/raw_message/${encodeURIComponent(msg.notmuch_id)}`), getSetting("openInTab")); }
   );
 
-  mkShortcut(["t"],
+  mkShortcut([["t"]],
     // eslint-disable-next-line solid/reactivity
-    () => { if(props.active) document.getElementById("editTags")?.focus(); },
+    () => { if(props.active) document.getElementById("editTags").querySelector("input")?.focus(); },
     true
   );
 
-  mkShortcut(["c"],
+  mkShortcut([["c"]],
     // eslint-disable-next-line solid/reactivity
-    () => { if(props.active) document.querySelector("button.content")?.click(); }
+    () => { if(props.active) document.querySelector("button.toggle-content")?.click(); }
   );
 
-  mkShortcut(["Delete"],
+  mkShortcut([["Delete"]],
     // eslint-disable-next-line solid/reactivity
     () => {
       if(props.active) {
@@ -308,7 +304,7 @@ export function Message(props) {
     true
   );
 
-  mkShortcut(["Shift", "?"],
+  mkShortcut([["Shift", "?"]],
     // eslint-disable-next-line solid/reactivity
     () => { if(props.active) window.open(`/?query=from:"${encodeURIComponent(msg.from)}"`, getSetting("openInTab")); }
   );
@@ -390,7 +386,7 @@ export function Message(props) {
 
         <Grid container justifyContent="flex-end" class="margin">
           <Show when={msg.body["text/html"]}>
-            <button class="content" data-testid={html() ? "Text" : "HTML"} onClick={(e) => {
+            <button class="toggle-content" data-testid={html() ? "Text" : "HTML"} onClick={(e) => {
                 setHtml(!html());
                 e.stopPropagation();
               }}>{html() ? "Text" : "HTML"}</button>
@@ -455,7 +451,6 @@ export function FetchedMessage() {
 
   return (
     <>
-      { /* eslint-disable-next-line no-undef */ }
       <Message msg={data.message} active={true} print={print}/>
     </>
   );

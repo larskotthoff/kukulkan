@@ -13,31 +13,66 @@ body {
     font-family: var(--fonts);
 }
 
-select {
-    background-color: #fff8e1;
+select, input, textarea {
     border: 1px solid;
     border-radius: 5px;
     padding: 3px;
+
+    background-color: inherit;
+    width: inherit;
 }
 
-select.compose-from {
-    background-color: #f0f4c3;
+div.input-wide {
+    border-radius: 0px;
+    border: none;
+    border-bottom: 1px solid;
+    outline: none;
+
+    width: 100%;
+}
+
+input.input-wide {
+    border-radius: 0px;
+    border: none;
+    border-bottom: 1px solid;
+    outline: none;
+
+    width: 100%;
+}
+
+textarea.input-wide {
+    border: 1px solid;
+    outline: none;
+
+    width: 100%;
+    margin-bottom: .5em;
+    margin-top: 1em;
+}
+
+.input-wide > input {
+    border-radius: 0px;
+    border: none;
+    outline: none;
 }
 
 button {
-    background-color: #fff8e1;
     border: 1px solid;
     border-radius: 5px;
     padding: 3px 5px 3px 5px;
     display: flex;
+    color: rgb(85, 139, 47) !important;
+    border-color: rgb(85, 139, 47) !important;
+
+    background-color: inherit;
+    width: inherit;
+}
+
+button.toggle-content {
+    width: auto;
 }
 
 button > span {
     padding-left: .2em;
-}
-
-button.content {
-    background-color: #f0f4c3;
 }
 
 .centered {
@@ -62,6 +97,7 @@ button.content {
 
 .chip {
     display: inline-flex;
+    white-space: nowrap;
 
     border-radius: 7px !important;
     margin-right: 3px !important;
@@ -71,18 +107,6 @@ button.content {
 
     padding-left: 3px;
     padding-right: 3px;
-}
-
-.MuiInputBase-root {
-    font-family: var(--fonts) !important;
-}
-
-.MuiButton-root {
-    font-family: var(--fonts) !important;
-}
-
-.MuiAlert-message {
-    font-family: var(--fonts) !important;
 }
 
 .message-text {
@@ -112,12 +136,6 @@ button.content {
     position: absolute;
     padding: .5em;
     cursor: pointer;
-
-    display: none;
-}
-
-.autocomplete-popup.visible {
-    display: block;
 }
 
 .autocomplete-popup > div {
@@ -180,19 +198,13 @@ button.content {
     border-style: solid;
 }
 
-.chip-edit-autocomplete div {
-    padding-left: 3px !important;
+.chip-edit-autocomplete {
+    display: flex;
+    align-items: baseline;
 }
 
 .chip-edit-autocomplete input {
-    padding-top: 7px !important;
-    padding-bottom: 7px !important;
-    width: auto !important;
-    flex-grow: 1;
-}
-
-.chip-edit-autocomplete .MuiInput-root {
-    flex-wrap: wrap;
+    width: inherit;
 }
 
 #query-box {
@@ -200,16 +212,10 @@ button.content {
 }
 
 #edit-tag-box {
-    position: fixed !important;
-    top: 10%;
-    left: 10%;
+    margin-top: 10px;
     width: 80% !important;
     background-color: #fff8e1;
     border: 2px solid black;
-}
-
-#edit-tag-box + .MuiOutlinedInput-notchedOutline {
-    border: none;
 }
 
 .threadnav-container {
@@ -217,6 +223,8 @@ button.content {
     margin-left: 0.5em;
     max-width: 10%;
     overflow: auto;
+    width: auto !important;
+    padding-right: 5px;
 }
 
 .threadnav-box {
@@ -279,11 +287,6 @@ button.content {
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
-}
-
-button {
-    color: rgb(85, 139, 47) !important;
-    border-color: rgb(85, 139, 47) !important;
 }
 
 label {
