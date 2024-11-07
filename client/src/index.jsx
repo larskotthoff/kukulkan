@@ -12,38 +12,8 @@ import { Thread } from "./Thread.jsx";
 import { TodoThreads } from "./TodoThreads.jsx";
 import { Write } from "./Write.jsx";
 
-// claude wrote this
-function setCacheHeaders() {
-  const tomorrow = new Date();
-  tomorrow.setHours(24, 0, 0, 0);
-
-  const headers = [
-    { httpEquiv: 'Expires', content: tomorrow.toUTCString() },
-    { httpEquiv: 'Cache-Control', content: `public, max-age=${Math.floor((tomorrow - Date.now()) / 1000)}` },
-    { httpEquiv: 'Last-Modified', content: (new Date()).toUTCString() }
-  ];
-
-  // Remove any existing cache control meta tags
-  document.head.querySelectorAll('meta[http-equiv]').forEach(tag => {
-    if (['Expires', 'Cache-Control', 'Last-Modified'].includes(tag.getAttribute('http-equiv'))) {
-      tag.remove();
-    }
-  });
-
-  // Add new meta tags
-  headers.forEach(({ httpEquiv, content }) => {
-    const meta = document.createElement('meta');
-    meta.setAttribute('http-equiv', httpEquiv);
-    meta.setAttribute('content', content);
-    document.head.appendChild(meta);
-  });
-}
-
-
 render(() => {
   const [progress, setProgress] = createSignal(1);
-
-  setCacheHeaders();
 
   return (
   <>
