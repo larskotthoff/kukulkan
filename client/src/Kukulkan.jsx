@@ -1,4 +1,4 @@
-import { createEffect, createSignal, Show } from "solid-js";
+import { createEffect, createSignal, on, Show } from "solid-js";
 
 import { Autocomplete } from "./Autocomplete.jsx";
 
@@ -46,14 +46,13 @@ export function Kukulkan(props) {
     setSelectedThreads([]);
   }
 
-  createEffect(() => {
-    activeThread();
+  createEffect(on(activeThread, () => {
     document.getElementsByClassName("thread active")[0]?.scrollIntoView({block: "nearest"});
-  });
+  }));
 
-  createEffect(() => {
+  createEffect(on(query, () => {
     document.title = query() || "Kukulkan";
-  });
+  }));
 
   mkShortcut([["Home"]],
     () => setActiveThread(0)
@@ -146,9 +145,9 @@ export function Kukulkan(props) {
     true
   );
 
-  createEffect(() => {
+  createEffect(on(showEditingTagModal, () => {
     if(showEditingTagModal()) document.querySelector("#edit-tag-box > input").focus();
-  });
+  }));
 
   function TagEditingModal() {
     return (

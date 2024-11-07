@@ -1,4 +1,4 @@
-import { createEffect, createSignal, For, onMount, Show } from "solid-js";
+import { createEffect, createSignal, For, on, onMount, Show } from "solid-js";
 
 import Grid from "@suid/material/Grid";
 import Stack from "@suid/material/Stack";
@@ -179,9 +179,9 @@ function ShadowRoot(props) {
             contentDiv = document.createElement("div");
       shadow.appendChild(contentDiv);
 
-      createEffect(() => {
+      createEffect(on(() => props.html, () => {
         contentDiv.innerHTML = props.html;
-      });
+      }));
     }
   });
 
@@ -244,13 +244,13 @@ export function Message(props) {
 
   const saw = 6 / msg.attachments.length;
 
-  createEffect(() => {
+  createEffect(on(() => props.active, () => {
     if(props.active) {
       elementTop?.scrollIntoView({block: "nearest"});
       document.title = msg.subject || "Kukulkan";
       if(msg.tags.includes("unread")) setTimeout(() => removeTag("unread"), 500);
     }
-  });
+  }));
 
   mkShortcut([["r"]],
     // eslint-disable-next-line solid/reactivity

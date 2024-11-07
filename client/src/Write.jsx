@@ -1,4 +1,4 @@
-import { createEffect, createSignal, For, Show } from "solid-js";
+import { createEffect, createSignal, For, on, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 
 import Grid from "@suid/material/Grid";
@@ -211,18 +211,18 @@ export function Write(props) {
   // eslint-disable-next-line solid/reactivity
   setMessage("body", message.bodyDefaultValue);
 
-  createEffect(() => {
+  createEffect(on(bodyRef, () => {
     if(bodyRef()) {
       bodyRef().value = message.bodyDefaultValue;
     }
-  });
+  }));
 
-  createEffect(() => {
+  createEffect(on(useTemplate, () => {
     if(useTemplate() && bodyRef().disabled === false) {
       bodyRef().value = useTemplate() + message.bodyDefaultValue;
       setMessage("body", bodyRef().value);
     }
-  });
+  }));
 
   function quote(text) {
     if(text) {
