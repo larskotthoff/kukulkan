@@ -9,7 +9,7 @@ export function Autocomplete(props) {
         [inputRef, setInputRef] = createSignal(),
         [sortedOptions, setSortedOptions] = createSignal([]);
 
-  let {text, setText, getOptions, handleKey, children, onBlur, setWidth, ...spreadProps} = props;
+  let {text, setText, getOptions, handleKey, children, onBlur, ...spreadProps} = props;
   if(!children) children = () => [];
 
   // sort options such that:
@@ -96,7 +96,6 @@ export function Autocomplete(props) {
     }
   }
 
-  // eslint-disable-next-line solid/reactivity
   createEffect(on(text, () => {
     setSelected(0);
   }));
@@ -112,7 +111,6 @@ export function Autocomplete(props) {
         type="text"
         ref={setInputRef}
         value={text() || ""}
-        // eslint-disable-next-line solid/reactivity
         onBlur={onBlur}
         onInput={(ev) => {
           setText(ev.target.value);
@@ -150,7 +148,6 @@ export function ChipComplete(props) {
       class="input-wide chip-edit-autocomplete"
       text={toAdd}
       setText={setToAdd}
-      setWidth={true}
       // eslint-disable-next-line solid/reactivity
       handleKey={async (ev) => {
         if((ev.code === 'Enter' || ev.key === 'Enter') && toAdd()) {

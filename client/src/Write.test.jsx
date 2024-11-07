@@ -676,7 +676,7 @@ test("localStorage deleted with shortcut d", async () => {
 });
 
 test("errors when attempting to send w/o to address", async () => {
-  const { getByTestId } = render(() => <Write/>);
+  render(() => <Write/>);
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();

@@ -4,6 +4,7 @@ import ErrorOutline from "@suid/icons-material/ErrorOutline";
 
 export function Alert(props) {
   const cols = { 'success': 'green', 'warning': 'yellow', 'error': 'red' },
+        // eslint-disable-next-line solid/reactivity
         {['class']: clss, severity, children, ...spreadProps} = props;
   return (<div
         class={`alert ${clss}`}
