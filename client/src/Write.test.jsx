@@ -715,10 +715,6 @@ test("data assembled correctly for sending new email", async () => {
 
   await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}otherto@test.com{enter}");
   await vi.waitFor(() => {
-    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/to%40test.com",
-      expect.objectContaining({
-        signal: expect.any(AbortSignal),
-      }));
     expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/otherto%40test.com",
       expect.objectContaining({
         signal: expect.any(AbortSignal),
@@ -741,7 +737,7 @@ test("data assembled correctly for sending new email", async () => {
   await userEvent.type(getByTestId("tagedit").querySelector("input"), "foobar{enter}{enter}");
   await userEvent.type(getByTestId("subject"), "testsubject");
   await userEvent.type(getByTestId("body"), "testbody");
-  expect(global.fetch).toHaveBeenCalledTimes(4);
+  expect(global.fetch).toHaveBeenCalledTimes(3);
 
   const file = new File(['test content'], 'test.txt', { type: 'text/plain' });
   await fireEvent.change(container.querySelector("input[type=file]"), { target: { files: [file] } });

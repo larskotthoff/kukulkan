@@ -14,7 +14,7 @@ import { getSetting } from "./Settings.jsx";
 
 import "./Kukulkan.css";
 import { separateQuotedNonQuoted } from "./Message.jsx";
-import { apiURL, filterAdminTags, formatFSz } from "./utils.js";
+import { apiURL, delayedDebouncedFetch, filterAdminTags, formatFSz } from "./utils.js";
 import { mkShortcut } from "./UiUtils.jsx";
 
 function Templates(props) {
@@ -35,9 +35,6 @@ function Templates(props) {
 }
 
 function AddrComplete(props) {
-  let controller = null,
-      debounceTimer = null;
-
   return (
     <ChipComplete
       chips={props.message[props.addrAttr]}
@@ -56,23 +53,7 @@ function AddrComplete(props) {
       // eslint-disable-next-line solid/reactivity
       getOptions={async (text) => {
         if(text.length > 2) {
-          return await (new Promise((resolve) => {
-            controller?.abort();
-            controller = new AbortController();
-            clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(async () => {
-              try {
-                props.sp?.(0);
-                const response = await fetch(apiURL(`api/address/${encodeURIComponent(text)}`), { signal: controller.signal });
-                props.sp?.(1);
-                if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
-                resolve(response.json());
-              // eslint-disable-next-line no-unused-vars
-              } catch(_) {
-                // this is fine, previous aborted completion request
-              }
-            }, 200);
-          }));
+          return delayedDebouncedFetch(apiURL(`api/address/${encodeURIComponent(text)}`), 200, props.sp);
         }
         return [];
       }}

@@ -188,7 +188,7 @@ export function Kukulkan(props) {
     <>
       <TagEditingModal/>
       <props.Threads threads={threads} activeThread={activeThread} setActiveThread={setActiveThread}
-        selectedThreads={selectedThreads} setQuery={setQuery}/>
+        selectedThreads={selectedThreads} setQuery={setQuery} sp={props.sp}/>
     </>
   );
 }

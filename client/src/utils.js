@@ -96,4 +96,27 @@ export function formatFSz(size) {
   return (size / Math.pow(1024, i)).toFixed(2) * 1 + ' ' + ['Bi', 'kiB', 'MiB', 'GiB', 'TiB'][i];
 }
 
+let controller = null,
+    debounceTimer = null;
+
+export async function delayedDebouncedFetch(url, delay, sp) {
+  return await (new Promise((resolve) => {
+    controller?.abort();
+    controller = new AbortController();
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(async () => {
+      try {
+        sp?.(0);
+        const response = await fetch(url, { signal: controller.signal });
+        sp?.(1);
+        if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
+        resolve(response.json());
+      // eslint-disable-next-line no-unused-vars
+      } catch(e) {
+        // this is fine, previous aborted completion request
+      }
+    }, delay);
+  }));
+}
+
 // vim: tabstop=2 shiftwidth=2 expandtab

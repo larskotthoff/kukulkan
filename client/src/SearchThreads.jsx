@@ -9,7 +9,7 @@ import { Autocomplete } from "./Autocomplete.jsx";
 
 import { getSetting } from "./Settings.jsx";
 
-import { renderDateNumThread } from "./utils.js";
+import { apiURL, delayedDebouncedFetch, renderDateNumThread } from "./utils.js";
 import { simulateKeyPress } from "./UiUtils.jsx";
 
 export function SearchThreads(props) {
@@ -47,12 +47,18 @@ export function SearchThreads(props) {
         class="input-wide"
         text={searchText}
         setText={setSearchText}
-        getOptions={(text) => {
+        // eslint-disable-next-line solid/reactivity
+        getOptions={async (text) => {
           let pts = text.split(':'),
               last = pts.pop();
           if(pts.length > 0 && pts[pts.length - 1].endsWith("tag") && last.length > 0) {
             // autocomplete possible tag
             return data.allTags.filter((t) => t.startsWith(last)).map((t) => [...pts, t].join(':'));
+          } else if(pts.length > 0 &&
+                      (pts[pts.length - 1].endsWith("from") || pts[pts.length - 1].endsWith("to")) &&
+                      last.length > 2) {
+            const opts = await delayedDebouncedFetch(apiURL(`api/email/${encodeURIComponent(last)}`), 200, props.sp);
+            return opts.map((t) => [...pts, t].join(':'));
           } else {
             return opts.filter((t) => t.includes(text));
           }

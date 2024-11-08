@@ -9,6 +9,7 @@ export function Autocomplete(props) {
         [inputRef, setInputRef] = createSignal(),
         [sortedOptions, setSortedOptions] = createSignal([]);
 
+  // eslint-disable-next-line solid/reactivity
   let {text, setText, getOptions, handleKey, children, onBlur, ...spreadProps} = props;
   if(!children) children = () => [];
 
@@ -57,8 +58,11 @@ export function Autocomplete(props) {
     } else if (ev.code === 'Enter' || ev.key === 'Enter') {
       select();
     } else if (ev.code === 'Escape') {
-      setShowPopover(false);
-      inputRef().blur();
+      if(showPopover()) {
+        setShowPopover(false);
+      } else {
+        inputRef().blur();
+      }
     } else {
       setShowPopover(true);
     }

@@ -135,6 +135,29 @@ def get_globals():
     return {"accounts": accts, "allTags": tags, "compose": cmp}
 
 
+def email_address_complete(query_string):
+    qs = query_string.casefold()
+    addrs = {}
+    i = 0
+    for msg in get_query(f"from:{query_string} or to:{query_string}").search_messages():
+        for header in ['from', 'to', 'cc', 'bcc']:
+            value = msg.get_header(header)
+            if value and qs in value.casefold():
+                for addr in split_email_addresses(value):
+                    acf = addr.casefold()
+                    if qs in acf:
+                        email = re.search(r'[^ "\'<>]+@[^ >"\']+', acf).group()
+                        # keep first one (i.e. most recent)
+                        try:
+                            addrs[email]
+                        except KeyError:
+                            addrs[email] = addr
+        if i > 1000 or len(addrs) > 14:
+            break
+        i += 1
+    return addrs
+
+
 def create_app():
     """Flask application factory."""
     if os.getenv("FLASK_DEBUG"):
@@ -207,27 +230,12 @@ def create_app():
         return [thread_to_json(t) for t in threads]
 
     @app.route("/api/address/<path:query_string>")
-    def address(query_string):
-        qs = query_string.casefold()
-        addrs = {}
-        i = 0
-        for msg in get_query(f"from:{query_string} or to:{query_string}").search_messages():
-            for header in ['from', 'to', 'cc', 'bcc']:
-                value = msg.get_header(header)
-                if value and qs in value.casefold():
-                    for addr in split_email_addresses(value):
-                        acf = addr.casefold()
-                        if qs in acf:
-                            email = re.search(r'[^ <>]+@[^ >]+', acf).group()
-                            # keep first one (i.e. most recent)
-                            try:
-                                addrs[email]
-                            except KeyError:
-                                addrs[email] = addr
-            if i > 1000 or len(addrs) > 14:
-                break
-            i += 1
-        return list(addrs.values())
+    def address_complete(query_string):
+        return list(email_address_complete(query_string).values())
+
+    @app.route("/api/email/<path:query_string>")
+    def email_complete(query_string):
+        return list(email_address_complete(query_string).keys())
 
     @app.route("/api/thread/<path:thread_id>")
     def thread(thread_id):

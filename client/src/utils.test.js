@@ -1,6 +1,15 @@
-import { test, expect } from "vitest"
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import * as utils from "./utils.js";
+
+beforeEach(() => {
+  global.fetch = vi.fn();
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
 
 test("getColor", () => {
   expect(utils.getColor("foo")).toBe("#c70579");
@@ -89,6 +98,35 @@ test("formatFSz", () => {
   expect(utils.formatFSz(1024 * 1024 * 1.5)).toBe("1.5 MiB");
   expect(utils.formatFSz(1024 * 1024 * 1024 * 1.5)).toBe("1.5 GiB");
   expect(utils.formatFSz(1024 * 1024 * 1024 * 1024 * 1.5)).toBe("1.5 TiB");
+});
+
+test("delayedDebouncedFetch", async () => {
+
+  global.fetch.mockResolvedValue({ ok: true, json: () => ["foo", "bar"] });
+  const res = await utils.delayedDebouncedFetch("foo", 100)
+
+  expect(res).toStrictEqual(["foo", "bar"]);
+  expect(global.fetch).toHaveBeenCalledTimes(1);
+  expect(global.fetch).toHaveBeenCalledWith("foo",
+    expect.objectContaining({
+      signal: expect.any(AbortSignal),
+    }));
+
+  vi.useFakeTimers();
+  utils.delayedDebouncedFetch("foobar", 200)
+  vi.advanceTimersByTime(100);
+  utils.delayedDebouncedFetch("bar", 100)
+  vi.advanceTimersByTime(200);
+  expect(global.fetch).toHaveBeenCalledTimes(2);
+  expect(global.fetch).not.toHaveBeenCalledWith("foobar",
+    expect.objectContaining({
+      signal: expect.any(AbortSignal),
+    }));
+  expect(global.fetch).toHaveBeenCalledWith("bar",
+    expect.objectContaining({
+      signal: expect.any(AbortSignal),
+    }));
+  vi.useRealTimers();
 });
 
 // vim: tabstop=2 shiftwidth=2 expandtab

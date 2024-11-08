@@ -11,12 +11,16 @@ beforeEach(() => {
   localStorage.clear();
   delete window.location;
   window.location = { ...originalLocation, search: '' };
+  vi.stubGlobal("data", {"allTags": ["foo", "bar"], "threads": []});
+  global.fetch = vi.fn();
 });
 
 afterEach(() => {
   localStorage.clear();
   cleanup();
   window.location = originalLocation;
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });
 
 const threads = [{authors: ["fooAuthor", "barAuthor"], subject: "test", tags:
@@ -47,6 +51,58 @@ test("shows completions and allows to select", async () => {
 
   await userEvent.type(container.querySelector("#query-box > input"), "{enter}{enter}");
   expect(window.location.search).toBe("query=date%3Atoday");
+});
+
+test("shows tag completions and allows to select", async () => {
+  const { container } = render(() => <SearchThreads threads={() => []} index={() => 0} activeThread={() => 0}
+    selectedThreads={() => []} setQuery={() => []}/>);
+  await userEvent.type(container.querySelector("#query-box > input"), "tag:f");
+  expect(screen.getByText("tag:foo")).toBeInTheDocument();
+
+  await userEvent.type(container.querySelector("#query-box > input"), "{enter}{enter}");
+  expect(window.location.search).toBe("query=tag%3Afoo");
+});
+
+test("shows adress completions and allows to select", async () => {
+  const { container } = render(() => <SearchThreads threads={() => []} index={() => 0} activeThread={() => 0}
+    selectedThreads={() => []} setQuery={() => []}/>);
+  global.fetch.mockResolvedValue({ ok: true, json: () => ["tester@test.com", "foo@bar.com"] });
+  await userEvent.type(container.querySelector("#query-box > input"), "from:test");
+  await vi.waitFor(() => {
+    expect(screen.getByText("from:tester@test.com")).toBeInTheDocument();
+  });
+  expect(global.fetch).toHaveBeenCalledTimes(1);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/email/test",
+    expect.objectContaining({
+      signal: expect.any(AbortSignal),
+    }));
+
+  await userEvent.type(container.querySelector("#query-box > input"), "{enter}{enter}");
+  expect(window.location.search).toBe("query=from%3Atester%40test.com");
+});
+
+test("shows combined completions and allows to select", async () => {
+  const { container } = render(() => <SearchThreads threads={() => []} index={() => 0} activeThread={() => 0}
+    selectedThreads={() => []} setQuery={() => []}/>);
+  global.fetch.mockResolvedValue({ ok: true, json: () => ["tester@test.com", "foo@bar.com"] });
+
+  await userEvent.type(container.querySelector("#query-box > input"), "tag:f");
+  expect(screen.getByText("tag:foo")).toBeInTheDocument();
+
+  await userEvent.type(container.querySelector("#query-box > input"), "{enter}");
+
+  await userEvent.type(container.querySelector("#query-box > input"), " and from:test");
+  await vi.waitFor(() => {
+    expect(screen.getByText("tag:foo and from:tester@test.com")).toBeInTheDocument();
+  });
+  expect(global.fetch).toHaveBeenCalledTimes(1);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/email/test",
+    expect.objectContaining({
+      signal: expect.any(AbortSignal),
+    }));
+
+  await userEvent.type(container.querySelector("#query-box > input"), "{enter}{enter}");
+  expect(window.location.search).toBe("query=tag%3Afoo+and+from%3Atester%40test.com");
 });
 
 test("saves queries for completion", async () => {
