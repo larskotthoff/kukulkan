@@ -89,15 +89,46 @@ button > span {
     align-items: stretch;
     justify-content: space-around;
 
-    gap: 5px;
+    gap: 4px;
+}
+
+.vertical-stack {
+    display: flex;
+    flex-direction: column;
+
+    gap: 4px;
+}
+
+.flow-wrap {
+    flex-flow: wrap;
+}
+
+.space-between {
+    justify-content: space-between;
 }
 
 .justify-start {
     justify-content: start;
 }
 
+.justify-center {
+    justify-content: center;
+}
+
+.justify-end {
+    justify-content: end;
+}
+
 .fit-content {
     width: fit-content;
+}
+
+.width-100 {
+    width: 100%;
+}
+
+.margin-bottom {
+    margin-bottom: 10px;
 }
 
 .margin {
@@ -106,6 +137,7 @@ button > span {
 }
 
 .paper {
+    border: 1px solid #999;
     box-shadow: 0px 3px 3px -2px rgba(0,0,0,0.2),0px 3px 4px 0px rgba(0,0,0,0.14),0px 1px 8px 0px rgba(0,0,0,0.12);
 }
 
@@ -190,6 +222,45 @@ button > span {
     border-style: solid;
 }
 
+.thread {
+    display: grid;
+    @media (min-width: 900px) {
+        grid-template-columns: 1fr 3fr 3fr 3fr 3fr;
+        padding: 2px;
+    }
+    @media (max-width: 899px) {
+        grid-template-columns: 1fr 3fr;
+        padding: 5px;
+    }
+}
+
+.thread.todo {
+    @media (min-width: 900px) {
+        grid-template-columns: 0.5fr 3fr 3fr 3fr 3fr;
+    }
+    @media (max-width: 899px) {
+        grid-template-columns: 0.5fr 3fr;
+    }
+}
+
+.thread .small {
+    @media (min-width: 900px) {
+        display: none;
+    }
+    @media (max-width: 899px) {
+        display: block;
+    }
+}
+
+.thread .large {
+    @media (min-width: 900px) {
+        display: block;
+    }
+    @media (max-width: 899px) {
+        display: none;
+    }
+}
+
 .thread div {
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -221,6 +292,51 @@ button > span {
     border-style: solid;
 }
 
+.todo-threads {
+    @media (min-width: 900px) {
+        max-width: calc(100% - 10.5em);
+    }
+}
+
+.calendar {
+    align-items: end;
+    text-align: end;
+    white-space: nowrap;
+
+    height: 99vh;
+    @media (min-width: 900px) {
+    }
+    @media (max-width: 899px) {
+        display: none;
+    }
+
+    overflow-y: scroll;
+    scrollbar-width: none;
+
+}
+
+.calendar .boxes {
+    display: flex;
+    align-items: center;
+    text-align: start;
+    width: 3em;
+}
+
+.calendar::-webkit-scrollbar {
+  display: none;
+}
+
+.calendar-box {
+    width: 1em;
+    height: 1em;
+    border: .05em solid white;
+    background-color: grey;
+    display: inline-block;
+}
+.calendar-box.highlight {
+    background-color: red;
+}
+
 .chip-edit-autocomplete {
     display: flex;
     flex-flow: wrap;
@@ -250,6 +366,8 @@ button > span {
     overflow: auto;
     width: auto !important;
     padding-right: 5px;
+
+    gap: 0px;
 }
 
 .threadnav-box {
@@ -266,46 +384,6 @@ button > span {
 
 .threadnav-box.active {
     border-color: black;
-}
-
-.todo-threads {
-    margin-bottom: auto !important;
-    @media (min-width: 900px) {
-        max-width: calc(100% - 10.5em);
-    }
-}
-
-.calendar {
-    align-items: end;
-    text-align: end;
-    white-space: nowrap;
-
-    height: 99vh;
-    @media (min-width: 900px) {
-        max-width: 10.5em;
-    }
-    @media (max-width: 899px) {
-        display: none;
-    }
-
-    overflow-y: scroll;
-    scrollbar-width: none;
-}
-
-.calendar::-webkit-scrollbar {
-  display: none;
-}
-
-.calendar-box {
-    width: 1em;
-    height: 1em;
-    border: .05em solid white;
-    background-color: grey;
-    display: inline-block;
-    text-align: left;
-}
-.calendar-box.highlight {
-    background-color: red;
 }
 
 .input-field-set {
@@ -328,7 +406,7 @@ label {
 }
 
 .sticky {
-    top: 0.5em;
+    top: 0px;
     position: sticky;
     height: fit-content;
 }
@@ -343,9 +421,9 @@ label {
 }
 
 .top-right {
-    position: relative;
-    top: 0px;
-    right: 0px;
+    position: fixed;
+    top: 10px;
+    right: 10px;
 }
 
 /* https://www.joshwcomeau.com/css/custom-css-reset/ */

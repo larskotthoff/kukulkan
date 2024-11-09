@@ -1,6 +1,5 @@
 import { createSignal, For } from 'solid-js';
 
-import Grid from "@suid/material/Grid";
 import Create from "@suid/icons-material/Create";
 import Settings from "@suid/icons-material/Settings";
 
@@ -75,60 +74,58 @@ export function SearchThreads(props) {
   }
 
   return (
-    <Grid container width="95%" class="centered">
-      <Grid container item class="centered" width="80%" spacing={2}>
-        <Grid item xs><QueryBox/></Grid>
-        <Grid item>
-          <a href="/write" target={getSetting("openInTab")} rel="noreferrer">
-            <Create/>
-          </a>
-        </Grid>
-      </Grid>
+    <div class="centered vertical-stack" style="width: 95%">
+      <div class="centered horizontal-stack" style="width: 80%">
+        <QueryBox/>
+        <a href="/write" target={getSetting("openInTab")} rel="noreferrer">
+          <Create/>
+        </a>
+      </div>
       <a href="/settings" class="top-right" target={getSetting("openInTab")} rel="noreferrer">
         <Settings/>
       </a>
-      <Grid item xs={12} align="right">{props.threads().length} thread{props.threads().length === 1 ? "" : "s"}.</Grid>
-        <For each={props.threads()}>
-          {(thread, index) =>
-            <Grid item container class={{
-                'thread': true,
-                'active': index() === props.activeThread(),
-                'selected': props.selectedThreads().indexOf(index()) !== -1
-              }}
-              onClick={() => {
-                props.setActiveThread(index());
-                simulateKeyPress('Enter');
-              }}
-              padding={{xs: 1, sm: 0.5}}
-            >
-              <Grid item sx={{ display: {xs: 'block', xl: 'none'} }} xs={2} sm={1}>
-                {renderDateNumThread(thread, false)}
-              </Grid>
-              <Grid item sx={{ display: {xs: 'none', xl: 'block'} }} xl={1}>
-                {renderDateNumThread(thread)}
-              </Grid>
-              <Grid item sx={{ display: {xs: 'none', lg: 'block'} }} sm={5} xl={3}>
-                <For each={thread.authors}>
-                  {(author) => <ColorChip value={author}/>}
-                </For>
-              </Grid>
-              <Grid item sx={{ display: {xs: 'block', lg: 'none'} }} xs={10} sm={5}>
-                <For each={thread.authors}>
-                  {(author) => <ColorChip value={author.split(/\s/)[0]}/>}
-                </For>
-              </Grid>
-              <Grid item xs={12} sm={6} xl={5}>
-                {thread.subject}
-              </Grid>
-              <Grid item sx={{ display: {xs: 'none', xl: 'block'} }} xl={3}>
-                <For each={thread.tags.sort()}>
-                  {(tag) => <ColorChip value={tag}/>}
-                </For>
-              </Grid>
-            </Grid>
-          }
+      <div class="horizontal-stack justify-end width-100">{props.threads().length} thread{props.threads().length === 1 ? "" : "s"}.</div>
+      <For each={props.threads()}>
+        {(thread, index) =>
+          <div classList={{
+              'thread': true,
+              'width-100': true,
+              'active': index() === props.activeThread(),
+              'selected': props.selectedThreads().indexOf(index()) !== -1
+            }}
+            onClick={() => {
+              props.setActiveThread(index());
+              simulateKeyPress('Enter');
+            }}
+          >
+            <div class="small">
+              {renderDateNumThread(thread, false)}
+            </div>
+            <div class="large">
+              {renderDateNumThread(thread)}
+            </div>
+            <div class="small">
+              <For each={thread.authors}>
+                {(author) => <ColorChip value={author.split(/\s/)[0]}/>}
+              </For>
+            </div>
+            <div class="large">
+              <For each={thread.authors}>
+                {(author) => <ColorChip value={author}/>}
+              </For>
+            </div>
+            <div style="grid-column: span 2">
+              {thread.subject}
+            </div>
+            <div class="large">
+              <For each={thread.tags.sort()}>
+                {(tag) => <ColorChip value={tag}/>}
+              </For>
+            </div>
+          </div>
+        }
       </For>
-    </Grid>
+    </div>
   );
 }
 

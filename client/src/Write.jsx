@@ -1,8 +1,6 @@
 import { createEffect, createSignal, For, on, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 
-import Grid from "@suid/material/Grid";
-
 import AttachFile from "@suid/icons-material/AttachFile";
 import Send from "@suid/icons-material/Send";
 
@@ -19,18 +17,16 @@ import { mkShortcut } from "./UiUtils.jsx";
 
 function Templates(props) {
   return (
-    <Grid container spacing={1} class="centered" sx={{ justifyContent: 'center', width: 'fit-content' }}>
+    <div class="centered horizontal-stack justify-center">
       <For each={props.templates}>
         {(template) => {
           mkShortcut([[template.shortcut]],
             () => document.getElementById(`template-${template.shortcut}`).click()
           );
-          return (<Grid item>
-            <button id={`template-${template.shortcut}`} onClick={() => props.setTemplate(template.template) }>{template.description} ({template.shortcut})</button>
-          </Grid>);
+          return (<button id={`template-${template.shortcut}`} onClick={() => props.setTemplate(template.template) }>{template.description} ({template.shortcut})</button>);
         }}
       </For>
-    </Grid>
+    </div>
   );
 }
 
@@ -325,56 +321,48 @@ export function Write(props) {
         <Templates templates={data.compose.templates} setTemplate={setUseTemplate}/>
       </Show>
       <div class="paper message centered">
-        <Grid container spacing={1} class="input-field-set">
-          <Grid item>From:</Grid>
-          <Grid item>
-            <select
-              data-testid="from"
-              value={message.from || ""}
-              onChange={(ev) => {
-                setMessage("from", ev.target.value);
-                localStorage.setItem(`draft-${draftKey}-from`, ev.target.value);
-              }}>
-                <For each={data.accounts}>
-                  {(acct) =>
-                    <option value={acct.id}>
-                      {`${acct.name} <${acct.email}>`}
-                    </option>
-                  }
-                </For>
-            </select>
-          </Grid>
-        </Grid>
-        <Grid container spacing={1} class="input-field-set">
-          <Grid item>To:</Grid>
-          <Grid item xs>
-            <AddrComplete addrAttr="to" message={message} setMessage={setMessage}
-              draftKey={draftKey}
-              data-testid="to"
-              sp={props.sp}/>
-          </Grid>
-        </Grid>
-        <Grid container spacing={1} class="input-field-set">
-          <Grid item>CC:</Grid>
-          <Grid item xs>
-            <AddrComplete addrAttr="cc" message={message} setMessage={setMessage}
-              draftKey={draftKey}
-              data-testid="cc"
-              sp={props.sp}/>
-          </Grid>
-        </Grid>
-        <Grid container spacing={1} class="input-field-set">
-          <Grid item>BCC:</Grid>
-          <Grid item xs>
-            <AddrComplete addrAttr="bcc" message={message} setMessage={setMessage}
-              draftKey={draftKey}
-              data-testid="bcc"
-              sp={props.sp}/>
-          </Grid>
-        </Grid>
-        <Grid container spacing={1} class="input-field-set">
-          <Grid item>Subject:</Grid>
-          <Grid item xs><input
+        <div class="input-field-set horizontal-stack justify-start">
+          From:
+          <select
+            data-testid="from"
+            value={message.from || ""}
+            onChange={(ev) => {
+              setMessage("from", ev.target.value);
+              localStorage.setItem(`draft-${draftKey}-from`, ev.target.value);
+            }}>
+              <For each={data.accounts}>
+                {(acct) =>
+                  <option value={acct.id}>
+                    {`${acct.name} <${acct.email}>`}
+                  </option>
+                }
+              </For>
+          </select>
+        </div>
+        <div class="input-field-set horizontal-stack">
+          To:
+          <AddrComplete addrAttr="to" message={message} setMessage={setMessage}
+            draftKey={draftKey}
+            data-testid="to"
+            sp={props.sp}/>
+        </div>
+        <div class="input-field-set horizontal-stack">
+          CC:
+          <AddrComplete addrAttr="cc" message={message} setMessage={setMessage}
+            draftKey={draftKey}
+            data-testid="cc"
+            sp={props.sp}/>
+        </div>
+        <div class="input-field-set horizontal-stack">
+          BCC:
+          <AddrComplete addrAttr="bcc" message={message} setMessage={setMessage}
+            draftKey={draftKey}
+            data-testid="bcc"
+            sp={props.sp}/>
+        </div>
+        <div class="input-field-set horizontal-stack">
+          Subject:
+          <input
             type="text"
             class="input-wide"
             value={message.subject || ""}
@@ -384,30 +372,27 @@ export function Write(props) {
               localStorage.setItem(`draft-${draftKey}-subject`, message.subject);
               document.title = `Compose: ${message.subject}`;
             }}/>
-          </Grid>
-        </Grid>
+        </div>
 
-        <Grid container spacing={1} class="input-field-set">
-          <Grid item>Tags:</Grid>
-          <Grid item xs>
-            <TagComplete
-              tags={message.tags}
-              addTag={(tagToAdd) => {
-                setMessage("tags", message.tags.length, tagToAdd);
+        <div class="input-field-set horizontal-stack">
+          Tags:
+          <TagComplete
+            tags={message.tags}
+            addTag={(tagToAdd) => {
+              setMessage("tags", message.tags.length, tagToAdd);
+              localStorage.setItem(`draft-${draftKey}-tags`, message.tags.join("\n"));
+            }}
+            removeTag={(tagToRemove) => {
+              setMessage("tags", message.tags.filter(t => t !== tagToRemove));
+              if(message.tags.length > 0) {
                 localStorage.setItem(`draft-${draftKey}-tags`, message.tags.join("\n"));
-              }}
-              removeTag={(tagToRemove) => {
-                setMessage("tags", message.tags.filter(t => t !== tagToRemove));
-                if(message.tags.length > 0) {
-                  localStorage.setItem(`draft-${draftKey}-tags`, message.tags.join("\n"));
-                } else {
-                  localStorage.removeItem(`draft-${draftKey}-tags`);
-                }
-              }}
-              data-testid="tagedit"
-            />
-          </Grid>
-        </Grid>
+              } else {
+                localStorage.removeItem(`draft-${draftKey}-tags`);
+              }
+            }}
+            data-testid="tagedit"
+          />
+        </div>
 
         <textarea
           class="input-wide"
@@ -435,29 +420,29 @@ export function Write(props) {
             localStorage.setItem(`draft-${draftKey}-body`, ev.target.value);
             setMessage("body", ev.target.value);
           }}/>
-        <For each={message.files}>
-          {(f) => <ColorChip value={`${f.name}` + (f.size ? ` (${formatFSz(f.size)})` : ``)} onClick={(e) => {
-              setMessage("files", message.files.filter(fi => fi !== f));
-              e.stopPropagation();
+        <Show when={message.files.length > 0}>
+          <div class="margin-bottom">
+            <For each={message.files}>
+              {(f) => <ColorChip value={`${f.name}` + (f.size ? ` (${formatFSz(f.size)})` : ``)} onClick={(e) => {
+                  setMessage("files", message.files.filter(fi => fi !== f));
+                  e.stopPropagation();
+                }}/>
+              }
+            </For>
+          </div>
+        </Show>
+        <div class="horizontal-stack space-between">
+          <button onClick={() => document.getElementById("attach").click()}>
+            <AttachFile/>
+            <span>Attach</span>
+            <input type="file" id="attach" multiple hidden onChange={(ev) => {
+              setMessage("files", (prevFiles) => [...prevFiles, ...Array.from(ev.target.files)]);
+              // not storing these in localStorage as we would have to
+              // encode/decode them and contents would become stale
             }}/>
-          }
-        </For>
-        <Grid container sx={{ marginTop: ".5em" }}>
-          <Grid item xs>
-            <button onClick={() => document.getElementById("attach").click()}>
-              <AttachFile/>
-              <span>Attach</span>
-              <input type="file" id="attach" multiple hidden onChange={(ev) => {
-                setMessage("files", (prevFiles) => [...prevFiles, ...Array.from(ev.target.files)]);
-                // not storing these in localStorage as we would have to
-                // encode/decode them and contents would become stale
-              }}/>
-            </button>
-          </Grid>
-          <Grid item>
-            <button id="send" onClick={sendMsg}><Send/><span>Send</span></button>
-          </Grid>
-        </Grid>
+          </button>
+          <button id="send" onClick={sendMsg}><Send/><span>Send</span></button>
+        </div>
       </div>
     </>
   );

@@ -1,7 +1,5 @@
 import { createEffect, createSignal, For, on, Show } from 'solid-js';
 
-import Grid from "@suid/material/Grid";
-
 import { ColorChip } from "./ColorChip.jsx";
 
 import { formatDuration } from "./utils.js";
@@ -122,45 +120,45 @@ export function TodoThreads(props) {
   function Calendar() {
     return (
       <Show when={dueDates().length > 0}>
-        <Grid container item class="calendar">
+        <div class="calendar">
           <For each={years()}>
             {(year, yi) =>
-              <Grid container item columnSpacing={2}>
-                <Grid item class="sticky" xs={2}>{year.getFullYear()}</Grid>
-                <Grid container item xs={10}>
+              <div class="horizontal-stack">
+                <div class="sticky" style="width: 3em">{year.getFullYear()}</div>
+                <div>
                   <For each={getIntervalBetweenDates(yi() === 0 ? year : startOfYear(year), Math.min(endOfYear(year), latest()), "Month")}>
                     {(month, mi) =>
-                      <Grid container item columnSpacing={1}>
-                        <Grid item class="sticky" xs={4}>{month.toLocaleString('default', { month: 'short' })}</Grid>
-                        <Grid container item xs={8} columnSpacing={0.5}>
+                      <div class="horizontal-stack">
+                        <div class="sticky" style="width: 2em">{month.toLocaleString('default', { month: 'short' })}</div>
+                        <div>
                           <For each={getIntervalBetweenDates(mi() === 0 ? month : startOfMonth(month), Math.min(endOfMonth(month), latest()), "Date")}>
                             {(day) =>
-                              <>
-                              <Grid item xs={4} data-testid={day.toDateString()} class={{
-                                    'today': JSON.stringify(day) === JSON.stringify(today),
-                                    'weekend': [0, 6].includes(day.getDay())
-                                  }}>
-                                {day.getDate().toString().padStart(2, '0')}
-                              </Grid>
-                              <Grid item xs={8} data-testid={`${day.toDateString()}-boxes`} style={{'text-align': 'left'}}>
-                                <For each={dueMap[day]}>
-                                  {dueindex =>
-                                    <div class="calendar-box" onMouseOver={() => props.setActiveThread(dueindex)}/>
-                                  }
-                                </For>
-                              </Grid>
-                              </>
+                              <div class="horizontal-stack">
+                                <div data-testid={day.toDateString()} classList={{
+                                      'today': JSON.stringify(day) === JSON.stringify(today),
+                                      'weekend': [0, 6].includes(day.getDay())
+                                    }} style="width: 2em">
+                                  {day.getDate().toString().padStart(2, '0')}
+                                </div>
+                                <div data-testid={`${day.toDateString()}-boxes`} class="boxes">
+                                  <For each={dueMap[day]}>
+                                    {dueindex =>
+                                      <div class="calendar-box" onMouseOver={() => props.setActiveThread(dueindex)}/>
+                                    }
+                                  </For>
+                                </div>
+                              </div>
                             }
                           </For>
-                        </Grid>
-                      </Grid>
+                        </div>
+                      </div>
                     }
                   </For>
-                </Grid>
-              </Grid>
+                </div>
+              </div>
             }
           </For>
-        </Grid>
+        </div>
       </Show>
     );
   }
@@ -168,11 +166,12 @@ export function TodoThreads(props) {
   return (
     <div class="centered horizontal-stack">
       <Calendar/>
-      <Grid container item class="todo-threads">
+      <div class="vertical-stack todo-threads">
         <For each={props.threads().sort(sortThreadsByDueDate)}>
           {(thread, index) =>
-            <Grid item container class={{
+            <div classList={{
                 'thread': true,
+                'todo': true,
                 'active': index() === props.activeThread(),
                 'selected': props.selectedThreads().indexOf(index()) !== -1,
                 'due': dues()[index()][0] ? dues()[index()][0] < tomorrow : false
@@ -191,33 +190,32 @@ export function TodoThreads(props) {
                 if(prevScrollPos) document.getElementsByClassName("calendar")[0].scrollTo(prevScrollPos);
                 document.getElementsByClassName("calendar-box")[index()]?.classList.remove("highlight");
               }}
-              padding={{xs: 1, sm: 0.5}}
             >
-              <Grid item xs={1} sm={0.5}>
+              <div>
                 {dues()[index()][1]}
-              </Grid>
-              <Grid item sx={{ display: {xs: 'none', lg: 'block'} }} sm={4}>
+              </div>
+              <div class="large">
                 <For each={thread.authors}>
                   {(author) => <ColorChip value={author}/>}
                 </For>
-              </Grid>
-              <Grid item sx={{ display: {xs: 'block', lg: 'none'} }} xs={11} sm={4}>
+              </div>
+              <div class="small">
                 <For each={thread.authors}>
                   {(author) => <ColorChip value={author.split(/\s/)[0]}/>}
                 </For>
-              </Grid>
-              <Grid item xs={12} sm={7} lg={5.5} xl={5}>
+              </div>
+              <div style="grid-column: span 2">
                 {thread.subject}
-              </Grid>
-              <Grid item sx={{ display: {xs: 'none', xl: 'block'} }} xl={2.5}>
+              </div>
+              <div class="large">
                 <For each={thread.tags.sort()}>
                   {(tag) => <ColorChip value={tag}/>}
                 </For>
-              </Grid>
-            </Grid>
+              </div>
+            </div>
           }
         </For>
-      </Grid>
+      </div>
     </div>
   );
 }

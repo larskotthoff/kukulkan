@@ -1,7 +1,5 @@
 import { createEffect, createSignal, For, on, onMount, Show } from "solid-js";
 
-import Grid from "@suid/material/Grid";
-
 import AttachFile from "@suid/icons-material/AttachFile";
 import Cancel from "@suid/icons-material/Cancel";
 import CheckCircle from "@suid/icons-material/CheckCircle";
@@ -108,7 +106,7 @@ function calUrl(id, action, index) {
 
 function calendarAction(msg, attachment, index) {
   if(attachment.preview.method === "REQUEST" && attachment.preview.status === "NEEDS-ACTION") {
-    return (<Grid container direction="row" justifyContent="space-around" m={1}>
+    return (<div class="horizontal-stack margin">
       <a href={calUrl(msg.notmuch_id, 'accept', index)} target={getSetting("openInTab")} rel="noreferrer">
         <CheckCircle fontSize="large"/>
       </a>
@@ -118,7 +116,7 @@ function calendarAction(msg, attachment, index) {
       <a href={calUrl(msg.notmuch_id, 'tentative', index)} target={getSetting("openInTab")} rel="noreferrer">
         <Help fontSize="large"/>
       </a>
-      </Grid>);
+      </div>);
   } else if(attachment.preview.status === "ACCEPTED") {
       return (<CheckCircle fontSize="large" style={{ margin: "8px" }}/>);
   } else if(attachment.preview.status === "DECLINED") {
@@ -241,8 +239,6 @@ export function Message(props) {
   }
   sigMsg += ".";
 
-  const saw = 6 / msg.attachments.length;
-
   createEffect(on(() => props.active, () => {
     if(props.active) {
       elementTop?.scrollIntoView({block: "nearest"});
@@ -331,51 +327,41 @@ export function Message(props) {
         </div>
 
         <Show when={!props.print}>
-          <Grid container justifyContent="space-between" direction="row" style={{ 'min-height': "3.5em" }} class="centered">
-            <Grid item xs>
-              <TagComplete
-                id="editTags"
-                tags={tags()}
-                addTag={(tagToAdd) => {
-                  addTag(tagToAdd);
-                }}
-                removeTag={(tagToRemove) => {
-                  removeTag(tagToRemove);
-                }}
-              />
-            </Grid>
-            <Grid item>
-              <a id="reply" href={replyUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
-                <Reply/>
-              </a>
-            </Grid>
-            <Grid item>
-              <a id="forward" href={fwdUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
-                <Forward/>
-              </a>
-            </Grid>
-            <Grid item>
-              <a id="print" href={printUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
-                <Print/>
-              </a>
-            </Grid>
-            <Grid item>
-              <a id="security" href={secUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
-                <Security/>
-              </a>
-            </Grid>
-          </Grid>
+          <div class="centered horizontal-stack">
+            <TagComplete
+              id="editTags"
+              tags={tags()}
+              addTag={(tagToAdd) => {
+                addTag(tagToAdd);
+              }}
+              removeTag={(tagToRemove) => {
+                removeTag(tagToRemove);
+              }}
+            />
+            <a id="reply" href={replyUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
+              <Reply/>
+            </a>
+            <a id="forward" href={fwdUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
+              <Forward/>
+            </a>
+            <a id="print" href={printUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
+              <Print/>
+            </a>
+            <a id="security" href={secUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
+              <Security/>
+            </a>
+          </div>
 
           <Show when={msg.attachments}>
-            <Grid container spacing={1}>
+            <div class="horizontal-stack flow-wrap">
               <For each={msg.attachments}>
                 {(attachment, index) =>
-                  <Grid item xs={4} style={{ 'min-height': "3em" }}>
+                  <div>
                     {handleAttachment(msg, attachment, index(), false)}
-                  </Grid>
+                  </div>
                 }
               </For>
-            </Grid>
+            </div>
           </Show>
 
           <Show when={msg.signature}>
@@ -383,14 +369,14 @@ export function Message(props) {
           </Show>
         </Show>
 
-        <Grid container justifyContent="flex-end" class="margin">
+        <div class="horizontal-stack margin justify-end">
           <Show when={msg.body["text/html"]}>
             <button class="toggle-content" data-testid={html() ? "Text" : "HTML"} onClick={(e) => {
                 setHtml(!html());
                 e.stopPropagation();
               }}>{html() ? "Text" : "HTML"}</button>
           </Show>
-        </Grid>
+        </div>
         <Show when={html()}>
           <ShadowRoot html={msg.body["text/html"]}/>
         </Show>
@@ -417,27 +403,27 @@ export function Message(props) {
       </Show>
 
       <Show when={!props.active}>
-        <Grid container direction="column">
-          <Grid container direction="row" justifyContent="space-between" wrap="nowrap">
-            <Grid item>{formatAddrs(msg.from)}</Grid>
+        <div class="vertical-stack">
+          <div class="horizontal-stack space-between">
+            <div>{formatAddrs(msg.from)}</div>
             <For each={msg.attachments}>
               {(attachment, index) => {
                 if(attachment.filename !== "smime.p7s") {
-                  return(<Grid item xs={saw} class="text-preview">
+                  return(<div class="text-preview">
                     {handleAttachment(msg, attachment, index(), true)}
-                  </Grid>);
+                  </div>);
                 }
               }}
             </For>
-            <Grid item>{formatDate(new Date(msg.date))}</Grid>
-          </Grid>
+            <div>{formatDate(new Date(msg.date))}</div>
+          </div>
           <div classList={{
               'message-text': true,
               'text-preview': true
             }}
             // eslint-disable-next-line solid/no-innerhtml
             innerHTML={linkifyUrlsToHtml(mainPart, linkifyOpts)}/>
-        </Grid>
+        </div>
       </Show>
     </div>
   );
