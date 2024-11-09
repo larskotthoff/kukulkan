@@ -120,8 +120,8 @@ export function TodoThreads(props) {
 
   let prevScrollPos = undefined;
 
-  return (
-    <Stack direction="row" class="centered" alignItems="stretch" spacing={1}>
+  function Calendar() {
+    return (
       <Show when={dueDates().length > 0}>
         <Grid container item class="calendar">
           <For each={years()}>
@@ -163,6 +163,12 @@ export function TodoThreads(props) {
           </For>
         </Grid>
       </Show>
+    );
+  }
+
+  return (
+    <Stack direction="row" class="centered" alignItems="stretch" spacing={1}>
+      <Calendar/>
       <Grid container item class="todo-threads">
         <For each={props.threads().sort(sortThreadsByDueDate)}>
           {(thread, index) =>
