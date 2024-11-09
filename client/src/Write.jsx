@@ -1,9 +1,6 @@
 import { createEffect, createSignal, For, on, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 
-import AttachFile from "@suid/icons-material/AttachFile";
-import Send from "@suid/icons-material/Send";
-
 import { Alert } from "./Alert.jsx";
 import { ChipComplete, TagComplete } from "./Autocomplete.jsx";
 import { ColorChip } from "./ColorChip.jsx";
@@ -13,7 +10,7 @@ import { getSetting } from "./Settings.jsx";
 import "./Kukulkan.css";
 import { separateQuotedNonQuoted } from "./Message.jsx";
 import { apiURL, delayedDebouncedFetch, filterAdminTags, formatFSz } from "./utils.js";
-import { mkShortcut } from "./UiUtils.jsx";
+import { mkShortcut, Icon, AttachFile, Send } from "./UiUtils.jsx";
 
 function Templates(props) {
   return (
@@ -433,7 +430,7 @@ export function Write(props) {
         </Show>
         <div class="horizontal-stack space-between">
           <button onClick={() => document.getElementById("attach").click()}>
-            <AttachFile/>
+            <Icon icon={AttachFile}/>
             <span>Attach</span>
             <input type="file" id="attach" multiple hidden onChange={(ev) => {
               setMessage("files", (prevFiles) => [...prevFiles, ...Array.from(ev.target.files)]);
@@ -441,7 +438,7 @@ export function Write(props) {
               // encode/decode them and contents would become stale
             }}/>
           </button>
-          <button id="send" onClick={sendMsg}><Send/><span>Send</span></button>
+          <button id="send" onClick={sendMsg}><Icon icon={Send}/><span>Send</span></button>
         </div>
       </div>
     </>

@@ -1,14 +1,5 @@
 import { createEffect, createSignal, For, on, onMount, Show } from "solid-js";
 
-import AttachFile from "@suid/icons-material/AttachFile";
-import Cancel from "@suid/icons-material/Cancel";
-import CheckCircle from "@suid/icons-material/CheckCircle";
-import Forward from "@suid/icons-material/Forward";
-import Help from "@suid/icons-material/Help";
-import Print from "@suid/icons-material/Print";
-import Reply from "@suid/icons-material/Reply";
-import Security from "@suid/icons-material/Security";
-
 import { getSetting } from "./Settings.jsx";
 
 import { linkifyUrlsToHtml } from "linkify-urls";
@@ -20,7 +11,7 @@ import { TagComplete } from "./Autocomplete.jsx";
 
 import "./Kukulkan.css";
 import { apiURL, formatDate, formatFSz, strip } from "./utils.js";
-import { mkShortcut } from "./UiUtils.jsx";
+import { mkShortcut, Icon, AttachFile, Cancel, CheckCircle, Forward, Help, Print, ReplyAll, Security } from "./UiUtils.jsx";
 
 export function separateQuotedNonQuoted(text) {
   let lines = text.split('\n'),
@@ -108,21 +99,21 @@ function calendarAction(msg, attachment, index) {
   if(attachment.preview.method === "REQUEST" && attachment.preview.status === "NEEDS-ACTION") {
     return (<div class="horizontal-stack margin">
       <a href={calUrl(msg.notmuch_id, 'accept', index)} target={getSetting("openInTab")} rel="noreferrer">
-        <CheckCircle fontSize="large"/>
+        <Icon icon={CheckCircle}/>
       </a>
       <a href={calUrl(msg.notmuch_id, 'decline', index)} target={getSetting("openInTab")} rel="noreferrer">
-        <Cancel fontSize="large"/>
+        <Icon icon={Cancel}/>
       </a>
       <a href={calUrl(msg.notmuch_id, 'tentative', index)} target={getSetting("openInTab")} rel="noreferrer">
-        <Help fontSize="large"/>
+        <Icon icon={Help}/>
       </a>
       </div>);
   } else if(attachment.preview.status === "ACCEPTED") {
-      return (<CheckCircle fontSize="large" style={{ margin: "8px" }}/>);
+      return (<Icon icon={CheckCircle} style={{ margin: "8px" }}/>);
   } else if(attachment.preview.status === "DECLINED") {
-      return (<Cancel fontSize="large" style={{ margin: "8px" }}/>);
+      return (<Icon icon={Cancel} style={{ margin: "8px" }}/>);
   } else if(attachment.preview.status === "TENTATIVE") {
-      return (<Help fontSize="large" style={{ margin: "8px" }}/>);
+      return (<Icon icon={Help} style={{ margin: "8px" }}/>);
   }
 }
 
@@ -135,7 +126,7 @@ function handleAttachment(msg, attachment, index, summary) {
       </a>);
   } else if(attachment.content_type.includes("calendar") && attachment.preview !== null && summary === false) {
     return (<div style={{ 'text-align': "center"}}><a href={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}`)} target={getSetting("openInTab")} rel="noreferrer">
-        <AttachFile/>{attachment.filename}
+        <Icon icon={AttachFile}/>{attachment.filename}
         {" (" + formatFSz(attachment.content_size) + ", " + attachment.content_type + ")"}
       </a>
       <a target={getSetting("openInTab")} rel="noreferrer"
@@ -156,11 +147,11 @@ function handleAttachment(msg, attachment, index, summary) {
       { calendarAction(msg, attachment, index) }
       </div>);
   } else if(attachment.content_type.includes("message/rfc822")) {
-    return (<a href={`/message?id=${encodeURIComponent(msg.notmuch_id)}&attachNum=${index}`} target={getSetting("openInTab")} rel="noreferrer"><AttachFile/>{attachment.filename}
+    return (<a href={`/message?id=${encodeURIComponent(msg.notmuch_id)}&attachNum=${index}`} target={getSetting("openInTab")} rel="noreferrer"><Icon icon={AttachFile}/>{attachment.filename}
       {summary ? "" : " (" + formatFSz(attachment.content_size) + ", " + attachment.content_type + ")"}
       </a>);
   } else {
-    return (<a href={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}`)} target={getSetting("openInTab")} rel="noreferrer"><AttachFile/>{attachment.filename}
+    return (<a href={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}`)} target={getSetting("openInTab")} rel="noreferrer"><Icon icon={AttachFile}/>{attachment.filename}
       {summary ? "" : " (" + formatFSz(attachment.content_size) + ", " + attachment.content_type + ")"}
       </a>);
   }
@@ -339,16 +330,16 @@ export function Message(props) {
               }}
             />
             <a id="reply" href={replyUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
-              <Reply/>
+              <Icon icon={ReplyAll}/>
             </a>
             <a id="forward" href={fwdUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
-              <Forward/>
+              <Icon icon={Forward}/>
             </a>
             <a id="print" href={printUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
-              <Print/>
+              <Icon icon={Print}/>
             </a>
             <a id="security" href={secUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
-              <Security/>
+              <Icon icon={Security}/>
             </a>
           </div>
 

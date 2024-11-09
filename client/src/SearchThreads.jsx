@@ -1,15 +1,12 @@
 import { createSignal, For } from 'solid-js';
 
-import Create from "@suid/icons-material/Create";
-import Settings from "@suid/icons-material/Settings";
-
 import { ColorChip } from "./ColorChip.jsx";
 import { Autocomplete } from "./Autocomplete.jsx";
 
 import { getSetting } from "./Settings.jsx";
 
 import { apiURL, delayedDebouncedFetch, renderDateNumThread } from "./utils.js";
-import { simulateKeyPress } from "./UiUtils.jsx";
+import { simulateKeyPress, Icon, Create, Settings } from "./UiUtils.jsx";
 
 export function SearchThreads(props) {
   const searchParams = window.location.search,
@@ -78,11 +75,11 @@ export function SearchThreads(props) {
       <div class="centered horizontal-stack" style="width: 80%">
         <QueryBox/>
         <a href="/write" target={getSetting("openInTab")} rel="noreferrer">
-          <Create/>
+          <Icon icon={Create}/>
         </a>
       </div>
       <a href="/settings" class="top-right" target={getSetting("openInTab")} rel="noreferrer">
-        <Settings/>
+        <Icon icon={Settings}/>
       </a>
       <div class="horizontal-stack justify-end width-100">{props.threads().length} thread{props.threads().length === 1 ? "" : "s"}.</div>
       <For each={props.threads()}>

@@ -426,6 +426,12 @@ label {
     right: 10px;
 }
 
+.icon {
+    width: 1em;
+    height: 1em;
+    font-size: 1.5rem;
+}
+
 /* https://www.joshwcomeau.com/css/custom-css-reset/ */
 
 /* 1. Use a more-intuitive box-sizing model */

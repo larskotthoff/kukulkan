@@ -1,6 +1,4 @@
-import TaskAlt from "@suid/icons-material/TaskAlt";
-import WarningAmber from "@suid/icons-material/WarningAmber";
-import ErrorOutline from "@suid/icons-material/ErrorOutline";
+import { Icon, ErrorOutline, TaskAlt, WarningAmber } from "./UiUtils.jsx";
 
 export function Alert(props) {
   const cols = { 'success': 'green', 'warning': 'yellow', 'error': 'red' },
@@ -10,9 +8,9 @@ export function Alert(props) {
         class={`alert ${clss}`}
         style={{ 'border': `3px solid ${cols[severity]}` }}
         {...spreadProps}>
-      {severity === "success" && <TaskAlt/>}
-      {severity === "warning" && <WarningAmber/>}
-      {severity === "error" && <ErrorOutline/>}
+      {severity === "success" && <Icon icon={TaskAlt}/>}
+      {severity === "warning" && <Icon icon={WarningAmber}/>}
+      {severity === "error" && <Icon icon={ErrorOutline}/>}
       <span>{children}</span>
     </div>);
 }
