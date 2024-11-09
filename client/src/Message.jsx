@@ -1,7 +1,6 @@
 import { createEffect, createSignal, For, on, onMount, Show } from "solid-js";
 
 import Grid from "@suid/material/Grid";
-import Stack from "@suid/material/Stack";
 
 import AttachFile from "@suid/icons-material/AttachFile";
 import Cancel from "@suid/icons-material/Cancel";
@@ -190,7 +189,7 @@ function ShadowRoot(props) {
 
 function HeaderLine(props) {
   return (
-    <Stack direction="row" spacing={.5}><span>{props.left}</span><span>{props.right}</span></Stack>
+    <div class="horizontal-stack justify-start"><span>{props.left}</span><span>{props.right}</span></div>
   );
 }
 

@@ -82,6 +82,20 @@ button > span {
     align-items: center;
 }
 
+.horizontal-stack {
+    display: flex;
+    flex-direction: row;
+
+    align-items: stretch;
+    justify-content: space-around;
+
+    gap: 5px;
+}
+
+.justify-start {
+    justify-content: start;
+}
+
 .fit-content {
     width: fit-content;
 }

@@ -1,7 +1,6 @@
 import { createEffect, createSignal, For, on, Show } from 'solid-js';
 
 import Grid from "@suid/material/Grid";
-import Stack from "@suid/material/Stack";
 
 import { ColorChip } from "./ColorChip.jsx";
 
@@ -167,7 +166,7 @@ export function TodoThreads(props) {
   }
 
   return (
-    <Stack direction="row" class="centered" alignItems="stretch" spacing={1}>
+    <div class="centered horizontal-stack">
       <Calendar/>
       <Grid container item class="todo-threads">
         <For each={props.threads().sort(sortThreadsByDueDate)}>
@@ -219,7 +218,7 @@ export function TodoThreads(props) {
           }
         </For>
       </Grid>
-    </Stack>
+    </div>
   );
 }
 

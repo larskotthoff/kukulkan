@@ -1,7 +1,6 @@
 import { createSignal, For, Show } from "solid-js";
 
 import Grid from "@suid/material/Grid";
-import Stack from "@suid/material/Stack";
 
 import { Message } from "./Message.jsx";
 
@@ -171,7 +170,7 @@ export function Thread(props) {
   return (
     <>
       <Show when={activeMessage() > -1}>
-        <Stack direction="row" class="centered" alignItems="stretch" justifyContent="space-around" spacing={1}>
+        <div class="centered horizontal-stack">
           <ThreadNav/>
           <Grid container width="auto" class="centered" direction="column">
             <For each={filteredThread()}>
@@ -186,7 +185,7 @@ export function Thread(props) {
                 />}
             </For>
           </Grid>
-        </Stack>
+        </div>
       </Show>
     </>
   );
