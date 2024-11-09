@@ -40,7 +40,7 @@ export function SearchThreads(props) {
       <Autocomplete
         id="query-box"
         name="search"
-        class="input-wide"
+        class="input-wide margin"
         text={searchText}
         setText={setSearchText}
         // eslint-disable-next-line solid/reactivity

@@ -317,8 +317,8 @@ export function Write(props) {
       <Show when={data.compose}>
         <Templates templates={data.compose.templates} setTemplate={setUseTemplate}/>
       </Show>
-      <div class="paper message centered">
-        <div class="input-field-set horizontal-stack justify-start">
+      <div class="paper message centered margin">
+        <div class="horizontal-stack justify-start align-center">
           From:
           <select
             data-testid="from"
@@ -336,28 +336,28 @@ export function Write(props) {
               </For>
           </select>
         </div>
-        <div class="input-field-set horizontal-stack">
+        <div class="horizontal-stack align-center">
           To:
           <AddrComplete addrAttr="to" message={message} setMessage={setMessage}
             draftKey={draftKey}
             data-testid="to"
             sp={props.sp}/>
         </div>
-        <div class="input-field-set horizontal-stack">
+        <div class="horizontal-stack align-center">
           CC:
           <AddrComplete addrAttr="cc" message={message} setMessage={setMessage}
             draftKey={draftKey}
             data-testid="cc"
             sp={props.sp}/>
         </div>
-        <div class="input-field-set horizontal-stack">
+        <div class="horizontal-stack align-center">
           BCC:
           <AddrComplete addrAttr="bcc" message={message} setMessage={setMessage}
             draftKey={draftKey}
             data-testid="bcc"
             sp={props.sp}/>
         </div>
-        <div class="input-field-set horizontal-stack">
+        <div class="horizontal-stack align-center">
           Subject:
           <input
             type="text"
@@ -371,7 +371,7 @@ export function Write(props) {
             }}/>
         </div>
 
-        <div class="input-field-set horizontal-stack">
+        <div class="horizontal-stack align-center">
           Tags:
           <TagComplete
             tags={message.tags}
@@ -392,7 +392,7 @@ export function Write(props) {
         </div>
 
         <textarea
-          class="input-wide"
+          class="input-wide margin"
           rows={window.innerHeight / parseFloat(window.getComputedStyle(document.getElementsByTagName("body")[0]).getPropertyValue("line-height")) - 18}
           ref={setBodyRef}
           data-testid="body"

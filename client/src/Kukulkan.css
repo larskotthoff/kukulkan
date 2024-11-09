@@ -1,5 +1,7 @@
 :root {
     --fonts: Fira Sans, Roboto, Hack, sans;
+    --primary-background: #fff8e1;
+    --secondary-background: #f0f4c3;
 }
 
 body {
@@ -8,7 +10,7 @@ body {
     background-position: bottom right;
     background-attachment: fixed;
     background-size: auto 25vh;
-    background-color: #fff8e1;
+    background-color: var(--primary-background);
 
     font-family: var(--fonts);
 }
@@ -22,16 +24,7 @@ select, input, textarea {
     width: inherit;
 }
 
-div.input-wide {
-    border-radius: 0px;
-    border: none;
-    border-bottom: 1px solid #999;
-    outline: none;
-
-    width: 100%;
-}
-
-input.input-wide {
+div.input-wide, input.input-wide {
     border-radius: 0px;
     border: none;
     border-bottom: 1px solid #999;
@@ -42,11 +35,8 @@ input.input-wide {
 
 textarea.input-wide {
     border: 1px solid #999;
-    outline: none;
 
     width: 100%;
-    margin-bottom: .5em;
-    margin-top: 1em;
 }
 
 .input-wide > input {
@@ -60,15 +50,11 @@ button {
     border-radius: 5px;
     padding: 3px 5px 3px 5px;
     display: flex;
-    color: rgb(85, 139, 47) !important;
-    border-color: rgb(85, 139, 47) !important;
+    color: rgb(85, 139, 47);
+    border-color: rgb(85, 139, 47);
 
     background-color: inherit;
     width: inherit;
-}
-
-button.toggle-content {
-    width: auto;
 }
 
 button > span {
@@ -76,8 +62,8 @@ button > span {
 }
 
 .centered {
-    margin-left: auto !important;
-    margin-right: auto !important;
+    margin-left: auto;
+    margin-right: auto;
 
     align-items: center;
 }
@@ -101,6 +87,10 @@ button > span {
 
 .flow-wrap {
     flex-flow: wrap;
+}
+
+.align-center {
+    align-items: center;
 }
 
 .space-between {
@@ -128,12 +118,12 @@ button > span {
 }
 
 .margin-bottom {
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .margin {
-    margin-top: 10px !important;
-    margin-bottom: 10px !important;
+    margin-top: 8px;
+    margin-bottom: 8px;
 }
 
 .paper {
@@ -149,11 +139,11 @@ button > span {
     display: inline-flex;
     white-space: nowrap;
 
-    border-radius: 7px !important;
-    margin-right: 3px !important;
+    border-radius: 7px;
+    margin-right: 3px;
 
-    background-color: var(--bg-color) !important;
-    color: oklch(from var(--bg-color) calc(1 - round(l - 0.15)) 0 0) !important;
+    background-color: var(--bg-color);
+    color: oklch(from var(--bg-color) calc(1 - round(l - 0.15)) 0 0);
 
     padding-left: 3px;
     padding-right: 3px;
@@ -174,14 +164,14 @@ button > span {
 }
 
 .cal-preview {
-    background-color: #f0f4c3 !important;
+    background-color: var(--secondary-background);
     white-space: pre-line;
     text-align: center;
     padding: 8px;
 }
 
 .autocomplete-popup {
-    background-color: #f0f4c3;
+    background-color: var(--secondary-background);
     z-index: 10;
     position: absolute;
     padding: .5em;
@@ -211,9 +201,8 @@ button > span {
 }
 
 .message {
-    background-color: #f0f4c3 !important;
+    background-color: var(--secondary-background);
     padding: 8px;
-    margin: 8px;
     width: min(80em, 80vw);
 }
 
@@ -268,15 +257,15 @@ button > span {
 }
 
 .thread.active {
-    background-color: rgba(85, 139, 47, 0.4) !important;
+    background-color: rgba(85, 139, 47, 0.4);
 }
 
 .thread.active:hover {
-    background-color: rgba(85, 139, 47, 0.5) !important;
+    background-color: rgba(85, 139, 47, 0.5);
 }
 
 .thread.selected.active {
-    background-color: rgba(85, 139, 47, 0.45) !important;
+    background-color: rgba(85, 139, 47, 0.45);
 }
 
 .thread.selected {
@@ -284,7 +273,7 @@ button > span {
 }
 
 .thread:hover {
-    background-color: rgba(85, 139, 47, 0.2) !important;
+    background-color: rgba(85, 139, 47, 0.2);
 }
 
 .thread.due {
@@ -348,14 +337,10 @@ button > span {
     flex-grow: 1;
 }
 
-#query-box {
+.edit-tag-box {
     margin-top: 10px;
-}
-
-#edit-tag-box {
-    margin-top: 10px;
-    width: 80% !important;
-    background-color: #fff8e1;
+    width: 80%;
+    background-color: var(--primary-background);
     border: 2px solid black;
 }
 
@@ -364,7 +349,7 @@ button > span {
     margin-left: 0.5em;
     max-width: 10%;
     overflow: auto;
-    width: auto !important;
+    width: auto;
     padding-right: 5px;
 
     gap: 0px;
@@ -386,19 +371,13 @@ button > span {
     border-color: black;
 }
 
-.input-field-set {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-}
-
 label {
-    color: rgb(85, 139, 47) !important;
-    border-color: rgb(85, 139, 47) !important;
+    color: rgb(85, 139, 47);
+    border-color: rgb(85, 139, 47);
 }
 
 .today {
-    background-color: rgba(255, 128, 0, 0.4) !important;
+    background-color: rgba(255, 128, 0, 0.4);
 }
 
 .weekend {
@@ -412,7 +391,7 @@ label {
 }
 
 .settings-box {
-    vertical-align: baseline !important;
+    vertical-align: baseline;
     width: 2em;
 }
 

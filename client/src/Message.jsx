@@ -301,6 +301,7 @@ export function Message(props) {
       classList={{
         'message': true,
         'paper': true,
+        'margin': true,
         'active': props.active,
         'deleted': msg.tags.includes("deleted")
       }}
