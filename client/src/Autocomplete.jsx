@@ -7,11 +7,9 @@ export function Autocomplete(props) {
   const [showPopover, setShowPopover] = createSignal(false),
         [selected, setSelected] = createSignal(0),
         [inputRef, setInputRef] = createSignal(),
-        [sortedOptions, setSortedOptions] = createSignal([]);
-
-  // eslint-disable-next-line solid/reactivity
-  let {text, setText, getOptions, handleKey, children, onBlur, ...spreadProps} = props;
-  if(!children) children = () => [];
+        [sortedOptions, setSortedOptions] = createSignal([]),
+        // eslint-disable-next-line solid/reactivity
+        {text, setText, getOptions, handleKey, children, onBlur, ...spreadProps} = props;
 
   // sort options such that:
   // - options that start with the search text come first
@@ -86,26 +84,8 @@ export function Autocomplete(props) {
            sortedOptions().length > 0;
   }
 
-  function adjustInputWidth() {
-    if(inputRef()) {
-      const siblings = Array.from(inputRef().parentNode.children).filter(
-                        (s) => s.tagName.toLowerCase() !== 'input');
-      if(siblings.length > 0) {
-        const last = siblings.at(-1),
-              rightPos = last.offsetLeft + last.offsetWidth;
-        inputRef().style.width = `calc(${(1 - (rightPos - inputRef().parentNode.offsetLeft) / inputRef().parentNode.offsetWidth) * 100}% - 6px)`;
-      } else {
-        inputRef().style.width = "100%";
-      }
-    }
-  }
-
   createEffect(on(text, () => {
     setSelected(0);
-  }));
-
-  createEffect(on([inputRef, children], () => {
-    adjustInputWidth();
   }));
 
   return (

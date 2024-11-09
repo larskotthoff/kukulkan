@@ -213,6 +213,11 @@ button > span {
     align-items: baseline;
 }
 
+.chip-edit-autocomplete input {
+    width: auto;
+    flex-grow: 1;
+}
+
 #query-box {
     margin-top: 10px;
 }
