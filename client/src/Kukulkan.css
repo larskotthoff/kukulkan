@@ -141,6 +141,7 @@ button > span {
     padding: .5em;
     cursor: pointer;
 
+    scrollbar-gutter: stable;
     max-height: 10%;
     overflow-y: auto;
     overflow-x: hidden;
