@@ -1,4 +1,4 @@
-import { For, Show } from 'solid-js';
+import { createEffect, createSignal, For, on, Show } from 'solid-js';
 
 import Grid from "@suid/material/Grid";
 import Stack from "@suid/material/Stack";
@@ -31,6 +31,11 @@ export function sortThreadsByDueDate(a, b) {
 }
 
 export function TodoThreads(props) {
+  const [dues, setDues] = createSignal(),
+        [dueDates, setDueDates] = createSignal(),
+        [latest, setLatest] = createSignal(),
+        [years, setYears] = createSignal();
+
   // eslint-disable-next-line solid/reactivity
   props.setQuery("tag:todo");
 
@@ -39,7 +44,7 @@ export function TodoThreads(props) {
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
-  const dueMap = {};
+  let dueMap = {};
 
   function processDueDate(thread, index) {
     const due = thread.tags.find((tag) => tag.startsWith("due:"));
@@ -99,30 +104,37 @@ export function TodoThreads(props) {
     return retval;
   }
 
+  function updateDuesEtc() {
+    dueMap = {};
+    setDues(props.threads().sort(sortThreadsByDueDate).map(processDueDate));
+    setDueDates(dues().map(d => d[0]).filter(x => x));
+    let earliest = new Date(Math.min(...(dueDates().concat(today))));
+    setLatest(new Date(Math.max(...dueDates())));
+    setYears(getIntervalBetweenDates(earliest, endOfYear(latest()), "FullYear"));
+  }
+
   // eslint-disable-next-line solid/reactivity
-  const dues = props.threads().sort(sortThreadsByDueDate).map(processDueDate),
-        dueDates = dues.map(d => d[0]).filter(x => x),
-        earliest = new Date(Math.min(...(dueDates.concat(today)))),
-        latest = new Date(Math.max(...dueDates)),
-        years = getIntervalBetweenDates(earliest, endOfYear(latest), "FullYear");
+  updateDuesEtc();
+  // eslint-disable-next-line solid/reactivity
+  createEffect(on(props.threads, updateDuesEtc));
 
   let prevScrollPos = undefined;
 
   return (
     <Stack direction="row" class="centered" alignItems="stretch" spacing={1}>
-      <Show when={dueDates.length > 0}>
+      <Show when={dueDates().length > 0}>
         <Grid container item class="calendar">
-          <For each={years}>
+          <For each={years()}>
             {(year, yi) =>
               <Grid container item columnSpacing={2}>
                 <Grid item class="sticky" xs={2}>{year.getFullYear()}</Grid>
                 <Grid container item xs={10}>
-                  <For each={getIntervalBetweenDates(yi() === 0 ? year : startOfYear(year), Math.min(endOfYear(year), latest), "Month")}>
+                  <For each={getIntervalBetweenDates(yi() === 0 ? year : startOfYear(year), Math.min(endOfYear(year), latest()), "Month")}>
                     {(month, mi) =>
                       <Grid container item columnSpacing={1}>
                         <Grid item class="sticky" xs={4}>{month.toLocaleString('default', { month: 'short' })}</Grid>
                         <Grid container item xs={8} columnSpacing={0.5}>
-                          <For each={getIntervalBetweenDates(mi() === 0 ? month : startOfMonth(month), Math.min(endOfMonth(month), latest), "Date")}>
+                          <For each={getIntervalBetweenDates(mi() === 0 ? month : startOfMonth(month), Math.min(endOfMonth(month), latest()), "Date")}>
                             {(day) =>
                               <>
                               <Grid item xs={4} data-testid={day.toDateString()} class={{
@@ -158,7 +170,7 @@ export function TodoThreads(props) {
                 'thread': true,
                 'active': index() === props.activeThread(),
                 'selected': props.selectedThreads().indexOf(index()) !== -1,
-                'due': dues[index()][0] ? dues[index()][0] < tomorrow : false
+                'due': dues()[index()][0] ? dues()[index()][0] < tomorrow : false
               }}
               onClick={() => {
                 props.setActiveThread(index());
@@ -177,7 +189,7 @@ export function TodoThreads(props) {
               padding={{xs: 1, sm: 0.5}}
             >
               <Grid item xs={1} sm={0.5}>
-                {dues[index()][1]}
+                {dues()[index()][1]}
               </Grid>
               <Grid item sx={{ display: {xs: 'none', lg: 'block'} }} sm={4}>
                 <For each={thread.authors}>

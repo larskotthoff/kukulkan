@@ -4,6 +4,7 @@ import { userEvent } from "@testing-library/user-event";
 
 import { Kukulkan } from "./Kukulkan.jsx";
 import { SearchThreads } from "./SearchThreads.jsx";
+import { TodoThreads } from "./TodoThreads.jsx";
 
 const originalLocation = window.location,
       tags = ["foo", "foobar"];
@@ -353,6 +354,48 @@ test("tag edits with multiple selection work", async () => {
   expect(container.querySelectorAll(".thread.selected").length).toBe(0);
 
   expect(window.open).toHaveBeenCalledTimes(0);
+});
+
+test("shows todo due dates correctly after marking done", async () => {
+  global.fetch.mockResolvedValue({ ok: true, json: () => [] });
+
+  const now = new Date(),
+        thr1 = {thread_id: "foo", authors: ["fooAuthor", "barAuthor"], subject: "test1", tags:
+          ["todo"], total_messages: 2, newest_date: 1000, oldest_date: 100},
+        thr2 = JSON.parse(JSON.stringify(thr1)),
+        thr3 = JSON.parse(JSON.stringify(thr1));
+  thr1.tags = thr1.tags.concat("due:" + (new Date(now.getTime() + 1000 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
+  thr2.subject = "test2";
+  thr2.tags = thr2.tags.concat("due:" + (new Date(now.getTime() + 1500 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
+  thr3.subject = "test3";
+
+  vi.stubGlobal("data", {"allTags": [], "threads": [thr1, thr2, thr3]});
+  const { container } = render(() => <Kukulkan Threads={TodoThreads}/>);
+  await vi.waitFor(() => {
+    expect(screen.getByText("test1")).toBeInTheDocument();
+  });
+
+  expect(container.querySelectorAll(".thread").length).toBe(3);
+  expect(container.querySelectorAll(".thread")[0].querySelector("div").innerHTML).toBe("3年");
+  expect(container.querySelectorAll(".thread")[0].querySelectorAll("div")[3].innerHTML).toBe("test1");
+  expect(container.querySelectorAll(".thread")[1].querySelector("div").innerHTML).toBe("4年");
+  expect(container.querySelectorAll(".thread")[1].querySelectorAll("div")[3].innerHTML).toBe("test2");
+  expect(container.querySelectorAll(".thread")[2].querySelector("div").innerHTML).toBe("");
+  expect(container.querySelectorAll(".thread")[2].querySelectorAll("div")[3].innerHTML).toBe("test3");
+
+  await userEvent.type(document.body, "d");
+  expect(global.fetch).toHaveBeenCalledTimes(2);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/remove/thread/foo/todo");
+  expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining("http://localhost:5000/api/tag/remove/thread/foo/due%3A"));
+
+  expect(container.querySelectorAll(".thread").length).toBe(3);
+  expect(container.querySelectorAll(".thread")[0].querySelector("div").innerHTML).toBe("4年");
+  expect(container.querySelectorAll(".thread")[0].querySelectorAll("div")[3].innerHTML).toBe("test2");
+  expect(container.querySelectorAll(".thread")[1].querySelector("div").innerHTML).toBe("");
+  expect(container.querySelectorAll(".thread")[1].querySelectorAll("div")[3].innerHTML).toBe("test1");
+  expect(container.querySelectorAll(".thread")[1].querySelectorAll("div")[4].innerHTML).toBe("");
+  expect(container.querySelectorAll(".thread")[2].querySelector("div").innerHTML).toBe("");
+  expect(container.querySelectorAll(".thread")[2].querySelectorAll("div")[3].innerHTML).toBe("test3");
 });
 
 // vim: tabstop=2 shiftwidth=2 expandtab
