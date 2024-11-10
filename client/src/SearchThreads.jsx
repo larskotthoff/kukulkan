@@ -82,46 +82,47 @@ export function SearchThreads(props) {
         <Icon icon={Settings}/>
       </a>
       <div class="horizontal-stack justify-end width-100">{props.threads().length} thread{props.threads().length === 1 ? "" : "s"}.</div>
-      <For each={props.threads()}>
-        {(thread, index) =>
-          <div classList={{
-              'thread': true,
-              'width-100': true,
-              'active': index() === props.activeThread(),
-              'selected': props.selectedThreads().indexOf(index()) !== -1
-            }}
-            onClick={() => {
-              props.setActiveThread(index());
-              simulateKeyPress('Enter');
-            }}
-          >
-            <div class="small">
-              {renderDateNumThread(thread, false)}
+      <div class="threads">
+        <For each={props.threads()}>
+          {(thread, index) =>
+            <div classList={{
+                'thread': true,
+                'active': index() === props.activeThread(),
+                'selected': props.selectedThreads().indexOf(index()) !== -1
+              }}
+              onClick={() => {
+                props.setActiveThread(index());
+                simulateKeyPress('Enter');
+              }}
+            >
+              <div class="small">
+                {renderDateNumThread(thread, false)}
+              </div>
+              <div class="large">
+                {renderDateNumThread(thread)}
+              </div>
+              <div class="small">
+                <For each={thread.authors}>
+                  {(author) => <ColorChip value={author.split(/\s/)[0]}/>}
+                </For>
+              </div>
+              <div class="large">
+                <For each={thread.authors}>
+                  {(author) => <ColorChip value={author}/>}
+                </For>
+              </div>
+              <div style="grid-column: span 2">
+                {thread.subject}
+              </div>
+              <div class="large">
+                <For each={thread.tags.sort()}>
+                  {(tag) => <ColorChip value={tag}/>}
+                </For>
+              </div>
             </div>
-            <div class="large">
-              {renderDateNumThread(thread)}
-            </div>
-            <div class="small">
-              <For each={thread.authors}>
-                {(author) => <ColorChip value={author.split(/\s/)[0]}/>}
-              </For>
-            </div>
-            <div class="large">
-              <For each={thread.authors}>
-                {(author) => <ColorChip value={author}/>}
-              </For>
-            </div>
-            <div style="grid-column: span 2">
-              {thread.subject}
-            </div>
-            <div class="large">
-              <For each={thread.tags.sort()}>
-                {(tag) => <ColorChip value={tag}/>}
-              </For>
-            </div>
-          </div>
-        }
-      </For>
+          }
+        </For>
+      </div>
     </div>
   );
 }

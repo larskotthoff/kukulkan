@@ -211,19 +211,17 @@ button > span {
     border-style: solid;
 }
 
-.thread {
+.threads {
     display: grid;
     @media (min-width: 900px) {
-        grid-template-columns: 1fr 3fr 3fr 3fr 3fr;
-        padding: 2px;
+        grid-template-columns: auto auto auto auto auto;
     }
     @media (max-width: 899px) {
-        grid-template-columns: 1fr 3fr;
-        padding: 5px;
+        grid-template-columns: .5fr 3fr;
     }
 }
 
-.thread.todo {
+.threads.todo {
     @media (min-width: 900px) {
         grid-template-columns: 0.5fr 3fr 3fr 3fr 3fr;
     }
@@ -232,7 +230,7 @@ button > span {
     }
 }
 
-.thread .small {
+.threads .small {
     @media (min-width: 900px) {
         display: none;
     }
@@ -241,12 +239,22 @@ button > span {
     }
 }
 
-.thread .large {
+.threads .large {
     @media (min-width: 900px) {
         display: block;
     }
     @media (max-width: 899px) {
         display: none;
+    }
+}
+
+.thread {
+    display: contents;
+}
+
+.thread div:nth-child(5) {
+    @media (max-width: 899px) {
+        margin-bottom: 8px;
     }
 }
 
@@ -254,29 +262,30 @@ button > span {
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
+    padding: 3px;
 }
 
-.thread.active {
+.thread.active div {
     background-color: rgba(85, 139, 47, 0.4);
 }
 
-.thread.active:hover {
+.thread.active:hover div {
     background-color: rgba(85, 139, 47, 0.5);
 }
 
-.thread.selected.active {
+.thread.selected.active div {
     background-color: rgba(85, 139, 47, 0.45);
 }
 
-.thread.selected {
+.thread.selected div {
     background-color: rgba(85, 139, 47, 0.3);
 }
 
-.thread:hover {
+.thread:hover div {
     background-color: rgba(85, 139, 47, 0.2);
 }
 
-.thread.due {
+.thread.due div {
     border-color: red;
     border-style: solid;
 }
