@@ -209,4 +209,32 @@ test("TagComplete works", async () => {
   expect(add).toBe("foobar");
 });
 
+test("TagComplete completes due dates", async () => {
+  let tags = ["foo", "test"],
+      add = "", remove = "";
+  vi.stubGlobal("data", { "allTags": tags });
+  const { container } = render(() =>
+    <TagComplete tags={tags} addTag={(t) => add = t}
+      removeTag={(t) => remove = t}/>);
+
+  const input = container.querySelector("input");
+  await userEvent.type(input, "due:");
+  expect(input.value).toEqual("due:");
+  let completions = document.querySelector(".autocomplete-popup");
+  expect(completions).toBe(null);
+
+  await userEvent.type(input, "tomorrow");
+  expect(input.value).toEqual("due:tomorrow");
+  completions = document.querySelector(".autocomplete-popup").children;
+  expect(completions.length).toBe(1);
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const dateStr = tomorrow.toISOString().split('T')[0];
+  expect(completions[0]).toHaveTextContent(`due:${dateStr}`);
+
+  expect(add).toBe("");
+  await userEvent.type(input, "{enter}{enter}");
+  expect(add).toBe(`due:${dateStr}`);
+});
+
 // vim: tabstop=2 shiftwidth=2 expandtab

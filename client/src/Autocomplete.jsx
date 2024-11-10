@@ -1,5 +1,6 @@
 // based on https://stackoverflow.com/questions/75751029/how-to-create-an-autocomplete-element
 import { createEffect, createSignal, For, Index, on, Show } from 'solid-js';
+import * as chrono from 'chrono-node';
 
 import { ColorChip } from "./ColorChip.jsx";
 
@@ -161,7 +162,12 @@ export function TagComplete(props) {
       addChip={props.addTag}
       removeChip={props.removeTag}
       getOptions={(text) => {
-        return data.allTags.filter((t) => t.includes(text));
+        const opts = data.allTags.filter((t) => t.includes(text));
+        if(text.startsWith("due:")) {
+          const parsed = chrono.parseDate(text.split(':')[1])?.toISOString().split('T')[0];
+          if(parsed) opts.unshift(`due:${parsed}`);
+        }
+        return opts;
       }}
       {...props}
     />
