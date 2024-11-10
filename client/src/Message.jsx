@@ -119,13 +119,11 @@ function calendarAction(msg, attachment, index) {
 
 function handleAttachment(msg, attachment, index, summary) {
   if(attachment.content_type.includes("image")) {
-    let mw = summary ? "3em" : "30em",
-        mh = summary ? "2em" : "20em";
     return (<a href={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}`)} target={getSetting("openInTab")} rel="noreferrer">
-        <img src={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}`)} alt={attachment.filename} style={{ 'max-width': mw, 'max-height': mh }}/>
+        <img src={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}`)} alt={attachment.filename}/>
       </a>);
   } else if(attachment.content_type.includes("calendar") && attachment.preview !== null && summary === false) {
-    return (<div style={{ 'text-align': "center"}}><a href={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}`)} target={getSetting("openInTab")} rel="noreferrer">
+    return (<div><a href={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}`)} target={getSetting("openInTab")} rel="noreferrer">
         <Icon icon={AttachFile}/>{attachment.filename}
         {" (" + formatFSz(attachment.content_size) + ", " + attachment.content_type + ")"}
       </a>
@@ -345,7 +343,7 @@ export function Message(props) {
           </div>
 
           <Show when={msg.attachments}>
-            <div class="horizontal-stack flow-wrap">
+            <div class="attachments">
               <For each={msg.attachments}>
                 {(attachment, index) =>
                   <div>

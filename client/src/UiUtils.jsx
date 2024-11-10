@@ -53,7 +53,7 @@ export const TaskAlt = `<svg class="icon" focusable="false" aria-hidden="true" v
 export const WarningAmber = `<svg class="icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24" data-testid="WarningAmberIcon"><path d="M12 5.99 19.53 19H4.47zM12 2 1 21h22z"></path><path d="M13 16h-2v2h2zm0-6h-2v5h2z"></path></svg>`;
 
 export function Icon(props) {
-  return (<div innerHTML={props.icon} style={props.style}/>);
+  return (<div innerHTML={props.icon} class="icon-container" style={props.style}/>);
 }
 
 // vim: tabstop=2 shiftwidth=2 expandtab
