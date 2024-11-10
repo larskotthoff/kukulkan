@@ -22,7 +22,7 @@ render(() => {
       "height": "8px",
       "position": "sticky",
       "top": "0",
-      "background": `linear-gradient(to right, #fff8e1 ${progress() * 100}%, rgba(85, 139, 47, 0.7) 0%)`
+      "background": progress() === 1 ? "var(--primary-background)" : `linear-gradient(to right, var(--primary-background-darker) ${progress() * 100}%, var(--primary-background) 0%)`
     }}/>
     <ErrorBoundary fallback={(error) => <Alert severity="error">Error: {error}<pre>{error.stack}</pre></Alert>}>
       <Router>

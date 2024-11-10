@@ -124,12 +124,12 @@ export function TodoThreads(props) {
           <For each={years()}>
             {(year, yi) =>
               <div class="horizontal-stack">
-                <div class="sticky" style="width: 3em">{year.getFullYear()}</div>
+                <div class="sticky" style={{ 'width': "3em" }}>{year.getFullYear()}</div>
                 <div>
                   <For each={getIntervalBetweenDates(yi() === 0 ? year : startOfYear(year), Math.min(endOfYear(year), latest()), "Month")}>
                     {(month, mi) =>
                       <div class="horizontal-stack">
-                        <div class="sticky" style="width: 2em">{month.toLocaleString('default', { month: 'short' })}</div>
+                        <div class="sticky" style={{ 'width': "2em" }}>{month.toLocaleString('default', { month: 'short' })}</div>
                         <div>
                           <For each={getIntervalBetweenDates(mi() === 0 ? month : startOfMonth(month), Math.min(endOfMonth(month), latest()), "Date")}>
                             {(day) =>
@@ -137,7 +137,7 @@ export function TodoThreads(props) {
                                 <div data-testid={day.toDateString()} classList={{
                                       'today': JSON.stringify(day) === JSON.stringify(today),
                                       'weekend': [0, 6].includes(day.getDay())
-                                    }} style="width: 2em">
+                                    }} style={{ 'width': "2em" }}>
                                   {day.getDate().toString().padStart(2, '0')}
                                 </div>
                                 <div data-testid={`${day.toDateString()}-boxes`} class="boxes">
@@ -180,13 +180,13 @@ export function TodoThreads(props) {
                 props.setActiveThread(index());
                 simulateKeyPress('Enter');
               }}
-              onmouseenter={() => {
+              onMouseEnter={() => {
                 const calElem = document.getElementsByClassName("calendar")[0];
                 prevScrollPos = { left: calElem?.scrollLeft, top: calElem?.scrollTop };
                 document.getElementsByClassName("calendar-box")[index()]?.classList.add("highlight");
                 document.getElementsByClassName("calendar-box")[index()]?.scrollIntoView({block: "nearest"});
               }}
-              onmouseleave={() => {
+              onMouseLeave={() => {
                 if(prevScrollPos) document.getElementsByClassName("calendar")[0].scrollTo(prevScrollPos);
                 document.getElementsByClassName("calendar-box")[index()]?.classList.remove("highlight");
               }}
@@ -204,7 +204,7 @@ export function TodoThreads(props) {
                   {(author) => <ColorChip value={author.split(/\s/)[0]}/>}
                 </For>
               </div>
-              <div style="grid-column: span 2">
+              <div style={{ 'grid-column': "span 2" }}>
                 {thread.subject}
               </div>
               <div class="large">

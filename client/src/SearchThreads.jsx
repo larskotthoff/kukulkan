@@ -71,8 +71,8 @@ export function SearchThreads(props) {
   }
 
   return (
-    <div class="centered vertical-stack" style="width: 95%">
-      <div class="centered horizontal-stack" style="width: 80%">
+    <div class="centered vertical-stack" style={{ 'width': "95%" }}>
+      <div class="centered horizontal-stack" style={{ 'width': "80%" }}>
         <QueryBox/>
         <a href="/write" target={getSetting("openInTab")} rel="noreferrer">
           <Icon icon={Create}/>
@@ -111,7 +111,7 @@ export function SearchThreads(props) {
                 {(author) => <ColorChip value={author}/>}
               </For>
             </div>
-            <div style="grid-column: span 2">
+            <div style={{ 'grid-column': "span 2" }}>
               {thread.subject}
             </div>
             <div class="large">
