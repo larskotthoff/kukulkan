@@ -396,15 +396,17 @@ export function Message(props) {
         <div class="vertical-stack">
           <div class="horizontal-stack space-between">
             <div>{formatAddrs(msg.from)}</div>
-            <For each={msg.attachments}>
-              {(attachment, index) => {
-                if(attachment.filename !== "smime.p7s") {
-                  return(<div class="text-preview">
-                    {handleAttachment(msg, attachment, index(), true)}
-                  </div>);
-                }
-              }}
-            </For>
+            <div class="attachments">
+              <For each={msg.attachments}>
+                {(attachment, index) => {
+                  if(attachment.filename !== "smime.p7s") {
+                    return(<div class="text-preview">
+                      {handleAttachment(msg, attachment, index(), true)}
+                    </div>);
+                  }
+                }}
+              </For>
+            </div>
             <div>{formatDate(new Date(msg.date))}</div>
           </div>
           <div classList={{
