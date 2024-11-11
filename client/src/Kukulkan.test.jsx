@@ -377,11 +377,11 @@ test("shows todo due dates correctly after marking done", async () => {
 
   expect(container.querySelectorAll(".thread").length).toBe(3);
   expect(container.querySelectorAll(".thread")[0].querySelector("div").innerHTML).toBe("3年");
-  expect(container.querySelectorAll(".thread")[0].querySelectorAll("div")[3].innerHTML).toBe("test1");
+  expect(container.querySelectorAll(".thread")[0].querySelectorAll("div")[4].innerHTML).toBe("test1");
   expect(container.querySelectorAll(".thread")[1].querySelector("div").innerHTML).toBe("4年");
-  expect(container.querySelectorAll(".thread")[1].querySelectorAll("div")[3].innerHTML).toBe("test2");
+  expect(container.querySelectorAll(".thread")[1].querySelectorAll("div")[4].innerHTML).toBe("test2");
   expect(container.querySelectorAll(".thread")[2].querySelector("div").innerHTML).toBe("");
-  expect(container.querySelectorAll(".thread")[2].querySelectorAll("div")[3].innerHTML).toBe("test3");
+  expect(container.querySelectorAll(".thread")[2].querySelectorAll("div")[4].innerHTML).toBe("test3");
 
   await userEvent.type(document.body, "d");
   expect(global.fetch).toHaveBeenCalledTimes(2);
@@ -390,12 +390,12 @@ test("shows todo due dates correctly after marking done", async () => {
 
   expect(container.querySelectorAll(".thread").length).toBe(3);
   expect(container.querySelectorAll(".thread")[0].querySelector("div").innerHTML).toBe("4年");
-  expect(container.querySelectorAll(".thread")[0].querySelectorAll("div")[3].innerHTML).toBe("test2");
+  expect(container.querySelectorAll(".thread")[0].querySelectorAll("div")[4].innerHTML).toBe("test2");
   expect(container.querySelectorAll(".thread")[1].querySelector("div").innerHTML).toBe("");
-  expect(container.querySelectorAll(".thread")[1].querySelectorAll("div")[3].innerHTML).toBe("test1");
-  expect(container.querySelectorAll(".thread")[1].querySelectorAll("div")[4].innerHTML).toBe("");
+  expect(container.querySelectorAll(".thread")[1].querySelectorAll("div")[4].innerHTML).toBe("test1");
+  expect(container.querySelectorAll(".thread")[1].querySelectorAll("div")[5].innerHTML).toBe("");
   expect(container.querySelectorAll(".thread")[2].querySelector("div").innerHTML).toBe("");
-  expect(container.querySelectorAll(".thread")[2].querySelectorAll("div")[3].innerHTML).toBe("test3");
+  expect(container.querySelectorAll(".thread")[2].querySelectorAll("div")[4].innerHTML).toBe("test3");
 });
 
 // vim: tabstop=2 shiftwidth=2 expandtab

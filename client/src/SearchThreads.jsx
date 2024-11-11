@@ -6,7 +6,7 @@ import { Autocomplete } from "./Autocomplete.jsx";
 import { getSetting } from "./Settings.jsx";
 
 import { apiURL, delayedDebouncedFetch, renderDateNumThread } from "./utils.js";
-import { simulateKeyPress, Icon, Create, Settings } from "./UiUtils.jsx";
+import { simulateKeyPress, Icon, Create, Settings, wideNarrowObserver } from "./UiUtils.jsx";
 
 export function SearchThreads(props) {
   const searchParams = window.location.search,
@@ -95,26 +95,30 @@ export function SearchThreads(props) {
               simulateKeyPress('Enter');
             }}
           >
-            <div class="small">
-              {renderDateNumThread(thread, false)}
+            <div ref={e => wideNarrowObserver?.observe(e)}>
+              <div class="narrow">
+                {renderDateNumThread(thread, false)}
+              </div>
+              <div class="wide">
+                {renderDateNumThread(thread)}
+              </div>
             </div>
-            <div class="large">
-              {renderDateNumThread(thread)}
-            </div>
-            <div class="small">
-              <For each={thread.authors}>
-                {(author) => <ColorChip value={author.split(/\s/)[0]}/>}
-              </For>
-            </div>
-            <div class="large">
-              <For each={thread.authors}>
-                {(author) => <ColorChip value={author}/>}
-              </For>
+            <div ref={e => wideNarrowObserver?.observe(e)}>
+              <div class="narrow">
+                <For each={thread.authors}>
+                  {(author) => <ColorChip value={author.split(/\s/)[0]}/>}
+                </For>
+              </div>
+              <div class="wide">
+                <For each={thread.authors}>
+                  {(author) => <ColorChip value={author}/>}
+                </For>
+              </div>
             </div>
             <div style={{ 'grid-column': "span 2" }}>
               {thread.subject}
             </div>
-            <div class="large">
+            <div class="column-wide">
               <For each={thread.tags.sort()}>
                 {(tag) => <ColorChip value={tag}/>}
               </For>

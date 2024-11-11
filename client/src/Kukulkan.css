@@ -238,25 +238,7 @@ button > span {
     }
 }
 
-.thread.todo {
-    @media (min-width: 900px) {
-        grid-template-columns: 0.5fr 3fr 3fr 3fr 3fr;
-    }
-    @media (max-width: 899px) {
-        grid-template-columns: 0.5fr 3fr;
-    }
-}
-
-.thread .small {
-    @media (min-width: 900px) {
-        display: none;
-    }
-    @media (max-width: 899px) {
-        display: block;
-    }
-}
-
-.thread .large {
+.thread .column-wide {
     @media (min-width: 900px) {
         display: block;
     }

@@ -3,7 +3,7 @@ import { createEffect, createSignal, For, on, Show } from 'solid-js';
 import { ColorChip } from "./ColorChip.jsx";
 
 import { formatDuration } from "./utils.js";
-import { simulateKeyPress } from "./UiUtils.jsx";
+import { simulateKeyPress, wideNarrowObserver } from "./UiUtils.jsx";
 
 function dateFromDue(due) {
   const dateComponents = due.split(':')[1].split('-'),
@@ -194,20 +194,22 @@ export function TodoThreads(props) {
               <div>
                 {dues()[index()][1]}
               </div>
-              <div class="large">
-                <For each={thread.authors}>
-                  {(author) => <ColorChip value={author}/>}
-                </For>
-              </div>
-              <div class="small">
-                <For each={thread.authors}>
-                  {(author) => <ColorChip value={author.split(/\s/)[0]}/>}
-                </For>
+              <div ref={e => wideNarrowObserver?.observe(e)}>
+                <div class="wide">
+                  <For each={thread.authors}>
+                    {(author) => <ColorChip value={author}/>}
+                  </For>
+                </div>
+                <div class="narrow">
+                  <For each={thread.authors}>
+                    {(author) => <ColorChip value={author.split(/\s/)[0]}/>}
+                  </For>
+                </div>
               </div>
               <div style={{ 'grid-column': "span 2" }}>
                 {thread.subject}
               </div>
-              <div class="large">
+              <div class="column-wide">
                 <For each={thread.tags.sort()}>
                   {(tag) => <ColorChip value={tag}/>}
                 </For>
