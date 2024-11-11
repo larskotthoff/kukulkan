@@ -280,7 +280,7 @@ button > span {
 
 .todo-threads {
     @media (min-width: 900px) {
-        max-width: calc(100% - 10.5em);
+        width: calc(100% - 10.5em);
     }
 }
 
