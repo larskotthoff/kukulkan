@@ -1044,6 +1044,58 @@ test("error when mail cannot be sent", async () => {
   expect(screen.getByText("Error sending message: foo")).toBeInTheDocument();
 });
 
+test("error when mail cannot be sent but no error when successful after", async () => {
+  const { getByTestId } = render(() => <Write/>);
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("Send")).toBeInTheDocument();
+  });
+  global.fetch.mockResolvedValue({ ok: true, json: () => [] });
+
+  await userEvent.type(getByTestId("to").querySelector("input"), "otherto@test.com{enter}");
+  await vi.waitFor(() => {
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/otherto%40test.com",
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      }));
+  });
+  expect(global.fetch).toHaveBeenCalledTimes(1);
+  await userEvent.type(getByTestId("subject"), "testsubject");
+
+  const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
+      json: () => Promise.resolve({send_id: 0})
+    });
+  let eventSourceInstance;
+  vi.spyOn(global, 'EventSource').mockImplementation((url) => {
+      eventSourceInstance = new MockEventSource(url);
+      return eventSourceInstance;
+  });
+  await userEvent.click(screen.getByText("Send"));
+  eventSourceInstance.simulateMessage({send_status: 1, send_output: "foo"});
+
+  expect(fetchSpy).toHaveBeenCalledTimes(1);
+  expect(fetchSpy).toHaveBeenCalledWith("http://localhost:5000/api/send",
+    expect.objectContaining({
+      method: 'POST',
+      body: expect.any(FormData),
+    }));
+
+  expect(screen.getByText("Error sending message: foo")).toBeInTheDocument();
+
+  await userEvent.click(screen.getByText("Send"));
+  eventSourceInstance.simulateMessage({send_status: 0, send_output: ""});
+
+  expect(fetchSpy).toHaveBeenCalledTimes(2);
+  expect(fetchSpy).toHaveBeenCalledWith("http://localhost:5000/api/send",
+    expect.objectContaining({
+      method: 'POST',
+      body: expect.any(FormData),
+    }));
+
+  expect(screen.queryByText("Error sending message: foo")).not.toBeInTheDocument();
+  expect(screen.getByText("Message sent.")).toBeInTheDocument();
+});
+
 test("external editing", async () => {
   vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": {"external-editor": "foo"}});
   const { getByTestId } = render(() => <Write/>);

@@ -257,6 +257,8 @@ export function Write(props) {
   }
 
   function sendMsg() {
+    setStatusMsg();
+
     if(message.to.length === 0) {
       setStatusMsg(`Error: No to address. Not sending.`);
       return;
