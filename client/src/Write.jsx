@@ -258,13 +258,16 @@ export function Write(props) {
 
   function sendMsg() {
     setStatusMsg();
+    document.getElementById("send").disabled = true;
 
     if(message.to.length === 0) {
       setStatusMsg(`Error: No to address. Not sending.`);
+      document.getElementById("send").disabled = false;
       return;
     }
     if(!message.subject) {
       setStatusMsg(`Error: No subject. Not sending.`);
+      document.getElementById("send").disabled = false;
       return;
     }
 
@@ -288,6 +291,9 @@ export function Write(props) {
       })
       .catch((error) => {
         setStatusMsg(`Error: ${JSON.stringify(error)}`);
+      })
+      .finally(() => {
+        document.getElementById("send").disabled = false;
       });
   }
 
