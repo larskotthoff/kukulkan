@@ -341,6 +341,12 @@ button > span {
     border: 2px solid black;
 }
 
+.edit-tag-box input {
+    outline: none;
+    width: 100%;
+    border: none;
+}
+
 .threadnav-container {
     margin-top: 0.5em;
     margin-left: 0.5em;

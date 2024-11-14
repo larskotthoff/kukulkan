@@ -155,7 +155,7 @@ export function Kukulkan(props) {
         <Autocomplete
           id="edit-tag-box"
           name="editTags"
-          class="input-wide centered edit-tag-box"
+          class="centered edit-tag-box"
           text={editingTags}
           setText={setEditingTags}
           onBlur={() => {
