@@ -1,0 +1,11 @@
+{
+    "accounts": [
+        {
+            "id": "test",
+            "name": "Foo Bar",
+            "email": "test@test.com",
+            "sendmail": "true",
+            "default": "true"
+        }
+    ]
+}
