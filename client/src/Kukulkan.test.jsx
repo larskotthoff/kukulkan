@@ -356,6 +356,52 @@ test("tag edits with multiple selection work", async () => {
   expect(window.open).toHaveBeenCalledTimes(0);
 });
 
+test("tag edits completions work", async () => {
+  global.fetch.mockResolvedValue({ ok: true, json: () => [] });
+  vi.stubGlobal("data", {"allTags": tags, "threads": [
+    {thread_id: "foo", authors: ["authors"], subject: "subject", tags: ["test"], total_messages: 1, newest_date: 1000, oldest_date: 100}
+  ]});
+  render(() => <Kukulkan Threads={SearchThreads}/>);
+  await vi.waitFor(() => {
+    expect(screen.getByText("1 thread.")).toBeInTheDocument();
+  });
+
+  await userEvent.type(document.body, "t");
+
+  const input = document.querySelector("#edit-tag-box > input");
+  await userEvent.type(input, "f");
+  let completions = document.querySelector(".autocomplete-popup").children;
+  expect(completions.length).toBe(2);
+  expect(completions[0]).toHaveTextContent("foo");
+  expect(completions[1]).toHaveTextContent("foobar");
+
+
+  await userEvent.type(input, "{backspace}");
+
+  await userEvent.type(input, "-f");
+  completions = document.querySelector(".autocomplete-popup").children;
+  expect(completions.length).toBe(2);
+  expect(completions[0]).toHaveTextContent("-foo");
+  expect(completions[1]).toHaveTextContent("-foobar");
+
+  await userEvent.type(input, "{backspace}{backspace}");
+
+  await userEvent.type(input, "due:tomorrow");
+  completions = document.querySelector(".autocomplete-popup").children;
+  expect(completions.length).toBe(1);
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const dateStr = tomorrow.toISOString().split('T')[0];
+  expect(completions[0]).toHaveTextContent(`due:${dateStr}`);
+  await userEvent.type(input, "{enter}");
+
+  await userEvent.type(input, " -f");
+  completions = document.querySelector(".autocomplete-popup").children;
+  expect(completions.length).toBe(2);
+  expect(completions[0]).toHaveTextContent(`due:${dateStr} -foo`);
+  expect(completions[1]).toHaveTextContent(`due:${dateStr} -foobar`);
+});
+
 test("shows todo due dates correctly after marking done", async () => {
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
 

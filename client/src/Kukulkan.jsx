@@ -1,4 +1,5 @@
 import { createEffect, createSignal, on, Show } from "solid-js";
+import * as chrono from 'chrono-node';
 
 import { Autocomplete } from "./Autocomplete.jsx";
 
@@ -165,11 +166,17 @@ export function Kukulkan(props) {
           getOptions={(text) => {
             // claude helped with this
             let pts = text.match(/([^ -]+)|[ -]/g),
-                last = pts.pop();
-            if(last.length > 0)
-              return data.allTags.filter((t) => t.startsWith(last)).map((t) => [...pts, t].join(''));
-            else
+                last = pts?.pop();
+            if(last && last.length > 0) {
+              const opts = data.allTags.filter((t) => t.startsWith(last));
+              if(last.startsWith("due:")) {
+                const parsed = chrono.parseDate(text.split(':')[1])?.toISOString().split('T')[0];
+                if(parsed) opts.unshift(`due:${parsed}`);
+              }
+              return opts.map((t) => [...pts, t].join(''));
+            } else {
               return [];
+            }
           }}
           handleKey={(ev) => {
             if(ev.code === 'Enter' || ev.key === 'Enter') {
