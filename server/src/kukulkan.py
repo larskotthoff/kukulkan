@@ -131,10 +131,10 @@ def close_db(e=None):
 def get_globals():
     accts = current_app.config.custom["accounts"]
     tags = [tag for tag in get_db().get_all_tags() if tag != "(null)"]
-    if not current_app.config.custom["compose"]:
-        cmp = []
-    else:
+    try:
         cmp = current_app.config.custom["compose"]
+    except KeyError:
+        cmp = []
     return {"accounts": accts, "allTags": tags, "compose": cmp}
 
 
