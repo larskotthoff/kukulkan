@@ -303,7 +303,7 @@ export function Write(props) {
 
   mkShortcut([["y"]],
     // eslint-disable-next-line solid/reactivity
-    () => bodyRef().disabled || document.getElementById("send").click()
+    () => document.getElementById("send").click()
   );
 
   mkShortcut([["b"]],
@@ -410,6 +410,7 @@ export function Write(props) {
               formData.append('body', ev.target.value);
 
               ev.target.disabled = true;
+              document.getElementById("send").disabled = true;
               ev.target.value = "[Editing externally...]";
               const url = getSetting("externalCompose") === true ?
                 `${window.location.protocol}//localhost:${window.location.port}/api/edit_external` :
@@ -417,6 +418,7 @@ export function Write(props) {
               const response = await fetch(url, { method: 'POST', body: formData });
               ev.target.value = await response.text();
               ev.target.disabled = false;
+              document.getElementById("send").disabled = false;
               localStorage.setItem(`draft-${draftKey}-body`, ev.target.value);
               setMessage("body", ev.target.value);
             }
