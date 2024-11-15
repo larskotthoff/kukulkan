@@ -32,6 +32,10 @@ COPY config /root/.config/kukulkan/config
 RUN cd \
     && wget https://nmbug.notmuchmail.org/archive/notmuch-list.tar.xz \
     && tar xf notmuch-list.tar.xz \
-    && notmuch new
+    && notmuch new \
+    && notmuch tag -unread date:..1M \
+    && notmuch tag +patch subject:patch or attachment:.patch \
+    && notmuch tag +bug subject:bug or body:bug \
+    && notmuch tag +question body:question or subject:'?'
 
 ENTRYPOINT gunicorn --bind 0.0.0.0:8000 --timeout 0 --threads 5 'root.kukulkan.prod.kukulkan:create_app()'
