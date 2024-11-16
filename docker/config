@@ -7,5 +7,15 @@
             "sendmail": "true",
             "default": "true"
         }
-    ]
+    ],
+
+    "compose": {
+        "templates": [
+            {
+                "shortcut": "0",
+                "description": "thanks",
+                "template": "Thanks, sounds good, let's do it that way!"
+            }
+        ]
+    }
 }
