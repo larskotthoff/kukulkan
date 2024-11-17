@@ -36,6 +36,8 @@ RUN cd \
     && notmuch tag -unread date:..1M \
     && notmuch tag +patch subject:patch or attachment:.patch \
     && notmuch tag +bug subject:bug or body:bug \
-    && notmuch tag +question body:question or subject:'?'
+    && notmuch tag +question body:question or subject:'?' \
+    && notmuch tag +todo date:1M.. and tag:patch \
+    && for m in `notmuch search --output=messages tag:todo | grep a`; do notmuch tag +due:`$(((RANDOM % 3) + \`date +%Y\`))`-`printf "%02d" $(((RANDOM % 12) + 1))`-`printf "%02d" $(((RANDOM % 28) + 1))` $m; done
 
 ENTRYPOINT gunicorn --bind 0.0.0.0:8000 --timeout 0 --threads 5 'root.kukulkan.prod.kukulkan:create_app()'
