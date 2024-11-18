@@ -11,7 +11,7 @@ import { TagComplete } from "./Autocomplete.jsx";
 
 import "./Kukulkan.css";
 import { apiURL, formatDate, formatFSz, strip } from "./utils.js";
-import { mkShortcut, Icon, AttachFile, Cancel, CheckCircle, Forward, Help, Print, ReplyAll, Security } from "./UiUtils.jsx";
+import { mkShortcut, Icon, AttachFile, Cancel, CheckCircle, Forward, Help, Print, ReplyAll, Security, Trash } from "./UiUtils.jsx";
 
 export function separateQuotedNonQuoted(text) {
   let lines = text.split('\n'),
@@ -279,12 +279,7 @@ export function Message(props) {
 
   mkShortcut([["Delete"]],
     // eslint-disable-next-line solid/reactivity
-    () => {
-      if(props.active) {
-        removeTag("unread");
-        addTag("deleted");
-      }
-    },
+    () => { if(props.active) document.querySelector("a[id='delete']")?.click(); },
     true
   );
 
@@ -339,6 +334,9 @@ export function Message(props) {
             </a>
             <a id="security" href={secUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
               <Icon icon={Security}/>
+            </a>
+            <a id="delete" href="#" onClick={() => { if(props.active) { removeTag("unread"); addTag("deleted"); }}}>
+              <Icon icon={Trash}/>
             </a>
           </div>
 
