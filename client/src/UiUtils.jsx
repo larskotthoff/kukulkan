@@ -36,6 +36,46 @@ export function simulateKeyPress(key, ctrlKey = false, shiftKey = false, altKey 
   document.dispatchEvent(event);
 }
 
+export function handleSwipe(el, left, right) {
+  const initialPos = { x: undefined, y: undefined },
+        finalPos = { x: undefined, y: undefined };
+
+  el.ontouchstart = (ev => {
+    initialPos.x = ev.touches.item(0).clientX;
+    initialPos.y = ev.touches.item(0).clientY;
+  });
+
+  el.ontouchcancel = (() => {
+    initialPos.x = undefined;
+    initialPos.y = undefined;
+    finalPos.x = undefined;
+    finalPos.y = undefined;
+  });
+
+  el.ontouchmove = (ev => {
+    finalPos.x = ev.touches.item(0).clientX;
+    finalPos.y = ev.touches.item(0).clientY;
+  });
+
+  el.ontouchend = (ev => {
+    const diffX = finalPos.x - initialPos.x,
+          diffY = finalPos.y - initialPos.y;
+
+    if(Math.abs(diffX) > 0.1 * window.screen.width && Math.abs(diffX) > 2 * Math.abs(diffY)) {
+      if(diffX < 0) {
+        left();
+      } else {
+        right();
+      }
+    }
+
+    initialPos.x = undefined;
+    initialPos.y = undefined;
+    finalPos.x = undefined;
+    finalPos.y = undefined;
+  });
+}
+
 export let wideNarrowObserver = null;
 if(typeof ResizeObserver === 'function') {
   wideNarrowObserver = new ResizeObserver((entries) => {

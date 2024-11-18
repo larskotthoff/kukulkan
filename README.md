@@ -73,7 +73,7 @@ autocomplete dialog without selecting a completion.
 
 Query notmuch database for threads (try `tag:unread` or `date:"this month"`).
 
-Keyboard shortcuts:
+Shortcuts:
 - Enter: open thread view
 - Home: go to top of thread list
 - End/0: to to end of thread list
@@ -104,7 +104,7 @@ all threads without a due date at the end.
 
 Note that if there are no threads tagged "todo", nothing will be shown.
 
-Keyboard shortcuts:
+Shortcuts:
 - Enter: open thread view
 - Home: go to top of thread list
 - End/0: to to end of thread list
@@ -138,15 +138,15 @@ box is determined by the temporal order in the thread, the x position by the
 fiber it belongs to. All but the active fiber (whose messages are shown) are
 shown with reduced opacity.
 
-Keyboard shortcuts:
+Shortcuts:
 - Home/1: go to first message in fiber
 - End/0: to to last message in fiber
 - k/up: go up one
 - K: go up ten
 - j/down: go down one
 - J: go down ten
-- h/left: activate left fiber
-- l/right: activate right fiber
+- h/left/swipe left: activate left fiber
+- l/right/swipe right: activate right fiber
 - F: toggle between fiber and flat views
 For the active message:
 - r: open compose view to reply all
@@ -169,7 +169,7 @@ remove the last tag.
 
 Write new email, either from scratch or replying/forwarding an existing message.
 
-Keyboard shortcuts:
+Shortcuts:
 - a: attach file to message
 - b: focus text body input (may open external editor depending on settings)
 - y: send message

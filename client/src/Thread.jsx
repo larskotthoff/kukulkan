@@ -6,7 +6,7 @@ import { getSetting } from "./Settings.jsx";
 
 import "./Kukulkan.css";
 import { extractEmailsSort, filterSubjectColor, filterAdminTags, getColor } from "./utils.js";
-import { mkShortcut } from "./UiUtils.jsx";
+import { handleSwipe, mkShortcut } from "./UiUtils.jsx";
 
 function getFirstUnread(thread) {
   let firstUnread = thread.findIndex((m) => {
@@ -108,15 +108,18 @@ export function Thread(props) {
     document.querySelector(".threadnav-box.active")?.scrollIntoView({inline: "center"});
   }
 
-  mkShortcut([["h"], ["ArrowLeft"]],
-    // eslint-disable-next-line solid/reactivity
-    () => updateActiveDepth(Math.max(0, filteredThread()[activeMessage()].depth - 1))
-  );
-  mkShortcut([["l"], ["ArrowRight"]],
-    // eslint-disable-next-line solid/reactivity
-    () => updateActiveDepth(Math.min(filteredThread()[activeMessage()].depth + 1,
-                                  Math.max(...data.thread.map(m => m.depth))))
-  );
+  function decreaseActiveDepth() {
+    updateActiveDepth(Math.max(0, filteredThread()[activeMessage()].depth - 1));
+  }
+
+  function increaseActiveDepth() {
+    updateActiveDepth(Math.min(filteredThread()[activeMessage()].depth + 1,
+                      Math.max(...data.thread.map(m => m.depth))));
+  }
+
+  mkShortcut([["h"], ["ArrowLeft"]], decreaseActiveDepth);
+  mkShortcut([["l"], ["ArrowRight"]], increaseActiveDepth);
+  handleSwipe(document.body, decreaseActiveDepth, increaseActiveDepth);
 
   mkShortcut([["Shift", "F"]],
     // eslint-disable-next-line solid/reactivity
