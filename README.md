@@ -170,13 +170,11 @@ graph TD;
 
     ms --> mbsync;
     mbsync --> notmuch;
-    notmuch --> kukulkanback;
-    kukulkanback --> notmuch;
+    notmuch <--> kukulkanback;
     kukulkanback --> msmtp;
     msmtp --> ms;
 
-    kukulkanback --> kukulkanfront;
-    kukulkanfront --> kukulkanback;
+    kukulkanback <--> kukulkanfront;
 ```
 
 ## Installation
