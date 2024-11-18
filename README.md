@@ -27,6 +27,33 @@ Email Client for Notmuch
 - keyboard shortcuts available for all actions
 - lots of tests for backend and frontend
 
+## Installation
+
+Assumes that you have [notmuch](https://notmuchmail.org) installed and working.
+You may need to install additional Python packages (in
+[requirements.txt](https://github.com/larskotthoff/kukulkan/blob/main/server/requirements.txt))
+and (for development only) node and the required node packages.
+
+For the production version, it should be sufficient to serve the `prod/`
+directory through a suitable WSGI container, e.g. `gunicorn 'kukulkan.prod.kukulkan:create_app()'`.
+The files in `prod/static` were created using `npm run build` in the `src/client` directory.
+
+For development, start the server with `FLASK_APP=kukulkan flask run`
+ and the client with `npm start` in the respective directories.
+The `deploy.sh` script automates deployment to the `prod/` directory.
+
+The configuration is assumed to be at $XDG_CONFIG_HOME/.config/kukulkan/config;
+an example configuration is provided in
+[config-example](https://github.com/larskotthoff/kukulkan/blob/main/config-example).
+
+Accounts that have `key` set will use this S/MIME key to sign sent emails. This
+only works if the key is not password protected. The `filter` key allows to
+specify what content in text/html and text/plain to replace; the second string
+in the array is what to replace it with (leave empty to remove matches).
+
+If your notmuch configuration is a non-standard place, you can specify this by
+setting the NOTMUCH_CONFIG environment variable.
+
 ## Usage
 
 Demo at
@@ -133,6 +160,9 @@ For the active message:
 - w: open raw message (unparsed text of the message file)
 - ?: open main view with query from:<sender of message>
 
+Click on tags to remove them, or press Backspace in the tag edit field to
+remove the last tag.
+
 ### Compose View
 
 ![Compose View](screens/compose.png?raw=true)
@@ -147,6 +177,9 @@ Keyboard shortcuts:
 
 Templates can be applied by pressing the defined key -- there is no check
 whether this overlaps with existing shortcuts.
+
+Click on addresses/tags to remove them, or press Backspace in the respective
+edit field to remove the last address/tag.
 
 ### Settings
 
@@ -176,30 +209,6 @@ graph TD;
 
     kukulkanback <--> kukulkanfront;
 ```
-
-## Installation
-
-Assumes that you have [notmuch](https://notmuchmail.org) installed and working.
-You may need to install additional Python packages (in
-[requirements.txt](https://github.com/larskotthoff/kukulkan/blob/main/server/requirements.txt))
-and (for development only) node and the required node packages.
-
-For the production version, it should be sufficient to serve the `prod/`
-directory through a suitable WSGI container, e.g. `gunicorn 'kukulkan.prod.kukulkan:create_app()'`.
-The files in `prod/static` were created using `npm run build` in the `src/client` directory.
-
-For development, start the server with `FLASK_APP=kukulkan flask run`
- and the client with `npm start` in the respective directories.
-The `deploy.sh` script automates deployment to the `prod/` directory.
-
-The configuration is assumed to be at $XDG_CONFIG_HOME/.config/kukulkan/config;
-an example configuration is provided in
-[config-example](https://github.com/larskotthoff/kukulkan/blob/main/config-example).
-
-Accounts that have `key` set will use this S/MIME key to sign sent emails. This
-only works if the key is not password protected. The `filter` key allows to
-specify what content in text/html and text/plain to replace; the second string
-in the array is what to replace it with (leave empty to remove matches).
 
 ## Credits
 
