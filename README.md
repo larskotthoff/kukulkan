@@ -159,7 +159,7 @@ to the browser you are using.
 ### General Architecture
 
 ```mermaid
-flowchart K;
+flowchart K
     ms[Mail Server]
     mbsync[mbsync/offlineimap/...]
     notmuch[notmuch]
