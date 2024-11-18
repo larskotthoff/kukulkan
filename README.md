@@ -159,22 +159,22 @@ to the browser you are using.
 ### General Architecture
 
 ```mermaid
-flowchart K
-    ms[Mail Server]
-    mbsync[mbsync/offlineimap/...]
-    notmuch[notmuch]
-    kukulkanback[Kukulkan Backend (Python)]
-    kukulkanfront[Kukulkan Frontend (JavaScript)]
-    msmtp[sendmail/msmtp/...]
+graph K;
+    ms[Mail Server];
+    mbsync[mbsync/offlineimap/...];
+    notmuch[notmuch];
+    kukulkanback[Kukulkan Backend (Python)];
+    kukulkanfront[Kukulkan Frontend (JavaScript)];
+    msmtp[sendmail/msmtp/...];
 
-    ms --> mbsync
-    mbsync --> notmuch
-    notmuch --> kukulkanback
-    kukulkanback --> notmuch
-    kukulkanback --> kukulkanfront
-    kukulkanfront --> kukulkanback
-    kukulkanback --> msmtp
-    msmtp --> ms
+    ms --> mbsync;
+    mbsync --> notmuch;
+    notmuch --> kukulkanback;
+    kukulkanback --> notmuch;
+    kukulkanback --> kukulkanfront;
+    kukulkanfront --> kukulkanback;
+    kukulkanback --> msmtp;
+    msmtp --> ms;
 ```
 
 ## Installation
