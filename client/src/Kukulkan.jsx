@@ -79,10 +79,13 @@ export function Kukulkan(props) {
     () => setActiveThread(threads().length - 1)
   );
 
-  mkShortcut([["Enter"]],
-    // eslint-disable-next-line solid/reactivity
-    () => { if(threads()[activeThread()]) window.open(`/thread?id=${encodeURIComponent(threads()[activeThread()].thread_id)}`, getSetting("openInTab")) }
-  );
+  function openActive() {
+    if(threads()[activeThread()]) {
+      window.open(`/thread?id=${encodeURIComponent(threads()[activeThread()].thread_id)}`, getSetting("openInTab"));
+    }
+  }
+
+  mkShortcut([["Enter"]], openActive);
 
   document.addEventListener('keydown', function(event) {
     if(document.activeElement.tagName.toLowerCase() !== 'input' && event.code === 'Space') {
@@ -114,37 +117,33 @@ export function Kukulkan(props) {
     true
   );
 
-  mkShortcut([["t"]],
-    // eslint-disable-next-line solid/reactivity
-    () => setShowEditingTagModal(!showEditingTagModal()),
-    true
-  );
+  function tagActive() {
+    setShowEditingTagModal(!showEditingTagModal());
+  }
 
-  mkShortcut([["Delete"]],
-    // eslint-disable-next-line solid/reactivity
-    () => {
-      setEditingTags("deleted -unread");
-      makeTagEdits();
-      setEditingTags("");
-    },
-    true
-  );
+  mkShortcut([["t"]], tagActive, true);
 
-  mkShortcut([["d"]],
-    // eslint-disable-next-line solid/reactivity
-    () => {
-      let edits = "-todo",
-          affectedThreads = selectedThreads();
-      if(affectedThreads.length === 0) affectedThreads = [activeThread()];
-      affectedThreads.forEach(affectedThread => {
-        let due = threads()[affectedThread].tags.find((tag) => tag.startsWith("due:"));
-        if(due) edits += " -" + due;
-      });
-      setEditingTags(edits);
-      makeTagEdits();
-    },
-    true
-  );
+  function deleteActive() {
+    setEditingTags("deleted -unread");
+    makeTagEdits();
+    setEditingTags("");
+  }
+
+  mkShortcut([["Delete"]], deleteActive, true);
+
+  function doneActive() {
+    let edits = "-todo",
+        affectedThreads = selectedThreads();
+    if(affectedThreads.length === 0) affectedThreads = [activeThread()];
+    affectedThreads.forEach(affectedThread => {
+      let due = threads()[affectedThread].tags.find((tag) => tag.startsWith("due:"));
+      if(due) edits += " -" + due;
+    });
+    setEditingTags(edits);
+    makeTagEdits();
+  }
+
+  mkShortcut([["d"]], doneActive, true);
 
   createEffect(on(showEditingTagModal, () => {
     if(showEditingTagModal()) document.querySelector("#edit-tag-box > input").focus();
@@ -195,7 +194,8 @@ export function Kukulkan(props) {
     <>
       <TagEditingModal/>
       <props.Threads threads={threads} activeThread={activeThread} setActiveThread={setActiveThread}
-        selectedThreads={selectedThreads} setQuery={setQuery} sp={props.sp}/>
+        selectedThreads={selectedThreads} setQuery={setQuery} sp={props.sp}
+        openActive={openActive} deleteActive={deleteActive} doneActive={doneActive} tagActive={tagActive}/>
     </>
   );
 }

@@ -151,7 +151,7 @@ test("sets active and selected classes", () => {
 test("sets active threads on click", async () => {
   const setActiveThread = vi.fn(),
         { container } = render(() => <SearchThreads threads={() => threads} index={() => 0} activeThread={() => 0}
-          selectedThreads={() => []} setActiveThread={setActiveThread} setQuery={() => []}/>);
+          selectedThreads={() => []} setActiveThread={setActiveThread} setQuery={() => []} openActive={() => 0}/>);
 
   expect(container.querySelectorAll(".thread").length).toBe(1);
 

@@ -5,11 +5,10 @@ import { userEvent } from "@testing-library/user-event";
 
 afterEach(cleanup);
 
-import { mkShortcut, simulateKeyPress } from "./UiUtils.jsx";
+import { mkShortcut } from "./UiUtils.jsx";
 
 test("exports", () => {
   expect(mkShortcut).not.toBe(undefined);
-  expect(simulateKeyPress).not.toBe(undefined);
 });
 
 // ChatGPT helped with the setup for this

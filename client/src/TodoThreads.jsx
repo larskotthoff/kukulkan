@@ -3,7 +3,7 @@ import { createEffect, createSignal, For, on, Show } from 'solid-js';
 import { ColorChip } from "./ColorChip.jsx";
 
 import { formatDuration } from "./utils.js";
-import { handleSwipe, simulateKeyPress, wideNarrowObserver } from "./UiUtils.jsx";
+import { handleSwipe, wideNarrowObserver } from "./UiUtils.jsx";
 
 function dateFromDue(due) {
   const dateComponents = due.split(':')[1].split('-'),
@@ -163,7 +163,7 @@ export function TodoThreads(props) {
     );
   }
 
-  handleSwipe(document.body, () => simulateKeyPress('d'), () => simulateKeyPress('t'));
+  handleSwipe(document.body, props.doneActive, props.tagActive);
 
   return (
     <div class="centered horizontal-stack">
@@ -180,7 +180,7 @@ export function TodoThreads(props) {
               }}
               onClick={() => {
                 props.setActiveThread(index());
-                simulateKeyPress('Enter');
+                props.openActive();
               }}
               onTouchStart={() => {
                 props.setActiveThread(index());

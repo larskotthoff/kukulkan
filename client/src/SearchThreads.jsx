@@ -6,7 +6,7 @@ import { Autocomplete } from "./Autocomplete.jsx";
 import { getSetting } from "./Settings.jsx";
 
 import { apiURL, delayedDebouncedFetch, renderDateNumThread } from "./utils.js";
-import { handleSwipe, simulateKeyPress, Icon, Create, Settings, wideNarrowObserver } from "./UiUtils.jsx";
+import { handleSwipe, Icon, Create, Settings, wideNarrowObserver } from "./UiUtils.jsx";
 
 export function SearchThreads(props) {
   const searchParams = window.location.search,
@@ -70,7 +70,7 @@ export function SearchThreads(props) {
     );
   }
 
-  handleSwipe(document.body, () => simulateKeyPress('Delete'), () => simulateKeyPress('t'));
+  handleSwipe(document.body, props.deleteActive, props.tagActive);
 
   return (
     <div class="centered vertical-stack" style={{ 'width': "95%" }}>
@@ -94,7 +94,7 @@ export function SearchThreads(props) {
             }}
             onClick={() => {
               props.setActiveThread(index());
-              simulateKeyPress('Enter');
+              props.openActive();
             }}
             onTouchStart={() => {
               props.setActiveThread(index());
