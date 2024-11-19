@@ -211,11 +211,11 @@ test("TagComplete works", async () => {
 
 test("TagComplete completes due dates", async () => {
   let tags = ["foo", "test"],
-      add = "", remove = "";
+      add = "";
   vi.stubGlobal("data", { "allTags": tags });
   const { container } = render(() =>
     <TagComplete tags={tags} addTag={(t) => add = t}
-      removeTag={(t) => remove = t}/>);
+      removeTag={() => null}/>);
 
   const input = container.querySelector("input");
   await userEvent.type(input, "due:");

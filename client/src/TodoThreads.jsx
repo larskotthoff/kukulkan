@@ -163,6 +163,7 @@ export function TodoThreads(props) {
     );
   }
 
+  // eslint-disable-next-line solid/reactivity
   handleSwipe(document.body, props.doneActive, props.tagActive);
 
   return (

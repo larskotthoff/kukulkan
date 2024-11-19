@@ -302,7 +302,6 @@ export function Write(props) {
   );
 
   mkShortcut([["y"]],
-    // eslint-disable-next-line solid/reactivity
     () => document.getElementById("send").click()
   );
 

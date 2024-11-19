@@ -117,8 +117,11 @@ export function Thread(props) {
                       Math.max(...data.thread.map(m => m.depth))));
   }
 
+  // eslint-disable-next-line solid/reactivity
   mkShortcut([["h"], ["ArrowLeft"]], decreaseActiveDepth);
+  // eslint-disable-next-line solid/reactivity
   mkShortcut([["l"], ["ArrowRight"]], increaseActiveDepth);
+  // eslint-disable-next-line solid/reactivity
   handleSwipe(document.body, decreaseActiveDepth, increaseActiveDepth);
 
   mkShortcut([["Shift", "F"]],

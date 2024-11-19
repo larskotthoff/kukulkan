@@ -70,6 +70,7 @@ export function SearchThreads(props) {
     );
   }
 
+  // eslint-disable-next-line solid/reactivity
   handleSwipe(document.body, props.deleteActive, props.tagActive);
 
   return (

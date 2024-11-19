@@ -85,6 +85,7 @@ export function Kukulkan(props) {
     }
   }
 
+  // eslint-disable-next-line solid/reactivity
   mkShortcut([["Enter"]], openActive);
 
   document.addEventListener('keydown', function(event) {
@@ -121,6 +122,7 @@ export function Kukulkan(props) {
     setShowEditingTagModal(!showEditingTagModal());
   }
 
+  // eslint-disable-next-line solid/reactivity
   mkShortcut([["t"]], tagActive, true);
 
   function deleteActive() {
@@ -129,6 +131,7 @@ export function Kukulkan(props) {
     setEditingTags("");
   }
 
+  // eslint-disable-next-line solid/reactivity
   mkShortcut([["Delete"]], deleteActive, true);
 
   function doneActive() {
@@ -143,6 +146,7 @@ export function Kukulkan(props) {
     makeTagEdits();
   }
 
+  // eslint-disable-next-line solid/reactivity
   mkShortcut([["d"]], doneActive, true);
 
   createEffect(on(showEditingTagModal, () => {

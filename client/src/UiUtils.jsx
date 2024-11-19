@@ -32,6 +32,7 @@ export function handleSwipe(el, left, right) {
     finalPos.y = ev.touches.item(0).clientY;
   });
 
+  // eslint-disable-next-line no-unused-vars
   el.ontouchend = (ev => {
     const diffX = finalPos.x - initialPos.x,
           diffY = finalPos.y - initialPos.y;
