@@ -229,21 +229,28 @@ button > span {
 .thread {
     display: grid;
     @media (min-width: 900px) {
-        grid-template-columns: 1fr 3fr 3fr 3fr 3fr;
+        grid-template-columns: 1fr 3fr 5fr 3fr;
         padding: 2px;
     }
     @media (max-width: 899px) {
-        grid-template-columns: 1fr 3fr;
+        grid-template-columns: 1fr 3fr 2fr;
         padding: 5px;
     }
 }
 
-.thread .column-wide {
-    @media (min-width: 900px) {
-        display: block;
-    }
+.grid {
+    display: grid;
+}
+
+.grid-authors {
     @media (max-width: 899px) {
-        display: none;
+        grid-column: span 2;
+    }
+}
+
+.grid-subject {
+    @media (max-width: 899px) {
+        grid-column: span 2;
     }
 }
 

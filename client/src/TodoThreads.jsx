@@ -3,7 +3,7 @@ import { createEffect, createSignal, For, on, Show } from 'solid-js';
 import { ColorChip } from "./ColorChip.jsx";
 
 import { formatDuration } from "./utils.js";
-import { simulateKeyPress, wideNarrowObserver } from "./UiUtils.jsx";
+import { handleSwipe, simulateKeyPress, wideNarrowObserver } from "./UiUtils.jsx";
 
 function dateFromDue(due) {
   const dateComponents = due.split(':')[1].split('-'),
@@ -163,6 +163,8 @@ export function TodoThreads(props) {
     );
   }
 
+  handleSwipe(document.body, () => simulateKeyPress('d'), () => simulateKeyPress('t'));
+
   return (
     <div class="centered horizontal-stack">
       <Calendar/>
@@ -180,6 +182,9 @@ export function TodoThreads(props) {
                 props.setActiveThread(index());
                 simulateKeyPress('Enter');
               }}
+              onTouchStart={() => {
+                props.setActiveThread(index());
+              }}
               onMouseEnter={() => {
                 const calElem = document.getElementsByClassName("calendar")[0];
                 prevScrollPos = { left: calElem?.scrollLeft, top: calElem?.scrollTop };
@@ -194,7 +199,7 @@ export function TodoThreads(props) {
               <div>
                 {dues()[index()][1]}
               </div>
-              <div ref={e => wideNarrowObserver?.observe(e)}>
+              <div class="grid-authors" ref={e => wideNarrowObserver?.observe(e)}>
                 <div class="wide">
                   <For each={thread.authors}>
                     {(author) => <ColorChip value={author}/>}
@@ -206,10 +211,10 @@ export function TodoThreads(props) {
                   </For>
                 </div>
               </div>
-              <div style={{ 'grid-column': "span 2" }}>
+              <div class="grid-subject">
                 {thread.subject}
               </div>
-              <div class="column-wide">
+              <div>
                 <For each={thread.tags.sort()}>
                   {(tag) => <ColorChip value={tag}/>}
                 </For>

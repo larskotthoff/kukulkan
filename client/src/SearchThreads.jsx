@@ -6,7 +6,7 @@ import { Autocomplete } from "./Autocomplete.jsx";
 import { getSetting } from "./Settings.jsx";
 
 import { apiURL, delayedDebouncedFetch, renderDateNumThread } from "./utils.js";
-import { simulateKeyPress, Icon, Create, Settings, wideNarrowObserver } from "./UiUtils.jsx";
+import { handleSwipe, simulateKeyPress, Icon, Create, Settings, wideNarrowObserver } from "./UiUtils.jsx";
 
 export function SearchThreads(props) {
   const searchParams = window.location.search,
@@ -70,6 +70,8 @@ export function SearchThreads(props) {
     );
   }
 
+  handleSwipe(document.body, () => simulateKeyPress('Delete'), () => simulateKeyPress('t'));
+
   return (
     <div class="centered vertical-stack" style={{ 'width': "95%" }}>
       <div class="centered horizontal-stack" style={{ 'width': "80%" }}>
@@ -94,6 +96,9 @@ export function SearchThreads(props) {
               props.setActiveThread(index());
               simulateKeyPress('Enter');
             }}
+            onTouchStart={() => {
+              props.setActiveThread(index());
+            }}
           >
             <div ref={e => wideNarrowObserver?.observe(e)}>
               <div class="narrow">
@@ -103,7 +108,7 @@ export function SearchThreads(props) {
                 {renderDateNumThread(thread)}
               </div>
             </div>
-            <div ref={e => wideNarrowObserver?.observe(e)}>
+            <div class="grid-authors" ref={e => wideNarrowObserver?.observe(e)}>
               <div class="narrow">
                 <For each={thread.authors}>
                   {(author) => <ColorChip value={author.split(/\s/)[0]}/>}
@@ -115,10 +120,10 @@ export function SearchThreads(props) {
                 </For>
               </div>
             </div>
-            <div style={{ 'grid-column': "span 2" }}>
+            <div class="grid-subject">
               {thread.subject}
             </div>
-            <div class="column-wide">
+            <div>
               <For each={thread.tags.sort()}>
                 {(tag) => <ColorChip value={tag}/>}
               </For>
