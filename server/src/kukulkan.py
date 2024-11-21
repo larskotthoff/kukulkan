@@ -149,12 +149,12 @@ def email_address_complete(query_string):
                 for addr in split_email_addresses(value):
                     acf = addr.casefold()
                     if qs in acf:
-                        email = re.search(r'[^ "\'<>]+@[^ >"\']+', acf).group()
+                        email_addr = re.search(r'[^ "\'<>]+@[^ >"\']+', acf).group()
                         # keep first one (i.e. most recent)
                         try:
-                            addrs[email]
+                            addrs[email_addr]
                         except KeyError:
-                            addrs[email] = addr
+                            addrs[email_addr] = addr
         if i > 1000 or len(addrs) > 14:
             break
         i += 1
@@ -202,14 +202,14 @@ def create_app():
         elif path == "thread":
             globs["thread"] = thread(request.args.get("id"))
         elif path == "message":
-            if(attachNum := request.args.get("attachNum")):
+            if(attach_num := request.args.get("attachNum")):
                 globs["message"] = attachment_message(request.args.get("id"),
-                                                      attachNum)
+                                                      attach_num)
             else:
                 globs["message"] = message(request.args.get("id"))
         elif path == "write":
-            if(id := request.args.get("id")):
-                globs["baseMessage"] = message(id)
+            if(wid := request.args.get("id")):
+                globs["baseMessage"] = message(wid)
         return render_template("index.html", data=globs)
 
     @app.after_request
