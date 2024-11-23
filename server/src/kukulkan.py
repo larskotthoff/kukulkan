@@ -204,7 +204,7 @@ def create_app():
         elif path == "message":
             if(attach_num := request.args.get("attachNum")):
                 globs["message"] = attachment_message(request.args.get("id"),
-                                                      attach_num)
+                                                      int(attach_num))
             else:
                 globs["message"] = message(request.args.get("id"))
         elif path == "write":
