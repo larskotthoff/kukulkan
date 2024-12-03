@@ -341,7 +341,7 @@ export function Message(props) {
           </div>
 
           <Show when={msg.attachments}>
-            <div class="attachments">
+            <div class="attachments" style={{ '--num-attachments': `${msg.attachments.length}` }}>
               <For each={msg.attachments}>
                 {(attachment, index) =>
                   <div>
@@ -394,7 +394,7 @@ export function Message(props) {
         <div class="vertical-stack">
           <div class="horizontal-stack space-between">
             <div>{formatAddrs(msg.from)}</div>
-            <div class="attachments">
+            <div class="attachments" style={{ '--num-attachments': `${msg.attachments.length}` }}>
               <For each={msg.attachments}>
                 {(attachment, index) => {
                   if(attachment.filename !== "smime.p7s") {

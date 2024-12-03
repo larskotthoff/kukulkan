@@ -219,10 +219,10 @@ button > span {
     margin-top: 10px;
 
     @media (min-width: 900px) {
-        grid-template-columns: repeat(6, 1fr);
+        grid-template-columns: repeat(min(var(--num-attachments), 6), 1fr);
     }
     @media (max-width: 899px) {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(min(var(--num-attachments), 3), 1fr);
     }
 }
 
