@@ -214,7 +214,6 @@ export function Write(props) {
   }
 
   function prefix(text) {
-    if(!text) return "";
     let pre = "";
     if(action === "reply" && !text.toLowerCase().startsWith("re:")) {
       pre = "Re: ";

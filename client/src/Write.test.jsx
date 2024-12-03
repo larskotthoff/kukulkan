@@ -112,6 +112,23 @@ test("base message reply all", async () => {
   expect(document.title).toBe("Compose: Re: Test.");
 });
 
+test("base message reply empty subject", async () => {
+  vi.stubGlobal('location', {
+    ...window.location,
+    search: '?id=foo&action=reply&mode=all'
+  });
+  const msg1 = JSON.parse(JSON.stringify(msg));
+  msg1.subject = "";
+  vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": [], "baseMessage": msg1});
+  const { getByTestId } = render(() => <Write/>);
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("Send")).toBeInTheDocument();
+  });
+  expect(getByTestId("subject").value).toBe("Re: ");
+  expect(document.title).toBe("Compose: Re:");
+});
+
 test("base message reply one", async () => {
   vi.stubGlobal('location', {
     ...window.location,
