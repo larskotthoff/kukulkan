@@ -166,6 +166,17 @@ export function TodoThreads(props) {
   // eslint-disable-next-line solid/reactivity
   handleSwipe(document.body, props.doneActive, props.tagActive);
 
+  // reload at midnight for correct due dates for new date
+  const loadDate = new Date();
+  function checkDate() {
+    const currentDate = new Date();
+    if(loadDate.getDate() !== currentDate.getDate()) {
+      location.reload();
+    }
+  }
+  document.addEventListener('visibilitychange', checkDate);
+  setTimeout(checkDate, (new Date().setHours(24, 0, 0, 0) - loadDate));
+
   return (
     <div class="centered horizontal-stack">
       <Calendar/>
