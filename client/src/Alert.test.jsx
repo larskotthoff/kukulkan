@@ -23,7 +23,7 @@ test("success works", () => {
   expect(screen.getByText("foo")).toBeInTheDocument();
 
   expect(window.getComputedStyle(element).getPropertyValue('border'))
-    .toBe('3px solid green');
+    .toBe('3px ridge green');
   expect(screen.getByTestId("TaskAltIcon")).toBeInTheDocument();
 });
 
@@ -35,7 +35,7 @@ test("warning works", () => {
   expect(screen.getByText("foo")).toBeInTheDocument();
 
   expect(window.getComputedStyle(element).getPropertyValue('border'))
-    .toBe('3px solid yellow');
+    .toBe('3px ridge yellow');
   expect(screen.getByTestId("WarningAmberIcon")).toBeInTheDocument();
 });
 
@@ -47,7 +47,7 @@ test("error works", () => {
   expect(screen.getByText("foo")).toBeInTheDocument();
 
   expect(window.getComputedStyle(element).getPropertyValue('border'))
-    .toBe('3px solid red');
+    .toBe('3px ridge red');
   expect(screen.getByTestId("ErrorOutlineIcon")).toBeInTheDocument();
 });
 

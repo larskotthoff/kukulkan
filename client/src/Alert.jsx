@@ -5,8 +5,8 @@ export function Alert(props) {
         // eslint-disable-next-line solid/reactivity
         {['class']: clss, severity, children, ...spreadProps} = props;
   return (<div
-        class={`alert ${clss}`}
-        style={{ 'border': `3px solid ${cols[severity]}` }}
+        class={`alert ${clss ? clss : ""}`}
+        style={{ 'border': `3px ridge ${cols[severity]}` }}
         {...spreadProps}>
       {severity === "success" && <Icon icon={TaskAlt}/>}
       {severity === "warning" && <Icon icon={WarningAmber}/>}
