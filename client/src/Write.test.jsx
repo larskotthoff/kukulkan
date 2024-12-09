@@ -112,6 +112,24 @@ test("base message reply all", async () => {
   expect(document.title).toBe("Compose: Re: Test.");
 });
 
+test("base message reply all duplicate addresses", async () => {
+  vi.stubGlobal('location', {
+    ...window.location,
+    search: '?id=foo&action=reply&mode=all'
+  });
+  const msg1 = JSON.parse(JSON.stringify(msg));
+  msg1.to = ["bar foo <bar@foo.com>"];
+  vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": [], "baseMessage": msg1});
+  const { getByTestId } = render(() => <Write/>);
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("Send")).toBeInTheDocument();
+  });
+  let tos = getByTestId("to").querySelectorAll("span");
+  expect(tos.length).toBe(1);
+  expect(tos[0].value).toBe("bar foo <bar@foo.com>");
+});
+
 test("base message reply empty subject", async () => {
   vi.stubGlobal('location', {
     ...window.location,

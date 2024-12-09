@@ -94,7 +94,7 @@ function makeToCc(msg, action, mode) {
       }, true);
     });
   }
-  return [ tmpTo, tmpCc ];
+  return [ [...new Set(tmpTo)], [...new Set(tmpCc)] ];
 }
 
 export function Write(props) {
