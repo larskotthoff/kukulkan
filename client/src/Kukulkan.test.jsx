@@ -319,6 +319,24 @@ test("tag edits work", async () => {
   expect(window.open).toHaveBeenCalledTimes(0);
 });
 
+test("tag edit box not shown when nothing there", async () => {
+  vi.stubGlobal('location', {
+    ...window.location,
+    search: '?query=foo'
+  });
+  global.fetch.mockResolvedValue({ ok: true, json: () => [] });
+  vi.stubGlobal("data", {"allTags": tags, "threads": []});
+  render(() => <Kukulkan Threads={SearchThreads}/>);
+  await vi.waitFor(() => {
+    expect(screen.getByText("0 threads.")).toBeInTheDocument();
+  });
+
+  await userEvent.type(document.body, "t");
+  expect(document.querySelector("#edit-tag-box > input")).not.toBeInTheDocument();
+
+  expect(global.fetch).toHaveBeenCalledTimes(0);
+});
+
 test("tag edits with multiple selection work", async () => {
   vi.stubGlobal('location', {
     ...window.location,

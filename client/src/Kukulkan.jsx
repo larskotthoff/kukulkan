@@ -119,7 +119,7 @@ export function Kukulkan(props) {
   );
 
   function tagActive() {
-    setShowEditingTagModal(!showEditingTagModal());
+    setShowEditingTagModal(threads().length > 0 && !showEditingTagModal());
   }
 
   // eslint-disable-next-line solid/reactivity
