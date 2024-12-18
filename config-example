@@ -25,6 +25,7 @@
     ],
 
     "gpg-keyserver": "keyserver.ubuntu.com",
+    "ca-bundle": "/etc/ca-certificates/extracted/email-ca-bundle.pem",
 
     "filter": {
         "content": {

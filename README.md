@@ -38,9 +38,16 @@ For the production version, it should be sufficient to serve the `prod/`
 directory through a suitable WSGI container, e.g. `gunicorn 'kukulkan.prod.kukulkan:create_app()'`.
 The files in `prod/static` were created using `npm run build` in the `src/client` directory.
 
-For development, start the server with `FLASK_APP=kukulkan flask run`
- and the client with `npm start` in the respective directories.
-The `deploy.sh` script automates deployment to the `prod/` directory.
+For development, start the server with `FLASK_APP=kukulkan FLASK_DEBUG="true" flask run`
+and the client with `npm start` in the respective directories. The
+`FLASK_DEBUG` option is necessary to correctly serve templates, which are used
+to reduce the number of requests. The `deploy.sh` script automates deployment to
+the `prod/` directory.
+
+If your notmuch configuration is a non-standard place, you can specify this by
+setting the NOTMUCH_CONFIG environment variable.
+
+## Configuration
 
 The configuration is assumed to be at $XDG_CONFIG_HOME/.config/kukulkan/config;
 an example configuration is provided in
@@ -51,8 +58,60 @@ only works if the key is not password protected. The `filter` key allows to
 specify what content in text/html and text/plain to replace; the second string
 in the array is what to replace it with (leave empty to remove matches).
 
-If your notmuch configuration is a non-standard place, you can specify this by
-setting the NOTMUCH_CONFIG environment variable.
+````
+{
+    "accounts": [ # define at least one account
+        {
+            "id": "foo", # internal ID, can be set arbitrarily
+            "name": "My Name",
+            "email": "foo@bar.com",
+            "key": "/path/to/key.key", # optional
+            "cert": "/path/to/cert.cert", # optional
+            "sendmail": "msmtp --account=foo -t",
+            "default": "true",
+            "save_sent_to": "/path/to/mail/foo/cur/", # where should saved mail be put
+            "additional_sent_tags": [ "foo" ] # tags to apply in addition to the ones specified in the user interface
+        },
+
+        {
+            "id": "bar",
+            "name": "Foo Bar",
+            "email": "bar@foo.com",
+            "sendmail": "msmtp --account=bar -t",
+            "default": "false", # can also be omitted if false
+            "save_sent_to": "/path/to/mail/bar/cur/",
+            "additional_sent_tags": [ "bar" ]
+        }
+
+    ],
+
+    "gpg-keyserver": "keyserver.ubuntu.com",
+    "ca-bundle": "/etc/ca-certificates/extracted/email-ca-bundle.pem", # for S/MIME verification
+    # if you're running Kukulkan on a different machine to where your browser is
+    # and you want external editing on the browser machine, set this to true
+    "allow-cross-origin-write": "true",
+
+    "filter": {
+        "content": {
+            "text/html": [ "<p>spam banner to be removed</p>", "" ],
+            "text/plain": [ "Some warning that message was from external source.", "" ]
+        }
+    },
+
+    "compose": {
+        "external-editor": "command that will be suffixed with file name", # for example "nvim-qt --nofork"
+
+        "templates": [
+            {
+                "shortcut": "1", # key to press in write view
+                "description": "foo", # description shown in write view
+                "template": "Thank you for your message." # body of email
+            }
+        ]
+    }
+
+}
+````
 
 ## Usage
 
