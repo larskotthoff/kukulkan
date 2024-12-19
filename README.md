@@ -43,14 +43,22 @@ the `prod/` directory through a suitable WSGI container, e.g. `gunicorn
 'kukulkan.prod.kukulkan:create_app()'`. The files in `prod/static` were created
 using `npm run build` in the `src/client` directory.
 
-For development, start the server with `FLASK_APP=kukulkan FLASK_DEBUG="true" flask run`
-and the client with `npm start` in the respective directories. The
-`FLASK_DEBUG` option is necessary to correctly serve templates, which are used
-to reduce the number of requests. The `deploy.sh` script automates deployment to
-the `prod/` directory.
-
 If your notmuch configuration is a non-standard place, you can specify this by
 setting the NOTMUCH_CONFIG environment variable.
+
+### Development
+
+To set up the development environment, install the depencies by running `pip
+install -r requirements.txt` (or whatever is suitable for you) in the `server/`
+directory and `npm i` in the `client/` directory.
+
+Start the server with `FLASK_APP=kukulkan FLASK_DEBUG="true" flask run` and the
+client with `npm start` in the respective directories. The `FLASK_DEBUG` option
+is necessary to correctly serve templates, which are used to reduce the number
+of requests.
+
+The `deploy.sh` script automates building the production version and deployment
+to the `prod/` directory.
 
 ## Configuration
 
