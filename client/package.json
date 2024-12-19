@@ -33,5 +33,10 @@
     "linkify-urls": "^5.0.0",
     "solid-js": "^1.9.3",
     "vitest": "^2.1.4"
+  },
+  "pnpm": {
+    "overrides": {
+      "rollup": "npm:@rollup/wasm-node"
+    }
   }
 }
