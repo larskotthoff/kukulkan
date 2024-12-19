@@ -111,6 +111,7 @@ export function Autocomplete(props) {
         }}
         onKeyDown={handleKeydown}
         autoComplete="off"
+        autoCapitalize="off"
       />
       <Show when={isVisible()}>
         <div class="autocomplete-popup paper" style={{
