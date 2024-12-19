@@ -50,9 +50,17 @@ export function Autocomplete(props) {
     let wasVisible = isVisible();
     if (ev.code === 'ArrowUp') {
       setSelected(prev => prev === 0 ? (sortedOptions().length - 1) : prev - 1);
+      try {
+        document.getElementsByClassName("autocomplete-popup")[0]?.getElementsByClassName("selected")[0]?.scrollIntoView({block: "nearest"});
+      // eslint-disable-next-line no-unused-vars
+      } catch(e) {;}
       ev.preventDefault();
     } else if (ev.code === 'ArrowDown') {
       setSelected(prev => prev + 1 === sortedOptions().length ? 0 : prev + 1);
+      try {
+        document.getElementsByClassName("autocomplete-popup")[0]?.getElementsByClassName("selected")[0]?.scrollIntoView({block: "nearest"});
+      // eslint-disable-next-line no-unused-vars
+      } catch(e) {;}
       ev.preventDefault();
     } else if (ev.code === 'Enter' || ev.key === 'Enter') {
       select();
