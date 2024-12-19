@@ -27,6 +27,10 @@ Email Client for Notmuch
 - keyboard shortcuts available for all actions
 - lots of tests for backend and frontend
 
+Kukulkan uses some features that require a recent browser (e.g. CSS relative
+colors) and does not provide any backwards compatibility for older browsers.
+If you are not running a recent browser, things may break.
+
 ## Installation
 
 Assumes that you have [notmuch](https://notmuchmail.org) installed and working.
@@ -34,9 +38,10 @@ You may need to install additional Python packages (in
 [requirements.txt](https://github.com/larskotthoff/kukulkan/blob/main/server/requirements.txt))
 and (for development only) node and the required node packages.
 
-For the production version, it should be sufficient to serve the `prod/`
-directory through a suitable WSGI container, e.g. `gunicorn 'kukulkan.prod.kukulkan:create_app()'`.
-The files in `prod/static` were created using `npm run build` in the `src/client` directory.
+For the production version (e.g. a release), it should be sufficient to serve
+the `prod/` directory through a suitable WSGI container, e.g. `gunicorn
+'kukulkan.prod.kukulkan:create_app()'`. The files in `prod/static` were created
+using `npm run build` in the `src/client` directory.
 
 For development, start the server with `FLASK_APP=kukulkan FLASK_DEBUG="true" flask run`
 and the client with `npm start` in the respective directories. The
@@ -112,6 +117,28 @@ in the array is what to replace it with (leave empty to remove matches).
 
 }
 ````
+
+### External Editor Support
+
+External editing works by making a request to a designated endpoint on the
+server, which then spawns the external editor with a temporary file, waits for
+the process to complete, and returns the contents of that same file to the
+client.
+
+There are two ways to make this work:
+- The Kukulkan server runs on the same machine as the browser, and was started
+  from a GUI environemnt (e.g. X11, wayland). The server will call the
+  configured external editor and editing should work as expected.
+- The Kukulkan server runs on a different machine than the browser. You can run
+  another Kukulkan server on the same machine as your browser (doesn't need
+  access to your mail) with an external editor configured. In the client
+  settings page, change "When composing, use" to "external editor on localhost".
+  This will make the request for the external editor to locahost instead of
+  whatever machine the server is running on, and should work as above. Note that
+  the protocol and port needs to be the same as for the remote server, and in
+  the remote server configuration you need to have set
+  `allow-cross-origin-write` to `true` (the external editor configuration on the
+  remote server doesn't matter though).
 
 ## Usage
 
