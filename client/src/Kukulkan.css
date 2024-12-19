@@ -323,9 +323,9 @@ button > span {
 .calendar-box {
     width: 1em;
     height: 1em;
-    border: .05em solid white;
     background-color: grey;
     display: inline-block;
+    margin: 0.05em;
 }
 .calendar-box.highlight {
     background-color: red;
@@ -370,8 +370,8 @@ button > span {
     position: relative;
     width: 1.2em;
     height: 1.2em;
-    border: .05em solid white;
     opacity: 0.3;
+    margin: 0.05em;
 }
 
 .threadnav-box.active-thread {
