@@ -239,8 +239,8 @@ Shortcuts:
 - K: go up ten
 - j/down: go down one
 - J: go down ten
-- h/left/swipe left: activate left fiber
-- l/right/swipe right: activate right fiber
+- h/left/swipe right: activate lower-depth fiber
+- l/right/swipe left: activate higher-depth fiber
 - F: toggle between fiber and flat views
 For the active message:
 - r: open compose view to reply all

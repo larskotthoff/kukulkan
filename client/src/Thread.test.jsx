@@ -105,8 +105,8 @@ test("fetches and renders thread", async () => {
   // thread nav
   const navs = container.querySelectorAll(".threadnav-box");
   expect(navs.length).toBe(2);
-  expect(navs[0].style["margin-left"]).toBe("0em");
-  expect(navs[1].style["margin-left"]).toBe("0em");
+  expect(getComputedStyle(navs[0]).getPropertyValue("--depth")).toBe("0");
+  expect(getComputedStyle(navs[1]).getPropertyValue("--depth")).toBe("0");
   expect(navs[0].classList).not.toContain("active");
   expect(navs[1].classList).toContain("active");
 });
@@ -334,9 +334,9 @@ test("thread nav shows and allows to navigate levels", async () => {
   // thread nav
   const navs = container.querySelectorAll(".threadnav-box");
   expect(navs.length).toBe(3);
-  expect(navs[0].style["margin-left"]).toBe("0em");
-  expect(navs[1].style["margin-left"]).toBe("1em");
-  expect(navs[2].style["margin-left"]).toBe("0em");
+  expect(getComputedStyle(navs[0]).getPropertyValue("--depth")).toBe("0");
+  expect(getComputedStyle(navs[1]).getPropertyValue("--depth")).toBe("1");
+  expect(getComputedStyle(navs[2]).getPropertyValue("--depth")).toBe("0");
   expect(navs[0].classList).not.toContain("active");
   expect(navs[1].classList).not.toContain("active");
   expect(navs[2].classList).toContain("active");
@@ -535,9 +535,9 @@ test("flat view works", async () => {
   // thread nav
   const navs = container.querySelectorAll(".threadnav-box");
   expect(navs.length).toBe(3);
-  expect(navs[0].style["margin-left"]).toBe("0em");
-  expect(navs[1].style["margin-left"]).toBe("1em");
-  expect(navs[2].style["margin-left"]).toBe("0em");
+  expect(getComputedStyle(navs[0]).getPropertyValue("--depth")).toBe("0");
+  expect(getComputedStyle(navs[1]).getPropertyValue("--depth")).toBe("1");
+  expect(getComputedStyle(navs[2]).getPropertyValue("--depth")).toBe("0");
   expect(navs[0].classList).toContain("active-thread");
   expect(navs[1].classList).not.toContain("active-thread");
   expect(navs[2].classList).toContain("active-thread");
@@ -561,9 +561,9 @@ test("flat view works", async () => {
   expect(screen.getByText("bar3")).toBeInTheDocument();
   expect(screen.getByText("test3")).toBeInTheDocument();
 
-  expect(navs[0].style["margin-left"]).toBe("0em");
-  expect(navs[1].style["margin-left"]).toBe("0em");
-  expect(navs[2].style["margin-left"]).toBe("0em");
+  expect(getComputedStyle(navs[0]).getPropertyValue("--depth")).toBe("0");
+  expect(getComputedStyle(navs[1]).getPropertyValue("--depth")).toBe("0");
+  expect(getComputedStyle(navs[2]).getPropertyValue("--depth")).toBe("0");
   expect(navs[0].classList).toContain("active-thread");
   expect(navs[1].classList).toContain("active-thread");
   expect(navs[2].classList).toContain("active-thread");
@@ -588,9 +588,9 @@ test("flat view works", async () => {
   expect(screen.getByText("test3")).toBeInTheDocument();
 
   expect(navs.length).toBe(3);
-  expect(navs[0].style["margin-left"]).toBe("0em");
-  expect(navs[1].style["margin-left"]).toBe("1em");
-  expect(navs[2].style["margin-left"]).toBe("0em");
+  expect(getComputedStyle(navs[0]).getPropertyValue("--depth")).toBe("0");
+  expect(getComputedStyle(navs[1]).getPropertyValue("--depth")).toBe("1");
+  expect(getComputedStyle(navs[2]).getPropertyValue("--depth")).toBe("0");
   expect(navs[0].classList).toContain("active-thread");
   expect(navs[1].classList).not.toContain("active-thread");
   expect(navs[2].classList).toContain("active-thread");
@@ -631,9 +631,9 @@ test("flat view can be set to be default", async () => {
   // thread nav
   let navs = container.querySelectorAll(".threadnav-box");
   expect(navs.length).toBe(3);
-  expect(navs[0].style["margin-left"]).toBe("0em");
-  expect(navs[1].style["margin-left"]).toBe("1em");
-  expect(navs[2].style["margin-left"]).toBe("0em");
+  expect(getComputedStyle(navs[0]).getPropertyValue("--depth")).toBe("0");
+  expect(getComputedStyle(navs[1]).getPropertyValue("--depth")).toBe("1");
+  expect(getComputedStyle(navs[2]).getPropertyValue("--depth")).toBe("0");
   expect(navs[0].classList).toContain("active-thread");
   expect(navs[1].classList).not.toContain("active-thread");
   expect(navs[2].classList).toContain("active-thread");
@@ -666,9 +666,9 @@ test("flat view can be set to be default", async () => {
 
   navs = container.querySelectorAll(".threadnav-box");
   expect(navs.length).toBe(3);
-  expect(navs[0].style["margin-left"]).toBe("0em");
-  expect(navs[1].style["margin-left"]).toBe("0em");
-  expect(navs[2].style["margin-left"]).toBe("0em");
+  expect(getComputedStyle(navs[0]).getPropertyValue("--depth")).toBe("0");
+  expect(getComputedStyle(navs[1]).getPropertyValue("--depth")).toBe("0");
+  expect(getComputedStyle(navs[2]).getPropertyValue("--depth")).toBe("0");
   expect(navs[0].classList).toContain("active-thread");
   expect(navs[1].classList).toContain("active-thread");
   expect(navs[2].classList).toContain("active-thread");
@@ -707,8 +707,8 @@ test("works correctly when msg references are messed up", async () => {
   // thread nav
   const navs = container.querySelectorAll(".threadnav-box");
   expect(navs.length).toBe(2);
-  expect(navs[0].style["margin-left"]).toBe("1em");
-  expect(navs[1].style["margin-left"]).toBe("0em");
+  expect(getComputedStyle(navs[0]).getPropertyValue("--depth")).toBe("1");
+  expect(getComputedStyle(navs[1]).getPropertyValue("--depth")).toBe("0");
   expect(navs[0].classList).not.toContain("active-thread");
   expect(navs[1].classList).toContain("active-thread");
 });
@@ -752,8 +752,8 @@ test("sets active message based on unread", async () => {
   // thread nav
   const navs = container.querySelectorAll(".threadnav-box");
   expect(navs.length).toBe(2);
-  expect(navs[0].style["margin-left"]).toBe("0em");
-  expect(navs[1].style["margin-left"]).toBe("0em");
+  expect(getComputedStyle(navs[0]).getPropertyValue("--depth")).toBe("0");
+  expect(getComputedStyle(navs[1]).getPropertyValue("--depth")).toBe("0");
   expect(navs[0].style["border-radius"]).toBe("1em");
   expect(navs[1].style["border-radius"]).toBe("1em");
   expect(navs[0].classList).toContain("active");

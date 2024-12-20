@@ -122,7 +122,7 @@ export function Thread(props) {
   // eslint-disable-next-line solid/reactivity
   mkShortcut([["l"], ["ArrowRight"]], increaseActiveDepth);
   // eslint-disable-next-line solid/reactivity
-  handleSwipe(document.body, decreaseActiveDepth, increaseActiveDepth);
+  handleSwipe(document.body, increaseActiveDepth, decreaseActiveDepth);
 
   mkShortcut([["Shift", "F"]],
     // eslint-disable-next-line solid/reactivity
@@ -160,7 +160,7 @@ export function Thread(props) {
                   'active-thread': filteredThread()?.find((mp) => { return mp.message_id === m.message_id; })
                 }}
                 style={{
-                  'margin-left': (filteredThread() === data.thread ? 0 : m.depth) + "em",
+                  '--depth': (filteredThread() === data.thread ? 0 : m.depth),
                   'border-radius': m.tags.includes("unread") ? "1em" : "0em",
                   'background-color': getColor(filterSubjectColor(m.subject) + filterAdminTags(m.tags) + extractEmailsSort(m.from + m.to + m.cc))
                 }}

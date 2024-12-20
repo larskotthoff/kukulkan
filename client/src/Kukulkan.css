@@ -14,6 +14,9 @@ body {
     background-color: var(--primary-background);
 
     font-family: var(--fonts);
+    @media (max-width: 899px) {
+        font-size: 90%;
+    }
 }
 
 select, input, textarea {
@@ -233,9 +236,9 @@ button > span {
         padding: 2px;
     }
     @media (max-width: 899px) {
-        grid-template-columns: 1fr 5fr 3fr;
-        gap: 2px;
-        padding: 5px;
+        grid-template-columns: auto auto auto;
+        gap: 5px;
+        padding: 8px;
     }
 }
 
@@ -298,8 +301,6 @@ button > span {
     white-space: nowrap;
 
     height: 99vh;
-    @media (min-width: 900px) {
-    }
     @media (max-width: 899px) {
         display: none;
     }
@@ -368,8 +369,9 @@ button > span {
 
 .threadnav-box {
     position: relative;
-    width: 1.2em;
-    height: 1.2em;
+    width: 1em;
+    height: 1em;
+    margin-left: calc(var(--depth) * 1em + 0.05em) !important;
     opacity: 0.3;
     margin: 0.05em;
 }
