@@ -179,8 +179,8 @@ Shortcuts:
 - s: go to settings
 - /: focus search box and select all text
 - Space: mark currently active thread
-- t: open tagging box for active/marked threads
-- Delete: tag active/marked threads with "deleted"; remove "unread" tag
+- t/swipe right: open tagging box for active/marked threads
+- Delete/swipe left: tag active/marked threads with "deleted"; remove "unread" tag
 
 In the tagging box, enter the list of tags to apply and remove (prefix with
 "-"), then press Enter to apply changes. Press Escape to close without making
@@ -210,9 +210,9 @@ Shortcuts:
 - s: go to settings
 - /: focus search box and select all text
 - Space: mark currently active thread
-- t: open tagging box for active/marked threads
+- t/swipe right: open tagging box for active/marked threads
 - Delete: tag active/marked threads with "deleted"; remove "unread" tag
-- d: mark thread done -- remove "todo" and any "due:*" tags
+- d/swipe left: mark thread done -- remove "todo" and any "due:*" tags
 
 Available at `/todo`
 ([https://kukulkan-840786380000.us-west1.run.app/todo](https://kukulkan-840786380000.us-west1.run.app/todo)).
