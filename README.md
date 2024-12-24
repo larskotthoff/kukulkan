@@ -44,7 +44,12 @@ the `prod/` directory through a suitable WSGI container, e.g. `gunicorn
 using `npm run build` in the `src/client` directory.
 
 If your notmuch configuration is a non-standard place, you can specify this by
-setting the NOTMUCH_CONFIG environment variable.
+setting the NOTMUCH_CONFIG environment variable. Note that the Python API only
+picks up options that are included in the database. You may have to run e.g.
+
+````
+notmuch config set --database search.exclude_tags 'deleted'
+````
 
 ### Development
 
