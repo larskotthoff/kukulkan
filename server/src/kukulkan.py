@@ -514,8 +514,11 @@ def create_app():
                         if progress["send_status"] != "sending":
                             run = False
                         yield f"data: {json.dumps(progress)}\n\n"
+                    else:
+                        send_queue.put(progress)
                 except queue.Empty:
                     yield f"data: {json.dumps({'send_id': send_id, 'progress': '0'})}\n\n"
+                    run = False
         return Response(generate(), mimetype='text/event-stream')
 
     return app
