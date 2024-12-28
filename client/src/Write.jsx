@@ -231,6 +231,10 @@ export function Write(props) {
   function listenForUpdates(sendId) {
     const eventSource = new EventSource(apiURL(`api/send_progress/${sendId}`));
 
+    eventSource.onopen = function() {
+        props.sp?.(0.01);
+    }
+
     eventSource.onmessage = function(message) {
       const data = JSON.parse(message.data);
 
