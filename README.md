@@ -40,8 +40,10 @@ and (for development only) node and the required node packages.
 
 For the production version (e.g. a release), it should be sufficient to serve
 the `prod/` directory through a suitable WSGI container, e.g. `gunicorn
-'kukulkan.prod.kukulkan:create_app()'`. The files in `prod/static` were created
-using `npm run build` in the `src/client` directory.
+'kukulkan.prod.kukulkan:create_app()'`. When using gunicorn, make sure not to
+use the default "sync" worker as this breaks the async requests necessary to
+show progress when sending. The files in `prod/static` were created using `npm
+run build` in the `src/client` directory.
 
 If your notmuch configuration is a non-standard place, you can specify this by
 setting the NOTMUCH_CONFIG environment variable. Note that the Python API only
