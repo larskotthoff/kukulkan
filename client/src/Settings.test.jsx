@@ -62,6 +62,11 @@ test("allows to change settings", async () => {
   screen.getByText("show in full").selected = true;
   await fireEvent.change(screen.getByTestId("abbreviateQuoted"));
   expect(getSetting("abbreviateQuoted")).toBe(false);
+
+  expect(getSetting("showSerpent")).toBe(false);
+  screen.getByText("Do").selected = true;
+  await fireEvent.change(screen.getByTestId("showSerpent"));
+  expect(getSetting("showSerpent")).toBe(true);
 });
 
 // vim: tabstop=2 shiftwidth=2 expandtab

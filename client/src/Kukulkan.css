@@ -5,12 +5,15 @@
     --secondary-background: #f0f4c3;
 }
 
-body {
+body.serpent {
     background-image: url("assets/serpent.webp");
     background-repeat: no-repeat;
     background-position: bottom right;
     background-attachment: fixed;
     background-size: auto 25vh;
+}
+
+body {
     background-color: var(--primary-background);
 
     font-family: var(--fonts);

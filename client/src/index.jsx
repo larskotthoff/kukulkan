@@ -11,9 +11,14 @@ import { Settings } from "./Settings.jsx";
 import { Thread } from "./Thread.jsx";
 import { TodoThreads } from "./TodoThreads.jsx";
 import { Write } from "./Write.jsx";
+import { getSetting } from "./Settings.jsx";
 
 render(() => {
   const [progress, setProgress] = createSignal(1);
+
+  if(getSetting("showSerpent")) {
+    document.getElementsByTagName("body")[0].classList.add("serpent");
+  }
 
   return (
   <>

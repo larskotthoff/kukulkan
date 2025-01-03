@@ -30,6 +30,13 @@ export function getSetting(setting) {
       } else {
         return val === "true";
       }
+    case "showSerpent":
+      val = localStorage.getItem("settings-showSerpent");
+      if(val === null) {
+        return false;
+      } else {
+        return val === "true";
+      }
   }
 }
 
@@ -38,7 +45,8 @@ export function Settings() {
         [openInTab, setOpenInTab] = createSignal(getSetting("openInTab")),
         [showNestedThread, setShowNestedThread] = createSignal(getSetting("showNestedThread")),
         [externalCompose, setExternalCompose] = createSignal(getSetting("externalCompose")),
-        [abbreviateQuoted, setAbbreviateQuoted] = createSignal(getSetting("abbreviateQuoted"));
+        [abbreviateQuoted, setAbbreviateQuoted] = createSignal(getSetting("abbreviateQuoted")),
+        [showSerpent, setShowSerpent] = createSignal(getSetting("showSerpent"));
 
   document.title = "Kukulkan Settings";
 
@@ -120,6 +128,22 @@ export function Settings() {
           show in full
         </option>
       </select> quoted text beyond the first level.
+    </div>
+    <div class="margin">
+      <select
+        data-testid="showSerpent"
+        value={showSerpent()}
+        onChange={(ev) => {
+          setShowSerpent(ev.target.value);
+          localStorage.setItem("settings-showSerpent", showSerpent());
+        }}>
+        <option value={true}>
+          Do
+        </option>
+        <option value={false}>
+          Do not
+        </option>
+      </select> show Kukulkan background.
     </div>
   </center>);
 }
