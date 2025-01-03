@@ -43,6 +43,7 @@ export function SearchThreads(props) {
         class="input-wide margin"
         text={searchText}
         setText={setSearchText}
+        onFocus={(e) => e.target.select()}
         // eslint-disable-next-line solid/reactivity
         getOptions={async (text) => {
           let pts = text.split(':'),

@@ -113,7 +113,6 @@ export function Kukulkan(props) {
   mkShortcut([["/"]],
     () => {
       document.querySelector("#query-box > input")?.focus();
-      document.querySelector("#query-box > input")?.select();
     },
     true
   );

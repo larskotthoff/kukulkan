@@ -10,7 +10,7 @@ export function Autocomplete(props) {
         [inputRef, setInputRef] = createSignal(),
         [sortedOptions, setSortedOptions] = createSignal([]),
         // eslint-disable-next-line solid/reactivity
-        {text, setText, getOptions, handleKey, children, onBlur, ...spreadProps} = props;
+        {text, setText, getOptions, handleKey, children, onBlur, onFocus, ...spreadProps} = props;
 
   // sort options such that:
   // - options that start with the search text come first
@@ -105,6 +105,7 @@ export function Autocomplete(props) {
         ref={setInputRef}
         value={text() || ""}
         onBlur={onBlur}
+        onFocus={onFocus}
         onInput={(ev) => {
           setText(ev.target.value);
           getSortedOptions();
