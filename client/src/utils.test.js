@@ -46,6 +46,8 @@ test("filterSubjectColor", () => {
 });
 
 test("formatDate", () => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date(2024, 6, 1));
   const now = new Date();
   expect(utils.formatDate(now)).toMatch(/[0-9]{2}:[0-9]{2}/);
   expect(utils.formatDate(new Date(now - (5 * 24 * 60 * 60 * 1000))))
@@ -54,6 +56,7 @@ test("formatDate", () => {
     .toMatch(/[0-9]{1,2}\/[0-9]{1,2} [0-9]{2}:[0-9]{2}/);
   expect(utils.formatDate(new Date(now - (400 * 24 * 60 * 60 * 1000))))
     .toMatch(/[0-9]{1,2}\/[0-9]{1,2}\/[0-9]{4} [0-9]{2}:[0-9]{2}/);
+  vi.useRealTimers();
 });
 
 test("formatDuration", () => {
