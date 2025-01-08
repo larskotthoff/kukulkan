@@ -257,7 +257,7 @@ For the active message:
 - c: toggle between displaying plain text and HTML content
 - Delete: apply tag "deleted", remove tag "unread"
 - p: open print view of message
-- s: open security view of message (checks DMARC etc)
+- s: open security view of message (checks DMARC etc, requires [mailauth](https://github.com/postalsys/mailauth))
 - w: open raw message (unparsed text of the message file)
 - ?: open main view with query from:<sender of message>
 
