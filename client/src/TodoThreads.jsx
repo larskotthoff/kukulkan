@@ -3,7 +3,7 @@ import { createEffect, createSignal, For, on, Show } from 'solid-js';
 import { ColorChip } from "./ColorChip.jsx";
 
 import { formatDuration } from "./utils.js";
-import { handleSwipe, wideNarrowObserver } from "./UiUtils.jsx";
+import { handleSwipe, Tag, TaskAlt, wideNarrowObserver } from "./UiUtils.jsx";
 
 function dateFromDue(due) {
   const dateComponents = due.split(':')[1].split('-'),
@@ -164,7 +164,7 @@ export function TodoThreads(props) {
   }
 
   // eslint-disable-next-line solid/reactivity
-  handleSwipe(document.body, props.doneActive, props.tagActive);
+  handleSwipe(document.body, props.doneActive, TaskAlt, props.tagActive, Tag);
 
   // reload at midnight for correct due dates for new date
   const loadDate = new Date();
@@ -180,7 +180,7 @@ export function TodoThreads(props) {
   return (
     <div class="centered horizontal-stack">
       <Calendar/>
-      <div class="vertical-stack todo-threads">
+      <div class="vertical-stack clipped todo-threads">
         <For each={props.threads().sort(sortThreadsByDueDate)}>
           {(thread, index) =>
             <div classList={{

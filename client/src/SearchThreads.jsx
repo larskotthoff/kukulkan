@@ -6,7 +6,7 @@ import { Autocomplete } from "./Autocomplete.jsx";
 import { getSetting } from "./Settings.jsx";
 
 import { apiURL, delayedDebouncedFetch, renderDateNumThread } from "./utils.js";
-import { handleSwipe, Icon, Create, Settings, wideNarrowObserver } from "./UiUtils.jsx";
+import { handleSwipe, Icon, Create, Settings, Tag, Trash, wideNarrowObserver } from "./UiUtils.jsx";
 
 export function SearchThreads(props) {
   const searchParams = window.location.search,
@@ -72,10 +72,10 @@ export function SearchThreads(props) {
   }
 
   // eslint-disable-next-line solid/reactivity
-  handleSwipe(document.body, props.deleteActive, props.tagActive);
+  handleSwipe(document.body, props.deleteActive, Trash, props.tagActive, Tag);
 
   return (
-    <div class="centered vertical-stack" style={{ 'width': "95%" }}>
+    <div class="centered clipped vertical-stack" style={{ 'width': "95%" }}>
       <div class="centered horizontal-stack" style={{ 'width': "80%" }}>
         <QueryBox/>
         <a href="/write" target={getSetting("openInTab")} rel="noreferrer">

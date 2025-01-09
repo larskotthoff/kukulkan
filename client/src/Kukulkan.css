@@ -232,6 +232,10 @@ button > span {
     }
 }
 
+.clipped {
+    overflow: clip;
+}
+
 .thread {
     display: grid;
     @media (min-width: 900px) {

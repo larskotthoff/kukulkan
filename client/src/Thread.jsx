@@ -122,7 +122,7 @@ export function Thread(props) {
   // eslint-disable-next-line solid/reactivity
   mkShortcut([["l"], ["ArrowRight"]], increaseActiveDepth);
   // eslint-disable-next-line solid/reactivity
-  handleSwipe(document.body, increaseActiveDepth, decreaseActiveDepth);
+  handleSwipe(document.body, increaseActiveDepth, null, decreaseActiveDepth, null);
 
   mkShortcut([["Shift", "F"]],
     // eslint-disable-next-line solid/reactivity
