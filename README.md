@@ -19,6 +19,7 @@ Email Client for Notmuch
 - threads can be shown in full or individual "fibers" (complete paths from root
   to leaf in thread tree), thread map for quick overview
 - allows to filter "CAUTION EXTERNAL EMAIL" and similar stuff from emails
+- filters trackers etc in HTML email
 - GPG and S/MIME verification support, S/MIME signing support
 - email templates
 - external editor support
@@ -198,10 +199,12 @@ changes.
 ![TODO View](screens/todo.png?raw=true)
 
 Shows threads tagged "todo". Due dates for TODOs can be specified by applying a
-tag of the format `due:<year>-<month>-<day>`, e.g. "due:2025-02-01". If there
-are threads tagged with a due date, a calendar will be shown on the left with
-marks when TODOs are due. Threads are ordered by due date, soonest first, with
-all threads without a due date at the end.
+tag of the format `due:<year>-<month>-<day>`, e.g. "due:2025-02-01". You can
+enter dates in natural language (English) and they will autocomplete to this
+format, e.g. "due:next Friday" or "due:Jan 27". If there are threads tagged with
+a due date, a calendar will be shown on the left with marks when TODOs are due.
+Threads are ordered by due date, soonest first, with all threads without a due
+date at the end.
 
 Note that if there are no threads tagged "todo", nothing will be shown.
 
@@ -316,3 +319,5 @@ graph TD;
 The UI was inspired by [astroid](https://github.com/astroidmail/astroid/), the server was inspired by [netviel](https://github.com/DavidMStraub/netviel).
 
 Test emails from the [notmuch repository](https://git.notmuchmail.org/git?p=notmuch;a=tree;f=test/corpora), the [Python EML parse module](https://github.com/GOVCERT-LU/eml_parser/tree/master/samples), the [Apache James Project](https://github.com/xishian/james-project/tree/main/mailbox/store/src/test/resources/eml), [Expresso Livre 3](https://github.com/emersonfaria/ExpressoLivre3/tree/master/tests/tine20/Felamimail/files), [ripgrep](https://github.com/phiresky/ripgrep-all/tree/b4dbe1b8e802a8139cca33a4640ed99fded5cbe3/exampledir), and [Simple Java Mail](https://github.com/bbottema/simple-java-mail/tree/master/modules/simple-java-mail/src/test/resources/test-messages).
+
+The favicon is from [here](https://mayadecipherment.com/2017/05/01/a-note-on-the-sign-for-tzihb-writing-painting/?amp=1) (thanks Colleen); the background image is Justin Kerr's drawing of [Yaxchilan lintel 15](https://www.britishmuseum.org/collection/object/E_Am1923-Maud-1).
