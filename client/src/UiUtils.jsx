@@ -12,7 +12,11 @@ export function mkShortcut(keysList, func, preventDefault = false) {
 }
 
 function shouldTrigger(diff) {
-    return Math.abs(diff) > 0.1 * window.screen.width;
+  return Math.abs(diff) > 50;
+}
+
+function shouldShow(diff) {
+  return Math.abs(diff) > 20;
 }
 
 export function handleSwipe(el, left, leftIcon, right, rightIcon) {
@@ -43,12 +47,16 @@ export function handleSwipe(el, left, leftIcon, right, rightIcon) {
   el.ontouchmove = (ev => {
     finalPos.x = ev.touches.item(0).clientX;
     if(leftIcon && rightIcon) {
-      t.style.left = (finalPos.x - initialPos.x) + "px";
-
       const diff = finalPos.x - initialPos.x;
+      if(shouldShow(diff)) {
+        t.style.left = (finalPos.x - initialPos.x) + "px";
+      }
+
       if(shouldTrigger(diff) && triggerEl === null) {
         triggerEl = document.createElement("div");
         triggerEl.style.position = "absolute";
+        triggerEl.style.top = "50%";
+        triggerEl.style.transform = "translateY(-50%)";
         if(diff < 0) {
           triggerEl.innerHTML = leftIcon;
         } else {
