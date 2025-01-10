@@ -236,6 +236,11 @@ export function Message(props) {
     }
   }));
 
+  mkShortcut([["e"]],
+    // eslint-disable-next-line solid/reactivity
+    () => { document.querySelector("div.message.active > div.preview-container")?.click(); }
+  );
+
   mkShortcut([["r"]],
     // eslint-disable-next-line solid/reactivity
     () => { if(props.active) document.querySelector("a[id='reply']")?.click(); }
@@ -375,6 +380,7 @@ export function Message(props) {
           <Show when={quotedPart}>
             <div classList={{
                 'message-text': true,
+                'preview-container': true,
                 'text-preview': !showQuoted()
               }}
               onClick={(e) => {

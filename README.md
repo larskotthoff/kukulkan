@@ -258,6 +258,7 @@ For the active message:
 - f: open compose view to forward
 - t: focus tag input to change tags
 - c: toggle between displaying plain text and HTML content
+- e: toggle expanded/abbreviated quoted text in plain text view
 - Delete: apply tag "deleted", remove tag "unread"
 - p: open print view of message
 - s: open security view of message (checks DMARC etc, requires [mailauth](https://github.com/postalsys/mailauth))
