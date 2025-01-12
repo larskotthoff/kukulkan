@@ -837,7 +837,7 @@ def smime_verify(part, accts):
                     getattr(hashes, salgo)(),
                 )
                 signatureok = True
-            except:
+            except Exception as e:
                 signatureok = False
                 message = str(e)
         elif sigalgoname == "rsassa_pkcs1v15":
