@@ -16,6 +16,8 @@ import queue
 
 import json
 import re
+import hashlib
+import base64
 
 from tempfile import mkstemp, NamedTemporaryFile
 
@@ -29,8 +31,14 @@ from dateutil import tz
 from dateutil.rrule import rrulestr
 from recurrent.event_parser import RecurringEvent
 
-from M2Crypto import SMIME, BIO, X509
-from asn1crypto import cms
+from asn1crypto import core, pem, cms
+from certvalidator import CertificateValidator, ValidationContext
+
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding, ec
+from cryptography.hazmat.primitives.serialization import load_pem_private_key, pkcs7, Encoding
+from cryptography import x509
+from cryptography.hazmat.backends import default_backend
 
 from bs4 import BeautifulSoup
 
@@ -407,15 +415,19 @@ def create_app():
             # using as_bytes directly doesn't seem to trigger content transfer
             # encoding etc, so the computed digest will be different from what's
             # sent
-            buf = BIO.MemoryBuffer(msg.as_string(policy=policy).encode("utf8"))
-            smime = SMIME.SMIME()
-            smime.load_key(account["key"], account["cert"])
-            p7 = smime.sign(buf, SMIME.PKCS7_DETACHED)
+            with open(account["key"], 'rb') as key_data:
+                key = load_pem_private_key(key_data.read(), password=None)
+            with open(account["cert"], 'rb') as cert_data:
+                cert = x509.load_pem_x509_certificate(cert_data.read())
 
-            out = BIO.MemoryBuffer()
-            buf = BIO.MemoryBuffer(msg.as_string(policy=policy).encode("utf8"))
-            smime.write(out, p7, buf)
-            msg = email.message_from_bytes(out.read())
+            out = pkcs7.PKCS7SignatureBuilder().set_data(
+                msg.as_string(policy=policy).encode("utf8")
+            ).add_signer(
+                cert, key, hashes.SHA512(), rsa_padding=padding.PKCS1v15()
+            ).sign(
+                Encoding.SMIME, [pkcs7.PKCS7Options.DetachedSignature]
+            )
+            msg = email.message_from_bytes(out)
 
         msg['Subject'] = request.values['subject']
         msg['From'] = f'{account["name"]} <{account["email"]}>'
@@ -494,7 +506,7 @@ def create_app():
                     finally:
                         db_write.close()
                 else:
-                    print(send_output)
+                    print(f"Error in send: {send_output}")
 
                 send_queue.put({"send_id": send_id, "send_status": p.returncode, "send_output": send_output})
 
@@ -563,7 +575,7 @@ def get_nested_body(email_msg):
                 repl = current_app.config.custom["filter"]["content"]["text/plain"]
                 tmp = re.sub(repl[0], repl[1], tmp)
             except Exception as e:
-                print(e)
+                current_app.logger.error(f"Exception when replacing text content: {str(e)}")
             content_plain += tmp
         elif part.get_content_type() == "text/html":
             tmp = part.get_content()
@@ -571,7 +583,7 @@ def get_nested_body(email_msg):
                 repl = current_app.config.custom["filter"]["content"]["text/html"]
                 tmp = re.sub(repl[0], repl[1], tmp)
             except Exception as e:
-                print(e)
+                current_app.logger.error(f"Exception when replacing HTML content: {str(e)}")
             content_html += tmp
         elif part.get_content_type() == "application/pkcs7-mime":
             # https://stackoverflow.com/questions/58427642/how-to-extract-data-from-application-pkcs7-mime-using-the-email-module-in-pyth
@@ -732,33 +744,135 @@ def messages_to_json(messages):
 
 def smime_verify(part, accts):
     try:
-        p7, data_bio = SMIME.smime_load_pkcs7_bio(BIO.MemoryBuffer(bytes(part)))
-        s = SMIME.SMIME()
-        cert_stack = p7.get0_signers(X509.X509_Stack())
-        s.set_x509_stack(cert_stack)
-        store = X509.X509_Store()
+        trusted_cert_pems = []
         if 'ca-bundle' in current_app.config.custom:
-            store.load_info(current_app.config.custom['ca-bundle'])
+            with open(current_app.config.custom['ca-bundle'], "rb") as f:
+                trusted_cert_pems.append(f.read())
         for acct in accts:
             if 'ca' in acct:
                 for ca in acct['ca']:
-                    store.load_info(ca)
-        s.set_x509_store(store)
-        try:
-            s.verify(p7, data_bio, flags=SMIME.PKCS7_DETACHED)
-            return {"valid": True}
-        except SMIME.PKCS7_Error as e:
-            if "self-signed certificate" in str(e) or "self signed certificate" in str(e) or "unable to get local issuer certificate" in str(e) or "unable to get issuer certificate" in str(e):
+                    with open(ca, "rb") as f:
+                        trusted_cert_pems.append(f.read())
+
+        signature_data = None
+        signed_content = None
+
+        for pt in part.walk():
+            content_type = pt.get_content_type()
+            if "pkcs7-signature" in content_type:
+                signature_data = pt.get_payload(decode=True)
+            elif "pkcs7-mime" in content_type:
+                pkcs7_data = base64.b64decode(pt.get_payload())
                 try:
-                    s.verify(p7, data_bio, flags=SMIME.PKCS7_NOVERIFY | SMIME.PKCS7_DETACHED)
-                    return {"valid": None, "message": "self-signed or unavailable certificate(s)"}
-                except SMIME.PKCS7_Error as ee:
-                    return {"valid": False, "message": str(ee)}
+                    signature_data = pkcs7_data
+                    signed_content = cms.ContentInfo.load(pkcs7_data)["content"]["encap_content_info"]["content"].contents
+                except Exception as e:
+                    raise ValueError(f"Failed to parse PKCS#7 data: {str(e)}") from e
+            # take the first part that is not the key -- there may be nested parts under it that we don't want
+            elif content_type != 'multipart/signed' and signed_content is None:
+                # S/MIME needs CRLF line endings
+                signed_content = bytes(pt).replace(b'\r\n', b'\n').replace(b'\n', b'\r\n')
+
+        if signature_data is None or signed_content is None:
+            raise ValueError("unable to find signature and signed content")
+
+        message = None
+
+        # parts of this code taken from endesive
+        signed_data_content = cms.ContentInfo.load(signature_data)["content"]
+        signature = signed_data_content["signer_infos"][0]["signature"].native
+        algo = signed_data_content["digest_algorithms"][0]["algorithm"].native
+        attrs = signed_data_content["signer_infos"][0]["signed_attrs"]
+        md_data = getattr(hashlib, algo)(signed_content).digest()
+        if attrs is not None and not isinstance(attrs, core.Void):
+            md_signed = None
+            for attr in attrs:
+                if attr["type"].native == "message_digest":
+                    md_signed = attr["values"].native[0]
+            signed_data = attrs.dump()
+            signed_data = b"\x31" + signed_data[1:]
+        else:
+            md_signed = md_data
+            signed_data = signed_content
+        hashok = md_data == md_signed
+        if not hashok:
+            message = "digests don't match"
+        cert = None
+        othercerts = []
+        serial = signed_data_content["signer_infos"][0]["sid"].native["serial_number"]
+        for tmpcert in signed_data_content["certificates"]:
+            if serial != tmpcert.native["tbs_certificate"]["serial_number"]:
+                othercerts.append(tmpcert.chosen)
             else:
-                return {"valid": False, "message": str(e)}
+                cert = tmpcert.chosen
+        public_key = x509.load_pem_x509_certificate(
+            pem.armor("CERTIFICATE", cert.dump()), default_backend()
+        ).public_key()
+
+        sigalgo = signed_data_content["signer_infos"][0]["signature_algorithm"]
+        sigalgoname = sigalgo.signature_algo
+        if isinstance(public_key, ec.EllipticCurvePublicKey):
+            try:
+                public_key.verify(
+                    signature,
+                    signed_data,
+                    ec.ECDSA(getattr(hashes, algo.upper())()),
+                )
+                signatureok = True
+            except Exception as e:
+                signatureok = False
+                message = str(e)
+        elif sigalgoname == "rsassa_pss":
+            parameters = sigalgo["parameters"]
+            salgo = parameters["hash_algorithm"].native["algorithm"].upper()
+            mgf = getattr(
+                padding, parameters["mask_gen_algorithm"].native["algorithm"].upper()
+            )(getattr(hashes, salgo)())
+            salt_length = parameters["salt_length"].native
+            try:
+                public_key.verify(
+                    signature,
+                    signed_data,
+                    padding.PSS(mgf, salt_length),
+                    getattr(hashes, salgo)(),
+                )
+                signatureok = True
+            except:
+                signatureok = False
+                message = str(e)
+        elif sigalgoname == "rsassa_pkcs1v15":
+            try:
+                public_key.verify(
+                    signature,
+                    signed_data,
+                    padding.PKCS1v15(),
+                    getattr(hashes, algo.upper())(),
+                )
+                signatureok = True
+            except Exception as e:
+                signatureok = False
+                message = str(e)
+        else:
+            raise ValueError("unknown signature algorithm")
+        validator = CertificateValidator(
+            cert, othercerts, validation_context=ValidationContext(trusted_cert_pems)
+        )
+        try:
+            validator.validate_usage(set(["digital_signature"]))
+            certok = True
+        except Exception as e:
+            certok = False
+            message = str(e)
+
+        if(hashok and signatureok and certok):
+            return {"valid": True}
+        if(hashok and signatureok):
+            return {"valid": None, "message": f"self-signed or unavailable certificate(s): {message}"}
+        return {"valid": False, "message": f"invalid signature: {message}"}
+
     except Exception as e:
-        current_app.logger.error("Exception in smime_verify: %s", str(e))
-        return {"valid": False, "message": "An internal error has occurred."}
+        current_app.logger.error(f"Exception in smime_verify: {str(e)}")
+        return {"valid": False, "message": f"An internal error has occurred: {str(e)}"}
 
 
 def eml_to_json(message_bytes):
@@ -843,7 +957,7 @@ def message_to_json(message):
                         else:
                             signature = {"valid": False, "message": verified.trust_text}
                 except Exception as e:
-                    current_app.logger.error("Exception in gpg_verify: %s", str(e))
+                    current_app.logger.error(f"Exception in gpg_verify: {str(e)}")
                     signature = {"valid": False, "message": "An internal error has occurred."}
                 finally:
                     os.unlink(path)

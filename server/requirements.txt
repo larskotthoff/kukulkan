@@ -1,10 +1,11 @@
 asn1crypto
+cryptography
+certvalidator
 beautifulsoup4
 Flask
 icalendar
 lxml
 lxml_html_clean
-M2Crypto
 notmuch
 pytest
 python_dateutil
