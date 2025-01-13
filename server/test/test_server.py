@@ -1028,7 +1028,7 @@ def test_message_signed_self(setup):
             msg = json.loads(response.data.decode())
             assert "Bob, we need to cancel this contract." in msg["body"]["text/plain"]
 
-            assert msg["signature"] == {'message': 'self-signed or unavailable certificate(s): cannot find trusted signing certificate', 'valid': None}
+            assert msg["signature"] == {'message': 'self-signed or unavailable certificate(s): signed by <Name(CN=Sample LAMPS Certificate Authority)>', 'valid': None}
         q.assert_called_once_with(db, 'id:"foo"')
 
     mf.get_filename.assert_called_once()
@@ -2658,7 +2658,7 @@ def test_send_sign_self(setup):
                 for part in email_msg.walk():
                     if "signed" in part.get('Content-Type') and "pkcs7-signature" in part.get('Content-Type'):
                         signature = k.smime_verify(part, app.config.custom["accounts"])
-                        assert signature['message'] == 'self-signed or unavailable certificate(s): cannot find trusted signing certificate'
+                        assert signature['message'] == 'self-signed or unavailable certificate(s): signed by <Name(C=AU,ST=Some-State,O=Internet Widgits Pty Ltd)>'
                         assert signature['valid'] == None
 
             assert m.call_count == 3
@@ -2767,7 +2767,7 @@ def test_send_sign_base64_transfer(setup):
                 for part in email_msg.walk():
                     if "signed" in part.get('Content-Type') and "pkcs7-signature" in part.get('Content-Type'):
                         signature = k.smime_verify(part, app.config.custom["accounts"])
-                        assert signature['message'] == 'self-signed or unavailable certificate(s): cannot find trusted signing certificate'
+                        assert signature['message'] == 'self-signed or unavailable certificate(s): signed by <Name(C=AU,ST=Some-State,O=Internet Widgits Pty Ltd)>'
                         assert signature['valid'] == None
             assert m.call_count == 3
             args = m.call_args.args
@@ -2878,7 +2878,7 @@ def test_send_sign_attachment(setup):
                 for part in email_msg.walk():
                     if "signed" in part.get('Content-Type') and "pkcs7-signature" in part.get('Content-Type'):
                         signature = k.smime_verify(part, app.config.custom["accounts"])
-                        assert signature['message'] == 'self-signed or unavailable certificate(s): cannot find trusted signing certificate'
+                        assert signature['message'] == 'self-signed or unavailable certificate(s): signed by <Name(C=AU,ST=Some-State,O=Internet Widgits Pty Ltd)>'
                         assert signature['valid'] == None
 
             assert m.call_count == 3
@@ -3023,7 +3023,7 @@ def test_send_sign_reply_cal(setup):
                             for part in email_msg.walk():
                                 if "signed" in part.get('Content-Type') and "pkcs7-signature" in part.get('Content-Type'):
                                     signature = k.smime_verify(part, app.config.custom["accounts"])
-                                    assert signature['message'] == 'self-signed or unavailable certificate(s): cannot find trusted signing certificate'
+                                    assert signature['message'] == 'self-signed or unavailable certificate(s): signed by <Name(C=AU,ST=Some-State,O=Internet Widgits Pty Ltd)>'
                                     assert signature['valid'] == None
 
                         assert m.call_count == 3

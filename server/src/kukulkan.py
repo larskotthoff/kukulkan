@@ -848,8 +848,6 @@ def smime_verify(part, accts):
             raise ValueError("unknown signature algorithm")
 
         certok = False
-        if message is None:
-            message = "cannot find trusted signing certificate"
         for trusted_cert in trusted_certs:
             if x509cert.issuer == trusted_cert.subject:
                 try:
@@ -864,6 +862,8 @@ def smime_verify(part, accts):
                 except Exception as e:
                     certok = False
                     message = str(e)
+        if certok == False and message is None:
+            message = f"signed by {x509cert.issuer}"
 
         if(hashok and signatureok and certok):
             return {"valid": True}
