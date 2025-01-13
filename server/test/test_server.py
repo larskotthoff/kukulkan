@@ -1028,7 +1028,7 @@ def test_message_signed_self(setup):
             msg = json.loads(response.data.decode())
             assert "Bob, we need to cancel this contract." in msg["body"]["text/plain"]
 
-            assert msg["signature"] == {'message': 'self-signed or unavailable certificate(s): Unable to build a validation path for the certificate "Common Name: Alice Lovelace" - no issuer matching "Common Name: Sample LAMPS Certificate Authority" was found', 'valid': None}
+            assert msg["signature"] == {'message': 'self-signed or unavailable certificate(s): cannot find trusted signing certificate', 'valid': None}
         q.assert_called_once_with(db, 'id:"foo"')
 
     mf.get_filename.assert_called_once()
@@ -1061,7 +1061,7 @@ def test_message_signed_expired(setup):
             msg = json.loads(response.data.decode())
             assert "Invio messaggio SMIME (signed and clear text)" in msg["body"]["text/plain"]
 
-            assert msg["signature"] == {'message': 'invalid signature: Unable to build a validation path for the certificate "Common Name: shatzing5@outlook.com" - no issuer matching "Common Name: Actalis Authentication Root CA, Organization: Actalis S.p.A./03358520967, Locality: Milan, Country: IT" was found', 'valid': False}
+            assert msg["signature"] == {'message': 'invalid signature: digests don\'t match', 'valid': False}
         q.assert_called_once_with(db, 'id:"foo"')
 
     mf.get_filename.assert_called_once()
@@ -1093,7 +1093,7 @@ def test_message_signed_invalid(setup):
             assert response.status_code == 200
             msg = json.loads(response.data.decode())
             assert "Bob, we need to cancel this contract." in msg["body"]["text/plain"]
-            assert msg["signature"] == {'message': 'invalid signature: Unable to build a validation path for the certificate "Common Name: Alice Lovelace" - no issuer matching "Common Name: Sample LAMPS Certificate Authority" was found', 'valid': False}
+            assert msg["signature"] == {'message': 'invalid signature: ', 'valid': False}
         q.assert_called_once_with(db, 'id:"foo"')
 
     mf.get_filename.assert_called_once()
@@ -2477,7 +2477,10 @@ def test_send_sign(setup):
     pd = {"from": "foo", "to": "bar@bar.com", "cc": "", "bcc": "", "subject": "test",
           "body": "foobar", "action": "compose", "tags": "foo,bar"}
 
-    del app.config.custom["ca-bundle"]
+    try:
+        del app.config.custom["ca-bundle"]
+    except KeyError:
+        pass
     app.config.custom["accounts"] = [{"id": "foo",
                                       "name": "Foo Bar",
                                       "email": "foo@bar.com",
@@ -2542,7 +2545,7 @@ def test_send_sign(setup):
                 for part in email_msg.walk():
                     if "signed" in part.get('Content-Type') and "pkcs7-signature" in part.get('Content-Type'):
                         signature = k.smime_verify(part, app.config.custom["accounts"])
-                        assert signature['message'] == 'self-signed or unavailable certificate(s): The X.509 certificate provided is self-signed - "Organization: Internet Widgits Pty Ltd, State/Province: Some-State, Country: AU"'
+                        assert signature['message'] == 'self-signed or unavailable certificate(s): cannot find trusted signing certificate'
                         assert signature['valid'] == None
 
             assert m.call_count == 3
@@ -2583,7 +2586,10 @@ def test_send_sign_base64_transfer(setup):
     pd = {"from": "foo", "to": "bar@bar.com", "cc": "", "bcc": "", "subject": "test",
           "body": "täst", "action": "compose", "tags": "foo,bar"}
 
-    del app.config.custom["ca-bundle"]
+    try:
+        del app.config.custom["ca-bundle"]
+    except KeyError:
+        pass
     app.config.custom["accounts"] = [{"id": "foo",
                                       "name": "Foo Bar",
                                       "email": "foo@bar.com",
@@ -2648,7 +2654,7 @@ def test_send_sign_base64_transfer(setup):
                 for part in email_msg.walk():
                     if "signed" in part.get('Content-Type') and "pkcs7-signature" in part.get('Content-Type'):
                         signature = k.smime_verify(part, app.config.custom["accounts"])
-                        assert signature['message'] == 'self-signed or unavailable certificate(s): The X.509 certificate provided is self-signed - "Organization: Internet Widgits Pty Ltd, State/Province: Some-State, Country: AU"'
+                        assert signature['message'] == 'self-signed or unavailable certificate(s): cannot find trusted signing certificate'
                         assert signature['valid'] == None
             assert m.call_count == 3
             args = m.call_args.args
@@ -2688,7 +2694,10 @@ def test_send_sign_attachment(setup):
           "body": "foobar", "action": "compose", "tags": "foo,bar"}
     pd['file'] = (io.BytesIO(b"This is a file."), 'test.txt')
 
-    del app.config.custom["ca-bundle"]
+    try:
+        del app.config.custom["ca-bundle"]
+    except KeyError:
+        pass
     app.config.custom["accounts"] = [{"id": "foo",
                                       "name": "Foo Bar",
                                       "email": "foo@bar.com",
@@ -2756,7 +2765,7 @@ def test_send_sign_attachment(setup):
                 for part in email_msg.walk():
                     if "signed" in part.get('Content-Type') and "pkcs7-signature" in part.get('Content-Type'):
                         signature = k.smime_verify(part, app.config.custom["accounts"])
-                        assert signature['message'] == 'self-signed or unavailable certificate(s): The X.509 certificate provided is self-signed - "Organization: Internet Widgits Pty Ltd, State/Province: Some-State, Country: AU"'
+                        assert signature['message'] == 'self-signed or unavailable certificate(s): cannot find trusted signing certificate'
                         assert signature['valid'] == None
 
             assert m.call_count == 3
@@ -2797,7 +2806,10 @@ def test_send_sign_reply_cal(setup):
           "body": "foobar", "action": "reply-cal-accept", "tags": "foo,bar",
           "refId": "oldFoo", "attachment-0": "unnamed attachment"}
 
-    del app.config.custom["ca-bundle"]
+    try:
+        del app.config.custom["ca-bundle"]
+    except KeyError:
+        pass
     app.config.custom["accounts"] = [{"id": "foo",
                                       "name": "Foo Bar",
                                       "email": "unittest@tine20.org",
@@ -2898,7 +2910,7 @@ def test_send_sign_reply_cal(setup):
                             for part in email_msg.walk():
                                 if "signed" in part.get('Content-Type') and "pkcs7-signature" in part.get('Content-Type'):
                                     signature = k.smime_verify(part, app.config.custom["accounts"])
-                                    assert signature['message'] == 'self-signed or unavailable certificate(s): The X.509 certificate provided is self-signed - "Organization: Internet Widgits Pty Ltd, State/Province: Some-State, Country: AU"'
+                                    assert signature['message'] == 'self-signed or unavailable certificate(s): cannot find trusted signing certificate'
                                     assert signature['valid'] == None
 
                         assert m.call_count == 3

@@ -32,8 +32,6 @@ from dateutil.rrule import rrulestr
 from recurrent.event_parser import RecurringEvent
 
 from asn1crypto import core, pem, cms
-from certvalidator import CertificateValidator, ValidationContext
-
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding, ec
 from cryptography.hazmat.primitives.serialization import load_pem_private_key, pkcs7, Encoding
@@ -744,15 +742,15 @@ def messages_to_json(messages):
 
 def smime_verify(part, accts):
     try:
-        trusted_cert_pems = []
+        trusted_certs = []
         if 'ca-bundle' in current_app.config.custom:
             with open(current_app.config.custom['ca-bundle'], "rb") as f:
-                trusted_cert_pems.append(f.read())
+                trusted_certs.append(x509.load_pem_x509_certificate(f.read()))
         for acct in accts:
             if 'ca' in acct:
                 for ca in acct['ca']:
                     with open(ca, "rb") as f:
-                        trusted_cert_pems.append(f.read())
+                        trusted_certs.append(x509.load_pem_x509_certificate(f.read()))
 
         signature_data = None
         signed_content = None
@@ -798,16 +796,12 @@ def smime_verify(part, accts):
         if not hashok:
             message = "digests don't match"
         cert = None
-        othercerts = []
         serial = signed_data_content["signer_infos"][0]["sid"].native["serial_number"]
         for tmpcert in signed_data_content["certificates"]:
-            if serial != tmpcert.native["tbs_certificate"]["serial_number"]:
-                othercerts.append(tmpcert.chosen)
-            else:
+            if serial == tmpcert.native["tbs_certificate"]["serial_number"]:
                 cert = tmpcert.chosen
-        public_key = x509.load_pem_x509_certificate(
-            pem.armor("CERTIFICATE", cert.dump()), default_backend()
-        ).public_key()
+        x509cert = x509.load_pem_x509_certificate(pem.armor("CERTIFICATE", cert.dump()), default_backend())
+        public_key = x509cert.public_key()
 
         sigalgo = signed_data_content["signer_infos"][0]["signature_algorithm"]
         sigalgoname = sigalgo.signature_algo
@@ -825,9 +819,7 @@ def smime_verify(part, accts):
         elif sigalgoname == "rsassa_pss":
             parameters = sigalgo["parameters"]
             salgo = parameters["hash_algorithm"].native["algorithm"].upper()
-            mgf = getattr(
-                padding, parameters["mask_gen_algorithm"].native["algorithm"].upper()
-            )(getattr(hashes, salgo)())
+            mgf = getattr(padding, parameters["mask_gen_algorithm"].native["algorithm"].upper())(getattr(hashes, salgo)())
             salt_length = parameters["salt_length"].native
             try:
                 public_key.verify(
@@ -854,15 +846,24 @@ def smime_verify(part, accts):
                 message = str(e)
         else:
             raise ValueError("unknown signature algorithm")
-        validator = CertificateValidator(
-            cert, othercerts, validation_context=ValidationContext(trusted_cert_pems)
-        )
-        try:
-            validator.validate_usage(set(["digital_signature"]))
-            certok = True
-        except Exception as e:
-            certok = False
-            message = str(e)
+
+        certok = False
+        if message is None:
+            message = "cannot find trusted signing certificate"
+        for trusted_cert in trusted_certs:
+            if x509cert.issuer == trusted_cert.subject:
+                try:
+                    trusted_cert.public_key().verify(
+                        x509cert.signature,
+                        x509cert.tbs_certificate_bytes,
+                        padding.PKCS1v15(),
+                        x509cert.signature_hash_algorithm
+                    )
+                    certok = True
+                    break
+                except Exception as e:
+                    certok = False
+                    message = str(e)
 
         if(hashok and signatureok and certok):
             return {"valid": True}
@@ -870,7 +871,7 @@ def smime_verify(part, accts):
             return {"valid": None, "message": f"self-signed or unavailable certificate(s): {message}"}
         return {"valid": False, "message": f"invalid signature: {message}"}
 
-    except Exception as e:
+    except ValueError as e:
         current_app.logger.error(f"Exception in smime_verify: {str(e)}")
         return {"valid": False, "message": f"An internal error has occurred: {str(e)}"}
 

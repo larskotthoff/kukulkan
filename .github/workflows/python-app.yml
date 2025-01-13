@@ -32,9 +32,6 @@ jobs:
         sudo apt-get install -y notmuch
         python -m pip install --upgrade pip
         pip install flake8 pytest
-        # oscrypto 1.3.0 includes a bug https://github.com/wbond/oscrypto/issues/78
-        # installing from this commit should fix the issue until there is a new release including the fix
-        python -m pip install git+https://github.com/wbond/oscrypto.git@1547f535001ba568b239b8797465536759c742a3
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Lint with flake8
       run: |

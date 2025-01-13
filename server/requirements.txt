@@ -1,6 +1,5 @@
 asn1crypto
 cryptography
-certvalidator
 beautifulsoup4
 Flask
 icalendar
