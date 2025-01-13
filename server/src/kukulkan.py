@@ -174,6 +174,7 @@ def create_app():
     else:
         app = Flask(__name__, static_folder="static", template_folder="static")
     app.config["PROPAGATE_EXCEPTIONS"] = True
+    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 900
 
     config_path = os.getenv("XDG_CONFIG_HOME") if os.getenv("XDG_CONFIG_HOME") else os.getenv("HOME") + os.path.sep + ".config"
     try:
