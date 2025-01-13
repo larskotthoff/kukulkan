@@ -12,21 +12,23 @@ export function mkShortcut(keysList, func, preventDefault = false) {
 }
 
 function shouldTrigger(diff) {
-  return Math.abs(diff) > 50;
+  return Math.abs(diff.x) > 0.3 * window.screen.width && Math.abs(diff.x) > 1.5 * Math.abs(diff.y);
 }
 
 function shouldShow(diff) {
-  return Math.abs(diff) > 20;
+  return Math.abs(diff.x) > 0.1 * window.screen.width && Math.abs(diff.x) > 1.5 * Math.abs(diff.y);
 }
 
 export function handleSwipe(el, left, leftIcon, right, rightIcon) {
-  const initialPos = { x: undefined },
-        finalPos = { x: undefined };
+  const initialPos = { x: undefined, y: undefined },
+        finalPos = { x: undefined, y: undefined };
   let t = null, triggerEl = null;
 
   function reset() {
     initialPos.x = undefined;
+    initialPos.y = undefined;
     finalPos.x = undefined;
+    finalPos.y = undefined;
     if(leftIcon && rightIcon) {
       t.style.position = null;
       if(triggerEl) t.removeChild(triggerEl);
@@ -36,6 +38,7 @@ export function handleSwipe(el, left, leftIcon, right, rightIcon) {
 
   el.ontouchstart = (ev => {
     initialPos.x = ev.touches.item(0).clientX;
+    initialPos.y = ev.touches.item(0).clientY;
     if(leftIcon && rightIcon) {
       t = ev.target.closest(".thread");
       t.style.position = "relative";
@@ -46,10 +49,11 @@ export function handleSwipe(el, left, leftIcon, right, rightIcon) {
 
   el.ontouchmove = (ev => {
     finalPos.x = ev.touches.item(0).clientX;
+    finalPos.y = ev.touches.item(0).clientY;
     if(leftIcon && rightIcon) {
-      const diff = finalPos.x - initialPos.x;
+      const diff = { x: finalPos.x - initialPos.x, y: finalPos.y - initialPos.y };
       if(shouldShow(diff)) {
-        t.style.left = (finalPos.x - initialPos.x) + "px";
+        t.style.left = diff.x + "px";
       }
 
       if(shouldTrigger(diff) && triggerEl === null) {
@@ -57,7 +61,7 @@ export function handleSwipe(el, left, leftIcon, right, rightIcon) {
         triggerEl.style.position = "absolute";
         triggerEl.style.top = "50%";
         triggerEl.style.transform = "translateY(-50%)";
-        if(diff < 0) {
+        if(diff.x < 0) {
           triggerEl.innerHTML = leftIcon;
         } else {
           triggerEl.innerHTML = rightIcon;
@@ -69,20 +73,20 @@ export function handleSwipe(el, left, leftIcon, right, rightIcon) {
         triggerEl = null;
       }
       if(triggerEl !== null) {
-        if(diff < 0) {
-          triggerEl.style.right = diff + "px";
+        if(diff.x < 0) {
+          triggerEl.style.right = diff.x + "px";
         } else {
-          triggerEl.style.left = -diff + "px";
+          triggerEl.style.left = -diff.x + "px";
         }
       }
     }
   });
 
   el.ontouchend = (() => {
-    const diff = finalPos.x - initialPos.x;
+    const diff = { x: finalPos.x - initialPos.x, y: finalPos.y - initialPos.y };
 
     if(shouldTrigger(diff)) {
-      if(diff < 0) {
+      if(diff.x < 0) {
         left();
       } else {
         right();

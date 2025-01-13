@@ -108,7 +108,9 @@ test("handleSwipe works", async () => {
   expect(right).toBe(1);
 });
 
-test("handleSwipe doesn't trigger under threshold", async () => {
+test("handleSwipe doesn't trigger under threshold or with vertical swipe", async () => {
+  Object.defineProperty(window.screen, 'width', { value: 1024 });
+  Object.defineProperty(window.screen, 'height', { value: 1024 });
   let left = 0, right = 0;
 
   handleSwipe(document.body, () => left += 1, null, () => right += 1, null);
@@ -127,9 +129,23 @@ test("handleSwipe doesn't trigger under threshold", async () => {
   await fireEvent(document.body, tt);
   expect(left).toBe(0);
   expect(right).toBe(0);
+
+  tt = createTouchEvent(0, 0, 'touchstart');
+  // for some reason it doesn't work if this is defined in createTouchEvent
+  tt.touches.item = (i) => tt.touches[i];
+  await fireEvent(document.body, tt);
+  tt = createTouchEvent(300, 700, 'touchmove');
+  tt.touches.item = (i) => tt.touches[i];
+  await fireEvent(document.body, tt);
+  tt = createTouchEvent(300, 700, 'touchend');
+  tt.touches.item = (i) => tt.touches[i];
+  await fireEvent(document.body, tt);
+  expect(left).toBe(0);
+  expect(right).toBe(0);
 });
 
 test("handleSwipe shows indicators and adjust position of swiped element", async () => {
+  Object.defineProperty(window.screen, 'width', { value: 1024 });
   const el = document.createElement("div");
   el.classList.add("thread");
 
@@ -147,38 +163,38 @@ test("handleSwipe shows indicators and adjust position of swiped element", async
   expect(el.children.length).toBe(0);
 
   // element position adjusted, no trigger shown
-  tt = createTouchEvent(25, 0, 'touchmove');
+  tt = createTouchEvent(150, 0, 'touchmove');
   tt.touches.item = (i) => tt.touches[i];
   await fireEvent(el, tt);
-  expect(el.style.left).toBe("25px");
+  expect(el.style.left).toBe("150px");
   expect(el.children.length).toBe(0);
 
-  tt = createTouchEvent(-25, 0, 'touchmove');
+  tt = createTouchEvent(-150, 0, 'touchmove');
   tt.touches.item = (i) => tt.touches[i];
   await fireEvent(el, tt);
-  expect(el.style.left).toBe("-25px");
+  expect(el.style.left).toBe("-150px");
   expect(el.children.length).toBe(0);
 
   // element position adjusted and trigger shown
-  tt = createTouchEvent(75, 0, 'touchmove');
+  tt = createTouchEvent(350, 0, 'touchmove');
   tt.touches.item = (i) => tt.touches[i];
   await fireEvent(el, tt);
-  expect(el.style.left).toBe("75px");
+  expect(el.style.left).toBe("350px");
   expect(el.children.length).toBe(1);
   expect(el.children[0].innerHTML).toBe("rightTest");
-  tt = createTouchEvent(75, 0, 'touchcancel');
+  tt = createTouchEvent(350, 0, 'touchcancel');
   await fireEvent(el, tt);
 
   tt = createTouchEvent(0, 0, 'touchstart');
   tt.touches.item = (i) => tt.touches[i];
   await fireEvent(el, tt);
-  tt = createTouchEvent(-75, 0, 'touchmove');
+  tt = createTouchEvent(-350, 0, 'touchmove');
   tt.touches.item = (i) => tt.touches[i];
   await fireEvent(el, tt);
-  expect(el.style.left).toBe("-75px");
+  expect(el.style.left).toBe("-350px");
   expect(el.children.length).toBe(1);
   expect(el.children[0].innerHTML).toBe("leftTest");
-  tt = createTouchEvent(-75, 0, 'touchcancel');
+  tt = createTouchEvent(-350, 0, 'touchcancel');
   await fireEvent(el, tt);
 });
 
