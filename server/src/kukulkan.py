@@ -43,6 +43,8 @@ from bs4 import BeautifulSoup
 import lxml
 from lxml_html_clean import Cleaner
 
+from PIL import Image
+
 from gnupg import GPG
 
 cleaner = Cleaner(javascript=True,
@@ -258,7 +260,8 @@ def create_app():
         return messages_to_json(messages)
 
     @app.route("/api/attachment/<path:message_id>/<int:num>")
-    def attachment(message_id, num):
+    @app.route("/api/attachment/<path:message_id>/<int:num>/<int:scale>")
+    def attachment(message_id, num, scale=0):
         msg = get_message(message_id)
         d = message_attachment(msg, num)
         if not d:
@@ -267,6 +270,15 @@ def create_app():
             f = io.BytesIO(io.StringIO(d["content"]).getvalue().encode("utf8"))
         else:
             f = io.BytesIO(bytes(d["content"]))
+            if "image" in d["content_type"] and scale != 0:
+                img = Image.open(f)
+
+                w, h = img.size
+                sf = min(500 / max(w, h), 1)
+                resized_img = img.resize((int(w * sf), int(h * sf)), Image.Resampling.LANCZOS)
+                f = io.BytesIO()
+                resized_img.save(f, format=img.format if img.format else 'JPEG')
+                f.seek(0)
         return send_file(f, mimetype=d["content_type"], as_attachment=False,
                          download_name=d["filename"].replace('\n', ''))
 

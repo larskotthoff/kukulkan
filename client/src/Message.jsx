@@ -120,7 +120,7 @@ function calendarAction(msg, attachment, index) {
 function handleAttachment(msg, attachment, index, summary) {
   if(attachment.content_type.includes("image")) {
     return (<a href={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}`)} target={getSetting("openInTab")} rel="noreferrer">
-        <img src={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}`)} alt={attachment.filename}/>
+        <img src={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}/1`)} alt={attachment.filename}/>
       </a>);
   } else if(attachment.content_type.includes("calendar") && attachment.preview !== null && summary === false) {
     return (<div><a href={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}`)} target={getSetting("openInTab")} rel="noreferrer">
