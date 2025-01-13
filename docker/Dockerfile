@@ -14,7 +14,7 @@ RUN apt-get update -qq && apt-get install -y --no-install-recommends \
     gunicorn \
     nodejs \
     npm \
-    python3-asn1crypto python3-bs4 python3-flask python3-icalendar python3-lxml python3-lxml-html-clean python3-m2crypto python3-werkzeug python3-gnupg \
+    python3-asn1crypto python3-bs4 python3-flask python3-icalendar python3-lxml python3-lxml-html-clean python3-cryptography python3-werkzeug python3-gnupg \
     && rm -rf /var/lib/apt/lists/* \
     && pip install --break-system-packages recurrent
 
