@@ -238,7 +238,7 @@ export function Message(props) {
 
   mkShortcut([["e"]],
     // eslint-disable-next-line solid/reactivity
-    () => { document.querySelector("div.message.active > div.preview-container")?.click(); }
+    () => { if(props.active) document.querySelector("div.message.active > div.preview-container")?.click(); }
   );
 
   mkShortcut([["r"]],
