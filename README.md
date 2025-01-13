@@ -56,7 +56,7 @@ notmuch config set --database search.exclude_tags 'deleted'
 
 ### Development
 
-To set up the development environment, install the depencies by running `pip
+To set up the development environment, install the dependencies by running `pip
 install -r requirements.txt` (or whatever is suitable for you) in the `server/`
 directory and `npm i` in the `client/` directory.
 
@@ -143,13 +143,13 @@ client.
 
 There are two ways to make this work:
 - The Kukulkan server runs on the same machine as the browser, and was started
-  from a GUI environemnt (e.g. X11, wayland). The server will call the
+  from a GUI environment (e.g. X11, wayland). The server will call the
   configured external editor and editing should work as expected.
 - The Kukulkan server runs on a different machine than the browser. You can run
   another Kukulkan server on the same machine as your browser (doesn't need
   access to your mail) with an external editor configured. In the client
   settings page, change "When composing, use" to "external editor on localhost".
-  This will make the request for the external editor to locahost instead of
+  This will make the request for the external editor to localhost instead of
   whatever machine the server is running on, and should work as above. Note that
   the protocol and port needs to be the same as for the remote server, and in
   the remote server configuration you need to have set
