@@ -862,7 +862,7 @@ def smime_verify(part, accts):
                 except Exception as e:
                     certok = False
                     message = str(e)
-        if certok == False and message is None:
+        if certok is False and message is None:
             message = f"signed by {x509cert.issuer}"
 
         if(hashok and signatureok and certok):
