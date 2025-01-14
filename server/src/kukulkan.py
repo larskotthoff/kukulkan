@@ -137,7 +137,10 @@ def close_db(e=None):
 
 
 def get_globals():
-    accts = current_app.config.custom["accounts"]
+    try:
+        accts = current_app.config.custom["accounts"]
+    except KeyError:
+        accts = []
     tags = [tag for tag in get_db().get_all_tags() if tag != "(null)"]
     try:
         cmp = current_app.config.custom["compose"]
@@ -329,10 +332,11 @@ def create_app():
 
     @app.route('/api/edit_external', methods=['POST'])
     def edit_external():
-        if not current_app.config.custom["compose"]:
-            abort(404)
-        editcmd = current_app.config.custom["compose"]["external-editor"]
-        if not editcmd:
+        try:
+            editcmd = current_app.config.custom["compose"]["external-editor"]
+            if not editcmd:
+                abort(404)
+        except KeyError:
             abort(404)
 
         # pylint: disable=consider-using-with
@@ -350,8 +354,11 @@ def create_app():
 
     @app.route('/api/send', methods=['GET', 'POST'])
     def send():
-        accounts = current_app.config.custom["accounts"]
-        account = [acct for acct in accounts if acct["id"] == request.values['from']][0]
+        try:
+            accounts = current_app.config.custom["accounts"]
+            account = [acct for acct in accounts if acct["id"] == request.values['from']][0]
+        except (KeyError, IndexError) as e:
+            raise ValueError("Unable to find matching account in config!") from e
 
         msg = email.message.EmailMessage()
         msg.set_content(request.values['body'])
@@ -585,6 +592,8 @@ def get_nested_body(email_msg):
             try:
                 repl = current_app.config.custom["filter"]["content"]["text/plain"]
                 tmp = re.sub(repl[0], repl[1], tmp)
+            except KeyError:
+                pass
             except Exception as e:
                 current_app.logger.error(f"Exception when replacing text content: {str(e)}")
             content_plain += tmp
@@ -593,6 +602,8 @@ def get_nested_body(email_msg):
             try:
                 repl = current_app.config.custom["filter"]["content"]["text/html"]
                 tmp = re.sub(repl[0], repl[1], tmp)
+            except KeyError:
+                pass
             except Exception as e:
                 current_app.logger.error(f"Exception when replacing HTML content: {str(e)}")
             content_html += tmp
@@ -639,12 +650,15 @@ def attendee_matches_addr(c, message):
         addr = str(c).split(':')[1]
     except IndexError:
         addr = c
-    accounts = current_app.config.custom["accounts"]
-    for acct in accounts:
-        if acct["email"] == addr or forwarded_to == acct["email"]:
+    try:
+        accounts = current_app.config.custom["accounts"]
+        for acct in accounts:
+            if acct["email"] == addr or forwarded_to == acct["email"]:
+                return True
+        if forwarded_to == addr:
             return True
-    if forwarded_to == addr:
-        return True
+    except KeyError:
+        pass
     return False
 
 
@@ -931,9 +945,12 @@ def message_to_json(message):
     for part in email_msg.walk():
         if part.get('Content-Type') and "signed" in part.get('Content-Type'):
             if "pkcs7-signature" in part.get('Content-Type') or "pkcs7-mime" in part.get('Content-Type'):
-                accounts = current_app.config.custom["accounts"]
-                accts = [acct for acct in accounts if acct["email"] in
-                         message.get_header("from").strip().replace('\t', ' ')]
+                try:
+                    accounts = current_app.config.custom["accounts"]
+                    accts = [acct for acct in accounts if acct["email"] in
+                             message.get_header("from").strip().replace('\t', ' ')]
+                except KeyError:
+                    accts = []
                 signature = smime_verify(part, accts)
             elif "pgp-signature" in part.get('Content-Type'):
                 signed_content = bytes(part.get_payload()[0])

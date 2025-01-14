@@ -1581,6 +1581,20 @@ def test_send(setup):
     dbw.close.assert_called_once()
 
 
+def test_send_no_account(setup):
+    app, _ = setup
+
+    pd = {"from": "foo", "to": "bar@bar.com", "cc": "", "bcc": "", "subject": "test",
+          "body": "foobar", "action": "compose", "tags": "foo,bar"}
+
+    with app.test_client() as test_client:
+        try:
+            test_client.post('/api/send', data=pd)
+            assert False
+        except ValueError as e:
+            assert str(e) == "Unable to find matching account in config!"
+
+
 @pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="Doesn't base64 encode and messes up UTF8.")
 def test_send_base64_transfer(setup):
     app, db = setup
