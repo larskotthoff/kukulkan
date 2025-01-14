@@ -24,7 +24,7 @@ afterEach(() => {
 });
 
 const threads = [{authors: ["fooAuthor", "barAuthor"], subject: "test", tags:
-  ["fooTag", "barTag"], total_messages: 2, newest_date: 1000, oldest_date: 100, preview: "preview"}];
+  ["fooTag", "barTag"], total_messages: 2, newest_date: 1000, oldest_date: 100}];
 
 test("exports SearchThreads", () => {
   expect(SearchThreads).not.toBe(undefined);
@@ -137,7 +137,6 @@ test("shows threads", () => {
   expect(screen.getAllByText("barTag").length).toBe(2);
   expect(screen.getAllByText("test").length).toBe(2);
   expect(screen.getAllByText(renderDateNumThread(threads[0])).length).toBe(2);
-  expect(screen.getAllByText("preview").length).toBe(2);
 });
 
 test("sets active and selected classes", () => {
