@@ -5,6 +5,8 @@ import os
 import email
 from unittest.mock import MagicMock, mock_open, patch, call
 
+from PIL import Image
+
 import src.kukulkan as k
 
 IN_GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"
@@ -508,6 +510,56 @@ def test_attachment_multiple(setup):
 
     assert mf.get_filename.call_count == 3
     assert mq.search_messages.call_count == 3
+
+
+def test_attachment_image_resize(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.get_filename = MagicMock(return_value="test/mails/attachment-image.eml")
+
+    mq = lambda: None
+    mq.search_messages = MagicMock(return_value=iter([mf]))
+
+    with patch("notmuch.Query", return_value=mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/attachment/foo/0/1')
+            assert response.status_code == 200
+            assert 25053 == len(response.data)
+            assert type(response.data) is bytes
+            assert "image/png" == response.mimetype
+            assert "inline; filename=filename.png" == response.headers['Content-Disposition']
+            img = Image.open(io.BytesIO(response.data))
+            assert (499, 402) == img.size
+        q.assert_called_once_with(db, 'id:"foo"')
+
+    mf.get_filename.assert_called_once()
+    mq.search_messages.assert_called_once()
+
+
+def test_attachment_image_no_resize(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.get_filename = MagicMock(return_value="test/mails/attachment-image.eml")
+
+    mq = lambda: None
+    mq.search_messages = MagicMock(return_value=iter([mf]))
+
+    with patch("notmuch.Query", return_value=mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/attachment/foo/0/0')
+            assert response.status_code == 200
+            assert 94590 == len(response.data)
+            assert type(response.data) is bytes
+            assert "image/png" == response.mimetype
+            assert "inline; filename=filename.png" == response.headers['Content-Disposition']
+            img = Image.open(io.BytesIO(response.data))
+            assert (1584, 1274) == img.size
+        q.assert_called_once_with(db, 'id:"foo"')
+
+    mf.get_filename.assert_called_once()
+    mq.search_messages.assert_called_once()
 
 
 def test_message_simple(setup):
