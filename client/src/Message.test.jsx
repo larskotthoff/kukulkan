@@ -155,7 +155,7 @@ test("renders message attachments", () => {
   msg.attachments = [ { content_type: "image", filename: "foo.jpg" } ];
   let { container } = render(() => <Message msg={msg} active={true}/>);
   expect(container.querySelector("a[href='http://localhost:5000/api/attachment/fo%40o/0']")).not.toBe(null);
-  expect(container.querySelector("img[src='http://localhost:5000/api/attachment/fo%40o/0'][alt='foo.jpg']")).not.toBe(null);
+  expect(container.querySelector("img[src='http://localhost:5000/api/attachment/fo%40o/0/1'][alt='foo.jpg']")).not.toBe(null);
   cleanup();
 
   // calendar
