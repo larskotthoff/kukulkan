@@ -70,6 +70,8 @@ export function Autocomplete(props) {
       } else {
         inputRef().blur();
       }
+    } else if (ev.code === 'Space') {
+      setShowPopover(false);
     } else {
       setShowPopover(true);
     }
@@ -97,6 +99,13 @@ export function Autocomplete(props) {
     setSelected(0);
   }));
 
+  window.onclick = e => {
+    if(!e.target.classList.contains("autocomplete-popup") &&
+      !e.target.classList.contains("autocomplete-option")) {
+      setShowPopover(false);
+    }
+  }
+
   return (
     <div {...spreadProps}>
       {children}
@@ -122,9 +131,10 @@ export function Autocomplete(props) {
           <Index each={sortedOptions()}>
             {(item, i) =>
               <div classList={{
+                  'autocomplete-option': true,
                   'selected': selected() === i
                 }}
-                onClick={() => select(i) }>
+                onClick={() => select(i)}>
                 {item()}
               </div>
             }

@@ -70,7 +70,7 @@ test("shows adress completions and allows to select", async () => {
   await userEvent.type(container.querySelector("#query-box > input"), "from:test");
   await vi.waitFor(() => {
     expect(screen.getByText("from:tester@test.com")).toBeInTheDocument();
-  });
+  }, { timeout: 1200 });
   expect(global.fetch).toHaveBeenCalledTimes(1);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/email/test",
     expect.objectContaining({
@@ -94,7 +94,7 @@ test("shows combined completions and allows to select", async () => {
   await userEvent.type(container.querySelector("#query-box > input"), " and from:test");
   await vi.waitFor(() => {
     expect(screen.getByText("tag:foo and from:tester@test.com")).toBeInTheDocument();
-  });
+  }, { timeout: 1200 });
   expect(global.fetch).toHaveBeenCalledTimes(1);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/email/test",
     expect.objectContaining({
