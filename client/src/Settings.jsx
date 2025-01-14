@@ -7,6 +7,13 @@ export function getSetting(setting) {
       return parseInt(localStorage.getItem("settings-numQueries"), 10) || 10;
     case "openInTab":
       return localStorage.getItem("settings-openInTab") || "_blank";
+    case "showPreview":
+      val = localStorage.getItem("settings-showPreview");
+      if(val === null) {
+        return true;
+      } else {
+        return val === "true";
+      }
     case "showNestedThread":
       val = localStorage.getItem("settings-showNestedThread");
       if(val === null) {
@@ -46,7 +53,8 @@ export function Settings() {
         [showNestedThread, setShowNestedThread] = createSignal(getSetting("showNestedThread")),
         [externalCompose, setExternalCompose] = createSignal(getSetting("externalCompose")),
         [abbreviateQuoted, setAbbreviateQuoted] = createSignal(getSetting("abbreviateQuoted")),
-        [showSerpent, setShowSerpent] = createSignal(getSetting("showSerpent"));
+        [showSerpent, setShowSerpent] = createSignal(getSetting("showSerpent")),
+        [showPreview, setShowPreview] = createSignal(getSetting("showPreview"));
 
   document.title = "Kukulkan Settings";
 
@@ -77,6 +85,22 @@ export function Settings() {
           same
         </option>
       </select> tab.
+    </div>
+    <div class="margin">
+      <select
+        data-testid="showPreview"
+        value={showPreview()}
+        onChange={(ev) => {
+          setShowPreview(ev.target.value);
+          localStorage.setItem("settings-showPreview", showPreview());
+        }}>
+        <option value={true}>
+          Do
+        </option>
+        <option value={false}>
+          Do not
+        </option>
+      </select> show preview for first matching message in active thread on search overview.
     </div>
     <div class="margin">
       Show <select

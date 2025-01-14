@@ -19,18 +19,22 @@ test("exports Settings", () => {
 test("gets settings", () => {
   expect(getSetting("numQueries")).toBe(10);
   expect(getSetting("openInTab")).toBe("_blank");
+  expect(getSetting("showPreview")).toBe(true);
   expect(getSetting("showNestedThread")).toBe(true);
   expect(getSetting("externalCompose")).toBe(-1);
   expect(getSetting("abbreviateQuoted")).toBe(true);
+  expect(getSetting("showSerpent")).toBe(false);
 });
 
 test("shows settings", () => {
   render(() => <Settings/>);
   expect(screen.getByTestId("numQueries")).toBeInTheDocument();
   expect(screen.getByTestId("openInTab")).toBeInTheDocument();
+  expect(screen.getByTestId("showPreview")).toBeInTheDocument();
   expect(screen.getByTestId("showNestedThread")).toBeInTheDocument();
   expect(screen.getByTestId("externalCompose")).toBeInTheDocument();
   expect(screen.getByTestId("abbreviateQuoted")).toBeInTheDocument();
+  expect(screen.getByTestId("showSerpent")).toBeInTheDocument();
 });
 
 test("allows to change settings", async () => {
@@ -44,6 +48,11 @@ test("allows to change settings", async () => {
   screen.getByText("same").selected = true;
   await fireEvent.change(screen.getByTestId("openInTab"));
   expect(getSetting("openInTab")).toBe("_self");
+
+  expect(getSetting("showPreview")).toBe(true);
+  screen.getAllByText("Do not")[0].selected = true;
+  await fireEvent.change(screen.getByTestId("showPreview"));
+  expect(getSetting("showPreview")).toBe(false);
 
   expect(getSetting("showNestedThread")).toBe(true);
   screen.getByText("flattened").selected = true;
@@ -64,7 +73,7 @@ test("allows to change settings", async () => {
   expect(getSetting("abbreviateQuoted")).toBe(false);
 
   expect(getSetting("showSerpent")).toBe(false);
-  screen.getByText("Do").selected = true;
+  screen.getAllByText("Do")[1].selected = true;
   await fireEvent.change(screen.getByTestId("showSerpent"));
   expect(getSetting("showSerpent")).toBe(true);
 });

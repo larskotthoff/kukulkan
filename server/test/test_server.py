@@ -199,6 +199,80 @@ def test_query_exclude_tags(setup):
     db.get_config.assert_called_once_with("search.exclude_tags")
 
 
+def test_query_preview(setup):
+    app, db = setup
+
+    mm1 = lambda: None
+    mm1.get_date = MagicMock(return_value="foodate")
+    mm1.get_tags = MagicMock(return_value=["footag"])
+    mm1.get_message_id = MagicMock(return_value="1")
+    mm2 = lambda: None
+    mm2.get_date = MagicMock(return_value="bardate")
+    mm2.get_tags = MagicMock(return_value=["bartag"])
+    mm2.get_message_id = MagicMock(return_value="2")
+    mm3 = lambda: None
+    mm3.get_date = MagicMock(return_value="foobardate")
+    mm3.get_tags = MagicMock(return_value=["foobartag"])
+    mm3.get_message_id = MagicMock(return_value="3")
+    mm3.get_filename = MagicMock(return_value="test/mails/simple.eml")
+    mm3.get_header = MagicMock(return_value="  foo\tbar  ")
+
+    mt = lambda: None
+    mt.get_messages = MagicMock(return_value=iter([mm1, mm2, mm3]))
+    mt.get_authors = MagicMock(return_value="foo bar, bar foo")
+    mt.get_matched_messages = MagicMock(return_value=23)
+    mt.get_subject = MagicMock(return_value="foosub")
+    mt.get_thread_id = MagicMock(return_value="id")
+    mt.get_total_messages = MagicMock(return_value=50)
+
+    mq = lambda: None
+    mq.search_threads = MagicMock(return_value=iter([mt]))
+    mq.search_messages = MagicMock(return_value=iter([mm3]))
+
+    db.get_config = MagicMock(return_value="")
+
+    with patch("notmuch.Query", return_value=mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/query/foo/1')
+            assert response.status_code == 200
+            thrds = json.loads(response.data.decode())
+            assert len(thrds) == 1
+            assert thrds[0]["authors"] == ["foo bar", "bar foo"]
+            assert thrds[0]["matched_messages"] == 23
+            assert thrds[0]["newest_date"] == "foobardate"
+            assert thrds[0]["oldest_date"] == "foodate"
+            assert thrds[0]["subject"] == "foosub"
+            assert thrds[0]["tags"] == ["bartag", "foobartag", "footag"]
+            assert thrds[0]["thread_id"] == "id"
+            assert thrds[0]["total_messages"] == 50
+            assert "With the new notmuch_message_get_flags() function" in thrds[0]["preview"]
+
+        q.assert_called_once_with(db, "foo")
+
+    mm1.get_date.assert_called_once()
+    mm1.get_tags.assert_called_once()
+    mm1.get_message_id.assert_called_once()
+    assert mm2.get_date.call_count == 0
+    mm2.get_tags.assert_called_once()
+    mm2.get_message_id.assert_called_once()
+    mm3.get_date.assert_called_once()
+    assert mm3.get_tags.call_count == 2
+    assert mm3.get_message_id.call_count == 3
+    mm3.get_filename.assert_called_once()
+    assert mm3.get_header.call_count == 17
+
+    mt.get_messages.assert_called_once()
+    assert mt.get_authors.call_count == 2
+    mt.get_matched_messages.assert_called_once()
+    assert mt.get_subject.call_count == 2
+    mt.get_thread_id.assert_called_once()
+    mt.get_total_messages.assert_called_once()
+
+    mq.search_threads.assert_called_once()
+    mq.search_messages.assert_called_once()
+    db.get_config.assert_called_once_with("search.exclude_tags")
+
+
 def test_address(setup):
     app, db = setup
 

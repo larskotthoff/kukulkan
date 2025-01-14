@@ -201,7 +201,7 @@ def create_app():
     def send_index():
         globs = get_globals()
         if(query_string := request.args.get("query")):
-            globs["threads"] = query(query_string)
+            globs["threads"] = query(query_string, show_preview=1)
         return render_template("index.html", data=globs)
 
     @app.route("/<path:path>", methods=['GET', 'POST'])
@@ -210,7 +210,7 @@ def create_app():
             return send_from_directory(app.static_folder, path)
         globs = get_globals()
         if path == "todo":
-            globs["threads"] = query("tag:todo")
+            globs["threads"] = query("tag:todo", show_preview=1)
         elif path == "thread":
             globs["thread"] = thread(request.args.get("id"))
         elif path == "message":
@@ -240,9 +240,15 @@ def create_app():
         return response
 
     @app.route("/api/query/<path:query_string>")
-    def query(query_string):
-        threads = get_query(query_string).search_threads()
-        return [thread_to_json(t) for t in threads]
+    @app.route("/api/query/<path:query_string>/<int:show_preview>")
+    def query(query_string, show_preview=0):
+        qry = get_query(query_string)
+        threads = qry.search_threads()
+        if show_preview != 0:
+            matching_ids = set(msg.get_message_id() for msg in qry.search_messages())
+        else:
+            matching_ids = None
+        return [thread_to_json(t, matching_ids) for t in threads]
 
     @app.route("/api/address/<path:query_string>")
     def address_complete(query_string):
@@ -554,11 +560,20 @@ def create_app():
     return app
 
 
-def thread_to_json(thread):
+def thread_to_json(thread, matching_ids):
     """Converts a `notmuch.threads.Thread` instance to a JSON object."""
     # necessary to get accurate tags and metadata, work around the notmuch API
     # only considering the matched messages
     messages = list(thread.get_messages())
+
+    preview = None
+    if matching_ids is not None:
+        matching_messages = [msg for msg in messages if msg.get_message_id() in matching_ids]
+        if len(matching_messages) > 0:
+            preview = message_to_json(matching_messages[0])["body"]["text/plain"]
+            if len(preview) > 500:
+                preview = preview[:500] + "..."
+
     tags = list({tag for msg in messages for tag in msg.get_tags()})
     tags.sort()
     return {
@@ -571,6 +586,7 @@ def thread_to_json(thread):
         "tags": tags,
         "thread_id": thread.get_thread_id(),
         "total_messages": thread.get_total_messages(),
+        "preview": preview
     }
 
 

@@ -1,4 +1,4 @@
-import { createSignal, For } from 'solid-js';
+import { createSignal, For, Show } from 'solid-js';
 
 import { ColorChip } from "./ColorChip.jsx";
 import { Autocomplete } from "./Autocomplete.jsx";
@@ -130,6 +130,11 @@ export function SearchThreads(props) {
                 {(tag) => <ColorChip value={tag}/>}
               </For>
             </div>
+            <Show when={thread.preview && getSetting("showPreview")}>
+              <div class="thread-preview">
+                {thread.preview}
+              </div>
+            </Show>
           </div>
         }
       </For>
