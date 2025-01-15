@@ -219,7 +219,7 @@ export function TodoThreads(props) {
                 </div>
                 <div class="narrow">
                   <For each={thread.authors}>
-                    {(author) => <ColorChip value={author.split(/\s/)[0]}/>}
+                    {(author) => <ColorChip value={author.split(/\s|,/)[0]}/>}
                   </For>
                 </div>
               </div>

@@ -68,6 +68,7 @@ policy = email.policy.default.clone(utf8=True)
 
 # claude helped with this
 def feed_input(process, buffer, bytes_written):
+    """Feeds input from a buffer to a process, monitoring how much is written."""
     processed = 0
     while True:
         chunk = buffer.read(1024)
@@ -98,7 +99,20 @@ def email_addresses_header(emails):
     return ", ".join(str(addr) for addr in tmp)
 
 
+def extract_name_from_email(email_str):
+    """Extracts the name part from an email address, or the address if there is
+    no name part."""
+    if email_str is None:
+        return "(no author)"
+    pts = email_str.replace('\t', ' ').strip().split(' ')
+    if len(pts) == 1:
+        return pts[0].strip('<>')
+    name = ' '.join(pts[:-1])
+    return name.strip('"\',')
+
+
 def split_email_addresses(header):
+    """Returns all email addresses (without the names) in a string."""
     addresses = re.findall(r'([^,][^@]*@[^,]+)', header.replace('\t', ' '))
     return [addr.strip() for addr in addresses]
 
@@ -137,6 +151,7 @@ def close_db(e=None):
 
 
 def get_globals():
+    """Get global configuration variables."""
     try:
         accts = current_app.config.custom["accounts"]
     except KeyError:
@@ -150,6 +165,8 @@ def get_globals():
 
 
 def email_address_complete(query_string):
+    """Returns list of email addresses from messages that match the
+    query_string."""
     qs = query_string.casefold()
     addrs = {}
     i = 0
@@ -560,10 +577,10 @@ def thread_to_json(thread):
     # only considering the matched messages
     messages = list(thread.get_messages())
     tags = list({tag for msg in messages for tag in msg.get_tags()})
-    tags.sort()
+    authors = [extract_name_from_email(msg.get_header("from")) for msg in messages]
+    authors = list(dict.fromkeys(authors))
     return {
-        "authors": [ a.strip() for a in thread.get_authors().replace(',', '|').split('|') ]
-            if thread.get_authors() else ["(no author)"],
+        "authors": authors,
         "matched_messages": thread.get_matched_messages(),
         "newest_date": messages[-1].get_date(),
         "oldest_date": messages[0].get_date(),
@@ -575,6 +592,7 @@ def thread_to_json(thread):
 
 
 def strip_tags(soup):
+    """Strip HTML tags."""
     for typ in ["a", "span", "em", "strong", "u", "i", "font", "mark", "label",
                 "s", "sub", "sup", "tt", "bdo", "button", "cite", "del", "b"]:
         for t in soup.find_all(typ):
@@ -645,6 +663,7 @@ def get_nested_body(email_msg):
 
 
 def attendee_matches_addr(c, message):
+    """Check if a meeting attendee marches an address."""
     forwarded_to = message.get("X-Forwarded-To").strip() if message.get("X-Forwarded-To") else None
     try:
         addr = str(c).split(':')[1]
@@ -768,6 +787,7 @@ def messages_to_json(messages):
 
 
 def smime_verify(part, accts):
+    """Verify S/MIME signature of signed part, considering CAs in accounts."""
     try:
         trusted_certs = []
         if 'ca-bundle' in current_app.config.custom:

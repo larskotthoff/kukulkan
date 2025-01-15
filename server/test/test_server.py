@@ -53,16 +53,18 @@ def test_query(setup):
     mm1 = lambda: None
     mm1.get_date = MagicMock(return_value="foodate")
     mm1.get_tags = MagicMock(return_value=["footag"])
+    mm1.get_header = MagicMock(return_value="foo bar <foo@bar.com>")
     mm2 = lambda: None
     mm2.get_date = MagicMock(return_value="bardate")
     mm2.get_tags = MagicMock(return_value=["bartag"])
+    mm2.get_header = MagicMock(return_value="bar foo <bar@foo.com>")
     mm3 = lambda: None
     mm3.get_date = MagicMock(return_value="foobardate")
     mm3.get_tags = MagicMock(return_value=["foobartag"])
+    mm3.get_header = MagicMock(return_value="bar foo <foo@bar.com>")
 
     mt = lambda: None
     mt.get_messages = MagicMock(return_value=iter([mm1, mm2, mm3]))
-    mt.get_authors = MagicMock(return_value="foo bar, bar foo")
     mt.get_matched_messages = MagicMock(return_value=23)
     mt.get_subject = MagicMock(return_value="foosub")
     mt.get_thread_id = MagicMock(return_value="id")
@@ -84,6 +86,7 @@ def test_query(setup):
             assert thrds[0]["newest_date"] == "foobardate"
             assert thrds[0]["oldest_date"] == "foodate"
             assert thrds[0]["subject"] == "foosub"
+            thrds[0]["tags"].sort()
             assert thrds[0]["tags"] == ["bartag", "foobartag", "footag"]
             assert thrds[0]["thread_id"] == "id"
             assert thrds[0]["total_messages"] == 50
@@ -92,13 +95,15 @@ def test_query(setup):
 
     mm1.get_date.assert_called_once()
     mm1.get_tags.assert_called_once()
+    mm1.get_header.assert_called_once()
     assert mm2.get_date.call_count == 0
     mm2.get_tags.assert_called_once()
+    mm2.get_header.assert_called_once()
     mm3.get_date.assert_called_once()
     mm3.get_tags.assert_called_once()
+    mm3.get_header.assert_called_once()
 
     mt.get_messages.assert_called_once()
-    assert mt.get_authors.call_count == 2
     mt.get_matched_messages.assert_called_once()
     assert mt.get_subject.call_count == 2
     mt.get_thread_id.assert_called_once()
@@ -114,10 +119,10 @@ def test_query_empty(setup):
     mm1 = lambda: None
     mm1.get_date = MagicMock(return_value="foodate")
     mm1.get_tags = MagicMock(return_value=["footag"])
+    mm1.get_header = MagicMock(return_value=None)
 
     mt = lambda: None
     mt.get_messages = MagicMock(return_value=iter([mm1]))
-    mt.get_authors = MagicMock(return_value="")
     mt.get_matched_messages = MagicMock(return_value=23)
     mt.get_subject = MagicMock(return_value="")
     mt.get_thread_id = MagicMock(return_value="id")
@@ -147,9 +152,9 @@ def test_query_empty(setup):
 
     assert mm1.get_date.call_count == 2
     mm1.get_tags.assert_called_once()
+    mm1.get_header.assert_called_once()
 
     mt.get_messages.assert_called_once()
-    assert mt.get_authors.call_count == 1
     mt.get_matched_messages.assert_called_once()
     assert mt.get_subject.call_count == 1
     mt.get_thread_id.assert_called_once()
