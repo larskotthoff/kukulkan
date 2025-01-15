@@ -92,6 +92,24 @@ button > span {
     gap: 4px;
 }
 
+.message-action-icons {
+    display: flex;
+
+    @media (min-width: 900px) {
+        flex-direction: row;
+    }
+    @media (max-width: 899px) {
+        flex-direction: column;
+        gap: 10px;
+        position: absolute;
+        right: 5px;
+        background-color: var(--secondary-background);
+        padding: 5px;
+        border: 1px solid #999;
+        box-shadow: 0px 3px 3px -2px rgba(0,0,0,0.2),0px 3px 4px 0px rgba(0,0,0,0.14),0px 1px 8px 0px rgba(0,0,0,0.12);
+    }
+}
+
 .flow-wrap {
     flex-flow: wrap;
 }
@@ -432,7 +450,7 @@ label {
 .icon {
     width: 1em;
     height: 1em;
-    font-size: 1.5rem;
+    font-size: 1.8rem;
 }
 
 /* https://www.joshwcomeau.com/css/custom-css-reset/ */

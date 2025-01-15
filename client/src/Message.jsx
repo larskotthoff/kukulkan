@@ -328,21 +328,23 @@ export function Message(props) {
                 removeTag(tagToRemove);
               }}
             />
-            <a id="reply" href={replyUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
-              <Icon icon={ReplyAll}/>
-            </a>
-            <a id="forward" href={fwdUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
-              <Icon icon={Forward}/>
-            </a>
-            <a id="print" href={printUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
-              <Icon icon={Print}/>
-            </a>
-            <a id="security" href={secUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
-              <Icon icon={Security}/>
-            </a>
-            <a id="delete" href="#" onClick={() => { if(props.active) { removeTag("unread"); addTag("deleted"); }}}>
-              <Icon icon={Trash}/>
-            </a>
+            <div class="message-action-icons">
+              <a id="reply" href={replyUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
+                <Icon icon={ReplyAll}/>
+              </a>
+              <a id="forward" href={fwdUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
+                <Icon icon={Forward}/>
+              </a>
+              <a id="print" href={printUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
+                <Icon icon={Print}/>
+              </a>
+              <a id="security" href={secUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
+                <Icon icon={Security}/>
+              </a>
+              <a id="delete" href="#" onClick={() => { if(props.active) { removeTag("unread"); addTag("deleted"); }}}>
+                <Icon icon={Trash}/>
+              </a>
+            </div>
           </div>
 
           <Show when={msg.attachments}>
