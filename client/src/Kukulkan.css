@@ -321,6 +321,9 @@ button > span {
     @media (min-width: 900px) {
         width: calc(100% - 10.5em);
     }
+    @media (max-width: 899px) {
+        width: 100%;
+    }
 }
 
 .calendar {
