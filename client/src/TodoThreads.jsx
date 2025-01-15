@@ -56,6 +56,7 @@ export function TodoThreads(props) {
       if(dueDate < today) return [ dueDate, "overdue!" ];
       else if(dueDate.getTime() === today.getTime()) return [ dueDate, "今日" ];
       else if(dueDate.getTime() === tomorrow.getTime()) return [ dueDate, "明日" ];
+      else if(dueDate - today < 1000 * 60 * 60 * 24 * 7) return [ dueDate, dueDate.toLocaleDateString([], { weekday: 'short' }) ];
       else return [ dueDate, formatDuration(today, dueDate) ];
     } else {
       return [ null, "" ];

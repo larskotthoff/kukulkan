@@ -85,7 +85,7 @@ test("shows due dates correctly", () => {
   t[0].tags = tags.concat("due:" + (new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
   render(() => <TodoThreads threads={() => t} index={() => 0} activeThread={() => 1} selectedThreads={() => []}
     setQuery={() => []}/>);
-  expect(screen.getByText("2日")).toBeInTheDocument();
+  expect(screen.getByText("Wed")).toBeInTheDocument();
   cleanup();
 
   t[0].tags = tags.concat("due:" + (new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
