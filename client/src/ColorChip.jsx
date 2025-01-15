@@ -1,11 +1,13 @@
 import { getColor } from "./utils.js";
 
 export function ColorChip(props) {
+  // eslint-disable-next-line solid/reactivity
+  const {['class']: clss, ...spreadProps} = props;
   return (<span
         label={props.value}
-        class="chip"
+        class={`chip ${clss ? clss : ""}`}
         style={{ '--bg-color': `${getColor(props.value)}` }}
-        {...props}>
+        {...spreadProps}>
       {props.value}
     </span>);
 }

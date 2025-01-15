@@ -229,7 +229,7 @@ export function TodoThreads(props) {
               </div>
               <div>
                 <For each={thread.tags.sort()}>
-                  {(tag) => <ColorChip value={tag}/>}
+                  {(tag) => <ColorChip class={tag === "todo" || tag.startsWith("due:") ? "hide-if-narrow" : ""} value={tag}/>}
                 </For>
               </div>
             </div>

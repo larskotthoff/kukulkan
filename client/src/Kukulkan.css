@@ -326,6 +326,12 @@ button > span {
     }
 }
 
+.hide-if-narrow {
+    @media (max-width: 899px) {
+        display: none;
+    }
+}
+
 .calendar {
     align-items: end;
     text-align: end;
