@@ -1085,7 +1085,7 @@ def test_message_signed_self(setup):
             msg = json.loads(response.data.decode())
             assert "Bob, we need to cancel this contract." in msg["body"]["text/plain"]
 
-            assert msg["signature"] == {'message': 'self-signed or unavailable certificate(s): signed by <Name(CN=Sample LAMPS Certificate Authority)>', 'valid': None}
+            assert msg["signature"] == {'message': 'self-signed or unavailable certificate(s): validation failed: required EKU not found (encountered processing <Certificate(subject=<Name(CN=Alice Lovelace)>, ...)>)', 'valid': None}
         q.assert_called_once_with(db, 'id:"foo"')
 
     mf.get_filename.assert_called_once()
@@ -1118,7 +1118,7 @@ def test_message_signed_expired(setup):
             msg = json.loads(response.data.decode())
             assert "Invio messaggio SMIME (signed and clear text)" in msg["body"]["text/plain"]
 
-            assert msg["signature"] == {'message': 'invalid signature: digests don\'t match', 'valid': False}
+            assert msg["signature"] == {'message': 'invalid signature: validation failed: cert is not valid at validation time (encountered processing <Certificate(subject=<Name(CN=shatzing5@outlook.com)>, ...)>)', 'valid': False}
         q.assert_called_once_with(db, 'id:"foo"')
 
     mf.get_filename.assert_called_once()
@@ -1150,7 +1150,7 @@ def test_message_signed_invalid(setup):
             assert response.status_code == 200
             msg = json.loads(response.data.decode())
             assert "Bob, we need to cancel this contract." in msg["body"]["text/plain"]
-            assert msg["signature"] == {'message': 'invalid signature: ', 'valid': False}
+            assert msg["signature"] == {'message': 'invalid signature: validation failed: required EKU not found (encountered processing <Certificate(subject=<Name(CN=Alice Lovelace)>, ...)>)', 'valid': False}
         q.assert_called_once_with(db, 'id:"foo"')
 
     mf.get_filename.assert_called_once()
@@ -2627,7 +2627,8 @@ def test_send_sign(setup):
                 for part in email_msg.walk():
                     if "signed" in part.get('Content-Type') and "pkcs7-signature" in part.get('Content-Type'):
                         signature = k.smime_verify(part, app.config.custom["accounts"])
-                        assert signature['valid'] == True
+                        assert signature['valid'] == None
+                        assert signature['message'] == 'self-signed or unavailable certificate(s): validation failed: basicConstraints.cA must not be asserted in an EE certificate (encountered processing <Certificate(subject=<Name(C=AU,ST=Some-State,O=Internet Widgits Pty Ltd)>, ...)>)'
 
             assert m.call_count == 4
             hdl = m()
@@ -2729,7 +2730,7 @@ def test_send_sign_self(setup):
                 for part in email_msg.walk():
                     if "signed" in part.get('Content-Type') and "pkcs7-signature" in part.get('Content-Type'):
                         signature = k.smime_verify(part, app.config.custom["accounts"])
-                        assert signature['message'] == 'self-signed or unavailable certificate(s): signed by <Name(C=AU,ST=Some-State,O=Internet Widgits Pty Ltd)>'
+                        assert signature['message'] == 'self-signed or unavailable certificate(s): can\'t create an empty store'
                         assert signature['valid'] == None
 
             assert m.call_count == 3
@@ -2838,7 +2839,7 @@ def test_send_sign_base64_transfer(setup):
                 for part in email_msg.walk():
                     if "signed" in part.get('Content-Type') and "pkcs7-signature" in part.get('Content-Type'):
                         signature = k.smime_verify(part, app.config.custom["accounts"])
-                        assert signature['message'] == 'self-signed or unavailable certificate(s): signed by <Name(C=AU,ST=Some-State,O=Internet Widgits Pty Ltd)>'
+                        assert signature['message'] == 'self-signed or unavailable certificate(s): can\'t create an empty store'
                         assert signature['valid'] == None
             assert m.call_count == 3
             args = m.call_args.args
@@ -2949,7 +2950,7 @@ def test_send_sign_attachment(setup):
                 for part in email_msg.walk():
                     if "signed" in part.get('Content-Type') and "pkcs7-signature" in part.get('Content-Type'):
                         signature = k.smime_verify(part, app.config.custom["accounts"])
-                        assert signature['message'] == 'self-signed or unavailable certificate(s): signed by <Name(C=AU,ST=Some-State,O=Internet Widgits Pty Ltd)>'
+                        assert signature['message'] == 'self-signed or unavailable certificate(s): can\'t create an empty store'
                         assert signature['valid'] == None
 
             assert m.call_count == 3
@@ -3094,7 +3095,7 @@ def test_send_sign_reply_cal(setup):
                             for part in email_msg.walk():
                                 if "signed" in part.get('Content-Type') and "pkcs7-signature" in part.get('Content-Type'):
                                     signature = k.smime_verify(part, app.config.custom["accounts"])
-                                    assert signature['message'] == 'self-signed or unavailable certificate(s): signed by <Name(C=AU,ST=Some-State,O=Internet Widgits Pty Ltd)>'
+                                    assert signature['message'] == 'self-signed or unavailable certificate(s): can\'t create an empty store'
                                     assert signature['valid'] == None
 
                         assert m.call_count == 3

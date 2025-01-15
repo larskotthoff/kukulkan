@@ -107,7 +107,8 @@ in the array is what to replace it with (leave empty to remove matches).
     ],
 
     "gpg-keyserver": "keyserver.ubuntu.com",
-    "ca-bundle": "/etc/ca-certificates/extracted/email-ca-bundle.pem", # for S/MIME verification
+    # required for S/MIME verification
+    "ca-bundle": "/etc/ca-certificates/extracted/email-ca-bundle.pem",
     # if you're running Kukulkan on a different machine to where your browser is
     # and you want external editing on the browser machine, set this to true
     "allow-cross-origin-write": "true",

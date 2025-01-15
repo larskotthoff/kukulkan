@@ -32,11 +32,12 @@ from dateutil.rrule import rrulestr
 from recurrent.event_parser import RecurringEvent
 
 from asn1crypto import core, pem, cms
+from cryptography import x509
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding, ec
 from cryptography.hazmat.primitives.serialization import load_pem_private_key, pkcs7, Encoding
-from cryptography import x509
 from cryptography.hazmat.backends import default_backend
+from cryptography.x509.verification import PolicyBuilder, Store
 
 from bs4 import BeautifulSoup
 
@@ -895,20 +896,16 @@ def smime_verify(part, accts):
             raise ValueError("unknown signature algorithm")
 
         certok = False
-        for trusted_cert in trusted_certs:
-            if x509cert.issuer == trusted_cert.subject:
-                try:
-                    trusted_cert.public_key().verify(
-                        x509cert.signature,
-                        x509cert.tbs_certificate_bytes,
-                        padding.PKCS1v15(),
-                        x509cert.signature_hash_algorithm
-                    )
-                    certok = True
-                    break
-                except Exception as e:
-                    certok = False
-                    message = str(e)
+        try:
+            store = Store(trusted_certs)
+            builder = PolicyBuilder().store(store)
+            verifier = builder.build_client_verifier()
+            verifier.verify(x509cert, [])
+            certok = True
+        except Exception as e:
+            certok = False
+            message = str(e)
+
         if certok is False and message is None:
             message = f"signed by {x509cert.issuer}"
 
