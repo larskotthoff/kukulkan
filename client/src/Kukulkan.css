@@ -224,6 +224,8 @@ button > span {
 
 .alert > span {
     padding-left: .5em;
+    margin-top: auto;
+    margin-bottom: auto;
 }
 
 .message {
@@ -446,6 +448,8 @@ label {
 
 .icon-container {
     display: inline-block;
+    margin-top: auto;
+    margin-bottom: auto;
 }
 
 .icon {
