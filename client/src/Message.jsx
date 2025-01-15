@@ -11,7 +11,7 @@ import { TagComplete } from "./Autocomplete.jsx";
 
 import "./Kukulkan.css";
 import { apiURL, formatDate, formatFSz, strip } from "./utils.js";
-import { mkShortcut, Icon, AttachFile, Cancel, CheckCircle, Forward, Help, Print, ReplyAll, Security, Trash } from "./UiUtils.jsx";
+import { mkShortcut, Icon, AttachFile, Cancel, CheckCircle, Forward, Help, MarkUnread, Print, ReplyAll, Security, Trash } from "./UiUtils.jsx";
 
 export function separateQuotedNonQuoted(text) {
   let lines = text.split('\n'),
@@ -340,6 +340,9 @@ export function Message(props) {
               </a>
               <a id="security" href={secUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
                 <Icon icon={Security}/>
+              </a>
+              <a id="unread" href="#" onClick={() => { if(props.active) { addTag("unread"); }}}>
+                <Icon icon={MarkUnread}/>
               </a>
               <a id="delete" href="#" onClick={() => { if(props.active) { removeTag("unread"); addTag("deleted"); }}}>
                 <Icon icon={Trash}/>
