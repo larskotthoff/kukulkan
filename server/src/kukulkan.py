@@ -257,20 +257,20 @@ def create_app():
             response.headers["X-Frame-Options"] = "SAMEORIGIN"
         return response
 
-    @app.route("/api/query/<path:query_string>")
+    @app.route("/api/query/<string:query_string>")
     def query(query_string):
         threads = get_query(query_string).search_threads()
         return [thread_to_json(t) for t in threads]
 
-    @app.route("/api/address/<path:query_string>")
+    @app.route("/api/address/<string:query_string>")
     def address_complete(query_string):
         return list(email_address_complete(query_string).values())
 
-    @app.route("/api/email/<path:query_string>")
+    @app.route("/api/email/<string:query_string>")
     def email_complete(query_string):
         return list(email_address_complete(query_string).keys())
 
-    @app.route("/api/thread/<path:thread_id>")
+    @app.route("/api/thread/<string:thread_id>")
     def thread(thread_id):
         threads = list(get_query(f'thread:"{thread_id}"', exclude=False).search_threads())
         if not threads:
@@ -280,8 +280,8 @@ def create_app():
         messages = threads[0].get_messages()
         return messages_to_json(messages)
 
-    @app.route("/api/attachment/<path:message_id>/<int:num>")
-    @app.route("/api/attachment/<path:message_id>/<int:num>/<int:scale>")
+    @app.route("/api/attachment/<string:message_id>/<int:num>")
+    @app.route("/api/attachment/<string:message_id>/<int:num>/<int:scale>")
     def attachment(message_id, num, scale=0):
         msg = get_message(message_id)
         d = message_attachment(msg, num)
@@ -303,7 +303,7 @@ def create_app():
         return send_file(f, mimetype=d["content_type"], as_attachment=False,
                          download_name=d["filename"].replace('\n', ''))
 
-    @app.route("/api/attachment_message/<path:message_id>/<int:num>")
+    @app.route("/api/attachment_message/<string:message_id>/<int:num>")
     def attachment_message(message_id, num):
         msg = get_message(message_id)
         d = message_attachment(msg, num)
@@ -311,25 +311,35 @@ def create_app():
             abort(404)
         return eml_to_json(bytes(d["content"]))
 
-    @app.route("/api/message/<path:message_id>")
+    @app.route("/api/message/<string:message_id>")
     def message(message_id):
         msg = get_message(message_id)
         return message_to_json(msg)
 
-    @app.route("/api/raw_message/<path:message_id>")
+    @app.route("/api/raw_message/<string:message_id>")
     def raw_message(message_id):
         msg = get_message(message_id)
         with open(msg.get_filename(), "r", encoding="utf8") as f:
             content = f.read()
         return content
 
-    @app.route("/api/auth_message/<path:message_id>")
+    @app.route("/api/auth_message/<string:message_id>")
     def auth_message(message_id):
         msg = get_message(message_id)
         # https://npm.io/package/mailauth
         return json.loads(os.popen(f"mailauth {msg.get_filename()}").read())['arc']['authResults']
 
-    @app.route("/api/tag/<op>/<string:typ>/<path:nid>/<tag>")
+    @app.route("/api/tag_batch/<string:typ>/<string:nids>/<string:tags>")
+    def change_tags(typ, nids, tags):
+        for nid in nids.split(' '):
+            for tag in tags.split(' '):
+                if(tag[0] == '-'):
+                    change_tag("remove", typ, nid, tag[1:])
+                else:
+                    change_tag("add", typ, nid, tag)
+        return f"{escape(nids)}/{escape(tags)}"
+
+    @app.route("/api/tag/<op>/<string:typ>/<string:nid>/<string:tag>")
     def change_tag(op, typ, nid, tag):
         # pylint: disable=no-member
         db_write = notmuch.Database(None, create=False, mode=notmuch.Database.MODE.READ_WRITE)

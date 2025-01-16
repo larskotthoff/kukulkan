@@ -20,31 +20,29 @@ export function Kukulkan(props) {
   function makeTagEdits() {
     let affectedThreads = selectedThreads();
     if(affectedThreads.length === 0) affectedThreads = [activeThread()];
-    affectedThreads.forEach(affectedThread => {
-      const thread = JSON.parse(JSON.stringify(threads()[affectedThread])),
-            urls = editingTags().split(' ').map((edit) => {
-              if(edit[0] === '-') {
-                thread.tags = thread.tags.filter(t => t !== edit.substring(1));
-                return apiURL(`api/tag/remove/thread/${encodeURIComponent(thread.thread_id)}/${encodeURIComponent(edit.substring(1))}`);
-              } else {
-                if(thread.tags.indexOf(edit) === -1) thread.tags.push(edit);
-                return apiURL(`api/tag/add/thread/${encodeURIComponent(thread.thread_id)}/${encodeURIComponent(edit)}`);
-              }
-            });
-      let done = 0;
-      props.sp?.(0);
-      // eslint-disable-next-line solid/reactivity
-      Promise.all(urls.map((u) => fetch(u).then((response) => {
-        done += 1;
-        props.sp?.(done / urls.length);
-        if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
-      // eslint-disable-next-line solid/reactivity
-      }))).then(() => setThreads([...threads().slice(0, affectedThread), thread, ...threads().slice(affectedThread + 1)]))
-      // eslint-disable-next-line solid/reactivity
-      .finally(() => props.sp?.(1));
-    });
-    setEditingTags("");
-    setSelectedThreads([]);
+    const affectedThreadIds = affectedThreads.map(t => threads()[t].thread_id),
+          url = apiURL(`api/tag_batch/thread/${encodeURIComponent(affectedThreadIds.join(' '))}/${encodeURIComponent(editingTags())}`);
+    props.sp?.(0);
+
+    fetch(url).then((response) => {
+      if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
+    // eslint-disable-next-line solid/reactivity
+    }).then(() => {
+      affectedThreads.forEach(affectedThread => {
+        const thread = JSON.parse(JSON.stringify(threads()[affectedThread]));
+        editingTags().split(' ').map((edit) => {
+          if(edit[0] === '-') {
+            thread.tags = thread.tags.filter(t => t !== edit.substring(1));
+          } else {
+            if(thread.tags.indexOf(edit) === -1) thread.tags.push(edit);
+          }
+        });
+        setThreads([...threads().slice(0, affectedThread), thread, ...threads().slice(affectedThread + 1)]);
+      });
+      setEditingTags("");
+      setSelectedThreads([]);
+    // eslint-disable-next-line solid/reactivity
+    }).finally(() => props.sp?.(1));
   }
 
   createEffect(on(activeThread, () => {
@@ -127,7 +125,6 @@ export function Kukulkan(props) {
   function deleteActive() {
     setEditingTags("deleted -unread");
     makeTagEdits();
-    setEditingTags("");
   }
 
   // eslint-disable-next-line solid/reactivity

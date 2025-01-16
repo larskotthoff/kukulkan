@@ -189,22 +189,21 @@ export function Message(props) {
         {mainPart, quotedPart} = separateQuotedNonQuoted(msg.body["text/plain"]);
   let elementTop;
 
-  async function removeTag(tag) {
+  async function changeTags(tagChanges) {
     props.sp?.(0);
-    const response = await fetch(apiURL(`api/tag/remove/message/${encodeURIComponent(msg.notmuch_id)}/${encodeURIComponent(tag)}`));
+    const response = await fetch(apiURL(`api/tag_batch/message/${encodeURIComponent(msg.notmuch_id)}/${encodeURIComponent(tagChanges)}`));
     props.sp?.(1);
     if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
-    setTags(tags().filter((t) => t !== tag));
-    msg.tags = tags();
-  }
-
-  async function addTag(tag) {
-    props.sp?.(0);
-    const response = await fetch(apiURL(`api/tag/add/message/${encodeURIComponent(msg.notmuch_id)}/${encodeURIComponent(tag)}`));
-    props.sp?.(1);
-    if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
-    const tmp = tags().concat(tag);
-    setTags(tmp.sort());
+    tagChanges.split(' ').forEach((edit) => {
+      if(edit[0] === '-') {
+        setTags(tags().filter((t) => t !== edit.substring(1)));
+      } else {
+        if(tags().indexOf(edit) === -1) {
+          const tmp = tags().concat(edit);
+          setTags(tmp.sort());
+        }
+      }
+    });
     msg.tags = tags();
   }
 
@@ -232,7 +231,7 @@ export function Message(props) {
     if(props.active) {
       elementTop?.scrollIntoView({block: "nearest"});
       document.title = msg.subject || "Kukulkan";
-      if(msg.tags.includes("unread")) setTimeout(() => removeTag("unread"), 500);
+      if(msg.tags.includes("unread")) setTimeout(() => changeTags("-unread"), 500);
     }
   }));
 
@@ -328,10 +327,10 @@ export function Message(props) {
               id="editTags"
               tags={tags()}
               addTag={(tagToAdd) => {
-                addTag(tagToAdd);
+                changeTags(tagToAdd);
               }}
               removeTag={(tagToRemove) => {
-                removeTag(tagToRemove);
+                changeTags('-' + tagToRemove);
               }}
             />
             <div class="message-action-icons">
@@ -347,10 +346,10 @@ export function Message(props) {
               <a id="security" href={secUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
                 <Icon icon={Security}/>
               </a>
-              <a id="unread" href="#" onClick={() => { if(props.active) { addTag("unread"); }}}>
+              <a id="unread" href="#" onClick={() => { if(props.active) { changeTags("unread"); }}}>
                 <Icon icon={MarkUnread}/>
               </a>
-              <a id="delete" href="#" onClick={() => { if(props.active) { removeTag("unread"); addTag("deleted"); }}}>
+              <a id="delete" href="#" onClick={() => { if(props.active) { changeTags("-unread deleted"); }}}>
                 <Icon icon={Trash}/>
               </a>
             </div>

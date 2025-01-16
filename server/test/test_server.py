@@ -417,6 +417,100 @@ def test_tag_remove_thread(setup):
     dbw.close.assert_called_once()
 
 
+def test_tags_add_message_batch(setup):
+    app, db = setup
+
+    dbw = lambda: None
+    dbw.close = MagicMock()
+    dbw.begin_atomic = MagicMock()
+    dbw.end_atomic = MagicMock()
+
+    mf = lambda: None
+    mf.add_tag = MagicMock()
+    mf.remove_tag = MagicMock()
+    mf.tags_to_maildir_flags = MagicMock()
+
+    mq = lambda: None
+    mq.search_messages = MagicMock()
+    mq.search_messages.side_effect = [iter([mf]), iter([mf]), iter([mf]), iter([mf])]
+
+    with patch("notmuch.Database", return_value=dbw):
+        with patch("notmuch.Query", return_value=mq) as q:
+            with app.test_client() as test_client:
+                response = test_client.get('/api/tag_batch/message/foo1 foo2/bar1 -bar2')
+                assert response.status_code == 200
+                assert b'foo1 foo2/bar1 -bar2' == response.data
+            assert q.mock_calls == [
+                call(dbw, 'id:"foo1" and not tag:bar1'),
+                call(dbw, 'id:"foo1" and tag:bar2'),
+                call(dbw, 'id:"foo2" and not tag:bar1'),
+                call(dbw, 'id:"foo2" and tag:bar2')
+            ]
+
+    assert mf.add_tag.mock_calls == [
+        call('bar1'),
+        call('bar1'),
+    ]
+    assert mf.remove_tag.mock_calls == [
+        call('bar2'),
+        call('bar2'),
+    ]
+    assert mf.tags_to_maildir_flags.call_count == 4
+
+    assert mq.search_messages.call_count == 4
+
+    assert dbw.begin_atomic.call_count == 4
+    assert dbw.end_atomic.call_count == 4
+    assert dbw.close.call_count == 4
+
+
+def test_tags_add_thread_batch(setup):
+    app, db = setup
+
+    dbw = lambda: None
+    dbw.close = MagicMock()
+    dbw.begin_atomic = MagicMock()
+    dbw.end_atomic = MagicMock()
+
+    mf = lambda: None
+    mf.add_tag = MagicMock()
+    mf.remove_tag = MagicMock()
+    mf.tags_to_maildir_flags = MagicMock()
+
+    mq = lambda: None
+    mq.search_messages = MagicMock()
+    mq.search_messages.side_effect = [iter([mf]), iter([mf]), iter([mf]), iter([mf])]
+
+    with patch("notmuch.Database", return_value=dbw):
+        with patch("notmuch.Query", return_value=mq) as q:
+            with app.test_client() as test_client:
+                response = test_client.get('/api/tag_batch/thread/foo1 foo2/bar1 -bar2')
+                assert response.status_code == 200
+                assert b'foo1 foo2/bar1 -bar2' == response.data
+            assert q.mock_calls == [
+                call(dbw, 'thread:"foo1" and not tag:bar1'),
+                call(dbw, 'thread:"foo1" and tag:bar2'),
+                call(dbw, 'thread:"foo2" and not tag:bar1'),
+                call(dbw, 'thread:"foo2" and tag:bar2')
+            ]
+
+    assert mf.add_tag.mock_calls == [
+        call('bar1'),
+        call('bar1'),
+    ]
+    assert mf.remove_tag.mock_calls == [
+        call('bar2'),
+        call('bar2'),
+    ]
+    assert mf.tags_to_maildir_flags.call_count == 4
+
+    assert mq.search_messages.call_count == 4
+
+    assert dbw.begin_atomic.call_count == 4
+    assert dbw.end_atomic.call_count == 4
+    assert dbw.close.call_count == 4
+
+
 def test_attachment_no_attachment(setup):
     app, db = setup
 

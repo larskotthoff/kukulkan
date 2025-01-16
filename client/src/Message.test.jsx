@@ -249,7 +249,7 @@ test("allows to edit tags", async () => {
   // remove tag
   await userEvent.click(getByTestId("test"));
   expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/remove/message/fo%40o/test");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/message/fo%40o/-test");
   expect(screen.getByText("foo")).toBeInTheDocument();
   expect(screen.getByText("bar")).toBeInTheDocument();
   expect(screen.queryByText("test")).not.toBeInTheDocument();
@@ -258,8 +258,8 @@ test("allows to edit tags", async () => {
   const input = container.querySelector("input");
   await userEvent.type(input, "testTag{enter}");
   expect(global.fetch).toHaveBeenCalledTimes(2);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/remove/message/fo%40o/test");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/add/message/fo%40o/testTag");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/message/fo%40o/-test");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/message/fo%40o/testTag");
   expect(screen.getByText("foo")).toBeInTheDocument();
   expect(screen.getByText("bar")).toBeInTheDocument();
   expect(screen.getByText("testTag")).toBeInTheDocument();
@@ -267,9 +267,9 @@ test("allows to edit tags", async () => {
   // remove tag
   await userEvent.type(input, "{backspace}");
   expect(global.fetch).toHaveBeenCalledTimes(3);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/remove/message/fo%40o/test");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/add/message/fo%40o/testTag");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/remove/message/fo%40o/testTag");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/message/fo%40o/-test");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/message/fo%40o/testTag");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/message/fo%40o/-testTag");
   expect(screen.getByText("foo")).toBeInTheDocument();
   expect(screen.getByText("bar")).toBeInTheDocument();
   expect(screen.queryByText("testTag")).not.toBeInTheDocument();
@@ -286,7 +286,7 @@ test("automatically removes unread tag", async () => {
     expect(screen.queryByText("unread")).not.toBeInTheDocument();
   });
   expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/remove/message/fo%40o/unread");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/message/fo%40o/-unread");
 
   expect(screen.getByText("foo")).toBeInTheDocument();
   expect(screen.queryByText("unread")).not.toBeInTheDocument();
@@ -300,9 +300,8 @@ test("delete shortcut works", async () => {
 
   global.fetch.mockResolvedValue({ ok: true });
   await userEvent.type(document.body, "{delete}");
-  expect(global.fetch).toHaveBeenCalledTimes(2);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/remove/message/fo%40o/unread");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag/add/message/fo%40o/deleted");
+  expect(global.fetch).toHaveBeenCalledTimes(1);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/message/fo%40o/-unread%20deleted");
   expect(screen.queryByText("unread")).not.toBeInTheDocument();
   expect(screen.getByText("deleted")).toBeInTheDocument();
 });
