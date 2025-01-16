@@ -1052,10 +1052,10 @@ def message_attachment(message, num=-1):
     """Returns attachment no. `num` of a `notmuch.message.Message` instance."""
     email_msg = email_from_notmuch(message)
     attachments = get_attachments(email_msg, True)
-    if not attachments or num > len(attachments) - 1:
-        return None
     if num == -1:
         return attachments
+    if not attachments or num > len(attachments) - 1:
+        return None
     return attachments[num]
 
 
