@@ -282,6 +282,12 @@ export function Message(props) {
     () => { if(props.active) document.querySelector("button.toggle-content")?.click(); }
   );
 
+  mkShortcut([["u"]],
+    // eslint-disable-next-line solid/reactivity
+    () => { if(props.active) document.querySelector("a[id='unread']")?.click(); },
+    true
+  );
+
   mkShortcut([["Delete"]],
     // eslint-disable-next-line solid/reactivity
     () => { if(props.active) document.querySelector("a[id='delete']")?.click(); },

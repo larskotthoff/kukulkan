@@ -260,6 +260,7 @@ For the active message:
 - t: focus tag input to change tags
 - c: toggle between displaying plain text and HTML content
 - e: toggle expanded/abbreviated quoted text in plain text view
+- u: apply tag "unread"
 - Delete: apply tag "deleted", remove tag "unread"
 - p: open print view of message
 - s: open security view of message (checks DMARC etc, requires [mailauth](https://github.com/postalsys/mailauth))
