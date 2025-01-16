@@ -232,7 +232,7 @@ export function Write(props) {
     const eventSource = new EventSource(apiURL(`api/send_progress/${sendId}`));
 
     eventSource.onopen = function() {
-        props.sp?.(0.01);
+        props.sp?.(0);
     }
 
     eventSource.onmessage = function(message) {

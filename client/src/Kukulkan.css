@@ -1,7 +1,7 @@
 :root {
     --fonts: Fira Sans, Roboto, Hack, sans;
     --primary-background: #fff8e1;
-    --primary-background-darker: oklch(from var(--primary-background) calc(l * 0.3) c h);
+    --primary-background-darker: oklch(from var(--primary-background) calc(l * 0.6) c h);
     --secondary-background: #f0f4c3;
 }
 
