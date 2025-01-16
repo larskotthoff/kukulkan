@@ -72,7 +72,7 @@ export function SearchThreads(props) {
   }
 
   // eslint-disable-next-line solid/reactivity
-  handleSwipe(document.body, props.deleteActive, Trash, props.tagActive, Tag);
+  handleSwipe(document.body, (el) => el.closest(".thread"), props.deleteActive, Trash, props.tagActive, Tag);
 
   return (
     <div class="centered clipped vertical-stack" style={{ 'width': "95%" }}>

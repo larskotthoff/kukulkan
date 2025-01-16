@@ -165,7 +165,7 @@ export function TodoThreads(props) {
   }
 
   // eslint-disable-next-line solid/reactivity
-  handleSwipe(document.body, props.doneActive, TaskAlt, props.tagActive, Tag);
+  handleSwipe(document.body, (el) => el.closest(".thread"), props.doneActive, TaskAlt, props.tagActive, Tag);
 
   // reload at midnight for correct due dates for new date
   const loadDate = new Date();

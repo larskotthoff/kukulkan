@@ -122,7 +122,7 @@ export function Thread(props) {
   // eslint-disable-next-line solid/reactivity
   mkShortcut([["l"], ["ArrowRight"]], increaseActiveDepth);
   // eslint-disable-next-line solid/reactivity
-  handleSwipe(document.body, increaseActiveDepth, null, decreaseActiveDepth, null);
+  handleSwipe(document.body, () => document.querySelector(".message-container"), increaseActiveDepth, null, decreaseActiveDepth, null);
 
   mkShortcut([["Shift", "F"]],
     // eslint-disable-next-line solid/reactivity
@@ -176,7 +176,7 @@ export function Thread(props) {
       <Show when={activeMessage() > -1}>
         <div class="centered horizontal-stack">
           <ThreadNav/>
-          <div class="centered vertical-stack">
+          <div class="message-container centered vertical-stack">
             <For each={filteredThread()}>
               {(m, i) => <Message msg={m} active={i() === activeMessage()} sp={props.sp}
                 onClick={(e) => {

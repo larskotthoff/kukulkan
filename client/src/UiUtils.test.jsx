@@ -78,7 +78,7 @@ test("mkShortcut doesn't trigger inside input-likes", async () => {
 test("handleSwipe works", async () => {
   let left = 0, right = 0;
 
-  handleSwipe(document.body, () => left += 1, null, () => right += 1, null);
+  handleSwipe(document.body, null, () => left += 1, null, () => right += 1, null);
   expect(left).toBe(0);
   expect(right).toBe(0);
 
@@ -113,7 +113,7 @@ test("handleSwipe doesn't trigger under threshold or with vertical swipe", async
   Object.defineProperty(window.screen, 'height', { value: 1024 });
   let left = 0, right = 0;
 
-  handleSwipe(document.body, () => left += 1, null, () => right += 1, null);
+  handleSwipe(document.body, null, () => left += 1, null, () => right += 1, null);
   expect(left).toBe(0);
   expect(right).toBe(0);
 
@@ -147,9 +147,8 @@ test("handleSwipe doesn't trigger under threshold or with vertical swipe", async
 test("handleSwipe shows indicators and adjust position of swiped element", async () => {
   Object.defineProperty(window.screen, 'width', { value: 1024 });
   const el = document.createElement("div");
-  el.classList.add("thread");
 
-  handleSwipe(el, () => 1, "leftTest", () => 1, "rightTest");
+  handleSwipe(el, () => el, () => 1, "leftTest", () => 1, "rightTest");
 
   // too little movement to adjust element position
   let tt = createTouchEvent(0, 0, 'touchstart');
