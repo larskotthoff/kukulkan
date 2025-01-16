@@ -288,6 +288,18 @@ whether this overlaps with existing shortcuts.
 Click on addresses/tags to remove them, or press Backspace in the respective
 edit field to remove the last address/tag.
 
+### Completions
+
+Completions for chips (with colored background) require two presses of Enter to
+be completed -- one to select from the completion menu, a second to confirm that
+this should be a chip. This is to allow the user to manually adjust completed
+entries.
+
+This can cause issues on phones, where virtual keyboards sometimes don't allow
+two Enters but advance to the next input field or something like that. To
+confirm the chip, you can also enter two spaces. This will result in a spurious
+space, but that should have no ill effects.
+
 ### Settings
 
 Available at `/settings`

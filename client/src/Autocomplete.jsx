@@ -147,6 +147,7 @@ export function Autocomplete(props) {
 
 export function ChipComplete(props) {
   const [toAdd, setToAdd] = createSignal();
+  let seenSpace = false;
 
   return (
     <Autocomplete
@@ -158,6 +159,14 @@ export function ChipComplete(props) {
         if((ev.code === 'Enter' || ev.key === 'Enter') && toAdd()) {
           props.addChip(toAdd());
           setToAdd(null);
+        } else if((ev.code === 'Space' || ev.key === 'Space') && toAdd()) {
+          if(seenSpace) {
+            props.addChip(toAdd());
+            setToAdd(null);
+            seenSpace = false;
+          } else {
+            seenSpace = true;
+          }
         } else if((ev.code === 'Backspace' || ev.key === 'Backspace') && !toAdd()) {
           const tmp = JSON.parse(JSON.stringify(props.chips)),
                 chip = tmp.pop();
