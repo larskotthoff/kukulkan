@@ -10,7 +10,7 @@ export function Autocomplete(props) {
         [inputRef, setInputRef] = createSignal(),
         [sortedOptions, setSortedOptions] = createSignal([]),
         // eslint-disable-next-line solid/reactivity
-        {text, setText, getOptions, handleKey, children, onBlur, onFocus, sort, ...spreadProps} = props;
+        {text, setText, getOptions, handleKey, children, onBlur, onFocus, onInput, sort, ...spreadProps} = props;
 
   // sort options such that:
   // - options that start with the search text come first
@@ -122,6 +122,7 @@ export function Autocomplete(props) {
         onInput={(ev) => {
           setText(ev.target.value);
           getSortedOptions();
+          if(typeof onInput === 'function') onInput(ev);
         }}
         onKeyDown={handleKeydown}
         autoComplete="off"
@@ -151,7 +152,6 @@ export function Autocomplete(props) {
 
 export function ChipComplete(props) {
   const [toAdd, setToAdd] = createSignal();
-  let seenSpace = false;
 
   return (
     <Autocomplete
@@ -163,18 +163,18 @@ export function ChipComplete(props) {
         if((ev.code === 'Enter' || ev.key === 'Enter') && toAdd()) {
           props.addChip(toAdd());
           setToAdd(null);
-        } else if((ev.code === ' ' || ev.key === ' ') && toAdd()) {
-          if(seenSpace) {
-            props.addChip(toAdd());
-            setToAdd(null);
-            seenSpace = false;
-          } else {
-            seenSpace = true;
-          }
         } else if((ev.code === 'Backspace' || ev.key === 'Backspace') && !toAdd()) {
           const tmp = JSON.parse(JSON.stringify(props.chips)),
                 chip = tmp.pop();
           props.removeChip(chip);
+        }
+      }}
+      onInput={(ev) => {
+        // chrome on android doesn't set key codes in events, so we have to
+        // handle the double space to complete this way
+        if(ev.target.value.endsWith("  ")) {
+          props.addChip(toAdd());
+          setToAdd(null);
         }
       }}
       {...props}>

@@ -193,7 +193,7 @@ test("ChipComplete works with double space", async () => {
   expect(add).toBe("");
   await userEvent.type(input, "{arrowdown}");
   await userEvent.type(input, "{enter}  ");
-  expect(add).toBe("foobar ");
+  expect(add).toBe("foobar  ");
 });
 
 test("TagComplete works", async () => {
