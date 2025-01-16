@@ -52,29 +52,29 @@ export function Autocomplete(props) {
 
   function handleKeydown(ev) {
     let wasVisible = isVisible();
-    if (ev.code === 'ArrowUp') {
+    if(ev.code === 'ArrowUp' || ev.key === 'ArrowUp') {
       setSelected(prev => prev === 0 ? (sortedOptions().length - 1) : prev - 1);
       try {
         document.getElementsByClassName("autocomplete-popup")[0]?.getElementsByClassName("selected")[0]?.scrollIntoView({block: "nearest"});
       // eslint-disable-next-line no-unused-vars
       } catch(e) {;}
       ev.preventDefault();
-    } else if (ev.code === 'ArrowDown') {
+    } else if(ev.code === 'ArrowDown' || ev.key === 'ArrowDown') {
       setSelected(prev => prev + 1 === sortedOptions().length ? 0 : prev + 1);
       try {
         document.getElementsByClassName("autocomplete-popup")[0]?.getElementsByClassName("selected")[0]?.scrollIntoView({block: "nearest"});
       // eslint-disable-next-line no-unused-vars
       } catch(e) {;}
       ev.preventDefault();
-    } else if (ev.code === 'Enter' || ev.key === 'Enter') {
+    } else if(ev.code === 'Enter' || ev.key === 'Enter') {
       select();
-    } else if (ev.code === 'Escape') {
+    } else if(ev.code === 'Escape' || ev.key === 'Escape') {
       if(showPopover()) {
         setShowPopover(false);
       } else {
         inputRef().blur();
       }
-    } else if (ev.code === 'Space') {
+    } else if(ev.code === ' ' || ev.key === ' ') {
       setShowPopover(false);
     } else {
       setShowPopover(true);
@@ -163,7 +163,7 @@ export function ChipComplete(props) {
         if((ev.code === 'Enter' || ev.key === 'Enter') && toAdd()) {
           props.addChip(toAdd());
           setToAdd(null);
-        } else if((ev.code === 'Space' || ev.key === 'Space') && toAdd()) {
+        } else if((ev.code === ' ' || ev.key === ' ') && toAdd()) {
           if(seenSpace) {
             props.addChip(toAdd());
             setToAdd(null);
