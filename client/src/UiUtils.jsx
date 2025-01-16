@@ -37,8 +37,6 @@ export function handleSwipe(el, indicatorSelector, left, leftIcon, right, rightI
   el.ontouchstart = (ev => {
     initialPos.x = ev.touches.item(0).clientX;
     initialPos.y = ev.touches.item(0).clientY;
-    indicator = typeof indicatorSelector === 'function' ? indicatorSelector(ev.target) : null;
-    if(indicator) indicator.style.position = "relative";
   });
 
   el.ontouchcancel = reset;
@@ -47,8 +45,12 @@ export function handleSwipe(el, indicatorSelector, left, leftIcon, right, rightI
     finalPos.x = ev.touches.item(0).clientX;
     finalPos.y = ev.touches.item(0).clientY;
     const diff = { x: finalPos.x - initialPos.x, y: finalPos.y - initialPos.y };
-    if(shouldShow(diff) && indicator) {
-      indicator.style.left = diff.x + "px";
+    if(shouldShow(diff)) {
+      if(!indicator) indicator = typeof indicatorSelector === 'function' ? indicatorSelector(ev.target) : null;
+      if(indicator) {
+        indicator.style.position = "relative";
+        indicator.style.left = diff.x + "px";
+      }
     }
 
     if(shouldTrigger(diff) && triggerEl === null) {
