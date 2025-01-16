@@ -66,6 +66,8 @@ button {
 
 button > span {
     padding-left: .2em;
+    margin-top: auto;
+    margin-bottom: auto;
 }
 
 .centered {
