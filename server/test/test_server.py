@@ -2540,7 +2540,7 @@ def test_send_forward_original_html(setup):
                                       "additional_sent_tags": ["test"]}]
 
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/clean-html.eml")
+    mf.get_filename = MagicMock(return_value="test/mails/multipart-html-text.eml")
     mf.add_tag = MagicMock()
     mf.tags_to_maildir_flags = MagicMock()
 
@@ -2552,62 +2552,63 @@ def test_send_forward_original_html(setup):
     mq.search_messages.side_effect = [iter([mf]), iter([mf])]
 
     with patch("notmuch.Query", return_value=mq) as q:
-        with patch("src.kukulkan.message_attachment", return_value=[]) as ma:
-            with patch("src.kukulkan.email_from_notmuch", return_value=email) as efn:
-                with patch("notmuch.Database", return_value=dbw):
-                    with patch("builtins.open", mock_open()) as m:
-                        text = None
-                        with app.test_client() as test_client:
-                            response = test_client.post('/api/send', data=pd)
-                            assert response.status_code == 202
-                            sid = response.json["send_id"]
-                            assert sid != None
-                            response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
-                            assert response.status_code == 200
-                            status = None
-                            response_iter = response.response.__iter__()
-                            try:
-                                while (chunk := next(response_iter)) is not None:
-                                    lines = chunk.decode().strip().split('\n\n')
-                                    for line in lines:
-                                        if line.startswith('data: '):
-                                            data = json.loads(line[6:])
-                                            if 'send_status' in data and data['send_status'] != 'sending':
-                                                status = data['send_status']
-                                                text = data['send_output']
-                                                break
-                            except StopIteration:
-                                pass
-                            assert status == 0
-                            assert "Content-Type: text/plain; charset=\"utf-8\"" in text
-                            assert "Content-Transfer-Encoding: 7bit" in text
-                            assert "MIME-Version: 1.0" in text
-                            assert "Subject: test" in text
-                            assert "From: Foo Bar <foo@bar.com>" in text
-                            assert "To: bar" in text
-                            assert "Cc:" in text
-                            assert "Bcc:" in text
-                            assert "Date: " in text
-                            assert "Message-ID: <" in text
-                            assert "\n\nfoobar\n" in text
-                            assert "Content-Type: text/html; charset=\"utf-8\"" in text
-                            assert "Content-Transfer-Encoding: 7bit" in text
-                            assert "Content-Disposition: attachment" in text
-                            assert "MIME-Version: 1.0" in text
-                            assert "<a href=\"https://example.com\">foo</a>" in text
-                        m.assert_called_once()
-                        args = m.call_args.args
-                        assert "kukulkan" in args[0]
-                        assert "folder" in args[0]
-                        assert ":2,S" in args[0]
-                        assert args[1] == "w"
-                        hdl = m()
-                        hdl.write.assert_called_once()
-                        args = hdl.write.call_args.args
-                        assert text == args[0]
+        with patch("src.kukulkan.email_from_notmuch", return_value=email) as efn:
+            with patch("notmuch.Database", return_value=dbw):
+                with patch("builtins.open", mock_open()) as m:
+                    text = None
+                    with app.test_client() as test_client:
+                        response = test_client.post('/api/send', data=pd)
+                        assert response.status_code == 202
+                        sid = response.json["send_id"]
+                        assert sid != None
+                        response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
+                        assert response.status_code == 200
+                        status = None
+                        response_iter = response.response.__iter__()
+                        try:
+                            while (chunk := next(response_iter)) is not None:
+                                lines = chunk.decode().strip().split('\n\n')
+                                for line in lines:
+                                    if line.startswith('data: '):
+                                        data = json.loads(line[6:])
+                                        if 'send_status' in data and data['send_status'] != 'sending':
+                                            status = data['send_status']
+                                            text = data['send_output']
+                                            break
+                        except StopIteration:
+                            pass
+                        assert status == 0
+                        assert "Content-Type: text/plain; charset=\"utf-8\"" in text
+                        assert "Content-Transfer-Encoding: 7bit" in text
+                        assert "MIME-Version: 1.0" in text
+                        assert "Subject: test" in text
+                        assert "From: Foo Bar <foo@bar.com>" in text
+                        assert "To: bar" in text
+                        assert "Cc:" in text
+                        assert "Bcc:" in text
+                        assert "Date: " in text
+                        assert "Message-ID: <" in text
+                        assert "\n\nfoobar\n" in text
+                        assert "Content-Type: text/html; charset=\"utf-8\"" in text
+                        assert "Content-Transfer-Encoding: 7bit" in text
+                        assert "Content-Disposition: attachment" in text
+                        assert "MIME-Version: 1.0" in text
+                        assert "<div dir=3D\"ltr\">credit card: 123456098712<div>" in text
+                    m.assert_called_once()
+                    args = m.call_args.args
+                    assert "kukulkan" in args[0]
+                    assert "folder" in args[0]
+                    assert ":2,S" in args[0]
+                    assert args[1] == "w"
+                    hdl = m()
+                    hdl.write.assert_called_once()
+                    args = hdl.write.call_args.args
+                    assert text == args[0]
 
-                efn.assert_called_once_with(mf)
-            ma.assert_called_once_with(mf)
+            assert efn.mock_calls == [
+                call(mf),
+                call(mf)
+            ]
 
         q.assert_has_calls([call(db, 'id:"oldFoo"'), call(dbw, "id:oldFoo")])
 

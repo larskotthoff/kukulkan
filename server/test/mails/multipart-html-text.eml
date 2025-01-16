@@ -1,0 +1,23 @@
+MIME-Version: 1.0
+Date: Thu, 18 Jul 2024 11:59:35 +0100
+Message-ID: <CAKaJnP3B_VbHo0zbpKWxNjgojeXanBipF=gq6PrA-Lv7qR7a9w@mail.gmail.com>
+Subject: sensitive data test
+From: Johnny Quest <johnny.quest@org_email_address.com>
+To: Johnny Quest <johnny.quest@org_email_address.com>
+Content-Type: multipart/alternative; boundary="0000000000006f12a2061d8379ad"
+
+--0000000000006f12a2061d8379ad
+Content-Type: text/plain; charset="UTF-8"
+
+credit card: 123456098712
+passport number: 780381-23345
+address: 10 Downing Street SW1A 2AA.
+
+--0000000000006f12a2061d8379ad
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr">credit card: 123456098712<div>passport=C2=A0number: 780381=
+-23345</div><div>address: 10 Downing Street=C2=A0SW1A 2AA.</div></div>
+
+--0000000000006f12a2061d8379ad--
