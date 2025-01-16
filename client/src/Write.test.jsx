@@ -370,7 +370,7 @@ test("addresses editable and complete", async () => {
       signal: expect.any(AbortSignal),
     }));
   await userEvent.type(input, "{enter}{enter}");
-  expect(screen.getByText("bar@foo.com")).toBeInTheDocument();
+  expect(screen.getByText("foo@bar.com")).toBeInTheDocument();
   await userEvent.type(input, "{backspace}");
   expect(screen.queryByText("bar@foo.com")).not.toBeInTheDocument();
 

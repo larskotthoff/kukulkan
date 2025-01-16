@@ -10,7 +10,7 @@ export function Autocomplete(props) {
         [inputRef, setInputRef] = createSignal(),
         [sortedOptions, setSortedOptions] = createSignal([]),
         // eslint-disable-next-line solid/reactivity
-        {text, setText, getOptions, handleKey, children, onBlur, onFocus, ...spreadProps} = props;
+        {text, setText, getOptions, handleKey, children, onBlur, onFocus, sort, ...spreadProps} = props;
 
   // sort options such that:
   // - options that start with the search text come first
@@ -43,7 +43,11 @@ export function Autocomplete(props) {
 
   async function getSortedOptions() {
     const options = await getOptions(text());
-    setSortedOptions(options.sort(cmp));
+    if(sort === false) {
+      setSortedOptions(options);
+    } else {
+      setSortedOptions(options.sort(cmp));
+    }
   }
 
   function handleKeydown(ev) {
