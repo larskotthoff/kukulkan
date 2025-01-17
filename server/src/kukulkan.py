@@ -347,8 +347,6 @@ def create_app():
         query = f"{id_type}:{nid} and {tag_prefix}tag:{tag}"
         db_write = notmuch.Database(None, create=False, mode=notmuch.Database.MODE.READ_WRITE)
         msgs = list(get_query(query, db_write, False).search_messages())
-        if len(msgs) == 0:
-            abort(404)
         try:
             db_write.begin_atomic()
             for msg in msgs:

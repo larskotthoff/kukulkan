@@ -285,31 +285,6 @@ def test_raw_message(setup):
     mq.search_messages.assert_called_once()
 
 
-def test_tag_add_message_none(setup):
-    app, db = setup
-
-    dbw = lambda: None
-    dbw.close = MagicMock()
-    dbw.begin_atomic = MagicMock()
-    dbw.end_atomic = MagicMock()
-
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([]))
-
-    with patch("notmuch.Database", return_value=dbw):
-        with patch("notmuch.Query", return_value=mq) as q:
-            with app.test_client() as test_client:
-                response = test_client.get('/api/tag/add/message/foo/bar')
-                assert response.status_code == 404
-            q.assert_called_once_with(dbw, 'id:foo and not tag:bar')
-
-    mq.search_messages.assert_called_once()
-
-    assert dbw.begin_atomic.call_count == 0
-    assert dbw.end_atomic.call_count == 0
-    assert dbw.close.call_count == 0
-
-
 def test_tag_add_message(setup):
     app, db = setup
 
