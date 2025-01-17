@@ -98,9 +98,6 @@ export function SearchThreads(props) {
               props.setActiveThread(index());
               props.openActive();
             }}
-            onTouchStart={() => {
-              props.setActiveThread(index());
-            }}
           >
             <div ref={e => wideNarrowObserver?.observe(e)}>
               <div class="narrow">

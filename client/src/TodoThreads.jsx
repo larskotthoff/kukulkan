@@ -195,9 +195,6 @@ export function TodoThreads(props) {
                 props.setActiveThread(index());
                 props.openActive();
               }}
-              onTouchStart={() => {
-                props.setActiveThread(index());
-              }}
               onMouseEnter={() => {
                 const calElem = document.getElementsByClassName("calendar")[0];
                 prevScrollPos = { left: calElem?.scrollLeft, top: calElem?.scrollTop };
