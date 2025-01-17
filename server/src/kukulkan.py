@@ -117,6 +117,7 @@ def split_email_addresses(header):
     addresses = re.findall(r'([^,][^@]*@[^,]+)', header.replace('\t', ' '))
     return [addr.strip() for addr in addresses]
 
+
 def get_db():
     """Get a new `Database` instance. Called before every request. Cached on first call."""
     if "db" not in g:

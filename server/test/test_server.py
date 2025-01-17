@@ -18,6 +18,27 @@ def test_split_email_addresses():
     assert ["\"Bar, Foo\" <foo@bar.com>", "\"Foo, Bar\" <bar@foo.com>"] == k.split_email_addresses("\"Bar, Foo\" <foo@bar.com>, \"Foo, Bar\" <bar@foo.com>")
     assert ["Bar, Foo <foo@bar.com>", "Foo, Bar <bar@foo.com>"] == k.split_email_addresses("Bar, Foo <foo@bar.com>, Foo, Bar <bar@foo.com>")
 
+
+def test_extract_name_from_email():
+    assert "(no author)" == k.extract_name_from_email(None)
+    assert "foo@bar.com" == k.extract_name_from_email("foo@bar.com")
+    assert "foo@bar.com" == k.extract_name_from_email("<foo@bar.com>")
+    assert "Foo Bar" == k.extract_name_from_email("Foo Bar <foo@bar.com>")
+    assert "Bar, Foo" == k.extract_name_from_email("\"Bar, Foo\" <foo@bar.com>")
+    assert "Bar, Foo" == k.extract_name_from_email("Bar, Foo <foo@bar.com>")
+    assert "Bar, Foo" == k.extract_name_from_email("Bar, Foo, <foo@bar.com>")
+
+
+def test_email_addresses_header():
+    assert "foo@bar.com" == k.email_addresses_header("foo@bar.com")
+    assert "foo@bar.com, bar@foo.com" == k.email_addresses_header("foo@bar.com\nbar@foo.com")
+    assert "Foo Bar <foo@bar.com>" == k.email_addresses_header("Foo Bar <foo@bar.com>")
+    assert "\"Bar, Foo\" <foo@bar.com>" == k.email_addresses_header("Bar, Foo <foo@bar.com>")
+    assert "\"Bar, Foo\" <foo@bar.com>" == k.email_addresses_header("\"Bar, Foo\" <foo@bar.com>")
+    assert "Foo Bar <foo@bar.com>" == k.email_addresses_header("\"Foo Bar\" <foo@bar.com>")
+    assert "Föö Bär <foo@bar.com>" == k.email_addresses_header("Föö Bär <foo@bar.com>")
+
+
 @pytest.fixture
 def setup():
     flask_app = k.create_app()
