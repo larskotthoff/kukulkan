@@ -342,8 +342,8 @@ def create_app():
     @app.route("/api/tag/<op>/<string:typ>/<string:nid>/<string:tag>")
     def change_tag(op, typ, nid, tag):
         # pylint: disable=no-member
-        id_type = ('id' if typ == "message" else typ)
-        tag_prefix = ('not ' if op == "add" else '')
+        id_type = 'id' if typ == "message" else typ
+        tag_prefix = 'not ' if op == "add" else ''
         query = f"{id_type}:{nid} and {tag_prefix}tag:{tag}"
         db_write = notmuch.Database(None, create=False, mode=notmuch.Database.MODE.READ_WRITE)
         msgs = list(get_query(query, db_write, False).search_messages())
