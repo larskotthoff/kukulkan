@@ -137,7 +137,7 @@ def get_query(query_string, db=None, exclude=True):
 
 def get_message(message_id):
     """Get a single message."""
-    msgs = list(get_query(f'id:"{message_id}"', exclude=False).search_messages())
+    msgs = list(get_query(f'id:{message_id}', exclude=False).search_messages())
     if not msgs:
         abort(404)
     if len(msgs) > 1:
@@ -342,9 +342,11 @@ def create_app():
     @app.route("/api/tag/<op>/<string:typ>/<string:nid>/<string:tag>")
     def change_tag(op, typ, nid, tag):
         # pylint: disable=no-member
+        query = f"{('id' if typ == "message" else typ)}:{nid} and {('not ' if op == "add" else '')}tag:{tag}"
         db_write = notmuch.Database(None, create=False, mode=notmuch.Database.MODE.READ_WRITE)
-        msgs = get_query(('id' if typ == "message" else typ) + ':"' + nid + '"' +
-                          ' and ' + ('not ' if op == "add" else '') + 'tag:' + tag, db_write, False).search_messages()
+        msgs = list(get_query(query, db_write, False).search_messages())
+        if len(msgs) == 0:
+            abort(404)
         try:
             db_write.begin_atomic()
             for msg in msgs:
