@@ -128,6 +128,20 @@ in the array is what to replace it with (leave empty to remove matches).
                 "shortcut": "1", # key to press in write view
                 "description": "foo", # description shown in write view
                 "template": "Thank you for your message." # body of email
+            },
+
+            {
+                "shortcut": "2", # key to press in write view
+                "description": "bar", # description shown in write view
+                "template": { # alternative form where more can be specified -- all fields optional
+                    "from": "foo", # ID of account as defined above
+                    "to": ["Foo Bar <foo@bar.com>"],
+                    "cc": ["Foo Bar <foo@bar.com>"],
+                    "bcc": ["Foo Bar <foo@bar.com>"],
+                    "subject": "This is a test.",
+                    "tags": ["fooTag", "barTag"],
+                    "body": "Thank you for your message."
+                }
             }
         ]
     }

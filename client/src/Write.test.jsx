@@ -335,6 +335,76 @@ test("template set with base message", async () => {
   expect(getByTestId("body").value).toBe(`blurg\n\n\nOn ${msg.date}, ${msg.from} wrote:\n> Test mail`);
 });
 
+test("complex template set by click", async () => {
+  const tmpl = {"from": "foo", "to": ["to@to.com"], "cc": ["cc@cc.com"], "bcc": ["bcc@bcc.com"],
+                "subject": "fooSubject", "tags": ["tag1", "tag2"], "body": "barBody"},
+        cmp = {"templates": [{"shortcut": "1", "description": "foo", "template": tmpl}]};
+  vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": cmp});
+  const { getByTestId } = render(() => <Write/>);
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("Send")).toBeInTheDocument();
+  });
+
+  expect(screen.getByText("foo (1)")).toBeInTheDocument();
+  expect(getByTestId("from").value).toBe("bar");
+  expect(getByTestId("to").querySelectorAll(".chip").length).toBe(0);
+  expect(getByTestId("cc").querySelectorAll(".chip").length).toBe(0);
+  expect(getByTestId("bcc").querySelectorAll(".chip").length).toBe(0);
+  expect(getByTestId("subject").value).toBe("");
+  expect(getByTestId("tagedit").querySelectorAll(".chip").length).toBe(0);
+  expect(getByTestId("body").value).toBe("");
+
+  await userEvent.click(screen.getByText("foo (1)"));
+  expect(getByTestId("from").value).toBe("foo");
+  expect(getByTestId("to").querySelectorAll(".chip").length).toBe(1);
+  expect(getByTestId("to").querySelectorAll(".chip")[0].textContent).toBe("to@to.com");
+  expect(getByTestId("cc").querySelectorAll(".chip").length).toBe(1);
+  expect(getByTestId("cc").querySelectorAll(".chip")[0].textContent).toBe("cc@cc.com");
+  expect(getByTestId("bcc").querySelectorAll(".chip").length).toBe(1);
+  expect(getByTestId("bcc").querySelectorAll(".chip")[0].textContent).toBe("bcc@bcc.com");
+  expect(getByTestId("subject").value).toBe("fooSubject");
+  expect(getByTestId("tagedit").querySelectorAll(".chip").length).toBe(2);
+  expect(getByTestId("tagedit").querySelectorAll(".chip")[0].textContent).toBe("tag1");
+  expect(getByTestId("tagedit").querySelectorAll(".chip")[1].textContent).toBe("tag2");
+  expect(getByTestId("body").value).toBe("barBody");
+});
+
+test("complex template set by shortcut", async () => {
+  const tmpl = {"from": "foo", "to": ["to@to.com"], "cc": ["cc@cc.com"], "bcc": ["bcc@bcc.com"],
+                "subject": "fooSubject", "tags": ["tag1", "tag2"], "body": "barBody"},
+        cmp = {"templates": [{"shortcut": "1", "description": "foo", "template": tmpl}]};
+  vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": cmp});
+  const { getByTestId } = render(() => <Write/>);
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("Send")).toBeInTheDocument();
+  });
+
+  expect(screen.getByText("foo (1)")).toBeInTheDocument();
+  expect(getByTestId("from").value).toBe("bar");
+  expect(getByTestId("to").querySelectorAll(".chip").length).toBe(0);
+  expect(getByTestId("cc").querySelectorAll(".chip").length).toBe(0);
+  expect(getByTestId("bcc").querySelectorAll(".chip").length).toBe(0);
+  expect(getByTestId("subject").value).toBe("");
+  expect(getByTestId("tagedit").querySelectorAll(".chip").length).toBe(0);
+  expect(getByTestId("body").value).toBe("");
+
+  await userEvent.type(document.body, "1");
+  expect(getByTestId("from").value).toBe("foo");
+  expect(getByTestId("to").querySelectorAll(".chip").length).toBe(1);
+  expect(getByTestId("to").querySelectorAll(".chip")[0].textContent).toBe("to@to.com");
+  expect(getByTestId("cc").querySelectorAll(".chip").length).toBe(1);
+  expect(getByTestId("cc").querySelectorAll(".chip")[0].textContent).toBe("cc@cc.com");
+  expect(getByTestId("bcc").querySelectorAll(".chip").length).toBe(1);
+  expect(getByTestId("bcc").querySelectorAll(".chip")[0].textContent).toBe("bcc@bcc.com");
+  expect(getByTestId("subject").value).toBe("fooSubject");
+  expect(getByTestId("tagedit").querySelectorAll(".chip").length).toBe(2);
+  expect(getByTestId("tagedit").querySelectorAll(".chip")[0].textContent).toBe("tag1");
+  expect(getByTestId("tagedit").querySelectorAll(".chip")[1].textContent).toBe("tag2");
+  expect(getByTestId("body").value).toBe("barBody");
+});
+
 test("addresses editable and complete", async () => {
   const { getByTestId } = render(() => <Write/>);
 

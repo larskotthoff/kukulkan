@@ -171,7 +171,6 @@ export function Write(props) {
   } else if(!from) {
     from = defAcct?.id;
   }
-  setMessage("from", from);
   if(localStorage.getItem(`draft-${draftKey}-subject`)) {
     subject = localStorage.getItem(`draft-${draftKey}-subject`);
     document.title = `Compose: ${subject}`;
@@ -194,8 +193,20 @@ export function Write(props) {
 
   createEffect(on(useTemplate, () => {
     if(useTemplate() && bodyRef().disabled === false) {
-      bodyRef().value = useTemplate() + message.bodyDefaultValue;
-      setMessage("body", bodyRef().value);
+      if(typeof useTemplate() === 'object') {
+        const tmpl = useTemplate();
+        for(const k in tmpl) {
+          if(k === "body") {
+            bodyRef().value = tmpl.body + message.bodyDefaultValue;
+            setMessage("body", bodyRef().value);
+          } else {
+            setMessage(k, tmpl[k]);
+          }
+        }
+      } else { // assume it's a string
+        bodyRef().value = useTemplate() + message.bodyDefaultValue;
+        setMessage("body", bodyRef().value);
+      }
     }
   }));
 
