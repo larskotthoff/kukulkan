@@ -34,6 +34,7 @@ function createTouchEvent(x, y, type = 'touchstart') {
 
 test("exports", () => {
   expect(mkShortcut).not.toBe(undefined);
+  expect(handleSwipe).not.toBe(undefined);
 });
 
 // ChatGPT helped with the setup for this
