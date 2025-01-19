@@ -636,7 +636,7 @@ def get_nested_body(email_msg):
     if content_html:
         try:
             repl = current_app.config.custom["filter"]["content"]["text/html"]
-            content_html = content_html.replace(repl[0], repl[1])
+            content_html = re.sub(repl[0], repl[1], content_html)
         except KeyError:
             pass
         except Exception as e:
@@ -667,7 +667,7 @@ def get_nested_body(email_msg):
 
     try:
         repl = current_app.config.custom["filter"]["content"]["text/plain"]
-        content = content.replace(repl[0], repl[1])
+        content = re.sub(repl[0], repl[1], content)
     except KeyError:
         pass
     except Exception as e:

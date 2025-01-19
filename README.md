@@ -115,6 +115,7 @@ in the array is what to replace it with (leave empty to remove matches).
 
     "filter": {
         "content": {
+            # regular expressions are supported here
             "text/html": [ "<p>spam banner to be removed</p>", "" ],
             "text/plain": [ "Some warning that message was from external source.", "" ]
         }
