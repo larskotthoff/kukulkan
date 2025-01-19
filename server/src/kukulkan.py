@@ -620,25 +620,9 @@ def get_nested_body(email_msg):
     content_html = ""
     for part in email_msg.walk():
         if part.get_content_type() == "text/plain":
-            tmp = part.get_content()
-            try:
-                repl = current_app.config.custom["filter"]["content"]["text/plain"]
-                tmp = re.sub(repl[0], repl[1], tmp)
-            except KeyError:
-                pass
-            except Exception as e:
-                current_app.logger.error(f"Exception when replacing text content: {str(e)}")
-            content_plain += tmp
+            content_plain += part.get_content()
         elif part.get_content_type() == "text/html":
-            tmp = part.get_content()
-            try:
-                repl = current_app.config.custom["filter"]["content"]["text/html"]
-                tmp = re.sub(repl[0], repl[1], tmp)
-            except KeyError:
-                pass
-            except Exception as e:
-                current_app.logger.error(f"Exception when replacing HTML content: {str(e)}")
-            content_html += tmp
+            content_html += part.get_content()
         elif part.get_content_type() == "application/pkcs7-mime":
             # https://stackoverflow.com/questions/58427642/how-to-extract-data-from-application-pkcs7-mime-using-the-email-module-in-pyth
             content_info = cms.ContentInfo.load(part.get_payload(decode=True))
@@ -650,6 +634,14 @@ def get_nested_body(email_msg):
             content_html += tmp_html
 
     if content_html:
+        try:
+            repl = current_app.config.custom["filter"]["content"]["text/html"]
+            content_html = content_html.replace(repl[0], repl[1])
+        except KeyError:
+            pass
+        except Exception as e:
+            current_app.logger.error(f"Exception when replacing HTML content: {str(e)}")
+
         # remove any conflicting document encodings
         html = lxml.html.fromstring(re.sub("<[?]xml[^>]+>", "", content_html))
         for tag in html.xpath('//*[@*[contains(.,"http")]]'):
@@ -672,6 +664,14 @@ def get_nested_body(email_msg):
         soup = BeautifulSoup(content_html, features='html.parser')
         strip_tags(soup)
         content = ''.join(soup.get_text("\n\n", strip=True))
+
+    try:
+        repl = current_app.config.custom["filter"]["content"]["text/plain"]
+        content = content.replace(repl[0], repl[1])
+    except KeyError:
+        pass
+    except Exception as e:
+        current_app.logger.error(f"Exception when replacing text content: {str(e)}")
 
     return content, content_html
 
