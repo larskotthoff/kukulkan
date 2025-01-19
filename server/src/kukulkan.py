@@ -677,7 +677,7 @@ def get_nested_body(email_msg):
 
 
 def attendee_matches_addr(c, message):
-    """Check if a meeting attendee marches an address."""
+    """Check if a meeting attendee matches an address."""
     forwarded_to = message.get("X-Forwarded-To").strip() if message.get("X-Forwarded-To") else None
     try:
         addr = str(c).split(':')[1]
