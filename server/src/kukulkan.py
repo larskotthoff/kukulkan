@@ -493,7 +493,8 @@ def create_app():
             mid = ref_msg.get_header("Message-ID").strip()
             msg['In-Reply-To'] = f"<{mid}>"
             if ref_msg.get_header("References"):
-                msg['References'] = f"{ref_msg.get_header("References").strip()} <{mid}>"
+                refs = ref_msg.get_header("References").strip()
+                msg['References'] = f"{refs} <{mid}>"
             else:
                 msg['References'] = f"<{mid}>"
 
