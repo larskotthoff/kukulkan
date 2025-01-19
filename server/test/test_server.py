@@ -2025,63 +2025,62 @@ def test_send_reply(setup):
     mf = lambda: None
     mf.add_tag = MagicMock()
     mf.tags_to_maildir_flags = MagicMock()
+    mf.get_header = MagicMock()
+    mf.get_header.side_effect = ["oldFoo", None]
 
     mq = lambda: None
     mq.search_messages = MagicMock()
     mq.search_messages.side_effect = [iter([mf]), iter([mf])]
 
     with patch("notmuch.Query", return_value=mq) as q:
-        with patch("src.kukulkan.message_to_json", return_value={"message_id": "oldFoo", "references": None}) as mtj:
-            with patch("notmuch.Database", return_value=dbw):
-                with patch("builtins.open", mock_open()) as m:
-                    text = None
-                    with app.test_client() as test_client:
-                        response = test_client.post('/api/send', data=pd)
-                        assert response.status_code == 202
-                        sid = response.json["send_id"]
-                        assert sid != None
-                        response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
-                        assert response.status_code == 200
-                        status = None
-                        response_iter = response.response.__iter__()
-                        try:
-                            while (chunk := next(response_iter)) is not None:
-                                lines = chunk.decode().strip().split('\n\n')
-                                for line in lines:
-                                    if line.startswith('data: '):
-                                        data = json.loads(line[6:])
-                                        if 'send_status' in data and data['send_status'] != 'sending':
-                                            status = data['send_status']
-                                            text = data['send_output']
-                                            break
-                        except StopIteration:
-                            pass
-                        assert status == 0
-                        assert "Content-Type: text/plain; charset=\"utf-8\"" in text
-                        assert "Content-Transfer-Encoding: 7bit" in text
-                        assert "MIME-Version: 1.0" in text
-                        assert "Subject: test" in text
-                        assert "From: Foo Bar <foo@bar.com>" in text
-                        assert "To: bar" in text
-                        assert "Cc:" in text
-                        assert "Bcc:" in text
-                        assert "Date: " in text
-                        assert "Message-ID: <" in text
-                        assert "In-Reply-To: <oldFoo>" in text
-                        assert "References: <oldFoo>" in text
-                        assert "\n\nfoobar\n" in text
-                    m.assert_called_once()
-                    args = m.call_args.args
-                    assert "kukulkan" in args[0]
-                    assert "folder" in args[0]
-                    assert ":2,S" in args[0]
-                    assert args[1] == "w"
-                    hdl = m()
-                    hdl.write.assert_called_once()
-                    args = hdl.write.call_args.args
-                    assert text == args[0]
-
-            mtj.assert_called_once_with(mf)
+        with patch("notmuch.Database", return_value=dbw):
+            with patch("builtins.open", mock_open()) as m:
+                text = None
+                with app.test_client() as test_client:
+                    response = test_client.post('/api/send', data=pd)
+                    assert response.status_code == 202
+                    sid = response.json["send_id"]
+                    assert sid != None
+                    response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
+                    assert response.status_code == 200
+                    status = None
+                    response_iter = response.response.__iter__()
+                    try:
+                        while (chunk := next(response_iter)) is not None:
+                            lines = chunk.decode().strip().split('\n\n')
+                            for line in lines:
+                                if line.startswith('data: '):
+                                    data = json.loads(line[6:])
+                                    if 'send_status' in data and data['send_status'] != 'sending':
+                                        status = data['send_status']
+                                        text = data['send_output']
+                                        break
+                    except StopIteration:
+                        pass
+                    assert status == 0
+                    assert "Content-Type: text/plain; charset=\"utf-8\"" in text
+                    assert "Content-Transfer-Encoding: 7bit" in text
+                    assert "MIME-Version: 1.0" in text
+                    assert "Subject: test" in text
+                    assert "From: Foo Bar <foo@bar.com>" in text
+                    assert "To: bar" in text
+                    assert "Cc:" in text
+                    assert "Bcc:" in text
+                    assert "Date: " in text
+                    assert "Message-ID: <" in text
+                    assert "In-Reply-To: <oldFoo>" in text
+                    assert "References: <oldFoo>" in text
+                    assert "\n\nfoobar\n" in text
+                m.assert_called_once()
+                args = m.call_args.args
+                assert "kukulkan" in args[0]
+                assert "folder" in args[0]
+                assert ":2,S" in args[0]
+                assert args[1] == "w"
+                hdl = m()
+                hdl.write.assert_called_once()
+                args = hdl.write.call_args.args
+                assert text == args[0]
 
         q.assert_has_calls([call(db, 'id:oldFoo'), call(dbw, "id:oldFoo")])
 
@@ -2126,63 +2125,62 @@ def test_send_reply_more_refs(setup):
     mf = lambda: None
     mf.add_tag = MagicMock()
     mf.tags_to_maildir_flags = MagicMock()
+    mf.get_header = MagicMock()
+    mf.get_header.side_effect = ["oldFoo", "olderFoo", "olderFoo"]
 
     mq = lambda: None
     mq.search_messages = MagicMock()
     mq.search_messages.side_effect = [iter([mf]), iter([mf])]
 
     with patch("notmuch.Query", return_value=mq) as q:
-        with patch("src.kukulkan.message_to_json", return_value={"message_id": "oldFoo", "references": "olderFoo"}) as mtj:
-            with patch("notmuch.Database", return_value=dbw):
-                with patch("builtins.open", mock_open()) as m:
-                    text = None
-                    with app.test_client() as test_client:
-                        response = test_client.post('/api/send', data=pd)
-                        assert response.status_code == 202
-                        sid = response.json["send_id"]
-                        assert sid != None
-                        response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
-                        assert response.status_code == 200
-                        status = None
-                        response_iter = response.response.__iter__()
-                        try:
-                            while (chunk := next(response_iter)) is not None:
-                                lines = chunk.decode().strip().split('\n\n')
-                                for line in lines:
-                                    if line.startswith('data: '):
-                                        data = json.loads(line[6:])
-                                        if 'send_status' in data and data['send_status'] != 'sending':
-                                            status = data['send_status']
-                                            text = data['send_output']
-                                            break
-                        except StopIteration:
-                            pass
-                        assert status == 0
-                        assert "Content-Type: text/plain; charset=\"utf-8\"" in text
-                        assert "Content-Transfer-Encoding: 7bit" in text
-                        assert "MIME-Version: 1.0" in text
-                        assert "Subject: test" in text
-                        assert "From: Foo Bar <foo@bar.com>" in text
-                        assert "To: bar" in text
-                        assert "Cc:" in text
-                        assert "Bcc:" in text
-                        assert "Date: " in text
-                        assert "Message-ID: <" in text
-                        assert "In-Reply-To: <oldFoo>" in text
-                        assert "References: olderFoo <oldFoo>" in text
-                        assert "\n\nfoobar\n" in text
-                    m.assert_called_once()
-                    args = m.call_args.args
-                    assert "kukulkan" in args[0]
-                    assert "folder" in args[0]
-                    assert ":2,S" in args[0]
-                    assert args[1] == "w"
-                    hdl = m()
-                    hdl.write.assert_called_once()
-                    args = hdl.write.call_args.args
-                    assert text == args[0]
-
-            mtj.assert_called_once_with(mf)
+        with patch("notmuch.Database", return_value=dbw):
+            with patch("builtins.open", mock_open()) as m:
+                text = None
+                with app.test_client() as test_client:
+                    response = test_client.post('/api/send', data=pd)
+                    assert response.status_code == 202
+                    sid = response.json["send_id"]
+                    assert sid != None
+                    response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
+                    assert response.status_code == 200
+                    status = None
+                    response_iter = response.response.__iter__()
+                    try:
+                        while (chunk := next(response_iter)) is not None:
+                            lines = chunk.decode().strip().split('\n\n')
+                            for line in lines:
+                                if line.startswith('data: '):
+                                    data = json.loads(line[6:])
+                                    if 'send_status' in data and data['send_status'] != 'sending':
+                                        status = data['send_status']
+                                        text = data['send_output']
+                                        break
+                    except StopIteration:
+                        pass
+                    assert status == 0
+                    assert "Content-Type: text/plain; charset=\"utf-8\"" in text
+                    assert "Content-Transfer-Encoding: 7bit" in text
+                    assert "MIME-Version: 1.0" in text
+                    assert "Subject: test" in text
+                    assert "From: Foo Bar <foo@bar.com>" in text
+                    assert "To: bar" in text
+                    assert "Cc:" in text
+                    assert "Bcc:" in text
+                    assert "Date: " in text
+                    assert "Message-ID: <" in text
+                    assert "In-Reply-To: <oldFoo>" in text
+                    assert "References: olderFoo <oldFoo>" in text
+                    assert "\n\nfoobar\n" in text
+                m.assert_called_once()
+                args = m.call_args.args
+                assert "kukulkan" in args[0]
+                assert "folder" in args[0]
+                assert ":2,S" in args[0]
+                assert args[1] == "w"
+                hdl = m()
+                hdl.write.assert_called_once()
+                args = hdl.write.call_args.args
+                assert text == args[0]
 
         q.assert_has_calls([call(db, 'id:oldFoo'), call(dbw, "id:oldFoo")])
 
@@ -2228,88 +2226,88 @@ def test_send_reply_cal(setup):
     mf = lambda: None
     mf.add_tag = MagicMock()
     mf.tags_to_maildir_flags = MagicMock()
+    mf.get_header = MagicMock()
+    mf.get_header.side_effect = ["oldFoo", None]
 
     mq = lambda: None
     mq.search_messages = MagicMock()
     mq.search_messages.side_effect = [iter([mf]), iter([mf]), iter([mf])]
 
     with patch("notmuch.Query", return_value=mq) as q:
-        with patch("src.kukulkan.message_to_json", return_value={"message_id": "oldFoo", "references": None}) as mtj:
-            with patch("src.kukulkan.message_attachment",
-                       return_value=[{"filename": "unnamed attachment", "content_type": "text/calendar",
-                                      "content": "BEGIN:VCALENDAR\n" +
-                                                 "METHOD:REQUEST\n" +
-                                                 "BEGIN:VEVENT\n" +
-                                                 "UID:6f59364f-987e-48bb-a0d1-5512a2ba5570\n" +
-                                                 "SEQUENCE:1\n" +
-                                                 "SUMMARY:testevent\n" +
-                                                 "ORGANIZER;CN=3DTRUE;CN=3Dunittest;PARTSTAT=3DACCEPTED;ROLE=3DCHAIR:mail=\n" +
-                                                 "to:pwulf@tine20.org\n" +
-                                                 "ATTENDEE;CN=3DTRUE;PARTSTAT=3DNEEDS-ACTION;ROLE=3DREQ-PARTICIPANT:mailt=\n" +
-                                                 "o:unittest@tine20.org\n" +
-                                                 "DTSTART;TZID=3DEurope/Berlin:20111101T090000\n" +
-                                                 "DTEND;TZID=3DEurope/Berlin:20111101T100000\n" +
-                                                 "LOCATION:kskdcsd\n" +
-                                                 "DESCRIPTION:adsddsadsd\n" +
-                                                 "END:VEVENT\n" +
-                                                 "END:VCALENDAR"}]) as ma:
-                with patch("notmuch.Database", return_value=dbw):
-                    with patch("builtins.open", mock_open()) as m:
-                        text = None
-                        with app.test_client() as test_client:
-                            response = test_client.post('/api/send', data=pd)
-                            assert response.status_code == 202
-                            sid = response.json["send_id"]
-                            assert sid != None
-                            response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
-                            assert response.status_code == 200
-                            status = None
-                            response_iter = response.response.__iter__()
-                            try:
-                                while (chunk := next(response_iter)) is not None:
-                                    lines = chunk.decode().strip().split('\n\n')
-                                    for line in lines:
-                                        if line.startswith('data: '):
-                                            data = json.loads(line[6:])
-                                            if 'send_status' in data and data['send_status'] != 'sending':
-                                                status = data['send_status']
-                                                text = data['send_output']
-                                                break
-                            except StopIteration:
-                                pass
-                            assert status == 0
-                            assert "Content-Type: text/plain" in text
-                            assert "Content-Type: multipart/mixed" in text
-                            assert "Content-Transfer-Encoding: 7bit" in text
-                            assert "Subject: Accept: test" in text
-                            assert "From: Foo Bar <unittest@tine20.org>" in text
-                            assert "To: bar" in text
-                            assert "Cc:" in text
-                            assert "Bcc:" in text
-                            assert "Date: " in text
-                            assert "Message-ID: <" in text
-                            assert "In-Reply-To: <oldFoo>" in text
-                            assert "References: <oldFoo>" in text
-                            assert "\n\nfoobar\n" in text
-                            assert "METHOD:REPLY" in text
-                            assert "DTSTAMP:" in text
-                            assert 'ATTENDEE;CN="Foo Bar";PARTSTAT=ACCEPTED:MAILTO:unittest@tine20.org' in text
-                            assert "SUMMARY:Accept: testevent" in text
-                            assert "SEQUENCE:1" in text
-                            assert "UID:6f59364f-987e-48bb-a0d1-5512a2ba5570" in text
-                        m.assert_called_once()
-                        args = m.call_args.args
-                        assert "kukulkan" in args[0]
-                        assert "folder" in args[0]
-                        assert ":2,S" in args[0]
-                        assert args[1] == "w"
-                        hdl = m()
-                        hdl.write.assert_called_once()
-                        args = hdl.write.call_args.args
-                        assert text == args[0]
+        with patch("src.kukulkan.message_attachment",
+                   return_value=[{"filename": "unnamed attachment", "content_type": "text/calendar",
+                                  "content": "BEGIN:VCALENDAR\n" +
+                                             "METHOD:REQUEST\n" +
+                                             "BEGIN:VEVENT\n" +
+                                             "UID:6f59364f-987e-48bb-a0d1-5512a2ba5570\n" +
+                                             "SEQUENCE:1\n" +
+                                             "SUMMARY:testevent\n" +
+                                             "ORGANIZER;CN=3DTRUE;CN=3Dunittest;PARTSTAT=3DACCEPTED;ROLE=3DCHAIR:mail=\n" +
+                                             "to:pwulf@tine20.org\n" +
+                                             "ATTENDEE;CN=3DTRUE;PARTSTAT=3DNEEDS-ACTION;ROLE=3DREQ-PARTICIPANT:mailt=\n" +
+                                             "o:unittest@tine20.org\n" +
+                                             "DTSTART;TZID=3DEurope/Berlin:20111101T090000\n" +
+                                             "DTEND;TZID=3DEurope/Berlin:20111101T100000\n" +
+                                             "LOCATION:kskdcsd\n" +
+                                             "DESCRIPTION:adsddsadsd\n" +
+                                             "END:VEVENT\n" +
+                                             "END:VCALENDAR"}]) as ma:
+            with patch("notmuch.Database", return_value=dbw):
+                with patch("builtins.open", mock_open()) as m:
+                    text = None
+                    with app.test_client() as test_client:
+                        response = test_client.post('/api/send', data=pd)
+                        assert response.status_code == 202
+                        sid = response.json["send_id"]
+                        assert sid != None
+                        response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
+                        assert response.status_code == 200
+                        status = None
+                        response_iter = response.response.__iter__()
+                        try:
+                            while (chunk := next(response_iter)) is not None:
+                                lines = chunk.decode().strip().split('\n\n')
+                                for line in lines:
+                                    if line.startswith('data: '):
+                                        data = json.loads(line[6:])
+                                        if 'send_status' in data and data['send_status'] != 'sending':
+                                            status = data['send_status']
+                                            text = data['send_output']
+                                            break
+                        except StopIteration:
+                            pass
+                        assert status == 0
+                        assert "Content-Type: text/plain" in text
+                        assert "Content-Type: multipart/mixed" in text
+                        assert "Content-Transfer-Encoding: 7bit" in text
+                        assert "Subject: Accept: test" in text
+                        assert "From: Foo Bar <unittest@tine20.org>" in text
+                        assert "To: bar" in text
+                        assert "Cc:" in text
+                        assert "Bcc:" in text
+                        assert "Date: " in text
+                        assert "Message-ID: <" in text
+                        assert "In-Reply-To: <oldFoo>" in text
+                        assert "References: <oldFoo>" in text
+                        assert "\n\nfoobar\n" in text
+                        assert "METHOD:REPLY" in text
+                        assert "DTSTAMP:" in text
+                        assert 'ATTENDEE;CN="Foo Bar";PARTSTAT=ACCEPTED:MAILTO:unittest@tine20.org' in text
+                        assert "SUMMARY:Accept: testevent" in text
+                        assert "SEQUENCE:1" in text
+                        assert "UID:6f59364f-987e-48bb-a0d1-5512a2ba5570" in text
+                    m.assert_called_once()
+                    args = m.call_args.args
+                    assert "kukulkan" in args[0]
+                    assert "folder" in args[0]
+                    assert ":2,S" in args[0]
+                    assert args[1] == "w"
+                    hdl = m()
+                    hdl.write.assert_called_once()
+                    args = hdl.write.call_args.args
+                    assert text == args[0]
 
-                ma.assert_called_once_with(mf)
-            mtj.assert_called_once_with(mf)
+            ma.assert_called_once_with(mf)
 
         q.assert_has_calls([call(db, 'id:oldFoo'), call(dbw, "id:oldFoo")])
 
@@ -3123,6 +3121,8 @@ def test_send_sign_reply_cal(setup):
     mf = lambda: None
     mf.add_tag = MagicMock()
     mf.tags_to_maildir_flags = MagicMock()
+    mf.get_header = MagicMock()
+    mf.get_header.side_effect = ["oldFoo", None]
 
     mq = lambda: None
     mq.search_messages = MagicMock()
@@ -3138,95 +3138,93 @@ def test_send_sign_reply_cal(setup):
     handle = mo.return_value
     handle.read.side_effect = crypto_open_vals
     with patch("notmuch.Query", return_value=mq) as q:
-        with patch("src.kukulkan.message_to_json", return_value={"message_id": "oldFoo", "references": None}) as mtj:
-            with patch("src.kukulkan.message_attachment",
-                       return_value=[{"filename": "unnamed attachment", "content_type": "text/calendar",
-                                      "content": "BEGIN:VCALENDAR\n" +
-                                                 "METHOD:REQUEST\n" +
-                                                 "BEGIN:VEVENT\n" +
-                                                 "UID:6f59364f-987e-48bb-a0d1-5512a2ba5570\n" +
-                                                 "SEQUENCE:1\n" +
-                                                 "SUMMARY:testevent\n" +
-                                                 "ORGANIZER;CN=3DTRUE;CN=3Dunittest;PARTSTAT=3DACCEPTED;ROLE=3DCHAIR:mail=\n" +
-                                                 "to:pwulf@tine20.org\n" +
-                                                 "ATTENDEE;CN=3DTRUE;PARTSTAT=3DNEEDS-ACTION;ROLE=3DREQ-PARTICIPANT:mailt=\n" +
-                                                 "o:unittest@tine20.org\n" +
-                                                 "DTSTART;TZID=3DEurope/Berlin:20111101T090000\n" +
-                                                 "DTEND;TZID=3DEurope/Berlin:20111101T100000\n" +
-                                                 "LOCATION:kskdcsd\n" +
-                                                 "DESCRIPTION:adsddsadsd\n" +
-                                                 "END:VEVENT\n" +
-                                                 "END:VCALENDAR"}]) as ma:
-                with patch("notmuch.Database", return_value=dbw):
-                    with patch("builtins.open", mo) as m:
-                        text = None
-                        with app.test_client() as test_client:
-                            response = test_client.post('/api/send', data=pd)
-                            assert response.status_code == 202
-                            sid = response.json["send_id"]
-                            assert sid != None
-                            response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
-                            assert response.status_code == 200
-                            status = None
-                            response_iter = response.response.__iter__()
-                            try:
-                                while (chunk := next(response_iter)) is not None:
-                                    lines = chunk.decode().strip().split('\n\n')
-                                    for line in lines:
-                                        if line.startswith('data: '):
-                                            data = json.loads(line[6:])
-                                            if 'send_status' in data and data['send_status'] != 'sending':
-                                                status = data['send_status']
-                                                text = data['send_output']
-                                                break
-                            except StopIteration:
-                                pass
-                            assert status == 0
-                            assert "Content-Type: text/plain" in text
-                            assert "Content-Type: multipart/mixed" in text
-                            assert "Content-Transfer-Encoding: 7bit" in text
-                            assert "Subject: Accept: test" in text
-                            assert "From: Foo Bar <unittest@tine20.org>" in text
-                            assert "To: bar" in text
-                            assert "Cc:" in text
-                            assert "Bcc:" in text
-                            assert "Date: " in text
-                            assert "Message-ID: <" in text
-                            assert "In-Reply-To: <oldFoo>" in text
-                            assert "References: <oldFoo>" in text
-                            assert "\n\nfoobar\n" in text
-                            assert "METHOD:REPLY" in text
-                            assert "DTSTAMP:" in text
-                            assert 'ATTENDEE;CN="Foo Bar";PARTSTAT=ACCEPTED:MAILTO:unittest@tine20.org' in text
-                            assert "SUMMARY:Accept: testevent" in text
-                            assert "SEQUENCE:1" in text
-                            assert "UID:6f59364f-987e-48bb-a0d1-5512a2ba5570" in text
+        with patch("src.kukulkan.message_attachment",
+                   return_value=[{"filename": "unnamed attachment", "content_type": "text/calendar",
+                                  "content": "BEGIN:VCALENDAR\n" +
+                                             "METHOD:REQUEST\n" +
+                                             "BEGIN:VEVENT\n" +
+                                             "UID:6f59364f-987e-48bb-a0d1-5512a2ba5570\n" +
+                                             "SEQUENCE:1\n" +
+                                             "SUMMARY:testevent\n" +
+                                             "ORGANIZER;CN=3DTRUE;CN=3Dunittest;PARTSTAT=3DACCEPTED;ROLE=3DCHAIR:mail=\n" +
+                                             "to:pwulf@tine20.org\n" +
+                                             "ATTENDEE;CN=3DTRUE;PARTSTAT=3DNEEDS-ACTION;ROLE=3DREQ-PARTICIPANT:mailt=\n" +
+                                             "o:unittest@tine20.org\n" +
+                                             "DTSTART;TZID=3DEurope/Berlin:20111101T090000\n" +
+                                             "DTEND;TZID=3DEurope/Berlin:20111101T100000\n" +
+                                             "LOCATION:kskdcsd\n" +
+                                             "DESCRIPTION:adsddsadsd\n" +
+                                             "END:VEVENT\n" +
+                                             "END:VCALENDAR"}]) as ma:
+            with patch("notmuch.Database", return_value=dbw):
+                with patch("builtins.open", mo) as m:
+                    text = None
+                    with app.test_client() as test_client:
+                        response = test_client.post('/api/send', data=pd)
+                        assert response.status_code == 202
+                        sid = response.json["send_id"]
+                        assert sid != None
+                        response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
+                        assert response.status_code == 200
+                        status = None
+                        response_iter = response.response.__iter__()
+                        try:
+                            while (chunk := next(response_iter)) is not None:
+                                lines = chunk.decode().strip().split('\n\n')
+                                for line in lines:
+                                    if line.startswith('data: '):
+                                        data = json.loads(line[6:])
+                                        if 'send_status' in data and data['send_status'] != 'sending':
+                                            status = data['send_status']
+                                            text = data['send_output']
+                                            break
+                        except StopIteration:
+                            pass
+                        assert status == 0
+                        assert "Content-Type: text/plain" in text
+                        assert "Content-Type: multipart/mixed" in text
+                        assert "Content-Transfer-Encoding: 7bit" in text
+                        assert "Subject: Accept: test" in text
+                        assert "From: Foo Bar <unittest@tine20.org>" in text
+                        assert "To: bar" in text
+                        assert "Cc:" in text
+                        assert "Bcc:" in text
+                        assert "Date: " in text
+                        assert "Message-ID: <" in text
+                        assert "In-Reply-To: <oldFoo>" in text
+                        assert "References: <oldFoo>" in text
+                        assert "\n\nfoobar\n" in text
+                        assert "METHOD:REPLY" in text
+                        assert "DTSTAMP:" in text
+                        assert 'ATTENDEE;CN="Foo Bar";PARTSTAT=ACCEPTED:MAILTO:unittest@tine20.org' in text
+                        assert "SUMMARY:Accept: testevent" in text
+                        assert "SEQUENCE:1" in text
+                        assert "UID:6f59364f-987e-48bb-a0d1-5512a2ba5570" in text
 
-                            assert "\n\nThis is an S/MIME signed message\n" in text
-                            assert "Content-Type: application/x-pkcs7-signature; name=\"smime.p7s\"" in text
-                            assert "Content-Transfer-Encoding: base64" in text
-                            assert "Content-Disposition: attachment; filename=\"smime.p7s\"" in text
+                        assert "\n\nThis is an S/MIME signed message\n" in text
+                        assert "Content-Type: application/x-pkcs7-signature; name=\"smime.p7s\"" in text
+                        assert "Content-Transfer-Encoding: base64" in text
+                        assert "Content-Disposition: attachment; filename=\"smime.p7s\"" in text
 
-                            email_msg = email.message_from_string(text)
-                            for part in email_msg.walk():
-                                if "signed" in part.get('Content-Type') and "pkcs7-signature" in part.get('Content-Type'):
-                                    signature = k.smime_verify(part, app.config.custom["accounts"])
-                                    assert signature['message'] == 'self-signed or unavailable certificate(s): can\'t create an empty store'
-                                    assert signature['valid'] == None
+                        email_msg = email.message_from_string(text)
+                        for part in email_msg.walk():
+                            if "signed" in part.get('Content-Type') and "pkcs7-signature" in part.get('Content-Type'):
+                                signature = k.smime_verify(part, app.config.custom["accounts"])
+                                assert signature['message'] == 'self-signed or unavailable certificate(s): can\'t create an empty store'
+                                assert signature['valid'] == None
 
-                        assert m.call_count == 3
-                        args = m.call_args.args
-                        assert "kukulkan" in args[0]
-                        assert "folder" in args[0]
-                        assert ":2,S" in args[0]
-                        assert args[1] == "w"
-                        hdl = m()
-                        hdl.write.assert_called_once()
-                        args = hdl.write.call_args.args
-                        assert text == args[0]
+                    assert m.call_count == 3
+                    args = m.call_args.args
+                    assert "kukulkan" in args[0]
+                    assert "folder" in args[0]
+                    assert ":2,S" in args[0]
+                    assert args[1] == "w"
+                    hdl = m()
+                    hdl.write.assert_called_once()
+                    args = hdl.write.call_args.args
+                    assert text == args[0]
 
-                ma.assert_called_once_with(mf)
-            mtj.assert_called_once_with(mf)
+            ma.assert_called_once_with(mf)
 
         q.assert_has_calls([call(db, 'id:oldFoo'), call(dbw, "id:oldFoo")])
 

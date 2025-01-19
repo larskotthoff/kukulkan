@@ -490,12 +490,12 @@ def create_app():
 
         if request.values['action'] == "reply" or request.values['action'].startswith("reply-cal-"):
             ref_msg = get_message(request.values['refId'])
-            ref_msg = message_to_json(ref_msg)
-            msg['In-Reply-To'] = f"<{ref_msg['message_id']}>"
-            if ref_msg['references']:
-                msg['References'] = f"{ref_msg['references']} <{ref_msg['message_id']}>"
+            mid = ref_msg.get_header("Message-ID").strip()
+            msg['In-Reply-To'] = f"<{mid}>"
+            if ref_msg.get_header("References"):
+                msg['References'] = f"{ref_msg.get_header("References").strip()} <{mid}>"
             else:
-                msg['References'] = f"<{ref_msg['message_id']}>"
+                msg['References'] = f"<{mid}>"
 
         # need to extract the request values for testing
         ra = request.values['action']
