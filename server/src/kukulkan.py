@@ -315,7 +315,7 @@ def create_app():
     @app.route("/api/message/<string:message_id>")
     def message(message_id):
         msg = get_message(message_id)
-        return message_to_json(msg)
+        return message_to_json(msg, True)
 
     @app.route("/api/raw_message/<string:message_id>")
     def raw_message(message_id):
@@ -962,66 +962,73 @@ def eml_to_json(message_bytes):
     return res
 
 
-def message_to_json(message):
+def message_to_json(message, get_deleted_body=False):
     """Converts a `notmuch.message.Message` instance to a JSON object."""
-    email_msg = email_from_notmuch(message)
+    tags = list(message.get_tags())
+    if "deleted" in tags and not get_deleted_body:
+        attachments = []
+        body = "(deleted message)"
+        html_body = None
+        signature = None
+    else:
+        email_msg = email_from_notmuch(message)
 
-    attachments = get_attachments(email_msg)
-    body, html_body = get_nested_body(email_msg)
+        attachments = get_attachments(email_msg)
+        body, html_body = get_nested_body(email_msg)
 
-    signature = None
-    # signature verification
-    # https://gist.github.com/russau/c0123ef934ef88808050462a8638a410
-    for part in email_msg.walk():
-        if part.get('Content-Type') and "signed" in part.get('Content-Type'):
-            if "pkcs7-signature" in part.get('Content-Type') or "pkcs7-mime" in part.get('Content-Type'):
-                try:
-                    accounts = current_app.config.custom["accounts"]
-                    accts = [acct for acct in accounts if acct["email"] in
-                             message.get_header("from").strip().replace('\t', ' ')]
-                except KeyError:
-                    accts = []
-                signature = smime_verify(part, accts)
-            elif "pgp-signature" in part.get('Content-Type'):
-                signed_content = bytes(part.get_payload()[0])
-                sig = bytes(part.get_payload()[1])
-                gpg = GPG()
-                public_keys = gpg.list_keys()
-                from_addr = message.get_header("from")
-                try:
-                    [_, address] = from_addr.split('<')
-                    from_addr = address.split('>')[0]
-                except ValueError:
-                    pass
+        signature = None
+        # signature verification
+        # https://gist.github.com/russau/c0123ef934ef88808050462a8638a410
+        for part in email_msg.walk():
+            if part.get('Content-Type') and "signed" in part.get('Content-Type'):
+                if "pkcs7-signature" in part.get('Content-Type') or "pkcs7-mime" in part.get('Content-Type'):
+                    try:
+                        accounts = current_app.config.custom["accounts"]
+                        accts = [acct for acct in accounts if acct["email"] in
+                                 message.get_header("from").strip().replace('\t', ' ')]
+                    except KeyError:
+                        accts = []
+                    signature = smime_verify(part, accts)
+                elif "pgp-signature" in part.get('Content-Type'):
+                    signed_content = bytes(part.get_payload()[0])
+                    sig = bytes(part.get_payload()[1])
+                    gpg = GPG()
+                    public_keys = gpg.list_keys()
+                    from_addr = message.get_header("from")
+                    try:
+                        [_, address] = from_addr.split('<')
+                        from_addr = address.split('>')[0]
+                    except ValueError:
+                        pass
 
-                found = False
-                for pkey in public_keys:
-                    for uid in pkey.get('uids'):
-                        if from_addr in uid:
-                            found = True
-                if not found and 'gpg-keyserver' in current_app.config.custom:
-                    current_app.logger.info(f"Key for {from_addr} not found, attempting to download...")
-                    # TODO: handle case where server is unreachable
-                    keys = gpg.search_keys(from_addr, current_app.config.custom['gpg-keyserver'])
-                    if len(keys) > 0:
-                        for key in keys:
-                            current_app.logger.info(f"Getting key {key.get('keyid')}")
-                            gpg.recv_keys(current_app.config.custom['gpg-keyserver'], key.get('keyid'))
-                osfile, path = mkstemp()
-                try:
-                    with os.fdopen(osfile, 'wb') as fd:
-                        fd.write(sig)
-                        fd.close()
-                        verified = gpg.verify_data(path, signed_content)
-                        if verified.valid:
-                            signature = {"valid": True}
-                        else:
-                            signature = {"valid": False, "message": verified.trust_text}
-                except Exception as e:
-                    current_app.logger.error(f"Exception in gpg_verify: {str(e)}")
-                    signature = {"valid": False, "message": "An internal error has occurred."}
-                finally:
-                    os.unlink(path)
+                    found = False
+                    for pkey in public_keys:
+                        for uid in pkey.get('uids'):
+                            if from_addr in uid:
+                                found = True
+                    if not found and 'gpg-keyserver' in current_app.config.custom:
+                        current_app.logger.info(f"Key for {from_addr} not found, attempting to download...")
+                        # TODO: handle case where server is unreachable
+                        keys = gpg.search_keys(from_addr, current_app.config.custom['gpg-keyserver'])
+                        if len(keys) > 0:
+                            for key in keys:
+                                current_app.logger.info(f"Getting key {key.get('keyid')}")
+                                gpg.recv_keys(current_app.config.custom['gpg-keyserver'], key.get('keyid'))
+                    osfile, path = mkstemp()
+                    try:
+                        with os.fdopen(osfile, 'wb') as fd:
+                            fd.write(sig)
+                            fd.close()
+                            verified = gpg.verify_data(path, signed_content)
+                            if verified.valid:
+                                signature = {"valid": True}
+                            else:
+                                signature = {"valid": False, "message": verified.trust_text}
+                    except Exception as e:
+                        current_app.logger.error(f"Exception in gpg_verify: {str(e)}")
+                        signature = {"valid": False, "message": "An internal error has occurred."}
+                    finally:
+                        os.unlink(path)
 
     res = {
         "from": message.get_header("from").strip().replace('\t', ' '),
@@ -1042,7 +1049,7 @@ def message_to_json(message):
         },
         "attachments": attachments,
         "notmuch_id": message.get_message_id(),
-        "tags": list(message.get_tags()),
+        "tags": tags,
         "signature": signature
     }
     if f"<{res['message_id']}>" == res['in_reply_to']:

@@ -728,6 +728,52 @@ def test_message_simple(setup):
     mq.search_messages.assert_called_once()
 
 
+def test_message_simple_deleted(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.get_filename = MagicMock(return_value="test/mails/simple.eml")
+    mf.get_header = MagicMock(return_value="  foo@bar  ")
+    mf.get_message_id = MagicMock(return_value="foo")
+    mf.get_tags = MagicMock(return_value=["deleted", "bar"])
+
+    mq = lambda: None
+    mq.search_messages = MagicMock(return_value=iter([mf]))
+
+    with patch("notmuch.Query", return_value=mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/message/foo')
+            assert response.status_code == 200
+            msg = json.loads(response.data.decode())
+            assert msg["from"] == "foo@bar"
+            assert msg["to"] == ["foo@bar"]
+            assert msg["cc"] == ["foo@bar"]
+            assert msg["bcc"] == ["foo@bar"]
+            assert msg["date"] == "foo@bar"
+            assert msg["subject"] == "foo@bar"
+            assert msg["message_id"] == "foo@bar"
+            assert msg["in_reply_to"] == "foo@bar"
+            assert msg["references"] == "foo@bar"
+            assert msg["reply_to"] == "foo@bar"
+            assert msg["delivered_to"] == "foo@bar"
+
+            assert "With the new notmuch_message_get_flags() function" in msg["body"]["text/plain"]
+            assert msg["body"]["text/html"] == ''
+
+            assert msg["notmuch_id"] == "foo"
+            assert msg["tags"] == ["deleted", "bar"]
+            assert msg["attachments"] == []
+            assert msg["signature"] is None
+        q.assert_called_once_with(db, 'id:foo')
+
+    mf.get_filename.assert_called_once()
+    mf.get_message_id.assert_called_once()
+    mf.get_tags.assert_called_once()
+    assert mf.get_header.call_count == 17
+
+    mq.search_messages.assert_called_once()
+
+
 def test_message_forwarded(setup):
     app, db = setup
 
@@ -1555,6 +1601,58 @@ def test_thread(setup):
         q.assert_called_once_with(db, 'thread:"foo"')
 
     mf.get_filename.assert_called_once()
+    mf.get_message_id.assert_called_once()
+    mf.get_tags.assert_called_once()
+    assert mf.get_header.call_count == 17
+
+    mt.get_messages.assert_called_once()
+
+    mq.search_threads.assert_called_once()
+
+
+def test_thread_deleted(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.get_filename = MagicMock(return_value="test/mails/simple.eml")
+    mf.get_header = MagicMock(return_value="  foo@bar  ")
+    mf.get_message_id = MagicMock(return_value="foo")
+    mf.get_tags = MagicMock(return_value=["deleted", "bar"])
+
+    mt = lambda: None
+    mt.get_messages = MagicMock(return_value=iter([mf]))
+
+    mq = lambda: None
+    mq.search_threads = MagicMock(return_value=iter([mt]))
+
+    with patch("notmuch.Query", return_value=mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/thread/foo')
+            assert response.status_code == 200
+            thread = json.loads(response.data.decode())
+            assert len(thread) == 1
+            msg = thread[0]
+            assert msg["from"] == "foo@bar"
+            assert msg["to"] == ["foo@bar"]
+            assert msg["cc"] == ["foo@bar"]
+            assert msg["bcc"] == ["foo@bar"]
+            assert msg["date"] == "foo@bar"
+            assert msg["subject"] == "foo@bar"
+            assert msg["message_id"] == "foo@bar"
+            assert msg["in_reply_to"] == "foo@bar"
+            assert msg["references"] == "foo@bar"
+            assert msg["reply_to"] == "foo@bar"
+
+            assert "(deleted message)" in msg["body"]["text/plain"]
+            assert msg["body"]["text/html"] == None
+
+            assert msg["notmuch_id"] == "foo"
+            assert msg["tags"] == ["deleted", "bar"]
+            assert msg["attachments"] == []
+            assert msg["signature"] is None
+        q.assert_called_once_with(db, 'thread:"foo"')
+
+    assert mf.get_filename.call_count == 0
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
     assert mf.get_header.call_count == 17
