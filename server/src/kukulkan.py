@@ -341,7 +341,7 @@ def create_app():
     def change_tags(typ, nids, tags):
         for nid in nids.split(' '):
             for tag in tags.split(' '):
-                if(tag[0] == '-'):
+                if tag[0] == '-':
                     change_tag("remove", typ, nid, tag[1:])
                 else:
                     change_tag("add", typ, nid, tag)
@@ -807,10 +807,9 @@ def get_attachments(email_msg, content=False):
 def messages_to_json(messages):
     """Converts a list of `notmuch.message.Message` instances to a JSON object."""
     msgs = list(messages)
-    if len(msgs) > 1:
-        return [message_to_json(m) for m in msgs]
-    else:
+    if len(msgs) == 1:
         return [message_to_json(m, get_deleted_body=True) for m in msgs]
+    return [message_to_json(m) for m in msgs]
 
 
 def smime_verify(part, accts):
