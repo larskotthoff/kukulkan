@@ -1632,7 +1632,7 @@ def test_thread(setup):
     mq.search_threads.assert_called_once()
 
 
-def test_thread_deleted(setup):
+def test_thread_deleted_single(setup):
     app, db = setup
 
     mf = lambda: None
@@ -1665,7 +1665,7 @@ def test_thread_deleted(setup):
             assert msg["references"] == "foo@bar"
             assert msg["reply_to"] == "foo@bar"
 
-            assert "(deleted message)" in msg["body"]["text/plain"]
+            assert "With the new notmuch_message_get_flags() function" in msg["body"]["text/plain"]
             assert msg["body"]["text/html"] == False
 
             assert msg["notmuch_id"] == "foo"
@@ -1674,10 +1674,79 @@ def test_thread_deleted(setup):
             assert msg["signature"] is None
         q.assert_called_once_with(db, 'thread:"foo"')
 
-    assert mf.get_filename.call_count == 0
+    assert mf.get_filename.call_count == 1
     mf.get_message_id.assert_called_once()
     mf.get_tags.assert_called_once()
     assert mf.get_header.call_count == 17
+
+    mt.get_messages.assert_called_once()
+
+    mq.search_threads.assert_called_once()
+
+
+def test_thread_none(setup):
+    app, db = setup
+
+    mq = lambda: None
+    mq.search_threads = MagicMock(return_value=iter([]))
+
+    with patch("notmuch.Query", return_value=mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/thread/foo')
+            assert response.status_code == 404
+        q.assert_called_once_with(db, 'thread:"foo"')
+
+    mq.search_threads.assert_called_once()
+
+
+def test_thread_deleted_multiple(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.get_filename = MagicMock(return_value="test/mails/simple.eml")
+    mf.get_header = MagicMock(return_value="  foo@bar  ")
+    mf.get_message_id = MagicMock(return_value="foo")
+    mf.get_tags = MagicMock(return_value=["deleted", "bar"])
+
+    mt = lambda: None
+    mt.get_messages = MagicMock(return_value=iter([mf, mf]))
+
+    mq = lambda: None
+    mq.search_threads = MagicMock(return_value=iter([mt]))
+
+    with patch("notmuch.Query", return_value=mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/thread/foo')
+            assert response.status_code == 200
+            thread = json.loads(response.data.decode())
+            assert len(thread) == 2
+            msg = thread[0]
+            assert msg["from"] == "foo@bar"
+            assert msg["to"] == ["foo@bar"]
+            assert msg["cc"] == ["foo@bar"]
+            assert msg["bcc"] == ["foo@bar"]
+            assert msg["date"] == "foo@bar"
+            assert msg["subject"] == "foo@bar"
+            assert msg["message_id"] == "foo@bar"
+            assert msg["in_reply_to"] == "foo@bar"
+            assert msg["references"] == "foo@bar"
+            assert msg["reply_to"] == "foo@bar"
+
+            assert "(deleted message)" in msg["body"]["text/plain"]
+            assert msg["body"]["text/html"] == False
+
+            assert msg["notmuch_id"] == "foo"
+            assert msg["tags"] == ["deleted", "bar"]
+            assert msg["attachments"] == []
+            assert msg["signature"] is None
+
+            assert thread[0] == thread[1]
+        q.assert_called_once_with(db, 'thread:"foo"')
+
+    assert mf.get_filename.call_count == 0
+    assert mf.get_message_id.call_count == 2
+    assert mf.get_tags.call_count == 2
+    assert mf.get_header.call_count == 17 * 2
 
     mt.get_messages.assert_called_once()
 

@@ -806,7 +806,11 @@ def get_attachments(email_msg, content=False):
 
 def messages_to_json(messages):
     """Converts a list of `notmuch.message.Message` instances to a JSON object."""
-    return [message_to_json(m) for m in messages]
+    msgs = list(messages)
+    if len(msgs) > 1:
+        return [message_to_json(m) for m in msgs]
+    else:
+        return [message_to_json(m, get_deleted_body=True) for m in msgs]
 
 
 def smime_verify(part, accts):
