@@ -317,6 +317,13 @@ def create_app():
         msg = get_message(message_id)
         return message_to_json(msg, True)
 
+    @app.route("/api/message_html/<string:message_id>")
+    def message_html(message_id):
+        msg = get_message(message_id)
+        email_msg = email_from_notmuch(msg)
+        html, _ = get_nested_body(email_msg, True)
+        return html
+
     @app.route("/api/raw_message/<string:message_id>")
     def raw_message(message_id):
         msg = get_message(message_id)
@@ -615,66 +622,67 @@ def strip_tags(soup):
     soup.smooth()
 
 
-def get_nested_body(email_msg):
+def get_nested_body(email_msg, html=False):
     """Gets all, potentially MIME-nested bodies."""
-    content_plain = ""
-    content_html = ""
+    has_html = False
+    content = ""
     for part in email_msg.walk():
-        if part.get_content_type() == "text/plain":
-            content_plain += part.get_content()
+        if part.get_content_type() == "text/plain" and html is False:
+            content += part.get_content()
         elif part.get_content_type() == "text/html":
-            content_html += part.get_content()
+            has_html = True
+            if html is True:
+                content += part.get_content()
         elif part.get_content_type() == "application/pkcs7-mime":
             # https://stackoverflow.com/questions/58427642/how-to-extract-data-from-application-pkcs7-mime-using-the-email-module-in-pyth
             content_info = cms.ContentInfo.load(part.get_payload(decode=True))
             compressed_data = content_info['content']
             smime = compressed_data['encap_content_info']['content'].native
             tmp = email.message_from_bytes(smime, policy=policy)
-            tmp_plain, tmp_html = get_nested_body(tmp)
-            content_plain += tmp_plain
-            content_html += tmp_html
+            tmp_content, tmp_has_html = get_nested_body(tmp, html)
+            content += tmp_content
+            if tmp_has_html:
+                has_html = True
 
-    if content_html:
+    if html is True and content:
         try:
             repl = current_app.config.custom["filter"]["content"]["text/html"]
-            content_html = re.sub(repl[0], repl[1], content_html)
+            content = re.sub(repl[0], repl[1], content)
         except KeyError:
             pass
         except Exception as e:
             current_app.logger.error(f"Exception when replacing HTML content: {str(e)}")
 
         # remove any conflicting document encodings
-        html = lxml.html.fromstring(re.sub("<[?]xml[^>]+>", "", content_html))
-        for tag in html.xpath('//*[@*[contains(.,"http")]]'):
+        tmp_html = lxml.html.fromstring(re.sub("<[?]xml[^>]+>", "", content))
+        for tag in tmp_html.xpath('//*[@*[contains(.,"http")]]'):
             for name, value in tag.items():
                 if "http" in value and not name == "href":
                     del tag.attrib[name]
-        content_html = lxml.html.tostring(cleaner.clean_html(html), encoding=str)
-        content_html = re.sub(r'(?i)background-image:.*http.*?;', '', content_html)
-    else:
-        content_html = ""
+        content = lxml.html.tostring(cleaner.clean_html(tmp_html), encoding=str)
+        content = re.sub(r'(?i)background-image:.*http.*?;', '', content)
 
-    # "plain" text might be HTML...
-    if content_plain:
-        content = content_plain
-        if "<html" in content_plain:
-            soup = BeautifulSoup(content_plain, features='html.parser')
+    if html is False:
+        if content:
+        # "plain" text might be HTML...
+            if "<html" in content:
+                soup = BeautifulSoup(content, features='html.parser')
+                strip_tags(soup)
+                content = ''.join(soup.get_text("\n\n", strip=True))
+        else:
+            content_html, _ = get_nested_body(email_msg, True)
+            soup = BeautifulSoup(content_html, features='html.parser')
             strip_tags(soup)
             content = ''.join(soup.get_text("\n\n", strip=True))
-    else:
-        soup = BeautifulSoup(content_html, features='html.parser')
-        strip_tags(soup)
-        content = ''.join(soup.get_text("\n\n", strip=True))
+        try:
+            repl = current_app.config.custom["filter"]["content"]["text/plain"]
+            content = re.sub(repl[0], repl[1], content)
+        except KeyError:
+            pass
+        except Exception as e:
+            current_app.logger.error(f"Exception when replacing text content: {str(e)}")
 
-    try:
-        repl = current_app.config.custom["filter"]["content"]["text/plain"]
-        content = re.sub(repl[0], repl[1], content)
-    except KeyError:
-        pass
-    except Exception as e:
-        current_app.logger.error(f"Exception when replacing text content: {str(e)}")
-
-    return content, content_html
+    return content, has_html
 
 
 def attendee_matches_addr(c, message):
@@ -937,7 +945,7 @@ def smime_verify(part, accts):
 def eml_to_json(message_bytes):
     """Converts an eml attachment (represented as bytes) to a JSON object."""
     email_msg = email.message_from_bytes(message_bytes, policy=policy)
-    body, html_body = get_nested_body(email_msg)
+    body, has_html = get_nested_body(email_msg)
     res = {
         "from": email_msg["from"].strip().replace('\t', ' ') if "from" in email_msg else "",
         "to": split_email_addresses(email_msg["to"]) if "to" in email_msg else [],
@@ -953,7 +961,7 @@ def eml_to_json(message_bytes):
         "delivered_to": email_msg["Delivered-To"].strip() if "Delivered-To" in email_msg else None,
         "body": {
             "text/plain": body,
-            "text/html": html_body
+            "text/html": has_html
         },
         "attachments": [],
         "notmuch_id": None,
@@ -969,13 +977,13 @@ def message_to_json(message, get_deleted_body=False):
     if "deleted" in tags and not get_deleted_body:
         attachments = []
         body = "(deleted message)"
-        html_body = None
+        has_html = False
         signature = None
     else:
         email_msg = email_from_notmuch(message)
 
         attachments = get_attachments(email_msg)
-        body, html_body = get_nested_body(email_msg)
+        body, has_html = get_nested_body(email_msg)
 
         signature = None
         # signature verification
@@ -1046,7 +1054,7 @@ def message_to_json(message, get_deleted_body=False):
         "delivered_to": message.get_header("Delivered-To").strip() if message.get_header("Delivered-To") else None,
         "body": {
             "text/plain": body,
-            "text/html": html_body
+            "text/html": has_html
         },
         "attachments": attachments,
         "notmuch_id": message.get_message_id(),

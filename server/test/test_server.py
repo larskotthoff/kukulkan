@@ -712,7 +712,7 @@ def test_message_simple(setup):
             assert msg["delivered_to"] == "foo@bar"
 
             assert "With the new notmuch_message_get_flags() function" in msg["body"]["text/plain"]
-            assert msg["body"]["text/html"] == ''
+            assert msg["body"]["text/html"] == False
 
             assert msg["notmuch_id"] == "foo"
             assert msg["tags"] == ["foo", "bar"]
@@ -758,7 +758,7 @@ def test_message_simple_deleted(setup):
             assert msg["delivered_to"] == "foo@bar"
 
             assert "With the new notmuch_message_get_flags() function" in msg["body"]["text/plain"]
-            assert msg["body"]["text/html"] == ''
+            assert msg["body"]["text/html"] == False
 
             assert msg["notmuch_id"] == "foo"
             assert msg["tags"] == ["deleted", "bar"]
@@ -794,7 +794,7 @@ def test_message_forwarded(setup):
             assert msg["forwarded_to"] == "something@other.org"
 
             assert "With the new notmuch_message_get_flags() function" in msg["body"]["text/plain"]
-            assert msg["body"]["text/html"] == ''
+            assert msg["body"]["text/html"] == False
 
             assert msg["notmuch_id"] == "foo"
             assert msg["tags"] == ["foo", "bar"]
@@ -1374,7 +1374,7 @@ def test_message_html_only(setup):
             assert response.status_code == 200
             msg = json.loads(response.data.decode())
             assert "hunter2" == msg["body"]["text/plain"]
-            assert "hunter2" in msg["body"]["text/html"]
+            assert msg["body"]["text/html"] == True
         q.assert_called_once_with(db, 'id:foo')
 
     mf.get_filename.assert_called_once()
@@ -1403,76 +1403,7 @@ def test_message_html_broken(setup):
             assert response.status_code == 200
             msg = json.loads(response.data.decode())
             assert "hunter2" == msg["body"]["text/plain"]
-            assert '' == msg["body"]["text/html"]
-        q.assert_called_once_with(db, 'id:foo')
-
-    mf.get_filename.assert_called_once()
-    mf.get_message_id.assert_called_once()
-    mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 17
-
-    mq.search_messages.assert_called_once()
-
-
-def test_message_link_scrubbing(setup):
-    app, db = setup
-
-    mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/clean-html.eml")
-    mf.get_header = MagicMock(return_value="  foo\tbar  ")
-    mf.get_message_id = MagicMock(return_value="foo")
-    mf.get_tags = MagicMock(return_value=["foo", "bar"])
-
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
-
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/message/foo')
-            assert response.status_code == 200
-            msg = json.loads(response.data.decode())
-            assert "foo" == msg["body"]["text/plain"]
-            assert "https://example.com" in msg["body"]["text/html"]
-            assert "https://tracking.com" not in msg["body"]["text/html"]
-            assert "http://image.com" not in msg["body"]["text/html"]
-        q.assert_called_once_with(db, 'id:foo')
-
-    mf.get_filename.assert_called_once()
-    mf.get_message_id.assert_called_once()
-    mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 17
-
-    mq.search_messages.assert_called_once()
-
-
-def test_message_filter_html(setup):
-    app, db = setup
-
-    mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/html-only.eml")
-    mf.get_header = MagicMock(return_value="  foo\tbar  ")
-    mf.get_message_id = MagicMock(return_value="foo")
-    mf.get_tags = MagicMock(return_value=["foo", "bar"])
-
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
-
-    app.config.custom["accounts"] = []
-    try:
-        app.config.custom["filter"]["content"]["text/html"] = ['<input value="a>swordfish">', "meat"]
-    except KeyError:
-        app.config.custom["filter"] = {}
-        app.config.custom["filter"]["content"] = {}
-        app.config.custom["filter"]["content"]["text/html"] = ['<input value="a>swordfish">', "meat"]
-
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/message/foo')
-            assert response.status_code == 200
-            msg = json.loads(response.data.decode())
-            assert "meat\n\nhunter2" == msg["body"]["text/plain"]
-            assert "meat" in msg["body"]["text/html"]
-            assert "swordfish" not in msg["body"]["text/html"]
+            assert msg["body"]["text/html"] == False
         q.assert_called_once_with(db, 'id:foo')
 
     mf.get_filename.assert_called_once()
@@ -1546,12 +1477,103 @@ def test_message_attachment_mail(setup):
             assert msg["delivered_to"] == "arne.keller@posteo.de"
 
             assert "Öffnen Sie den unten stehenden Aktivierungslink" in msg["body"]["text/plain"]
-            assert "Öffnen Sie den unten stehenden Aktivierungslink" in msg["body"]["text/html"]
+            assert msg["body"]["text/html"] == True
 
             assert msg["notmuch_id"] == None
             assert msg["tags"] == []
             assert msg["attachments"] == []
             assert msg["signature"] is None
+        q.assert_called_once_with(db, 'id:foo')
+
+    mf.get_filename.assert_called_once()
+    mq.search_messages.assert_called_once()
+
+
+def test_message_html_simple(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.get_filename = MagicMock(return_value="test/mails/html-only.eml")
+
+    mq = lambda: None
+    mq.search_messages = MagicMock(return_value=iter([mf]))
+
+    with patch("notmuch.Query", return_value=mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/message_html/foo')
+            assert response.status_code == 200
+            assert response.data == b'<div>\n  <body>\n    \n  </body><p>\n  hunter2\n</p></div>'
+        q.assert_called_once_with(db, 'id:foo')
+
+    mf.get_filename.assert_called_once()
+    mq.search_messages.assert_called_once()
+
+
+def test_message_html_none(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.get_filename = MagicMock(return_value="test/mails/simple.eml")
+
+    mq = lambda: None
+    mq.search_messages = MagicMock(return_value=iter([mf]))
+
+    with patch("notmuch.Query", return_value=mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/message_html/foo')
+            assert response.status_code == 200
+            assert response.data == b''
+        q.assert_called_once_with(db, 'id:foo')
+
+    mf.get_filename.assert_called_once()
+    mq.search_messages.assert_called_once()
+
+
+def test_message_html_link_scrubbing(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.get_filename = MagicMock(return_value="test/mails/clean-html.eml")
+
+    mq = lambda: None
+    mq.search_messages = MagicMock(return_value=iter([mf]))
+
+    with patch("notmuch.Query", return_value=mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/message_html/foo')
+            assert response.status_code == 200
+            assert "https://example.com" in str(response.data)
+            assert "https://tracking.com" not in str(response.data)
+            assert "http://image.com" not in str(response.data)
+        q.assert_called_once_with(db, 'id:foo')
+
+    mf.get_filename.assert_called_once()
+    mq.search_messages.assert_called_once()
+
+
+def test_message_html_filter_html(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.get_filename = MagicMock(return_value="test/mails/html-only.eml")
+
+    mq = lambda: None
+    mq.search_messages = MagicMock(return_value=iter([mf]))
+
+    app.config.custom["accounts"] = []
+    try:
+        app.config.custom["filter"]["content"]["text/html"] = ['<input value="a>swordfish">', "meat"]
+    except KeyError:
+        app.config.custom["filter"] = {}
+        app.config.custom["filter"]["content"] = {}
+        app.config.custom["filter"]["content"]["text/html"] = ['<input value="a>swordfish">', "meat"]
+
+    with patch("notmuch.Query", return_value=mq) as q:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/message_html/foo')
+            assert response.status_code == 200
+            assert "meat" in str(response.data)
+            assert "swordfish" not in str(response.data)
         q.assert_called_once_with(db, 'id:foo')
 
     mf.get_filename.assert_called_once()
@@ -1592,7 +1614,7 @@ def test_thread(setup):
             assert msg["reply_to"] == "foo@bar"
 
             assert "With the new notmuch_message_get_flags() function" in msg["body"]["text/plain"]
-            assert msg["body"]["text/html"] == ''
+            assert msg["body"]["text/html"] == False
 
             assert msg["notmuch_id"] == "foo"
             assert msg["tags"] == ["foo", "bar"]
@@ -1644,7 +1666,7 @@ def test_thread_deleted(setup):
             assert msg["reply_to"] == "foo@bar"
 
             assert "(deleted message)" in msg["body"]["text/plain"]
-            assert msg["body"]["text/html"] == None
+            assert msg["body"]["text/html"] == False
 
             assert msg["notmuch_id"] == "foo"
             assert msg["tags"] == ["deleted", "bar"]

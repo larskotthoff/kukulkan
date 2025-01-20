@@ -15,7 +15,7 @@ const msg = {
   notmuch_id: "fo@o",
   attachments: [],
   body: {
-    "text/html": "Test mail in HTML",
+    "text/html": true,
     "text/plain": "Test mail"
   }
 };
@@ -215,7 +215,7 @@ test("smime attachment hidden when collapsed", () => {
 test("links are linkified in text", () => {
   const msg1 = JSON.parse(JSON.stringify(msg));
   msg1.body = {
-    "text/html": "",
+    "text/html": false,
     "text/plain": "http://www.foobar.com"
   };
 
@@ -229,13 +229,19 @@ test("allows to switch between text and HTML", async () => {
   expect(screen.getByText("Test mail")).toBeInTheDocument();
   expect(screen.getByText("bar foo <bar@foo.com>")).toBeInTheDocument();
 
+  global.fetch.mockResolvedValue({ ok: true, text: () => "Test mail in HTML" });
+
   await userEvent.click(getByTestId("HTML"));
+  expect(global.fetch).toHaveBeenCalledTimes(1);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/message_html/fo%40o");
+
   expect(screen.getByShadowText("Test mail in HTML")).toBeInTheDocument();
   expect(screen.queryByText("Test mail")).not.toBeInTheDocument();
 
   await userEvent.click(getByTestId("Text"));
   expect(screen.queryByShadowText("Test mail in HTML")).not.toBeInTheDocument();
   expect(screen.getByText("Test mail")).toBeInTheDocument();
+  expect(global.fetch).toHaveBeenCalledTimes(1);
 });
 
 test("allows to edit tags", async () => {
@@ -308,7 +314,7 @@ test("delete shortcut works", async () => {
 
 test("click expands and collapses quoted text", async () => {
   msg.body = {
-    "text/html": "Test mail in HTML",
+    "text/html": true,
     "text/plain": "Test mail\n\n> quoted text bla bla bla"
   }
   const { container } = render(() => <Message msg={msg} active={true}/>);
