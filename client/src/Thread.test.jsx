@@ -760,4 +760,50 @@ test("sets active message based on unread", async () => {
   expect(navs[1].classList).not.toContain("active");
 });
 
+test("sets active message based on deleted", async () => {
+  vi.stubGlobal('location', {
+    ...window.location,
+    search: '?id=foo'
+  });
+  const tmp = JSON.parse(JSON.stringify(thread));
+  tmp[1].tags.push("deleted");
+  vi.stubGlobal("data", {"thread": tmp});
+  const { container } = render(() => <Thread/>);
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("Test.")).toBeInTheDocument();
+  });
+
+  // expanded
+  expect(screen.getByText("foo bar <foo@bar.com>")).toBeInTheDocument();
+  expect(screen.getByText("bar foo <bar@foo.com>")).toBeInTheDocument();
+  expect(screen.getByText("test@test.com")).toBeInTheDocument();
+  expect(screen.getByText("foo.txt (100 Bi, text)")).toBeInTheDocument();
+  expect(screen.getByText("foo")).toBeInTheDocument();
+  expect(screen.getByText("bar")).toBeInTheDocument();
+  expect(screen.getByText("test")).toBeInTheDocument();
+  expect(screen.getByText("Test mail")).toBeInTheDocument();
+
+  // collapsed email
+  expect(screen.getByText("foo2 bar <foo@bar.com>")).toBeInTheDocument();
+  expect(screen.queryByText("bar2 foo2 <bar@foo.com>")).not.toBeInTheDocument();
+  expect(screen.queryByText("test2@test2.com")).not.toBeInTheDocument();
+  expect(screen.getByText("Test mail2")).toBeInTheDocument();
+  expect(screen.queryByText("foo2")).not.toBeInTheDocument();
+  expect(screen.queryByText("bar2")).not.toBeInTheDocument();
+  expect(screen.queryByText("test2")).not.toBeInTheDocument();
+
+  expect(document.title).toBe("Test.");
+
+  // thread nav
+  const navs = container.querySelectorAll(".threadnav-box");
+  expect(navs.length).toBe(2);
+  expect(getComputedStyle(navs[0]).getPropertyValue("--depth")).toBe("0");
+  expect(getComputedStyle(navs[1]).getPropertyValue("--depth")).toBe("0");
+  expect(navs[0].style["border-radius"]).toBe("0em");
+  expect(navs[1].style["border-radius"]).toBe("0em");
+  expect(navs[0].classList).toContain("active");
+  expect(navs[1].classList).not.toContain("active");
+});
+
 // vim: tabstop=2 shiftwidth=2 expandtab

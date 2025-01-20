@@ -8,16 +8,22 @@ import "./Kukulkan.css";
 import { extractEmailsSort, filterSubjectColor, filterAdminTags, getColor } from "./utils.js";
 import { handleSwipe, mkShortcut } from "./UiUtils.jsx";
 
-function getFirstUnread(thread) {
-  let firstUnread = thread.findIndex((m) => {
+// finds first message to show; unread or not deleted
+function getFirstToShow(thread) {
+  let first = thread.findIndex((m) => {
     return m.tags.includes("unread");
   });
-  return firstUnread > -1 ? firstUnread : thread.length - 1;
+  if(first === -1) {
+    first = thread.findLastIndex((m) => {
+      return !m.tags.includes("deleted");
+    });
+  }
+  return first;
 }
 
 function filterThread(msg, thread) {
   if(msg === null) {
-    msg = thread[getFirstUnread(thread)];
+    msg = thread[getFirstToShow(thread)];
   }
 
   let prv = [];
@@ -66,7 +72,7 @@ export function Thread(props) {
     setActiveMessage(activeIdx);
   } else {
     setFilteredThread(data.thread);
-    setActiveMessage(getFirstUnread(data.thread));
+    setActiveMessage(getFirstToShow(data.thread));
   }
 
   mkShortcut([["Home"], ["1"]],
@@ -133,7 +139,7 @@ export function Thread(props) {
         setActiveMessage(activeIdx);
       } else {
         setFilteredThread(data.thread);
-        setActiveMessage(getFirstUnread(data.thread));
+        setActiveMessage(getFirstToShow(data.thread));
       }
     }
   );
