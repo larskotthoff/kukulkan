@@ -2423,7 +2423,7 @@ def test_send_reply_cal(setup):
     mq.search_messages.side_effect = [iter([mf]), iter([mf]), iter([mf])]
 
     with patch("notmuch.Query", return_value=mq) as q:
-        with patch("src.kukulkan.message_attachment",
+        with patch("src.kukulkan.message_attachments",
                    return_value=[{"filename": "unnamed attachment", "content_type": "text/calendar",
                                   "content": "BEGIN:VCALENDAR\n" +
                                              "METHOD:REQUEST\n" +
@@ -2548,7 +2548,7 @@ def test_send_forward(setup):
     mq.search_messages.side_effect = [iter([mf]), iter([mf])]
 
     with patch("notmuch.Query", return_value=mq) as q:
-        with patch("src.kukulkan.message_attachment", return_value=[{"filename": "testfile", "content_type": "text/plain", "content": b"This is content."}]) as ma:
+        with patch("src.kukulkan.message_attachments", return_value=[{"filename": "testfile", "content_type": "text/plain", "content": b"This is content."}]) as ma:
             with patch("notmuch.Database", return_value=dbw):
                 with patch("builtins.open", mock_open()) as m:
                     text = None
@@ -2651,7 +2651,7 @@ def test_send_forward_text_attachment(setup):
     mq.search_messages.side_effect = [iter([mf]), iter([mf])]
 
     with patch("notmuch.Query", return_value=mq) as q:
-        with patch("src.kukulkan.message_attachment", return_value=[{"filename": "unnamed attachment", "content_type": "text/plain", "content": "This is content."}]) as ma:
+        with patch("src.kukulkan.message_attachments", return_value=[{"filename": "unnamed attachment", "content_type": "text/plain", "content": "This is content."}]) as ma:
             with patch("notmuch.Database", return_value=dbw):
                 with patch("builtins.open", mock_open()) as m:
                     text = None
@@ -3327,7 +3327,7 @@ def test_send_sign_reply_cal(setup):
     handle = mo.return_value
     handle.read.side_effect = crypto_open_vals
     with patch("notmuch.Query", return_value=mq) as q:
-        with patch("src.kukulkan.message_attachment",
+        with patch("src.kukulkan.message_attachments",
                    return_value=[{"filename": "unnamed attachment", "content_type": "text/calendar",
                                   "content": "BEGIN:VCALENDAR\n" +
                                              "METHOD:REQUEST\n" +

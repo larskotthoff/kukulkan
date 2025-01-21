@@ -21,7 +21,7 @@ import base64
 
 from tempfile import mkstemp, NamedTemporaryFile
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import notmuch
 from flask import Flask, Response, abort, current_app, g, render_template, request, send_file, send_from_directory
@@ -70,7 +70,11 @@ policy = email.policy.default.clone(utf8=True)
 
 
 # claude helped with this
-def feed_input(process, buffer, bytes_written):
+def feed_input(
+    process: subprocess.Popen,
+    buffer: io.BytesIO,
+    bytes_written: queue.Queue,
+) -> None:
     """Feeds input from a buffer to a process, monitoring how much is written."""
     processed = 0
     while True:
@@ -78,8 +82,8 @@ def feed_input(process, buffer, bytes_written):
         if not chunk:
             break
         processed += len(chunk)
-        process.stdin.write(chunk)
-        process.stdin.flush()
+        process.stdin.write(chunk) # type: ignore[union-attr]
+        process.stdin.flush() # type: ignore[union-attr]
         bytes_written.put(processed)
 
 
@@ -156,25 +160,25 @@ def close_db(e: Optional[Any] = None) -> None:
     g.db.close()
 
 
-def get_globals():
+def get_globals() -> Dict[str, Any]:
     """Get global configuration variables."""
     try:
-        accts = current_app.config.custom["accounts"]
+        accts = current_app.config.custom["accounts"] # type: ignore[attr-defined]
     except KeyError:
         accts = []
     tags = [tag for tag in get_db().get_all_tags() if tag != "(null)"]
     try:
-        cmp = current_app.config.custom["compose"]
+        cmp = current_app.config.custom["compose"] # type: ignore[attr-defined]
     except KeyError:
         cmp = []
     return {"accounts": accts, "allTags": tags, "compose": cmp}
 
 
-def email_address_complete(query_string):
+def email_address_complete(query_string: str) -> Dict[str, str]:
     """Returns list of email addresses from messages that match the
     query_string."""
     qs = query_string.casefold()
-    addrs = {}
+    addrs: Dict[str, str] = {}
     i = 0
     for msg in get_query(f"from:{query_string} or to:{query_string}").search_messages():
         for header in ['from', 'to', 'cc', 'bcc']:
@@ -183,19 +187,19 @@ def email_address_complete(query_string):
                 for addr in split_email_addresses(value):
                     acf = addr.casefold()
                     if qs in acf:
-                        email_addr = re.search(r'[^ "\'<>]+@[^ >"\']+', acf).group()
-                        # keep first one (i.e. most recent)
-                        try:
-                            addrs[email_addr]
-                        except KeyError:
-                            addrs[email_addr] = addr
+                        match = re.search(r"[^ \"'<>]+@[^ >\"']+", acf)
+                        if match:
+                            email_addr = match.group()
+                            # keep first one (i.e. most recent)
+                            if email_addr not in addrs:
+                                addrs[email_addr] = addr
         if i > 1000 or len(addrs) > 14:
             break
         i += 1
     return addrs
 
 
-def create_app():
+def create_app() -> Flask:
     """Flask application factory."""
     if os.getenv("FLASK_DEBUG"):
         app = Flask(__name__, static_folder="static", template_folder="../../client/")
@@ -204,13 +208,17 @@ def create_app():
     app.config["PROPAGATE_EXCEPTIONS"] = True
     app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 900
 
-    config_path = os.getenv("XDG_CONFIG_HOME") if os.getenv("XDG_CONFIG_HOME") else os.getenv("HOME") + os.path.sep + ".config"
+    config_path = (
+        os.getenv("XDG_CONFIG_HOME")
+        if os.getenv("XDG_CONFIG_HOME")
+        else os.path.join(os.getenv("HOME", ""), ".config")
+    )
     try:
         with open(f"{config_path}{os.path.sep}kukulkan{os.path.sep}config", "r", encoding="utf8") as f:
-            app.config.custom = json.load(f)
+            app.config.custom = json.load(f) # type: ignore[attr-defined]
     except FileNotFoundError:
         app.logger.warning("Configuration file not found, setting empty config.")
-        app.config.custom = {}
+        app.config.custom = {} # type: ignore[attr-defined]
 
     app.logger.setLevel(logging.INFO)
 
@@ -228,30 +236,43 @@ def create_app():
         return render_template("index.html", data=globs)
 
     @app.route("/<path:path>", methods=['GET', 'POST'])
-    def send_js(path):
-        if path and os.path.exists(safe_join(app.static_folder, path)):
-            return send_from_directory(app.static_folder, path)
+    def send_js(path: str) -> Any:
+        full_path = safe_join(app.static_folder or "/", path)
+        if path and full_path and os.path.exists(full_path):
+            return send_from_directory(app.static_folder or "/", path)
         globs = get_globals()
         if path == "todo":
             globs["threads"] = query("tag:todo")
         elif path == "thread":
-            globs["thread"] = thread(request.args.get("id"))
+            globs["thread"] = thread(request.args.get("id") or "")
         elif path == "message":
-            if(attach_num := request.args.get("attachNum")):
-                globs["message"] = attachment_message(request.args.get("id"),
-                                                      int(attach_num))
+            attach_num_str = request.args.get("attachNum")
+            attach_num = int(attach_num_str) if attach_num_str else -1
+            if attach_num != -1:
+                globs["message"] = attachment_message(
+                    request.args.get("id") or "", attach_num
+                )
             else:
-                globs["message"] = message(request.args.get("id"))
+                globs["message"] = message(request.args.get("id") or "")
         elif path == "write":
-            if(wid := request.args.get("id")):
+            wid = request.args.get("id")
+            if wid:
                 globs["baseMessage"] = message(wid)
         return render_template("index.html", data=globs)
 
     @app.after_request
-    def security_headers(response):
+    def security_headers(response: Response) -> Response:
         response.headers["X-Content-Type-Options"] = "nosniff"
 
-        if os.getenv("FLASK_DEBUG") or ("allow-cross-origin-write" in current_app.config.custom and current_app.config.custom["allow-cross-origin-write"] == "true" and (request.path.startswith("/write") or request.path.startswith("/api/edit_external"))):
+        if (
+            os.getenv("FLASK_DEBUG")
+            or (
+                "allow-cross-origin-write" in current_app.config.custom # type: ignore[attr-defined]
+                and current_app.config.custom["allow-cross-origin-write"] == "true" # type: ignore[attr-defined]
+                and (request.path.startswith("/write") or request.path.startswith("/api/edit_external")
+                )
+            )
+        ):
             response.headers["Access-Control-Allow-Origin"] = "*"
             response.headers["Cross-Origin-Opener-Policy"] = "cross-origin"
             response.headers["Cross-Origin-Resource-Policy"] = "cross-origin"
@@ -352,12 +373,14 @@ def create_app():
         return f"{escape(nids)}/{escape(tags)}"
 
     @app.route("/api/tag/<op>/<string:typ>/<string:nid>/<string:tag>")
-    def change_tag(op, typ, nid, tag):
+    def change_tag(op: str, typ: str, nid: str, tag: str) -> str:
         # pylint: disable=no-member
         id_type = 'id' if typ == "message" else typ
         tag_prefix = 'not ' if op == "add" else ''
         query = f"{id_type}:{nid} and {tag_prefix}tag:{tag}"
-        db_write = notmuch.Database(None, create=False, mode=notmuch.Database.MODE.READ_WRITE)
+        db_write = notmuch.Database(
+            None, create=False, mode=notmuch.Database.MODE.READ_WRITE # type: ignore[attr-defined]
+        )
         msgs = list(get_query(query, db_write, False).search_messages())
         try:
             db_write.begin_atomic()
@@ -373,9 +396,9 @@ def create_app():
         return escape(tag)
 
     @app.route('/api/edit_external', methods=['POST'])
-    def edit_external():
+    def edit_external() -> Any:
         try:
-            editcmd = current_app.config.custom["compose"]["external-editor"]
+            editcmd = current_app.config.custom["compose"]["external-editor"] # type: ignore[attr-defined]
             if not editcmd:
                 abort(404)
         except KeyError:
@@ -387,17 +410,16 @@ def create_app():
             tmp.write(request.values['body'])
             tmp.close()
             subprocess.run(editcmd.split(' ') + [tmp.name], check=True)
-            # pylint: disable=consider-using-with
-            tmp = open(tmp.name, encoding="utf8")
-            return tmp.read()
+            with open(tmp.name, encoding="utf8") as tmp_file:
+                return tmp_file.read()
         finally:
             tmp.close()
             os.unlink(tmp.name)
 
     @app.route('/api/send', methods=['GET', 'POST'])
-    def send():
+    def send() -> Tuple[Dict[str, str], int]:
         try:
-            accounts = current_app.config.custom["accounts"]
+            accounts = current_app.config.custom["accounts"] # type: ignore[attr-defined]
             account = [acct for acct in accounts if acct["id"] == request.values['from']][0]
         except (KeyError, IndexError) as e:
             raise ValueError("Unable to find matching account in config!") from e
@@ -408,11 +430,15 @@ def create_app():
         if request.values['action'] == "forward":
             # attach attachments and HTML from original mail
             ref_msg = get_message(request.values['refId'])
-            ref_atts = message_attachment(ref_msg)
+            ref_atts: List[Dict[str, Any]] = message_attachments(ref_msg)
             for key in request.values.keys():
                 if key.startswith("attachment-") and key not in request.files:
                     try:
-                        att = next(tmp for tmp in ref_atts if tmp["filename"] == request.values[key])
+                        att = next(
+                            tmp
+                            for tmp in ref_atts
+                            if tmp["filename"] == request.values[key]
+                        )
                         typ = att["content_type"].split('/', 1)
                         if isinstance(att["content"], bytes):
                             msg.add_attachment(att["content"], maintype=typ[0], subtype=typ[1], filename=att["filename"])
@@ -423,14 +449,14 @@ def create_app():
                         email_msg = email_from_notmuch(ref_msg)
                         for part in email_msg.walk():
                             if part.get_content_type() == "text/html":
-                                html = part.get_content()
+                                html = part.get_content() # type: ignore[attr-defined]
                                 msg.add_attachment(html, subtype="html")
 
         if request.values['action'].startswith("reply-cal-"):
             # create new calendar reply attachment
             action = request.values['action'].split('-')[2].capitalize()
             ref_msg = get_message(request.values['refId'])
-            ref_atts = message_attachment(ref_msg)
+            ref_atts = message_attachments(ref_msg)
             for key in request.values.keys():
                 if key.startswith("attachment-") and key not in request.files:
                     att = [tmp for tmp in ref_atts if tmp["filename"] == request.values[key]][0]
@@ -450,44 +476,48 @@ def create_app():
                         event["location"] = component["location"]
                         event["summary"] = f"{action}: {component['summary']}"
                         attendee = icalendar.vCalAddress(f'MAILTO:{account["email"]}')
-                        attendee.params['cn'] = icalendar.vText(account["name"])
+                        attendee.params['cn'] = icalendar.vText(account["name"]) # type: ignore[attr-defined]
                         if action == "Accept":
-                            attendee.params['partstat'] = icalendar.vText('ACCEPTED')
+                            attendee.params['partstat'] = icalendar.vText('ACCEPTED') # type: ignore[attr-defined]
                         elif action == "Decline":
-                            attendee.params['partstat'] = icalendar.vText('DECLINED')
+                            attendee.params['partstat'] = icalendar.vText('DECLINED') # type: ignore[attr-defined]
                         else:
-                            attendee.params['partstat'] = icalendar.vText(action.upper())
+                            attendee.params['partstat'] = icalendar.vText(action.upper()) # type: ignore[attr-defined]
                         event.add('attendee', attendee)
                         rcal.add_component(event)
                         msg.add_attachment(rcal.to_ical().decode("utf8"),
                                            subtype=typ[1],
                                            filename=att["filename"])
-                        msg.attach(email.mime.text.MIMEText(rcal.to_ical().decode("utf8"),
-                                                                       "calendar;method=REPLY"))
+                        msg.attach(
+                            email.mime.text.MIMEText(
+                                rcal.to_ical().decode("utf8"), # type: ignore[arg-type]
+                                "calendar;method=REPLY",
+                            )
+                        )
 
-        for att in request.files:
-            content = request.files[att].read()
-            typ = request.files[att].mimetype.split('/', 1)
+        for att_file in request.files:
+            content = request.files[att_file].read()
+            typ = request.files[att_file].mimetype.split('/', 1)
             msg.add_attachment(content, maintype=typ[0], subtype=typ[1],
-                               filename=request.files[att].filename)
+                               filename=request.files[att_file].filename)
 
         if "key" in account and "cert" in account:
             # using as_bytes directly doesn't seem to trigger content transfer
             # encoding etc, so the computed digest will be different from what's
             # sent
             with open(account["key"], 'rb') as key_data:
-                key = load_pem_private_key(key_data.read(), password=None)
+                key = load_pem_private_key(key_data.read(), password=None) # type: ignore[assignment]
             with open(account["cert"], 'rb') as cert_data:
                 cert = x509.load_pem_x509_certificate(cert_data.read())
 
             out = pkcs7.PKCS7SignatureBuilder().set_data(
                 msg.as_string(policy=policy).encode("utf8")
             ).add_signer(
-                cert, key, hashes.SHA512(), rsa_padding=padding.PKCS1v15()
+                cert, key, hashes.SHA512(), rsa_padding=padding.PKCS1v15() # type: ignore[arg-type]
             ).sign(
                 Encoding.SMIME, [pkcs7.PKCS7Options.DetachedSignature]
             )
-            msg = email.message_from_bytes(out)
+            msg = email.message_from_bytes(out) # type: ignore[assignment]
 
         msg['Subject'] = request.values['subject']
         msg['From'] = f'{account["name"]} <{account["email"]}>'
@@ -518,11 +548,11 @@ def create_app():
         rt = request.values['tags']
 
         # claude helped with this
-        def worker(send_id):
+        def worker(send_id: str) -> None:
             sendcmd = account["sendmail"]
             bytes_msg = msg.as_string(policy=policy).encode("utf8")
             bytes_total = len(bytes_msg)
-            bytes_written = queue.Queue()
+            bytes_written: queue.Queue = queue.Queue()
             with subprocess.Popen(sendcmd.split(' '), stdin=subprocess.PIPE,
                                   stdout=subprocess.PIPE,
                                   stderr=subprocess.PIPE) as p:
@@ -542,7 +572,7 @@ def create_app():
                         f.write(msg.as_string(policy=policy))
 
                     # pylint: disable=no-member
-                    db_write = notmuch.Database(None, create=False, mode=notmuch.Database.MODE.READ_WRITE)
+                    db_write = notmuch.Database(None, create=False, mode=notmuch.Database.MODE.READ_WRITE) # type: ignore[attr-defined]
                     try:
                         db_write.begin_atomic()
                         if ra == "reply" or ra.startswith("reply-cal-"):
@@ -626,23 +656,23 @@ def strip_tags(soup: BeautifulSoup) -> None:
     soup.smooth()
 
 
-def get_nested_body(email_msg, html=False):
+def get_nested_body(email_msg: email.message.Message, html: bool = False) -> Tuple[str, bool]:
     """Gets all, potentially MIME-nested bodies."""
     has_html = False
     content = ""
     for part in email_msg.walk():
         if part.get_content_type() == "text/plain" and html is False:
-            content += part.get_content()
+            content += part.get_content() # type: ignore[attr-defined]
         elif part.get_content_type() == "text/html":
             has_html = True
             if html is True:
-                content += part.get_content()
+                content += part.get_content() # type: ignore[attr-defined]
         elif part.get_content_type() == "application/pkcs7-mime":
             # https://stackoverflow.com/questions/58427642/how-to-extract-data-from-application-pkcs7-mime-using-the-email-module-in-pyth
             content_info = cms.ContentInfo.load(part.get_payload(decode=True))
             compressed_data = content_info['content']
             smime = compressed_data['encap_content_info']['content'].native
-            tmp = email.message_from_bytes(smime, policy=policy)
+            tmp = email.message_from_bytes(smime, policy=policy) # type: ignore[arg-type]
             tmp_content, tmp_has_html = get_nested_body(tmp, html)
             content += tmp_content
             if tmp_has_html:
@@ -650,7 +680,7 @@ def get_nested_body(email_msg, html=False):
 
     if html is True and content:
         try:
-            repl = current_app.config.custom["filter"]["content"]["text/html"]
+            repl = current_app.config.custom["filter"]["content"]["text/html"] # type: ignore[attr-defined]
             content = re.sub(repl[0], repl[1], content)
         except KeyError:
             pass
@@ -659,10 +689,10 @@ def get_nested_body(email_msg, html=False):
 
         # remove any conflicting document encodings
         tmp_html = lxml.html.fromstring(re.sub("<[?]xml[^>]+>", "", content))
-        for tag in tmp_html.xpath('//*[@*[contains(.,"http")]]'):
-            for name, value in tag.items():
+        for tag in tmp_html.xpath('//*[@*[contains(.,"http")]]'): # type: ignore[union-attr]
+            for name, value in tag.items(): # type: ignore[union-attr]
                 if "http" in value and not name == "href":
-                    del tag.attrib[name]
+                    del tag.attrib[name] # type: ignore[union-attr]
         content = lxml.html.tostring(cleaner.clean_html(tmp_html), encoding=str)
         content = re.sub(r'(?i)background-image:.*http.*?;', '', content)
 
@@ -679,7 +709,7 @@ def get_nested_body(email_msg, html=False):
             strip_tags(soup)
             content = ''.join(soup.get_text("\n\n", strip=True))
         try:
-            repl = current_app.config.custom["filter"]["content"]["text/plain"]
+            repl = current_app.config.custom["filter"]["content"]["text/plain"] # type: ignore[attr-defined]
             content = re.sub(repl[0], repl[1], content)
         except KeyError:
             pass
@@ -689,15 +719,17 @@ def get_nested_body(email_msg, html=False):
     return content, has_html
 
 
-def attendee_matches_addr(c, message):
+def attendee_matches_addr(c: icalendar.vCalAddress, message: email.message.Message) -> bool:
     """Check if a meeting attendee matches an address."""
-    forwarded_to = message.get("X-Forwarded-To").strip() if message.get("X-Forwarded-To") else None
+    forwarded_to = message.get("X-Forwarded-To")
+    if forwarded_to:
+        forwarded_to = forwarded_to.strip()
     try:
         addr = str(c).split(':')[1]
     except IndexError:
         addr = c
     try:
-        accounts = current_app.config.custom["accounts"]
+        accounts = current_app.config.custom["accounts"] # type: ignore[attr-defined]
         for acct in accounts:
             if acct["email"] == addr or forwarded_to == acct["email"]:
                 return True
@@ -708,14 +740,14 @@ def attendee_matches_addr(c, message):
     return False
 
 
-def get_attachments(email_msg, content=False):
+def get_attachments(email_msg: email.message.Message, content: bool = False) -> List[Dict[str, Any]]:
     """Returns all attachments for an email message."""
     attachments = []
     for part in email_msg.walk():
         if part.get_content_maintype() == "multipart":
             continue
         if (part.get_content_disposition() in ["attachment", "inline"] or part.get_content_type() == "text/calendar") and not (part.get_content_disposition() == "inline" and part.get_content_type() == "text/plain"):
-            ctnt = part.get_content()
+            ctnt = part.get_content() # type: ignore[attr-defined]
             preview = None
             if part.get_content_type() == "text/calendar" or part.get_content_type() == "text/x-vcalendar":
                 # create "preview"
@@ -802,7 +834,7 @@ def get_attachments(email_msg, content=False):
                 content_info = cms.ContentInfo.load(part.get_payload(decode=True))
                 compressed_data = content_info['content']
                 smime = compressed_data['encap_content_info']['content'].native
-                tmp = email.message_from_bytes(smime, policy=policy)
+                tmp = email.message_from_bytes(smime, policy=policy) # type: ignore[arg-type]
                 att_tmp = get_attachments(tmp, content)
                 attachments += att_tmp
     return attachments
@@ -816,12 +848,12 @@ def messages_to_json(messages: List[notmuch.Message]) -> List[Dict[str, Any]]:
     return [message_to_json(m) for m in msgs]
 
 
-def smime_verify(part, accts):
+def smime_verify(part: email.message.Message, accts: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Verify S/MIME signature of signed part, considering CAs in accounts."""
     try:
         trusted_certs = []
-        if 'ca-bundle' in current_app.config.custom:
-            with open(current_app.config.custom['ca-bundle'], "rb") as f:
+        if 'ca-bundle' in current_app.config.custom: # type: ignore[attr-defined]
+            with open(current_app.config.custom['ca-bundle'], "rb") as f: # type: ignore[attr-defined]
                 trusted_certs.append(x509.load_pem_x509_certificate(f.read()))
         for acct in accts:
             if 'ca' in acct:
@@ -837,7 +869,7 @@ def smime_verify(part, accts):
             if "pkcs7-signature" in content_type:
                 signature_data = pt.get_payload(decode=True)
             elif "pkcs7-mime" in content_type:
-                pkcs7_data = base64.b64decode(pt.get_payload())
+                pkcs7_data = base64.b64decode(str(pt.get_payload()))
                 try:
                     signature_data = pkcs7_data
                     signed_content = cms.ContentInfo.load(pkcs7_data)["content"]["encap_content_info"]["content"].contents
@@ -877,7 +909,7 @@ def smime_verify(part, accts):
         for tmpcert in signed_data_content["certificates"]:
             if serial == tmpcert.native["tbs_certificate"]["serial_number"]:
                 cert = tmpcert.chosen
-        x509cert = x509.load_pem_x509_certificate(pem.armor("CERTIFICATE", cert.dump()), default_backend())
+        x509cert = x509.load_pem_x509_certificate(pem.armor("CERTIFICATE", cert.dump()), default_backend()) # type: ignore[union-attr]
         public_key = x509cert.public_key()
 
         sigalgo = signed_data_content["signer_infos"][0]["signature_algorithm"]
@@ -899,10 +931,10 @@ def smime_verify(part, accts):
             mgf = getattr(padding, parameters["mask_gen_algorithm"].native["algorithm"].upper())(getattr(hashes, salgo)())
             salt_length = parameters["salt_length"].native
             try:
-                public_key.verify(
+                public_key.verify( # type: ignore[call-arg, union-attr]
                     signature,
                     signed_data,
-                    padding.PSS(mgf, salt_length),
+                    padding.PSS(mgf, salt_length), # type: ignore[arg-type]
                     getattr(hashes, salgo)(),
                 )
                 signatureok = True
@@ -911,10 +943,10 @@ def smime_verify(part, accts):
                 message = str(e)
         elif sigalgoname == "rsassa_pkcs1v15":
             try:
-                public_key.verify(
+                public_key.verify( # type: ignore[call-arg, union-attr]
                     signature,
                     signed_data,
-                    padding.PKCS1v15(),
+                    padding.PKCS1v15(), # type: ignore[arg-type]
                     getattr(hashes, algo.upper())(),
                 )
                 signatureok = True
@@ -949,9 +981,9 @@ def smime_verify(part, accts):
         return {"valid": False, "message": f"An internal error has occurred: {str(e)}"}
 
 
-def eml_to_json(message_bytes):
+def eml_to_json(message_bytes: bytes) -> Dict[str, Any]:
     """Converts an eml attachment (represented as bytes) to a JSON object."""
-    email_msg = email.message_from_bytes(message_bytes, policy=policy)
+    email_msg = email.message_from_bytes(message_bytes, policy=policy) # type: ignore[arg-type]
     body, has_html = get_nested_body(email_msg)
     res = {
         "from": email_msg["from"].strip().replace('\t', ' ') if "from" in email_msg else "",
@@ -978,7 +1010,7 @@ def eml_to_json(message_bytes):
     return res
 
 
-def message_to_json(message, get_deleted_body=False):
+def message_to_json(message: notmuch.Message, get_deleted_body: bool = False) -> Dict[str, Any]:
     """Converts a `notmuch.message.Message` instance to a JSON object."""
     tags = list(message.get_tags())
     if "deleted" in tags and get_deleted_body is False:
@@ -996,18 +1028,18 @@ def message_to_json(message, get_deleted_body=False):
         # signature verification
         # https://gist.github.com/russau/c0123ef934ef88808050462a8638a410
         for part in email_msg.walk():
-            if part.get('Content-Type') and "signed" in part.get('Content-Type'):
-                if "pkcs7-signature" in part.get('Content-Type') or "pkcs7-mime" in part.get('Content-Type'):
+            if part.get('Content-Type') and "signed" in part.get('Content-Type'): # type: ignore[operator]
+                if "pkcs7-signature" in part.get('Content-Type') or "pkcs7-mime" in part.get('Content-Type'): # type: ignore[operator]
                     try:
-                        accounts = current_app.config.custom["accounts"]
+                        accounts = current_app.config.custom["accounts"] # type: ignore[attr-defined]
                         accts = [acct for acct in accounts if acct["email"] in
                                  message.get_header("from").strip().replace('\t', ' ')]
                     except KeyError:
                         accts = []
                     signature = smime_verify(part, accts)
-                elif "pgp-signature" in part.get('Content-Type'):
-                    signed_content = bytes(part.get_payload()[0])
-                    sig = bytes(part.get_payload()[1])
+                elif "pgp-signature" in part.get('Content-Type'): # type: ignore[operator]
+                    signed_content = bytes(part.get_payload()[0]) # type: ignore[arg-type, index]
+                    sig = bytes(part.get_payload()[1]) # type: ignore[arg-type, index]
                     gpg = GPG()
                     public_keys = gpg.list_keys()
                     from_addr = message.get_header("from")
@@ -1022,14 +1054,14 @@ def message_to_json(message, get_deleted_body=False):
                         for uid in pkey.get('uids'):
                             if from_addr in uid:
                                 found = True
-                    if not found and 'gpg-keyserver' in current_app.config.custom:
+                    if not found and 'gpg-keyserver' in current_app.config.custom: # type: ignore[attr-defined]
                         current_app.logger.info(f"Key for {from_addr} not found, attempting to download...")
                         # TODO: handle case where server is unreachable
-                        keys = gpg.search_keys(from_addr, current_app.config.custom['gpg-keyserver'])
+                        keys = gpg.search_keys(from_addr, current_app.config.custom['gpg-keyserver']) # type: ignore[attr-defined]
                         if len(keys) > 0:
                             for key in keys:
                                 current_app.logger.info(f"Getting key {key.get('keyid')}")
-                                gpg.recv_keys(current_app.config.custom['gpg-keyserver'], key.get('keyid'))
+                                gpg.recv_keys(current_app.config.custom['gpg-keyserver'], key.get('keyid')) # type: ignore[attr-defined]
                     osfile, path = mkstemp()
                     try:
                         with os.fdopen(osfile, 'wb') as fd:
@@ -1074,19 +1106,22 @@ def message_to_json(message, get_deleted_body=False):
     return res
 
 
+def message_attachments(message: notmuch.Message) -> List[Dict[str, Any]]:
+    """Returns all attachments of a `notmuch.message.Message` instance."""
+    email_msg = email_from_notmuch(message)
+    return get_attachments(email_msg, True)
+
+
 def message_attachment(message: notmuch.Message, num: int = -1) -> Optional[Dict[str, Any]]:
     """Returns attachment no. `num` of a `notmuch.message.Message` instance."""
-    email_msg = email_from_notmuch(message)
-    attachments = get_attachments(email_msg, True)
-    if num == -1:
-        return attachments
+    attachments = message_attachments(message)
     if not attachments or num > len(attachments) - 1:
         return None
     return attachments[num]
 
 
-def email_from_notmuch(message):
+def email_from_notmuch(message: notmuch.Message) -> email.message.Message:
     """Returns the email message corresponding to a `notmuch.message.Message` instance."""
     with open(message.get_filename(), "rb") as f:
-        email_msg = email.message_from_binary_file(f, policy=policy)
+        email_msg = email.message_from_binary_file(f, policy=policy) # type: ignore[arg-type]
         return email_msg
