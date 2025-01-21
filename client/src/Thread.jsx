@@ -147,31 +147,33 @@ export function Thread(props) {
   function ThreadNav() {
     return (
       <Show when={filteredThread() && filteredThread()[activeMessage()]}>
-        <div class="vertical-stack threadnav-container sticky">
-          <For each={data.thread}>
-            {(m, i) =>
-              <div
-                onClick={() => {
-                  if(filteredThread() === data.thread) {
-                    setActiveMessage(i);
-                  } else {
-                    let [ft, activeIdx] = filterThread(m, data.thread);
-                    setFilteredThread(ft);
-                    setActiveMessage(activeIdx);
-                  }
-                }}
-                classList={{
-                  'threadnav-box': true,
-                  'active': filteredThread()[activeMessage()].message_id === m.message_id,
-                  'active-thread': filteredThread()?.find((mp) => { return mp.message_id === m.message_id; })
-                }}
-                style={{
-                  '--depth': (filteredThread() === data.thread ? 0 : m.depth),
-                  'border-radius': m.tags.includes("unread") ? "1em" : "0em",
-                  'background-color': getColor(filterSubjectColor(m.subject) + filterAdminTags(m.tags) + extractEmailsSort(m.from + m.to + m.cc))
-                }}
-              />}
-          </For>
+        <div class="threadnav-container">
+          <div class="vertical-stack threadnav-inner">
+            <For each={data.thread}>
+              {(m, i) =>
+                <div
+                  onClick={() => {
+                    if(filteredThread() === data.thread) {
+                      setActiveMessage(i);
+                    } else {
+                      let [ft, activeIdx] = filterThread(m, data.thread);
+                      setFilteredThread(ft);
+                      setActiveMessage(activeIdx);
+                    }
+                  }}
+                  classList={{
+                    'threadnav-box': true,
+                    'active': filteredThread()[activeMessage()].message_id === m.message_id,
+                    'active-thread': filteredThread()?.find((mp) => { return mp.message_id === m.message_id; })
+                  }}
+                  style={{
+                    '--depth': (filteredThread() === data.thread ? 0 : m.depth),
+                    'border-radius': m.tags.includes("unread") ? "1em" : "0em",
+                    'background-color': getColor(filterSubjectColor(m.subject) + filterAdminTags(m.tags) + extractEmailsSort(m.from + m.to + m.cc))
+                  }}
+                />}
+            </For>
+          </div>
         </div>
       </Show>
     );

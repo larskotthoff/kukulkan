@@ -396,14 +396,24 @@ button > span {
 }
 
 .threadnav-container {
-    margin-top: 0.5em;
-    margin-left: 0.5em;
-    max-width: 10%;
+    height: 100vh;
     overflow: auto;
-    width: auto;
-    padding-right: 5px;
+    direction: rtl;
 
-    gap: 0px;
+    position: fixed;
+    top: 1em;
+    left: .5em;
+    padding-left: .5em;
+
+    @media (max-width: 83em) {
+        max-width: 3.5em;
+    }
+}
+
+.threadnav-inner {
+    overflow: auto;
+    direction: ltr;
+    gap: .5px;
 }
 
 .threadnav-box {
