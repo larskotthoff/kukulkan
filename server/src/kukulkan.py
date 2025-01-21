@@ -1067,7 +1067,7 @@ def message_to_json(message: notmuch.Message, get_deleted_body: bool = False) ->
                         with os.fdopen(osfile, 'wb') as fd:
                             fd.write(sig)
                             fd.close()
-                            verified = gpg.verify_data(path, signed_content)
+                            verified = gpg.verify_data(path, signed_content) # type: ignore[attr-defined]
                             if verified.valid:
                                 signature = {"valid": True}
                             else:
