@@ -96,7 +96,7 @@ test("general shortcuts work", async () => {
 
   await userEvent.type(document.body, "c");
   expect(window.open).toHaveBeenCalledTimes(1);
-  expect(window.open).toHaveBeenCalledWith('/write', '_blank');
+  expect(window.open).toHaveBeenCalledWith('/write', '_self');
 });
 
 test("provides tag completions", async () => {
@@ -160,12 +160,12 @@ test("opens thread on enter and click", async () => {
 
   await userEvent.type(document.body, "{enter}");
   expect(window.open).toHaveBeenCalledTimes(1);
-  expect(window.open).toHaveBeenCalledWith('/thread?id=foo', '_blank');
+  expect(window.open).toHaveBeenCalledWith('/thread?id=foo', '_self');
 
   await userEvent.click(container.querySelector(".thread"));
   expect(window.open).toHaveBeenCalledTimes(2);
-  expect(window.open).toHaveBeenCalledWith('/thread?id=foo', '_blank');
-  expect(window.open).toHaveBeenCalledWith('/thread?id=foo', '_blank');
+  expect(window.open).toHaveBeenCalledWith('/thread?id=foo', '_self');
+  expect(window.open).toHaveBeenCalledWith('/thread?id=foo', '_self');
 });
 
 test("opens thread on enter and click in same tab with config", async () => {
@@ -243,7 +243,7 @@ test("navigation and selection shortcuts work", async () => {
   await userEvent.type(document.body, "{end}");
   await userEvent.type(document.body, "{enter}");
   expect(window.open).toHaveBeenCalledTimes(1);
-  expect(window.open).toHaveBeenCalledWith('/thread?id=bar', '_blank');
+  expect(window.open).toHaveBeenCalledWith('/thread?id=bar', '_self');
 });
 
 test("delete thread works", async () => {

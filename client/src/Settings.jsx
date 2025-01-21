@@ -6,7 +6,7 @@ export function getSetting(setting) {
     case "numQueries":
       return parseInt(localStorage.getItem("settings-numQueries"), 10) || 10;
     case "openInTab":
-      return localStorage.getItem("settings-openInTab") || "_blank";
+      return localStorage.getItem("settings-openInTab") || "_self";
     case "showNestedThread":
       val = localStorage.getItem("settings-showNestedThread");
       if(val === null) {

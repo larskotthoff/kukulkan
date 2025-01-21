@@ -18,7 +18,7 @@ test("exports Settings", () => {
 
 test("gets settings", () => {
   expect(getSetting("numQueries")).toBe(10);
-  expect(getSetting("openInTab")).toBe("_blank");
+  expect(getSetting("openInTab")).toBe("_self");
   expect(getSetting("showNestedThread")).toBe(true);
   expect(getSetting("externalCompose")).toBe(-1);
   expect(getSetting("abbreviateQuoted")).toBe(true);
@@ -40,10 +40,10 @@ test("allows to change settings", async () => {
   await fireEvent.change(screen.getByTestId("numQueries"));
   expect(getSetting("numQueries")).toBe(1);
 
-  expect(getSetting("openInTab")).toBe("_blank");
-  screen.getByText("same").selected = true;
-  await fireEvent.change(screen.getByTestId("openInTab"));
   expect(getSetting("openInTab")).toBe("_self");
+  screen.getByText("new").selected = true;
+  await fireEvent.change(screen.getByTestId("openInTab"));
+  expect(getSetting("openInTab")).toBe("_blank");
 
   expect(getSetting("showNestedThread")).toBe(true);
   screen.getByText("flattened").selected = true;
