@@ -21,6 +21,8 @@ import base64
 
 from tempfile import mkstemp, NamedTemporaryFile
 
+from typing import Any, Dict, List, Optional
+
 import notmuch
 from flask import Flask, Response, abort, current_app, g, render_template, request, send_file, send_from_directory
 from markupsafe import escape
@@ -62,7 +64,7 @@ cleaner = Cleaner(javascript=True,
                   add_nofollow=True)
 
 
-send_queue = queue.Queue()
+send_queue: queue.Queue = queue.Queue()
 
 policy = email.policy.default.clone(utf8=True)
 
@@ -82,7 +84,7 @@ def feed_input(process, buffer, bytes_written):
 
 
 # claude helped with this as well
-def email_addresses_header(emails):
+def email_addresses_header(emails: str) -> str:
     """Encodes email names and addresses from list of addresses separated by newline."""
     tmp = []
     if len(emails) > 0:
@@ -100,7 +102,7 @@ def email_addresses_header(emails):
     return ", ".join(str(addr) for addr in tmp)
 
 
-def extract_name_from_email(email_str):
+def extract_name_from_email(email_str: Optional[str]) -> str:
     """Extracts the name part from an email address, or the address if there is
     no name part."""
     if email_str is None:
@@ -112,20 +114,22 @@ def extract_name_from_email(email_str):
     return name.strip('"\',')
 
 
-def split_email_addresses(header):
+def split_email_addresses(header: str) -> List[str]:
     """Returns all email addresses (without the names) in a string."""
     addresses = re.findall(r'([^,][^@]*@[^,]+)', header.replace('\t', ' '))
     return [addr.strip() for addr in addresses]
 
 
-def get_db():
+def get_db() -> notmuch.Database:
     """Get a new `Database` instance. Called before every request. Cached on first call."""
     if "db" not in g:
         g.db = notmuch.Database(None, create=False)
     return g.db
 
 
-def get_query(query_string, db=None, exclude=True):
+def get_query(
+    query_string: str, db: Optional[notmuch.Database] = None, exclude: bool = True
+) -> notmuch.Query:
     """Get a Query with config set."""
     db = get_db() if db is None else db
     query = notmuch.Query(db, query_string)
@@ -136,7 +140,7 @@ def get_query(query_string, db=None, exclude=True):
     return query
 
 
-def get_message(message_id):
+def get_message(message_id: str) -> notmuch.Message:
     """Get a single message."""
     msgs = list(get_query(f'id:{message_id}', exclude=False).search_messages())
     if not msgs:
@@ -147,7 +151,7 @@ def get_message(message_id):
 
 
 # pylint: disable=unused-argument
-def close_db(e=None):
+def close_db(e: Optional[Any] = None) -> None:
     """Close the Database. Called after every request."""
     g.db.close()
 
@@ -211,13 +215,13 @@ def create_app():
     app.logger.setLevel(logging.INFO)
 
     @app.before_request
-    def before_request():
+    def before_request() -> None:
         get_db()
 
     app.teardown_appcontext(close_db)
 
     @app.route("/", methods=['GET', 'POST'])
-    def send_index():
+    def send_index() -> Any:
         globs = get_globals()
         if(query_string := request.args.get("query")):
             globs["threads"] = query(query_string)
@@ -259,20 +263,20 @@ def create_app():
         return response
 
     @app.route("/api/query/<string:query_string>")
-    def query(query_string):
+    def query(query_string: str) -> List[Dict[str, Any]]:
         threads = get_query(query_string).search_threads()
         return [thread_to_json(t) for t in threads]
 
     @app.route("/api/address/<string:query_string>")
-    def address_complete(query_string):
+    def address_complete(query_string: str) -> List[str]:
         return list(email_address_complete(query_string).values())
 
     @app.route("/api/email/<string:query_string>")
-    def email_complete(query_string):
+    def email_complete(query_string: str) -> List[str]:
         return list(email_address_complete(query_string).keys())
 
     @app.route("/api/thread/<string:thread_id>")
-    def thread(thread_id):
+    def thread(thread_id: str) -> Any:
         threads = list(get_query(f'thread:"{thread_id}"', exclude=False).search_threads())
         if not threads:
             abort(404)
@@ -283,7 +287,7 @@ def create_app():
 
     @app.route("/api/attachment/<string:message_id>/<int:num>")
     @app.route("/api/attachment/<string:message_id>/<int:num>/<int:scale>")
-    def attachment(message_id, num, scale=0):
+    def attachment(message_id: str, num: int, scale: int = 0) -> Any:
         msg = get_message(message_id)
         d = message_attachment(msg, num)
         if not d:
@@ -305,7 +309,7 @@ def create_app():
                          download_name=d["filename"].replace('\n', ''))
 
     @app.route("/api/attachment_message/<string:message_id>/<int:num>")
-    def attachment_message(message_id, num):
+    def attachment_message(message_id: str, num: int) -> Any:
         msg = get_message(message_id)
         d = message_attachment(msg, num)
         if not d:
@@ -313,32 +317,32 @@ def create_app():
         return eml_to_json(bytes(d["content"]))
 
     @app.route("/api/message/<string:message_id>")
-    def message(message_id):
+    def message(message_id: str) -> Dict[str, Any]:
         msg = get_message(message_id)
         return message_to_json(msg, True)
 
     @app.route("/api/message_html/<string:message_id>")
-    def message_html(message_id):
+    def message_html(message_id: str) -> str:
         msg = get_message(message_id)
         email_msg = email_from_notmuch(msg)
         html, _ = get_nested_body(email_msg, True)
         return html
 
     @app.route("/api/raw_message/<string:message_id>")
-    def raw_message(message_id):
+    def raw_message(message_id: str) -> str:
         msg = get_message(message_id)
         with open(msg.get_filename(), "r", encoding="utf8") as f:
             content = f.read()
         return content
 
     @app.route("/api/auth_message/<string:message_id>")
-    def auth_message(message_id):
+    def auth_message(message_id: str) -> Dict[str, Any]:
         msg = get_message(message_id)
         # https://npm.io/package/mailauth
         return json.loads(os.popen(f"mailauth {msg.get_filename()}").read())['arc']['authResults']
 
     @app.route("/api/tag_batch/<string:typ>/<string:nids>/<string:tags>")
-    def change_tags(typ, nids, tags):
+    def change_tags(typ: str, nids: str, tags: str) -> str:
         for nid in nids.split(' '):
             for tag in tags.split(' '):
                 if tag[0] == '-':
@@ -573,8 +577,8 @@ def create_app():
 
     # claude helped with this
     @app.route("/api/send_progress/<send_id>")
-    def task_progress(send_id):
-        def generate():
+    def task_progress(send_id: str) -> Response:
+        def generate() -> Any:
             run = True
             while run:
                 try:
@@ -593,7 +597,7 @@ def create_app():
     return app
 
 
-def thread_to_json(thread):
+def thread_to_json(thread: notmuch.Thread) -> Dict[str, Any]:
     """Converts a `notmuch.threads.Thread` instance to a JSON object."""
     # necessary to get accurate tags and metadata, work around the notmuch API
     # only considering the matched messages
@@ -613,7 +617,7 @@ def thread_to_json(thread):
     }
 
 
-def strip_tags(soup):
+def strip_tags(soup: BeautifulSoup) -> None:
     """Strip HTML tags."""
     for typ in ["a", "span", "em", "strong", "u", "i", "font", "mark", "label",
                 "s", "sub", "sup", "tt", "bdo", "button", "cite", "del", "b"]:
@@ -804,7 +808,7 @@ def get_attachments(email_msg, content=False):
     return attachments
 
 
-def messages_to_json(messages):
+def messages_to_json(messages: List[notmuch.Message]) -> List[Dict[str, Any]]:
     """Converts a list of `notmuch.message.Message` instances to a JSON object."""
     msgs = list(messages)
     if len(msgs) == 1:
@@ -977,7 +981,7 @@ def eml_to_json(message_bytes):
 def message_to_json(message, get_deleted_body=False):
     """Converts a `notmuch.message.Message` instance to a JSON object."""
     tags = list(message.get_tags())
-    if "deleted" in tags and get_deleted_body == False:
+    if "deleted" in tags and get_deleted_body is False:
         attachments = []
         body = "(deleted message)"
         has_html = False
@@ -1070,7 +1074,7 @@ def message_to_json(message, get_deleted_body=False):
     return res
 
 
-def message_attachment(message, num=-1):
+def message_attachment(message: notmuch.Message, num: int = -1) -> Optional[Dict[str, Any]]:
     """Returns attachment no. `num` of a `notmuch.message.Message` instance."""
     email_msg = email_from_notmuch(message)
     attachments = get_attachments(email_msg, True)
