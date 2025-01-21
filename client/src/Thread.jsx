@@ -8,17 +8,17 @@ import "./Kukulkan.css";
 import { extractEmailsSort, filterSubjectColor, filterAdminTags, getColor } from "./utils.js";
 import { handleSwipe, mkShortcut } from "./UiUtils.jsx";
 
-// finds first message to show; unread or not deleted
+// finds first message to show; unread or not deleted or last message
 function getFirstToShow(thread) {
   let first = thread.findIndex((m) => {
     return m.tags.includes("unread");
   });
   if(first === -1) {
     first = thread.findLastIndex((m) => {
-      return !m.tags.includes("deleted");
+      return m.tags.includes("deleted") === false;
     });
   }
-  return first;
+  return first > -1 ? first : thread.length - 1;
 }
 
 function filterThread(msg, thread) {

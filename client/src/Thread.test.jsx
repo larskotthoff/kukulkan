@@ -760,7 +760,34 @@ test("sets active message based on unread", async () => {
   expect(navs[1].classList).not.toContain("active");
 });
 
-test("sets active message based on deleted", async () => {
+test("sets active message based on deleted for single message", async () => {
+  vi.stubGlobal('location', {
+    ...window.location,
+    search: '?id=foo'
+  });
+  const tmp = JSON.parse(JSON.stringify(thread[0]));
+  tmp.tags.push("deleted");
+  vi.stubGlobal("data", {"thread": [tmp]});
+  const { container } = render(() => <Thread/>);
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("Test.")).toBeInTheDocument();
+  });
+
+  // expanded
+  expect(screen.getByText("foo bar <foo@bar.com>")).toBeInTheDocument();
+  expect(screen.getByText("bar foo <bar@foo.com>")).toBeInTheDocument();
+  expect(screen.getByText("test@test.com")).toBeInTheDocument();
+  expect(screen.getByText("foo.txt (100 Bi, text)")).toBeInTheDocument();
+  expect(screen.getByText("foo")).toBeInTheDocument();
+  expect(screen.getByText("bar")).toBeInTheDocument();
+  expect(screen.getByText("test")).toBeInTheDocument();
+  expect(screen.getByText("Test mail")).toBeInTheDocument();
+
+  expect(document.title).toBe("Test.");
+});
+
+test("sets active message based on deleted for multiple messages", async () => {
   vi.stubGlobal('location', {
     ...window.location,
     search: '?id=foo'

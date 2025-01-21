@@ -977,7 +977,7 @@ def eml_to_json(message_bytes):
 def message_to_json(message, get_deleted_body=False):
     """Converts a `notmuch.message.Message` instance to a JSON object."""
     tags = list(message.get_tags())
-    if "deleted" in tags and not get_deleted_body:
+    if "deleted" in tags and get_deleted_body == False:
         attachments = []
         body = "(deleted message)"
         has_html = False
