@@ -25,6 +25,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import notmuch
 from flask import Flask, Response, abort, current_app, g, render_template, request, send_file, send_from_directory
+from flask_compress import Compress
 from markupsafe import escape
 from werkzeug.utils import safe_join
 
@@ -67,7 +68,6 @@ cleaner = Cleaner(javascript=True,
 send_queue: queue.Queue = queue.Queue()
 
 policy = email.policy.default.clone(utf8=True)
-
 
 # claude helped with this
 def feed_input(
@@ -207,6 +207,7 @@ def create_app() -> Flask:
         app = Flask(__name__, static_folder="static", template_folder="static")
     app.config["PROPAGATE_EXCEPTIONS"] = True
     app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 900
+    Compress(app)
 
     config_path = (
         os.getenv("XDG_CONFIG_HOME")

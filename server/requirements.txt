@@ -3,6 +3,7 @@ cryptography
 beautifulsoup4
 pillow
 Flask
+Flask-Compress
 icalendar
 lxml
 lxml_html_clean
