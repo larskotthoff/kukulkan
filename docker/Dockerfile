@@ -20,7 +20,6 @@ RUN cd \
     && git clone https://github.com/larskotthoff/kukulkan.git \
     && cd kukulkan \
     && pip install --break-system-packages -r server/requirements.txt \
-    && pip uninstall --break-system-packages notmuch \
     && ./deploy.sh
 
 RUN cd \
