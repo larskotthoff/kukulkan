@@ -10,17 +10,15 @@ RUN apt-get update -qq && apt-get install -y --no-install-recommends \
     python3-pip \
     wget \
     notmuch \
-    python3-notmuch \
     gunicorn \
     nodejs \
     npm \
-    python3-asn1crypto python3-bs4 python3-flask python3-icalendar python3-lxml python3-lxml-html-clean python3-cryptography python3-pillow python3-werkzeug python3-gnupg \
-    && rm -rf /var/lib/apt/lists/* \
-    && pip install --break-system-packages recurrent
+    && rm -rf /var/lib/apt/lists/*
 
 RUN cd \
     && git clone https://github.com/larskotthoff/kukulkan.git \
     && cd kukulkan \
+    && pip install --break-system-packages -r server/requirements.txt \
     && ./deploy.sh
 
 RUN cd \
