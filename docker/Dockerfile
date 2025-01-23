@@ -10,6 +10,7 @@ RUN apt-get update -qq && apt-get install -y --no-install-recommends \
     python3-pip \
     wget \
     notmuch \
+    python3-notmuch \
     gunicorn \
     nodejs \
     npm \
@@ -19,6 +20,7 @@ RUN cd \
     && git clone https://github.com/larskotthoff/kukulkan.git \
     && cd kukulkan \
     && pip install --break-system-packages -r server/requirements.txt \
+    && pip uninstall --break-system-packages notmuch \
     && ./deploy.sh
 
 RUN cd \
