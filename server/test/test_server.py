@@ -72,7 +72,7 @@ def test_query(setup):
     mm3 = lambda: None
     mm3.get_date = MagicMock(return_value="foobardate")
     mm3.get_tags = MagicMock(return_value=["foobartag"])
-    mm3.get_header = MagicMock(return_value="bar foo <bar@foo.com>")
+    mm3.get_header = MagicMock(return_value="bar\tfoo <bar@foo.com>")
 
     mt = lambda: None
     mt.get_messages = MagicMock(return_value=iter([mm1, mm2, mm3]))
@@ -91,8 +91,7 @@ def test_query(setup):
             response = test_client.get('/api/query/foo')
             assert response.status_code == 200
             thrds = json.loads(response.data.decode())
-            assert len(thrds) == 1
-            assert thrds[0]["authors"] == ["bar foo <bar@foo.com>", "foo bar <foo@bar.com>"]
+            assert thrds[0]["authors"] == ["foo bar <foo@bar.com>", "bar foo <bar@foo.com>"]
             assert thrds[0]["matched_messages"] == 23
             assert thrds[0]["newest_date"] == "foobardate"
             assert thrds[0]["oldest_date"] == "foodate"
@@ -106,13 +105,13 @@ def test_query(setup):
 
     mm1.get_date.assert_called_once()
     mm1.get_tags.assert_called_once()
-    mm1.get_header.assert_called_once()
+    assert mm1.get_header.call_count == 2
     assert mm2.get_date.call_count == 0
     mm2.get_tags.assert_called_once()
-    mm2.get_header.assert_called_once()
+    assert mm2.get_header.call_count == 2
     mm3.get_date.assert_called_once()
     mm3.get_tags.assert_called_once()
-    mm3.get_header.assert_called_once()
+    assert mm3.get_header.call_count == 2
 
     mt.get_messages.assert_called_once()
     mt.get_matched_messages.assert_called_once()

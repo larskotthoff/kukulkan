@@ -183,63 +183,60 @@ export function TodoThreads(props) {
       <Calendar/>
       <div class="vertical-stack clipped todo-threads">
         <For each={props.threads().sort(sortThreadsByDueDate)}>
-          {(thread, index) =>
-            <div classList={{
-                'thread': true,
-                'todo': true,
-                'active': index() === props.activeThread(),
-                'selected': props.selectedThreads().indexOf(index()) !== -1,
-                'due': dues()[index()][0] ? dues()[index()][0] < tomorrow : false
-              }}
-              onClick={() => {
-                props.setActiveThread(index());
-                props.openActive();
-              }}
-              onTouchStart={() => {
-                props.setActiveThread(index());
-              }}
-              onMouseEnter={() => {
-                const calElem = document.getElementsByClassName("calendar")[0];
-                prevScrollPos = { left: calElem?.scrollLeft, top: calElem?.scrollTop };
-                document.getElementsByClassName("calendar-box")[index()]?.classList.add("highlight");
-                document.getElementsByClassName("calendar-box")[index()]?.scrollIntoView({block: "nearest"});
-              }}
-              onMouseLeave={() => {
-                if(prevScrollPos) document.getElementsByClassName("calendar")[0].scrollTo(prevScrollPos);
-                document.getElementsByClassName("calendar-box")[index()]?.classList.remove("highlight");
-              }}
-            >
-              <div>
-                {dues()[index()][1]}
-              </div>
-              <div class="grid-authors" ref={e => wideNarrowObserver?.observe(e)}>
-                <div class="wide">
-                  <For each={thread.authors}>
-                    {(author) => {
-                      let pts = splitAddressHeader(author);
-                      return (<ColorChip key={pts[0]} value={pts[1]}/>);
-                    }}
+          {(thread, index) => {
+            const authors = thread.authors.map(splitAddressHeader);
+            return (
+              <div classList={{
+                  'thread': true,
+                  'todo': true,
+                  'active': index() === props.activeThread(),
+                  'selected': props.selectedThreads().indexOf(index()) !== -1,
+                  'due': dues()[index()][0] ? dues()[index()][0] < tomorrow : false
+                }}
+                onClick={() => {
+                  props.setActiveThread(index());
+                  props.openActive();
+                }}
+                onTouchStart={() => {
+                  props.setActiveThread(index());
+                }}
+                onMouseEnter={() => {
+                  const calElem = document.getElementsByClassName("calendar")[0];
+                  prevScrollPos = { left: calElem?.scrollLeft, top: calElem?.scrollTop };
+                  document.getElementsByClassName("calendar-box")[index()]?.classList.add("highlight");
+                  document.getElementsByClassName("calendar-box")[index()]?.scrollIntoView({block: "nearest"});
+                }}
+                onMouseLeave={() => {
+                  if(prevScrollPos) document.getElementsByClassName("calendar")[0].scrollTo(prevScrollPos);
+                  document.getElementsByClassName("calendar-box")[index()]?.classList.remove("highlight");
+                }}
+              >
+                <div>
+                  {dues()[index()][1]}
+                </div>
+                <div class="grid-authors" ref={e => wideNarrowObserver?.observe(e)}>
+                  <div class="narrow">
+                    <For each={authors}>
+                      {(author) => <ColorChip key={author[0]} value={author[2]}/>}
+                    </For>
+                  </div>
+                  <div class="wide">
+                    <For each={authors}>
+                      {(author) => <ColorChip key={author[0]} value={author[1]}/>}
+                    </For>
+                  </div>
+                </div>
+                <div class="grid-subject">
+                  {thread.subject}
+                </div>
+                <div>
+                  <For each={thread.tags.sort()}>
+                    {(tag) => <ColorChip class={tag === "todo" || tag.startsWith("due:") ? "hide-if-narrow" : ""} value={tag}/>}
                   </For>
                 </div>
-                <div class="narrow">
-                  <For each={thread.authors}>
-                    {(author) => {
-                      let pts = splitAddressHeader(author);
-                      return (<ColorChip key={pts[0]} value={pts[2]}/>);
-                    }}
-                  </For>
-                </div>
               </div>
-              <div class="grid-subject">
-                {thread.subject}
-              </div>
-              <div>
-                <For each={thread.tags.sort()}>
-                  {(tag) => <ColorChip class={tag === "todo" || tag.startsWith("due:") ? "hide-if-narrow" : ""} value={tag}/>}
-                </For>
-              </div>
-            </div>
-          }
+            );
+          }}
         </For>
       </div>
     </div>

@@ -622,7 +622,11 @@ def thread_to_json(thread: notmuch.Thread) -> Dict[str, Any]:
     # only considering the matched messages
     messages = list(thread.get_messages())
     tags = list({tag for msg in messages for tag in msg.get_tags()})
-    authors = list({msg.get_header("from") for msg in messages})
+    # using dict.fromkeys here to get the original order, which is not
+    # necessarily preserved in a set
+    authors = list(dict.fromkeys(msg.get_header("from").replace('\t', ' ').strip()
+                                if msg.get_header("from") else None
+                                for msg in messages))
     return {
         "authors": authors,
         "matched_messages": thread.get_matched_messages(),

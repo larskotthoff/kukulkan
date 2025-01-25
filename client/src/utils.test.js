@@ -23,6 +23,7 @@ test("strip", () => {
 
 test("extractEmailsSort", () => {
   expect(utils.extractEmailsSort("foo@bar.com")).toBe(".@abcfmooor");
+  expect(utils.extractEmailsSort("FOO@bar.com")).toBe(".@abcfmooor");
   expect(utils.extractEmailsSort("<foo@bar.com>")).toBe(".@abcfmooor");
   expect(utils.extractEmailsSort("Foo Bar <foo@bar.com>")).toBe(".@abcfmooor");
   expect(utils.extractEmailsSort("'Foo Bar' <foo@bar.com>")).toBe(".@abcfmooor");
@@ -79,13 +80,13 @@ test("renderDateNumThread", () => {
   const now = (new Date()) / 1000,
         thread = { total_messages: 1, newest_date: now, oldest_date: now - (24 * 60 * 60) };
 
-  expect(utils.renderDateNumThread(thread)).toMatch(/[0-9]{2}:[0-9]{2}/);
+  expect(utils.renderDateNumThread(thread).join(" ")).toMatch(/[0-9]{2}:[0-9]{2}/);
 
   thread.total_messages = 2;
-  expect(utils.renderDateNumThread(thread)).toMatch(/[0-9]{2}:[0-9]{2} \(2\/24時\)/);
+  expect(utils.renderDateNumThread(thread).join(" ")).toMatch(/[0-9]{2}:[0-9]{2} \(2\/24時\)/);
 
-  expect(utils.renderDateNumThread(thread, false)).not.toMatch(/[0-9]{2}:[0-9]{2} \(2\/24時\)/);
-  expect(utils.renderDateNumThread(thread, false)).toMatch(/[0-9]{2}:[0-9]{2}/);
+  expect(utils.renderDateNumThread(thread)[0]).not.toMatch(/[0-9]{2}:[0-9]{2} \(2\/24時\)/);
+  expect(utils.renderDateNumThread(thread)[0]).toMatch(/[0-9]{2}:[0-9]{2}/);
 });
 
 test("apiURL", () => {
@@ -107,6 +108,7 @@ test("splitAddressHeader", () => {
   expect(utils.splitAddressHeader(null)).toStrictEqual(["@", "(no author)", "(none)"]);
   expect(utils.splitAddressHeader("foo@bar.com")).toStrictEqual(["foo@bar.com", "foo@bar.com", "foo@bar.com"]);
   expect(utils.splitAddressHeader("<foo@bar.com>")).toStrictEqual(["foo@bar.com", "foo@bar.com", "foo@bar.com"]);
+  expect(utils.splitAddressHeader("<FOO@bar.com>")).toStrictEqual(["foo@bar.com", "FOO@bar.com", "FOO@bar.com"]);
 
   expect(utils.splitAddressHeader("Foo Bar <foo@bar.com>")).toStrictEqual(["foo@bar.com", "Foo Bar", "Foo"]);
   expect(utils.splitAddressHeader("'Foo Bar' <foo@bar.com>")).toStrictEqual(["foo@bar.com", "Foo Bar", "Foo"]);

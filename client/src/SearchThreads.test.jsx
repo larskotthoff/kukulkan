@@ -136,7 +136,7 @@ test("shows threads", () => {
   expect(screen.getAllByText("fooTag").length).toBe(2);
   expect(screen.getAllByText("barTag").length).toBe(2);
   expect(screen.getAllByText("test").length).toBe(2);
-  expect(screen.getAllByText(renderDateNumThread(threads[0])).length).toBe(2);
+  expect(screen.getAllByText(renderDateNumThread(threads[0]).join(" ")).length).toBe(2);
 });
 
 test("sets active and selected classes", () => {

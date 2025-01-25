@@ -87,57 +87,55 @@ export function SearchThreads(props) {
       </a>
       <div class="horizontal-stack justify-end width-100">{props.threads().length} thread{props.threads().length === 1 ? "" : "s"}.</div>
       <For each={props.threads()}>
-        {(thread, index) =>
-          <div classList={{
-              'thread': true,
-              'width-100': true,
-              'active': index() === props.activeThread(),
-              'selected': props.selectedThreads().indexOf(index()) !== -1
-            }}
-            onClick={() => {
-              props.setActiveThread(index());
-              props.openActive();
-            }}
-            onTouchStart={() => {
-              props.setActiveThread(index());
-            }}
-          >
-            <div ref={e => wideNarrowObserver?.observe(e)}>
-              <div class="narrow">
-                {renderDateNumThread(thread, false)}
+        {(thread, index) => {
+          const authors = thread.authors.map(splitAddressHeader),
+                dateNum = renderDateNumThread(thread);
+          return (
+            <div classList={{
+                'thread': true,
+                'width-100': true,
+                'active': index() === props.activeThread(),
+                'selected': props.selectedThreads().indexOf(index()) !== -1
+              }}
+              onClick={() => {
+                props.setActiveThread(index());
+                props.openActive();
+              }}
+              onTouchStart={() => {
+                props.setActiveThread(index());
+              }}
+            >
+              <div ref={e => wideNarrowObserver?.observe(e)}>
+                <div class="narrow">
+                  {dateNum[0]}
+                </div>
+                <div class="wide">
+                  {dateNum.join(" ")}
+                </div>
               </div>
-              <div class="wide">
-                {renderDateNumThread(thread)}
+              <div class="grid-authors" ref={e => wideNarrowObserver?.observe(e)}>
+                <div class="narrow">
+                  <For each={authors}>
+                    {(author) => <ColorChip key={author[0]} value={author[2]}/>}
+                  </For>
+                </div>
+                <div class="wide">
+                  <For each={authors}>
+                    {(author) => <ColorChip key={author[0]} value={author[1]}/>}
+                  </For>
+                </div>
               </div>
-            </div>
-            <div class="grid-authors" ref={e => wideNarrowObserver?.observe(e)}>
-              <div class="narrow">
-                <For each={thread.authors}>
-                  {(author) => {
-                    let pts = splitAddressHeader(author);
-                    return (<ColorChip key={pts[0]} value={pts[2]}/>);
-                  }}
+              <div class="grid-subject">
+                {thread.subject}
+              </div>
+              <div>
+                <For each={thread.tags.sort()}>
+                  {(tag) => <ColorChip value={tag}/>}
                 </For>
               </div>
-              <div class="wide">
-                <For each={thread.authors}>
-                  {(author) => {
-                    let pts = splitAddressHeader(author);
-                    return (<ColorChip key={pts[0]} value={pts[1]}/>);
-                  }}
-                </For>
-              </div>
             </div>
-            <div class="grid-subject">
-              {thread.subject}
-            </div>
-            <div>
-              <For each={thread.tags.sort()}>
-                {(tag) => <ColorChip value={tag}/>}
-              </For>
-            </div>
-          </div>
-        }
+          );
+        }}
       </For>
     </div>
   );

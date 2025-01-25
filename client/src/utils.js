@@ -25,7 +25,7 @@ export function strip(html) {
 }
 
 export function extractEmailsSort(string) {
-  return string.match(/([^ <>]+@[^ >]+)/g).join('').split('').sort().join('');
+  return string.match(/([^ <>]+@[^ >]+)/g).join('').toLowerCase().split('').sort().join('');
 }
 
 export function filterAdminTags(tags) {
@@ -74,10 +74,10 @@ export function formatDuration(from, to) {
   }
 }
 
-export function renderDateNumThread(thread, long = true) {
-  let res = formatDate(new Date(thread.newest_date * 1000));
-  if(thread.total_messages > 1 && long) {
-    res += ` (${thread.total_messages}/${formatDuration(new Date(thread.oldest_date * 1000), new Date(thread.newest_date * 1000))})`;
+export function renderDateNumThread(thread) {
+  let res = [formatDate(new Date(thread.newest_date * 1000))];
+  if(thread.total_messages > 1) {
+    res.push(`(${thread.total_messages}/${formatDuration(new Date(thread.oldest_date * 1000), new Date(thread.newest_date * 1000))})`);
   }
   return res;
 }
@@ -99,9 +99,8 @@ export function formatFSz(size) {
 export function splitAddressHeader(header) {
   let res = ["@", "(no author)", "(none)"];
   if(header) {
-    let tmp = header.replace('\t', ' ').trim(),
-        key = tmp.match(/([^ <>]+@[^ >]+)/)[0],
-        pts = tmp.split(' ');
+    let key = header.match(/([^ <>]+@[^ >]+)/)[0],
+        pts = header.split(' ');
     if(pts.length > 1) {
       let long = pts.slice(0, -1).join(" ").replace(/^"|^'|^,|"$|'$|,$/gm, ''),
           short = long,
@@ -113,9 +112,9 @@ export function splitAddressHeader(header) {
           short = npts[0];
         }
       }
-      res = [key, long, short];
+      res = [key.toLowerCase(), long, short];
     } else {
-      res = [key, key, key];
+      res = [key.toLowerCase(), key, key];
     }
   }
   return res;
