@@ -179,7 +179,7 @@ export function ChipComplete(props) {
       }}
       {...props}>
       <For each={props.chips}>
-        {(chip) => <ColorChip data-testid={chip} value={chip} onClick={(e) => {
+        {(chip, i) => <ColorChip data-testid={chip} key={props.keys ? props.keys[i()] : chip} value={chip} onClick={(e) => {
             props.removeChip(chip);
             e.stopPropagation();
           }}/>}

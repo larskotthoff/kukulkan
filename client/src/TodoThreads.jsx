@@ -2,7 +2,7 @@ import { createEffect, createSignal, For, on, Show } from 'solid-js';
 
 import { ColorChip } from "./ColorChip.jsx";
 
-import { formatDuration } from "./utils.js";
+import { formatDuration, splitAddressHeader } from "./utils.js";
 import { handleSwipe, Tag, TaskAlt, wideNarrowObserver } from "./UiUtils.jsx";
 
 function dateFromDue(due) {
@@ -215,12 +215,18 @@ export function TodoThreads(props) {
               <div class="grid-authors" ref={e => wideNarrowObserver?.observe(e)}>
                 <div class="wide">
                   <For each={thread.authors}>
-                    {(author) => <ColorChip value={author}/>}
+                    {(author) => {
+                      let pts = splitAddressHeader(author);
+                      return (<ColorChip key={pts[0]} value={pts[1]}/>);
+                    }}
                   </For>
                 </div>
                 <div class="narrow">
                   <For each={thread.authors}>
-                    {(author) => <ColorChip value={author.split(/\s|,/)[0]}/>}
+                    {(author) => {
+                      let pts = splitAddressHeader(author);
+                      return (<ColorChip key={pts[0]} value={pts[2]}/>);
+                    }}
                   </For>
                 </div>
               </div>

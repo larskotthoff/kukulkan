@@ -6,7 +6,7 @@ export function ColorChip(props) {
   return (<span
         label={props.value}
         class={`chip ${clss ? clss : ""}`}
-        style={{ '--bg-color': `${getColor(props.value)}` }}
+        style={{ '--bg-color': `${getColor(props.key ? props.key : props.value)}` }}
         {...spreadProps}>
       {props.value}
     </span>);

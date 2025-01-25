@@ -768,7 +768,7 @@ test("sets active message based on deleted for single message", async () => {
   const tmp = JSON.parse(JSON.stringify(thread[0]));
   tmp.tags.push("deleted");
   vi.stubGlobal("data", {"thread": [tmp]});
-  const { container } = render(() => <Thread/>);
+  render(() => <Thread/>);
 
   await vi.waitFor(() => {
     expect(screen.getByText("Test.")).toBeInTheDocument();

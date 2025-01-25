@@ -23,7 +23,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-const threads = [{authors: ["fooAuthor", "barAuthor"], subject: "test", tags:
+const threads = [{authors: ["foo@Author", "bar@Author"], subject: "test", tags:
   ["fooTag", "barTag"], total_messages: 2, newest_date: 1000, oldest_date: 100}];
 
 test("exports SearchThreads", () => {
@@ -131,8 +131,8 @@ test("shows threads", () => {
   expect(container.querySelectorAll(".thread.active").length).toBe(0);
   expect(container.querySelectorAll(".thread.selected").length).toBe(0);
   expect(container.querySelectorAll(".chip").length).toBe(12);
-  expect(screen.getAllByText("fooAuthor").length).toBe(4);
-  expect(screen.getAllByText("barAuthor").length).toBe(4);
+  expect(screen.getAllByText("foo@Author").length).toBe(4);
+  expect(screen.getAllByText("bar@Author").length).toBe(4);
   expect(screen.getAllByText("fooTag").length).toBe(2);
   expect(screen.getAllByText("barTag").length).toBe(2);
   expect(screen.getAllByText("test").length).toBe(2);

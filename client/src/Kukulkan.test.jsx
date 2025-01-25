@@ -118,8 +118,8 @@ test("shows threads", async () => {
     search: '?query=foo'
   });
   vi.stubGlobal("data", {"allTags": tags, "threads": [
-    {authors: ["fooAuthor", "barAuthor"], subject: "test", tags: ["fooTag", "barTag"], total_messages: 2, newest_date: 1000, oldest_date: 100},
-    {authors: ["test1", "test2"], subject: "foobar", tags: ["unread", "new"], total_messages: 1, newest_date: 1000, oldest_date: 100}
+    {authors: ["foo@Author", "bar@Author"], subject: "test", tags: ["fooTag", "barTag"], total_messages: 2, newest_date: 1000, oldest_date: 100},
+    {authors: ["test@1", "test@2"], subject: "foobar", tags: ["unread", "new"], total_messages: 1, newest_date: 1000, oldest_date: 100}
   ]});
 
   const { container } = render(() => <Kukulkan Threads={SearchThreads}/>);
@@ -131,14 +131,14 @@ test("shows threads", async () => {
 
   expect(container.querySelectorAll(".thread").length).toBe(2);
   expect(container.querySelectorAll(".chip").length).toBe(12);
-  expect(screen.getAllByText("fooAuthor").length).toBe(2);
-  expect(screen.getAllByText("barAuthor").length).toBe(2);
+  expect(screen.getAllByText("foo@Author").length).toBe(2);
+  expect(screen.getAllByText("bar@Author").length).toBe(2);
   expect(screen.getAllByText("fooTag").length).toBe(1);
   expect(screen.getAllByText("barTag").length).toBe(1);
   expect(screen.getAllByText("test").length).toBe(1);
 
-  expect(screen.getAllByText("test1").length).toBe(2);
-  expect(screen.getAllByText("test2").length).toBe(2);
+  expect(screen.getAllByText("test@1").length).toBe(2);
+  expect(screen.getAllByText("test@2").length).toBe(2);
   expect(screen.getAllByText("unread").length).toBe(1);
   expect(screen.getAllByText("new").length).toBe(1);
   expect(screen.getAllByText("foobar").length).toBe(1);
@@ -150,7 +150,7 @@ test("opens thread on enter and click", async () => {
     search: '?query=foo'
   });
   vi.stubGlobal("data", {"allTags": tags, "threads": [
-    {thread_id: "foo", authors: ["test"], subject: "foobar", tags: ["test"], total_messages: 1, newest_date: 1000, oldest_date: 100}
+    {thread_id: "foo", authors: ["te@t"], subject: "foobar", tags: ["test"], total_messages: 1, newest_date: 1000, oldest_date: 100}
   ]});
   const { container } = render(() => <Kukulkan Threads={SearchThreads}/>);
   await vi.waitFor(() => {
@@ -174,7 +174,7 @@ test("opens thread on enter and click in same tab with config", async () => {
     search: '?query=foo'
   });
   vi.stubGlobal("data", {"allTags": tags, "threads": [
-    {thread_id: "foo", authors: ["test"], subject: "foobar", tags: ["test"], total_messages: 1, newest_date: 1000, oldest_date: 100}
+    {thread_id: "foo", authors: ["te@t"], subject: "foobar", tags: ["test"], total_messages: 1, newest_date: 1000, oldest_date: 100}
   ]});
   localStorage.setItem("settings-openInTab", "_self");
   const { container } = render(() => <Kukulkan Threads={SearchThreads}/>);
@@ -200,8 +200,8 @@ test("navigation and selection shortcuts work", async () => {
     search: '?query=foo'
   });
   vi.stubGlobal("data", {"allTags": tags, "threads": [
-    {thread_id: "foo", authors: ["test1"], subject: "foobar1", tags: ["test1"], total_messages: 1, newest_date: 1000, oldest_date: 100},
-    {thread_id: "bar", authors: ["test2"], subject: "foobar2", tags: ["test2"], total_messages: 1, newest_date: 1000, oldest_date: 100}
+    {thread_id: "foo", authors: ["test@1"], subject: "foobar1", tags: ["test1"], total_messages: 1, newest_date: 1000, oldest_date: 100},
+    {thread_id: "bar", authors: ["test@2"], subject: "foobar2", tags: ["test2"], total_messages: 1, newest_date: 1000, oldest_date: 100}
   ]});
   const { container } = render(() => <Kukulkan Threads={SearchThreads}/>);
   await vi.waitFor(() => {
@@ -210,29 +210,29 @@ test("navigation and selection shortcuts work", async () => {
 
   expect(screen.getByText("2 threads.")).toBeInTheDocument();
 
-  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test1");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@1");
 
   await userEvent.type(document.body, "j");
-  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test2");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@2");
   await userEvent.type(document.body, "k");
-  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test1");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@1");
 
   await userEvent.type(document.body, "{ArrowDown}");
-  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test2");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@2");
   await userEvent.type(document.body, "{ArrowUp}");
-  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test1");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@1");
 
   await userEvent.type(document.body, "J");
-  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test2");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@2");
   await userEvent.type(document.body, "K");
-  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test1");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@1");
 
   await userEvent.type(document.body, "0");
-  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test2");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@2");
   await userEvent.type(document.body, "{home}");
-  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test1");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@1");
   await userEvent.type(document.body, "{end}");
-  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test2");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@2");
 
   await userEvent.type(document.body, " ");
   expect(container.querySelectorAll(".thread.selected").length).toBe(1);
@@ -253,7 +253,7 @@ test("delete thread works", async () => {
   });
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
   vi.stubGlobal("data", {"allTags": tags, "threads": [
-    {thread_id: "foo", authors: ["test"], subject: "foobar", tags: ["unread"], total_messages: 1, newest_date: 1000, oldest_date: 100}
+    {thread_id: "foo", authors: ["te@t"], subject: "foobar", tags: ["unread"], total_messages: 1, newest_date: 1000, oldest_date: 100}
   ]});
   render(() => <Kukulkan Threads={SearchThreads}/>);
   await vi.waitFor(() => {
@@ -274,7 +274,7 @@ test("mark thread done works", async () => {
   });
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
   vi.stubGlobal("data", {"allTags": tags, "threads": [
-    {thread_id: "foo", authors: ["test"], subject: "foobar", tags: ["todo", "due:1970-01-01"], total_messages: 1, newest_date: 1000, oldest_date: 100}
+    {thread_id: "foo", authors: ["te@t"], subject: "foobar", tags: ["todo", "due:1970-01-01"], total_messages: 1, newest_date: 1000, oldest_date: 100}
   ]});
   render(() => <Kukulkan Threads={SearchThreads}/>);
   await vi.waitFor(() => {
@@ -298,7 +298,7 @@ test("tag edits work", async () => {
   });
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
   vi.stubGlobal("data", {"allTags": tags, "threads": [
-    {thread_id: "foo", authors: ["authors"], subject: "subject", tags: ["test"], total_messages: 1, newest_date: 1000, oldest_date: 100}
+    {thread_id: "foo", authors: ["autho@s"], subject: "subject", tags: ["test"], total_messages: 1, newest_date: 1000, oldest_date: 100}
   ]});
   render(() => <Kukulkan Threads={SearchThreads}/>);
   await vi.waitFor(() => {
@@ -341,8 +341,8 @@ test("tag edits with multiple selection work", async () => {
   });
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
   vi.stubGlobal("data", {"allTags": tags, "threads": [
-    {thread_id: "foo", authors: ["authors"], subject: "subject", tags: ["test1"], total_messages: 1, newest_date: 1000, oldest_date: 100},
-    {thread_id: "bar", authors: ["authors"], subject: "subject", tags: ["test2"], total_messages: 1, newest_date: 1000, oldest_date: 100}
+    {thread_id: "foo", authors: ["autho@s"], subject: "subject", tags: ["test1"], total_messages: 1, newest_date: 1000, oldest_date: 100},
+    {thread_id: "bar", authors: ["autho@s"], subject: "subject", tags: ["test2"], total_messages: 1, newest_date: 1000, oldest_date: 100}
   ]});
   const { container } = render(() => <Kukulkan Threads={SearchThreads}/>);
   await vi.waitFor(() => {
@@ -371,7 +371,7 @@ test("tag edits with multiple selection work", async () => {
 test("tag edits completions work", async () => {
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
   vi.stubGlobal("data", {"allTags": tags, "threads": [
-    {thread_id: "foo", authors: ["authors"], subject: "subject", tags: ["test"], total_messages: 1, newest_date: 1000, oldest_date: 100}
+    {thread_id: "foo", authors: ["autho@s"], subject: "subject", tags: ["test"], total_messages: 1, newest_date: 1000, oldest_date: 100}
   ]});
   render(() => <Kukulkan Threads={SearchThreads}/>);
   await vi.waitFor(() => {
@@ -418,7 +418,7 @@ test("shows todo due dates correctly after marking done", async () => {
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
 
   const now = new Date(),
-        thr1 = {thread_id: "foo", authors: ["fooAuthor", "barAuthor"], subject: "test1", tags:
+        thr1 = {thread_id: "foo", authors: ["foo@Author", "bar@Author"], subject: "test1", tags:
           ["todo"], total_messages: 2, newest_date: 1000, oldest_date: 100},
         thr2 = JSON.parse(JSON.stringify(thr1)),
         thr3 = JSON.parse(JSON.stringify(thr1));

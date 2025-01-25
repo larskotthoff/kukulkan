@@ -106,18 +106,6 @@ def email_addresses_header(emails: str) -> str:
     return ", ".join(str(addr) for addr in tmp)
 
 
-def extract_name_from_email(email_str: Optional[str]) -> str:
-    """Extracts the name part from an email address, or the address if there is
-    no name part."""
-    if email_str is None:
-        return "(no author)"
-    pts = email_str.replace('\t', ' ').strip().split(' ')
-    if len(pts) == 1:
-        return pts[0].strip('<>')
-    name = ' '.join(pts[:-1])
-    return name.strip('"\',')
-
-
 def split_email_addresses(header: str) -> List[str]:
     """Returns all email addresses (without the names) in a string."""
     addresses = re.findall(r'([^,][^@]*@[^,]+)', header.replace('\t', ' '))
@@ -634,8 +622,7 @@ def thread_to_json(thread: notmuch.Thread) -> Dict[str, Any]:
     # only considering the matched messages
     messages = list(thread.get_messages())
     tags = list({tag for msg in messages for tag in msg.get_tags()})
-    authors = [extract_name_from_email(msg.get_header("from")) for msg in messages]
-    authors = list(dict.fromkeys(authors))
+    authors = list({msg.get_header("from") for msg in messages})
     return {
         "authors": authors,
         "matched_messages": thread.get_matched_messages(),

@@ -19,16 +19,6 @@ def test_split_email_addresses():
     assert ["Bar, Foo <foo@bar.com>", "Foo, Bar <bar@foo.com>"] == k.split_email_addresses("Bar, Foo <foo@bar.com>, Foo, Bar <bar@foo.com>")
 
 
-def test_extract_name_from_email():
-    assert "(no author)" == k.extract_name_from_email(None)
-    assert "foo@bar.com" == k.extract_name_from_email("foo@bar.com")
-    assert "foo@bar.com" == k.extract_name_from_email("<foo@bar.com>")
-    assert "Foo Bar" == k.extract_name_from_email("Foo Bar <foo@bar.com>")
-    assert "Bar, Foo" == k.extract_name_from_email("\"Bar, Foo\" <foo@bar.com>")
-    assert "Bar, Foo" == k.extract_name_from_email("Bar, Foo <foo@bar.com>")
-    assert "Bar, Foo" == k.extract_name_from_email("Bar, Foo, <foo@bar.com>")
-
-
 def test_email_addresses_header():
     assert "foo@bar.com" == k.email_addresses_header("foo@bar.com")
     assert "foo@bar.com, bar@foo.com" == k.email_addresses_header("foo@bar.com\nbar@foo.com")
@@ -77,12 +67,12 @@ def test_query(setup):
     mm1.get_header = MagicMock(return_value="foo bar <foo@bar.com>")
     mm2 = lambda: None
     mm2.get_date = MagicMock(return_value="bardate")
-    mm2.get_tags = MagicMock(return_value=["bartag"])
+    mm2.get_tags = MagicMock(return_value=["footag", "bartag"])
     mm2.get_header = MagicMock(return_value="bar foo <bar@foo.com>")
     mm3 = lambda: None
     mm3.get_date = MagicMock(return_value="foobardate")
     mm3.get_tags = MagicMock(return_value=["foobartag"])
-    mm3.get_header = MagicMock(return_value="bar foo <foo@bar.com>")
+    mm3.get_header = MagicMock(return_value="bar foo <bar@foo.com>")
 
     mt = lambda: None
     mt.get_messages = MagicMock(return_value=iter([mm1, mm2, mm3]))
@@ -102,7 +92,7 @@ def test_query(setup):
             assert response.status_code == 200
             thrds = json.loads(response.data.decode())
             assert len(thrds) == 1
-            assert thrds[0]["authors"] == ["foo bar", "bar foo"]
+            assert thrds[0]["authors"] == ["bar foo <bar@foo.com>", "foo bar <foo@bar.com>"]
             assert thrds[0]["matched_messages"] == 23
             assert thrds[0]["newest_date"] == "foobardate"
             assert thrds[0]["oldest_date"] == "foodate"
@@ -160,7 +150,7 @@ def test_query_empty(setup):
             assert response.status_code == 200
             thrds = json.loads(response.data.decode())
             assert len(thrds) == 1
-            assert thrds[0]["authors"] == ["(no author)"]
+            assert thrds[0]["authors"] == [None]
             assert thrds[0]["matched_messages"] == 23
             assert thrds[0]["newest_date"] == "foodate"
             assert thrds[0]["oldest_date"] == "foodate"

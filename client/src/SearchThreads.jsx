@@ -5,7 +5,7 @@ import { Autocomplete } from "./Autocomplete.jsx";
 
 import { getSetting } from "./Settings.jsx";
 
-import { apiURL, delayedDebouncedFetch, renderDateNumThread } from "./utils.js";
+import { apiURL, delayedDebouncedFetch, renderDateNumThread, splitAddressHeader } from "./utils.js";
 import { handleSwipe, Icon, Create, Settings, Tag, Trash, wideNarrowObserver } from "./UiUtils.jsx";
 
 export function SearchThreads(props) {
@@ -113,12 +113,18 @@ export function SearchThreads(props) {
             <div class="grid-authors" ref={e => wideNarrowObserver?.observe(e)}>
               <div class="narrow">
                 <For each={thread.authors}>
-                  {(author) => <ColorChip value={author.split(/\s|,/)[0]}/>}
+                  {(author) => {
+                    let pts = splitAddressHeader(author);
+                    return (<ColorChip key={pts[0]} value={pts[2]}/>);
+                  }}
                 </For>
               </div>
               <div class="wide">
                 <For each={thread.authors}>
-                  {(author) => <ColorChip value={author}/>}
+                  {(author) => {
+                    let pts = splitAddressHeader(author);
+                    return (<ColorChip key={pts[0]} value={pts[1]}/>);
+                  }}
                 </For>
               </div>
             </div>

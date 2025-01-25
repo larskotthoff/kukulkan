@@ -9,7 +9,7 @@ import { getSetting } from "./Settings.jsx";
 
 import "./Kukulkan.css";
 import { separateQuotedNonQuoted } from "./Message.jsx";
-import { apiURL, delayedDebouncedFetch, filterAdminTags, formatFSz } from "./utils.js";
+import { apiURL, delayedDebouncedFetch, filterAdminTags, formatFSz, splitAddressHeader } from "./utils.js";
 import { mkShortcut, Icon, AttachFile, Send } from "./UiUtils.jsx";
 
 function Templates(props) {
@@ -31,6 +31,9 @@ function AddrComplete(props) {
   return (
     <ChipComplete
       chips={props.message[props.addrAttr]}
+      keys={props.message[props.addrAttr].map((addr) => {
+        return splitAddressHeader(addr)[0];
+      })}
       addChip={(addr) => {
         props.setMessage(props.addrAttr, props.message[props.addrAttr].length, addr);
         localStorage.setItem(`draft-${props.draftKey}-${props.addrAttr}`, props.message[props.addrAttr].join("\n"));

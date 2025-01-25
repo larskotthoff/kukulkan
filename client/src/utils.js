@@ -96,6 +96,31 @@ export function formatFSz(size) {
   return (size / Math.pow(1024, i)).toFixed(2) * 1 + ' ' + ['Bi', 'kiB', 'MiB', 'GiB', 'TiB'][i];
 }
 
+export function splitAddressHeader(header) {
+  let res = ["@", "(no author)", "(none)"];
+  if(header) {
+    let tmp = header.replace('\t', ' ').trim(),
+        key = tmp.match(/([^ <>]+@[^ >]+)/)[0],
+        pts = tmp.split(' ');
+    if(pts.length > 1) {
+      let long = pts.slice(0, -1).join(" ").replace(/^"|^'|^,|"$|'$|,$/gm, ''),
+          short = long,
+          npts = long.split(' ');
+      if(npts.length > 1) {
+        if(npts[0].endsWith(',')) {
+          short = npts[1];
+        } else {
+          short = npts[0];
+        }
+      }
+      res = [key, long, short];
+    } else {
+      res = [key, key, key];
+    }
+  }
+  return res;
+}
+
 let controller = null,
     debounceTimer = null;
 

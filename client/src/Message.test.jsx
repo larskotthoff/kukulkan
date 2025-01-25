@@ -121,14 +121,15 @@ test("renders message components", () => {
 });
 
 test("renders additional message components", () => {
-  msg.reply_to = "Reply to";
-  msg.forwarded_to = "Forwarded to";
-  msg.bcc = ["BCC"];
+  const msg1 = JSON.parse(JSON.stringify(msg));
+  msg1.reply_to = "Reply@to";
+  msg1.forwarded_to = "Forwarded@to";
+  msg1.bcc = ["BCC@BCC"];
 
-  render(() => <Message msg={msg} active={true}/>);
-  expect(screen.getByText("Reply to")).toBeInTheDocument();
-  expect(screen.getByText("Forwarded to")).toBeInTheDocument();
-  expect(screen.getByText("BCC")).toBeInTheDocument();
+  render(() => <Message msg={msg1} active={true}/>);
+  expect(screen.getByText("Reply@to")).toBeInTheDocument();
+  expect(screen.getByText("Forwarded@to")).toBeInTheDocument();
+  expect(screen.getByText("BCC@BCC")).toBeInTheDocument();
 });
 
 test("renders message signature", () => {

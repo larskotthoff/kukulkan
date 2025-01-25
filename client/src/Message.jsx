@@ -10,7 +10,7 @@ import { ColorChip } from "./ColorChip.jsx";
 import { TagComplete } from "./Autocomplete.jsx";
 
 import "./Kukulkan.css";
-import { apiURL, formatDate, formatFSz, strip } from "./utils.js";
+import { apiURL, formatDate, formatFSz, splitAddressHeader, strip } from "./utils.js";
 import { mkShortcut, Icon, AttachFile, Cancel, CheckCircle, Forward, Help, MarkUnread, Print, ReplyAll, Security, Trash } from "./UiUtils.jsx";
 
 export function separateQuotedNonQuoted(text) {
@@ -70,9 +70,10 @@ function formatAddrs(addrs) {
   if(!(addrs instanceof Array)) {
     addrs = [addrs];
   }
-  return addrs.map((addr) => (
-    <ColorChip value={addr}/>
-  ));
+  return addrs.map((addr) => {
+    let pts = splitAddressHeader(addr);
+    return (<ColorChip key={pts[0]} value={addr}/>);
+  });
 }
 
 function printUrl(id) {

@@ -103,6 +103,22 @@ test("formatFSz", () => {
   expect(utils.formatFSz(1024 * 1024 * 1024 * 1024 * 1.5)).toBe("1.5 TiB");
 });
 
+test("splitAddressHeader", () => {
+  expect(utils.splitAddressHeader(null)).toStrictEqual(["@", "(no author)", "(none)"]);
+  expect(utils.splitAddressHeader("foo@bar.com")).toStrictEqual(["foo@bar.com", "foo@bar.com", "foo@bar.com"]);
+  expect(utils.splitAddressHeader("<foo@bar.com>")).toStrictEqual(["foo@bar.com", "foo@bar.com", "foo@bar.com"]);
+
+  expect(utils.splitAddressHeader("Foo Bar <foo@bar.com>")).toStrictEqual(["foo@bar.com", "Foo Bar", "Foo"]);
+  expect(utils.splitAddressHeader("'Foo Bar' <foo@bar.com>")).toStrictEqual(["foo@bar.com", "Foo Bar", "Foo"]);
+  expect(utils.splitAddressHeader("\"Foo Bar\" <foo@bar.com>")).toStrictEqual(["foo@bar.com", "Foo Bar", "Foo"]);
+
+  expect(utils.splitAddressHeader("Bar, Foo <foo@bar.com>")).toStrictEqual(["foo@bar.com", "Bar, Foo", "Foo"]);
+  expect(utils.splitAddressHeader("'Bar, Foo' <foo@bar.com>")).toStrictEqual(["foo@bar.com", "Bar, Foo", "Foo"]);
+  expect(utils.splitAddressHeader("\"Bar, Foo\" <foo@bar.com>")).toStrictEqual(["foo@bar.com", "Bar, Foo", "Foo"]);
+
+  expect(utils.splitAddressHeader("Many long names <foo@bar.com>")).toStrictEqual(["foo@bar.com", "Many long names", "Many"]);
+});
+
 test("delayedDebouncedFetch", async () => {
 
   global.fetch.mockResolvedValue({ ok: true, json: () => ["foo", "bar"] });
