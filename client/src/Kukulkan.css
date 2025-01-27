@@ -201,7 +201,7 @@ button > span {
 .autocomplete-popup {
     background-color: var(--secondary-background);
     z-index: 10;
-    position: absolute;
+    position: fixed;
     padding: .5em;
     cursor: pointer;
 
