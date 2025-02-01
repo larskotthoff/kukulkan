@@ -187,7 +187,7 @@ autocomplete dialog without selecting a completion.
 
 ### Main View
 
-![Main View](screens/main.png?raw=true)
+![Main View](screens/main.png?raw=true) ![Main View on phone](screens/main-phone.png?raw=true)
 
 Query notmuch database for threads (try `tag:unread` or `date:"this month"`).
 
@@ -212,7 +212,7 @@ changes.
 
 ### TODO View
 
-![TODO View](screens/todo.png?raw=true)
+![TODO View](screens/todo.png?raw=true) ![TODO View on Phone](screens/todo-phone.png?raw=true)
 
 Shows threads tagged "todo". Due dates for TODOs can be specified by applying a
 tag of the format `due:<year>-<month>-<day>`, e.g. "due:2025-02-01". You can
@@ -245,7 +245,7 @@ Available at `/todo`
 
 ### Thread View
 
-![Thread View](screens/thread.png?raw=true)
+![Thread View](screens/thread.png?raw=true) ![Thread View on Phone](screens/thread-phone.png?raw=true)
 
 Shows messages in a thread. Threads are broken up into fibers by default, i.e.
 complete paths from the leaves of the thread tree to the root (you can change
@@ -292,7 +292,7 @@ remove the last tag.
 
 ### Compose View
 
-![Compose View](screens/compose.png?raw=true)
+![Compose View](screens/compose.png?raw=true) ![Compose View on Phone](screens/compose-phone.png?raw=true)
 
 Write new email, either from scratch or replying/forwarding an existing message.
 
