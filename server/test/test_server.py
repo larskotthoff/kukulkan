@@ -45,7 +45,7 @@ def setup():
 def test_globals(setup):
     app, db = setup
 
-    db.get_all_tags = MagicMock(return_value=['foo', 'bar', '(null)'])
+    db.get_all_tags = MagicMock(return_value=['foo', 'bar', '(null)', 'due:2222-22-22'])
 
     app.config.custom["accounts"] = "foo"
     app.config.custom["compose"] = {}

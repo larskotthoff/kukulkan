@@ -154,7 +154,7 @@ def get_globals() -> Dict[str, Any]:
         accts = current_app.config.custom["accounts"] # type: ignore[attr-defined]
     except KeyError:
         accts = []
-    tags = [tag for tag in get_db().get_all_tags() if tag != "(null)"]
+    tags = [tag for tag in get_db().get_all_tags() if tag != "(null)" and not tag.startswith("due:")]
     try:
         cmp = current_app.config.custom["compose"] # type: ignore[attr-defined]
     except KeyError:
