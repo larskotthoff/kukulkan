@@ -1,11 +1,5 @@
 """Flask web app providing API to notmuch. Based on API from netviel (https://github.com/DavidMStraub/netviel)."""
 
-import email
-import email.headerregistry
-import email.mime.multipart
-import email.mime.text
-import email.policy
-
 import datetime
 import io
 import logging
@@ -13,6 +7,7 @@ import os
 import subprocess
 import threading
 import queue
+import enum
 
 import json
 import re
@@ -21,9 +16,15 @@ import base64
 
 from tempfile import mkstemp, NamedTemporaryFile
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Generator
 
-import notmuch
+import email
+import email.headerregistry
+import email.mime.multipart
+import email.mime.text
+import email.policy
+
+import notmuch2
 from flask import Flask, Response, abort, current_app, g, render_template, request, send_file, send_from_directory
 from flask_compress import Compress
 from markupsafe import escape
@@ -112,34 +113,44 @@ def split_email_addresses(header: str) -> List[str]:
     return [addr.strip() for addr in addresses]
 
 
-def get_db() -> notmuch.Database:
+def get_db() -> notmuch2.Database:
     """Get a new `Database` instance. Called before every request. Cached on first call."""
     if "db" not in g:
-        g.db = notmuch.Database(None, create=False)
+        g.db = notmuch2.Database()
     return g.db
 
 
-def get_query(
-    query_string: str, db: Optional[notmuch.Database] = None, exclude: bool = True
-) -> notmuch.Query:
-    """Get a Query with config set."""
+class QTYP(enum.Enum):
+    """What should the query return?"""
+    MESSAGES = 0
+    THREADS = 1
+
+
+def get_query(typ: QTYP, query_string: str, db: Optional[notmuch2.Database] = None, exclude: bool = True) -> Generator[notmuch2.Message|notmuch2.Thread]:
+    """Get messages or threads matching a query."""
     db = get_db() if db is None else db
-    query = notmuch.Query(db, query_string)
+    excluded = []
     if exclude:
-        for tag in db.get_config("search.exclude_tags").split(';'):
-            if tag != '':
-                query.exclude_tag(tag)
-    return query
+        excluded = [tag for tag in db.config["search.exclude_tags"].split(';')
+                    if tag != '']
+    if typ == QTYP.MESSAGES:
+        return db.messages(query_string,
+                           exclude_tags=excluded,
+                           sort=notmuch2.Database.SORT.NEWEST_FIRST)
+    elif typ == QTYP.THREADS:
+        return db.threads(query_string,
+                          exclude_tags=excluded,
+                          sort=notmuch2.Database.SORT.NEWEST_FIRST)
 
 
-def get_message(message_id: str) -> notmuch.Message:
+def get_message(message_id: str) -> notmuch2.Message:
     """Get a single message."""
-    msgs = list(get_query(f'id:{message_id}', exclude=False).search_messages())
-    if not msgs:
+    db = get_db() if db is None else db
+    try:
+        msg = db.find(message_id)
+    except notmuch2.LookupError:
         abort(404)
-    if len(msgs) > 1:
-        abort(500)
-    return msgs[0]
+    return msg
 
 
 # pylint: disable=unused-argument
@@ -154,7 +165,7 @@ def get_globals() -> Dict[str, Any]:
         accts = current_app.config.custom["accounts"] # type: ignore[attr-defined]
     except KeyError:
         accts = []
-    tags = [tag for tag in get_db().get_all_tags() if tag != "(null)" and not tag.startswith("due:")]
+    tags = [tag for tag in get_db().tags if tag != "(null)" and not tag.startswith("due:")]
     try:
         cmp = current_app.config.custom["compose"] # type: ignore[attr-defined]
     except KeyError:
@@ -168,9 +179,9 @@ def email_address_complete(query_string: str) -> Dict[str, str]:
     qs = query_string.casefold()
     addrs: Dict[str, str] = {}
     i = 0
-    for msg in get_query(f"from:{query_string} or to:{query_string}").search_messages():
+    for msg in get_query(QTYP.MESSAGES, f"from:{query_string} or to:{query_string}"):
         for header in ['from', 'to', 'cc', 'bcc']:
-            value = msg.get_header(header)
+            value = msg.header(header)
             if value and qs in value.casefold():
                 for addr in split_email_addresses(value):
                     acf = addr.casefold()
@@ -274,8 +285,7 @@ def create_app() -> Flask:
 
     @app.route("/api/query/<string:query_string>")
     def query(query_string: str) -> List[Dict[str, Any]]:
-        threads = get_query(query_string).search_threads()
-        return [thread_to_json(t) for t in threads]
+        return [thread_to_json(t) for t in get_query(QTYP.THREADS, query_string)]
 
     @app.route("/api/address/<string:query_string>")
     def address_complete(query_string: str) -> List[str]:
@@ -287,13 +297,10 @@ def create_app() -> Flask:
 
     @app.route("/api/thread/<string:thread_id>")
     def thread(thread_id: str) -> Any:
-        threads = list(get_query(f'thread:"{thread_id}"', exclude=False).search_threads())
-        if not threads:
+        msgs = list(get_query(QTYP.MESSAGES, f'thread:"{thread_id}"', exclude=False))
+        if len(msgs) == 0:
             abort(404)
-        if len(threads) > 1:
-            abort(500)
-        messages = threads[0].get_messages()
-        return messages_to_json(messages)
+        return messages_to_json(msgs)
 
     @app.route("/api/attachment/<string:message_id>/<int:num>")
     @app.route("/api/attachment/<string:message_id>/<int:num>/<int:scale>")
@@ -341,7 +348,7 @@ def create_app() -> Flask:
     @app.route("/api/raw_message/<string:message_id>")
     def raw_message(message_id: str) -> str:
         msg = get_message(message_id)
-        with open(msg.get_filename(), "r", encoding="utf8") as f:
+        with open(msg.path, "r", encoding="utf8") as f:
             content = f.read()
         return content
 
@@ -349,7 +356,7 @@ def create_app() -> Flask:
     def auth_message(message_id: str) -> Dict[str, Any]:
         msg = get_message(message_id)
         # https://npm.io/package/mailauth
-        return json.loads(os.popen(f"mailauth {msg.get_filename()}").read())['arc']['authResults']
+        return json.loads(os.popen(f"mailauth {msg.path}").read())['arc']['authResults']
 
     @app.route("/api/tag_batch/<string:typ>/<string:nids>/<string:tags>")
     def change_tags(typ: str, nids: str, tags: str) -> str:
@@ -367,18 +374,16 @@ def create_app() -> Flask:
         id_type = 'id' if typ == "message" else typ
         tag_prefix = 'not ' if op == "add" else ''
         query = f"{id_type}:{nid} and {tag_prefix}tag:{tag}"
-        db_write = notmuch.Database(
-            None, create=False, mode=notmuch.Database.MODE.READ_WRITE # type: ignore[attr-defined]
-        )
-        msgs = list(get_query(query, db_write, False).search_messages())
+        db_write = notmuch2.Database(mode=notmuch2.Database.MODE.READ_WRITE)
+        msgs = list(db_write.messages(query))
         try:
             db_write.begin_atomic()
             for msg in msgs:
+                tags = msg.tags
                 if op == "add":
-                    msg.add_tag(tag)
+                    tags.add(tag)
                 elif op == "remove":
-                    msg.remove_tag(tag)
-                msg.tags_to_maildir_flags()
+                    tags.discard(tag)
             db_write.end_atomic()
         finally:
             db_write.close()
@@ -520,10 +525,10 @@ def create_app() -> Flask:
 
         if request.values['action'] == "reply" or request.values['action'].startswith("reply-cal-"):
             ref_msg = get_message(request.values['refId'])
-            mid = ref_msg.get_header("Message-ID").strip()
+            mid = ref_msg.header("Message-ID").strip()
             msg['In-Reply-To'] = f"<{mid}>"
-            if ref_msg.get_header("References"):
-                refs = ref_msg.get_header("References").strip()
+            if ref_msg.header("References"):
+                refs = ref_msg.header("References").strip()
                 msg['References'] = f"{refs} <{mid}>"
             else:
                 msg['References'] = f"<{mid}>"
@@ -560,28 +565,24 @@ def create_app() -> Flask:
                     with open(fname, "w", encoding="utf8") as f:
                         f.write(msg.as_string(policy=policy))
 
-                    # pylint: disable=no-member
-                    db_write = notmuch.Database(None, create=False, mode=notmuch.Database.MODE.READ_WRITE) # type: ignore[attr-defined]
+                    db_write = notmuch2.Database(mode=notmuch2.Database.MODE.READ_WRITE)
                     try:
                         db_write.begin_atomic()
                         if ra == "reply" or ra.startswith("reply-cal-"):
-                            ref_msgs = get_query(f"id:{rr}", db_write, False).search_messages()
+                            ref_msgs = db_write.messages(f"id:{rr}")
                             for ref_msg in ref_msgs:
-                                ref_msg.add_tag("replied")
-                                ref_msg.tags_to_maildir_flags()
+                                ref_msg.tags.add("replied")
                         elif ra == "forward":
-                            ref_msgs = get_query(f"id:{rr}", db_write, False).search_messages()
+                            ref_msgs = db_write.messages(f"id:{rr}")
                             for ref_msg in ref_msgs:
-                                ref_msg.add_tag("passed")
-                                ref_msg.tags_to_maildir_flags()
+                                ref_msg.tags.add("passed")
 
-                        (notmuch_msg, _) = db_write.index_file(fname, True)
-                        notmuch_msg.maildir_flags_to_tags()
+                        (notmuch_msg, _) = db_write.add(fname)
+                        tags = notmuch_msg.tags
                         for tag in rt.split(',') + account["additional_sent_tags"]:
                             if tag != "":
-                                notmuch_msg.add_tag(tag)
-                        notmuch_msg.add_tag("sent")
-                        notmuch_msg.tags_to_maildir_flags()
+                                tags.add(tag)
+                        tags.add("sent")
                         db_write.end_atomic()
                     finally:
                         db_write.close()
@@ -616,26 +617,21 @@ def create_app() -> Flask:
     return app
 
 
-def thread_to_json(thread: notmuch.Thread) -> Dict[str, Any]:
-    """Converts a `notmuch.threads.Thread` instance to a JSON object."""
-    # necessary to get accurate tags and metadata, work around the notmuch API
-    # only considering the matched messages
-    messages = list(thread.get_messages())
-    tags = list({tag for msg in messages for tag in msg.get_tags()})
+def thread_to_json(t: notmuch2.Thread) -> Dict[str, Any]:
+    """Converts a `notmuch2.Thread` to a JSON object."""
     # using dict.fromkeys here to get the original order, which is not
     # necessarily preserved in a set
-    authors = list(dict.fromkeys(msg.get_header("from").replace('\t', ' ').strip()
-                                if msg.get_header("from") else None
-                                for msg in messages))
+    authors = list(dict.fromkeys(msg.header("from").replace('\t', ' ').strip()
+                                for msg in t))
     return {
         "authors": authors,
-        "matched_messages": thread.get_matched_messages(),
-        "newest_date": messages[-1].get_date(),
-        "oldest_date": messages[0].get_date(),
-        "subject": thread.get_subject().replace('\t', ' ') if thread.get_subject() else "(no subject)",
-        "tags": tags,
-        "thread_id": thread.get_thread_id(),
-        "total_messages": thread.get_total_messages(),
+        "matched_messages": t.matched,
+        "newest_date": t.last,
+        "oldest_date": t.first,
+        "subject": t.subject.replace('\t', ' ') if t.subject else "(no subject)",
+        "tags": list(t.tags),
+        "thread_id": t.threadid,
+        "total_messages": len(t)
     }
 
 
@@ -832,9 +828,8 @@ def get_attachments(email_msg: email.message.Message, content: bool = False) -> 
     return attachments
 
 
-def messages_to_json(messages: List[notmuch.Message]) -> List[Dict[str, Any]]:
-    """Converts a list of `notmuch.message.Message` instances to a JSON object."""
-    msgs = list(messages)
+def messages_to_json(msgs: List[notmuch2.Message]) -> List[Dict[str, Any]]:
+    """Converts a list of `notmuch2.Message` instances to a JSON object."""
     if len(msgs) == 1:
         return [message_to_json(m, get_deleted_body=True) for m in msgs]
     return [message_to_json(m) for m in msgs]
@@ -1002,16 +997,15 @@ def eml_to_json(message_bytes: bytes) -> Dict[str, Any]:
     return res
 
 
-def message_to_json(message: notmuch.Message, get_deleted_body: bool = False) -> Dict[str, Any]:
-    """Converts a `notmuch.message.Message` instance to a JSON object."""
-    tags = list(message.get_tags())
-    if "deleted" in tags and get_deleted_body is False:
+def message_to_json(msg: notmuch2.Message, get_deleted_body: bool = False) -> Dict[str, Any]:
+    """Converts a `notmuch2.Message` instance to a JSON object."""
+    if "deleted" in msg.tags and get_deleted_body is False:
         attachments = []
         body = "(deleted message)"
         has_html = False
         signature = None
     else:
-        email_msg = email_from_notmuch(message)
+        email_msg = email_from_notmuch(msg)
 
         attachments = get_attachments(email_msg)
         body, has_html = get_nested_body(email_msg)
@@ -1025,7 +1019,7 @@ def message_to_json(message: notmuch.Message, get_deleted_body: bool = False) ->
                     try:
                         accounts = current_app.config.custom["accounts"] # type: ignore[attr-defined]
                         accts = [acct for acct in accounts if acct["email"] in
-                                 message.get_header("from").strip().replace('\t', ' ')]
+                                 msg.header("from").strip().replace('\t', ' ')]
                     except KeyError:
                         accts = []
                     signature = smime_verify(part, accts)
@@ -1034,7 +1028,7 @@ def message_to_json(message: notmuch.Message, get_deleted_body: bool = False) ->
                     sig = bytes(part.get_payload()[1]) # type: ignore[arg-type, index]
                     gpg = GPG()
                     public_keys = gpg.list_keys()
-                    from_addr = message.get_header("from")
+                    from_addr = msg.header("from")
                     try:
                         [_, address] = from_addr.split('<')
                         from_addr = address.split('>')[0]
@@ -1071,25 +1065,25 @@ def message_to_json(message: notmuch.Message, get_deleted_body: bool = False) ->
                         os.unlink(path)
 
     res = {
-        "from": message.get_header("from").strip().replace('\t', ' '),
-        "to": split_email_addresses(message.get_header("to")),
-        "cc": split_email_addresses(message.get_header("cc")),
-        "bcc": split_email_addresses(message.get_header("bcc")),
-        "date": message.get_header("date").strip(),
-        "subject": message.get_header("subject").strip().replace('\t', ' '),
-        "message_id": message.get_header("Message-ID").strip(),
-        "in_reply_to": message.get_header("In-Reply-To").strip() if message.get_header("In-Reply-To") else None,
-        "references": message.get_header("References").strip() if message.get_header("References") else None,
-        "reply_to": message.get_header("Reply-To").strip() if message.get_header("Reply-To") else None,
-        "forwarded_to": message.get_header("X-Forwarded-To").strip() if message.get_header("X-Forwarded-To") else None,
-        "delivered_to": message.get_header("Delivered-To").strip() if message.get_header("Delivered-To") else None,
+        "from": msg.header("from").strip().replace('\t', ' '),
+        "to": split_email_addresses(msg.header("to")),
+        "cc": split_email_addresses(msg.header("cc")),
+        "bcc": split_email_addresses(msg.header("bcc")),
+        "date": msg.header("date").strip(),
+        "subject": msg.header("subject").strip().replace('\t', ' '),
+        "message_id": msg.header("Message-ID").strip(),
+        "in_reply_to": msg.header("In-Reply-To").strip(),
+        "references": msg.header("References").strip(),
+        "reply_to": msg.header("Reply-To").strip(),
+        "forwarded_to": msg.header("X-Forwarded-To").strip(),
+        "delivered_to": msg.header("Delivered-To").strip(),
         "body": {
             "text/plain": body,
             "text/html": has_html
         },
         "attachments": attachments,
-        "notmuch_id": message.get_message_id(),
-        "tags": tags,
+        "notmuch_id": msg.messageid,
+        "tags": msg.tags,
         "signature": signature
     }
     if f"<{res['message_id']}>" == res['in_reply_to']:
@@ -1098,22 +1092,22 @@ def message_to_json(message: notmuch.Message, get_deleted_body: bool = False) ->
     return res
 
 
-def message_attachments(message: notmuch.Message) -> List[Dict[str, Any]]:
-    """Returns all attachments of a `notmuch.message.Message` instance."""
+def message_attachments(message: notmuch2.Message) -> List[Dict[str, Any]]:
+    """Returns all attachments of a `notmuch2.Message` instance."""
     email_msg = email_from_notmuch(message)
     return get_attachments(email_msg, True)
 
 
-def message_attachment(message: notmuch.Message, num: int = -1) -> Optional[Dict[str, Any]]:
-    """Returns attachment no. `num` of a `notmuch.message.Message` instance."""
+def message_attachment(message: notmuch2.Message, num: int = -1) -> Optional[Dict[str, Any]]:
+    """Returns attachment no. `num` of a `notmuch2.Message` instance."""
     attachments = message_attachments(message)
     if not attachments or num > len(attachments) - 1:
         return None
     return attachments[num]
 
 
-def email_from_notmuch(message: notmuch.Message) -> email.message.Message:
-    """Returns the email message corresponding to a `notmuch.message.Message` instance."""
-    with open(message.get_filename(), "rb") as f:
+def email_from_notmuch(message: notmuch2.Message) -> email.message.Message:
+    """Returns the email message corresponding to a `notmuch2Message` instance."""
+    with open(message.path, "rb") as f:
         email_msg = email.message_from_binary_file(f, policy=policy) # type: ignore[arg-type]
         return email_msg
