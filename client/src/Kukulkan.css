@@ -94,6 +94,10 @@ button > span {
     gap: 4px;
 }
 
+.message-container {
+    margin-bottom: 50px;
+}
+
 .message-action-icons {
     display: flex;
 
