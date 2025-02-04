@@ -107,9 +107,15 @@ def email_addresses_header(emails: str) -> str:
     return ", ".join(str(addr) for addr in tmp)
 
 
+def get_header(msg: notmuch2.Message, header: str) -> None|str:
+    try:
+        return msg.header(header).replace('\t', ' ').strip()
+    except LookupError:
+        return None
+
 def split_email_addresses(header: str) -> List[str]:
     """Returns all email addresses (without the names) in a string."""
-    addresses = re.findall(r'([^,][^@]*@[^,]+)', header.replace('\t', ' '))
+    addresses = re.findall(r'([^,][^@]*@[^,]+)', header)
     return [addr.strip() for addr in addresses]
 
 
@@ -126,28 +132,32 @@ class QTYP(enum.Enum):
     THREADS = 1
 
 
-def get_query(typ: QTYP, query_string: str, db: Optional[notmuch2.Database] = None, exclude: bool = True) -> Generator[notmuch2.Message|notmuch2.Thread]:
-    """Get messages or threads matching a query."""
+def get_query(typ: QTYP, query_string: str, db: Optional[notmuch2.Database] = None, exclude: bool = True) -> (int, Generator[notmuch2.Message|notmuch2.Thread]):
+    """Get messages or threads matching a query, along with the number matching."""
     db = get_db() if db is None else db
     excluded = []
     if exclude:
         excluded = [tag for tag in db.config["search.exclude_tags"].split(';')
                     if tag != '']
     if typ == QTYP.MESSAGES:
-        return db.messages(query_string,
-                           exclude_tags=excluded,
-                           sort=notmuch2.Database.SORT.NEWEST_FIRST)
+        num = db.count_messages(query_string,
+                                exclude_tags=excluded)
+        it = db.messages(query_string,
+                         exclude_tags=excluded,
+                         sort=notmuch2.Database.SORT.OLDEST_FIRST)
     elif typ == QTYP.THREADS:
-        return db.threads(query_string,
-                          exclude_tags=excluded,
-                          sort=notmuch2.Database.SORT.NEWEST_FIRST)
+        num = db.count_threads(query_string,
+                               exclude_tags=excluded)
+        it = db.threads(query_string,
+                        exclude_tags=excluded,
+                        sort=notmuch2.Database.SORT.NEWEST_FIRST)
+    return [num, it]
 
 
 def get_message(message_id: str) -> notmuch2.Message:
     """Get a single message."""
-    db = get_db() if db is None else db
     try:
-        msg = db.find(message_id)
+        msg = get_db().find(message_id)
     except notmuch2.LookupError:
         abort(404)
     return msg
@@ -179,10 +189,11 @@ def email_address_complete(query_string: str) -> Dict[str, str]:
     qs = query_string.casefold()
     addrs: Dict[str, str] = {}
     i = 0
-    for msg in get_query(QTYP.MESSAGES, f"from:{query_string} or to:{query_string}"):
+    (_, msgs) = get_query(QTYP.MESSAGES, f"from:{query_string} or to:{query_string}")
+    for msg in msgs:
         for header in ['from', 'to', 'cc', 'bcc']:
-            value = msg.header(header)
-            if value and qs in value.casefold():
+            value = get_header(msg, header)
+            if value is not None and qs in value.casefold():
                 for addr in split_email_addresses(value):
                     acf = addr.casefold()
                     if qs in acf:
@@ -285,7 +296,8 @@ def create_app() -> Flask:
 
     @app.route("/api/query/<string:query_string>")
     def query(query_string: str) -> List[Dict[str, Any]]:
-        return [thread_to_json(t) for t in get_query(QTYP.THREADS, query_string)]
+        (_, threads) = get_query(QTYP.THREADS, query_string)
+        return [thread_to_json(t) for t in threads]
 
     @app.route("/api/address/<string:query_string>")
     def address_complete(query_string: str) -> List[str]:
@@ -297,10 +309,11 @@ def create_app() -> Flask:
 
     @app.route("/api/thread/<string:thread_id>")
     def thread(thread_id: str) -> Any:
-        msgs = list(get_query(QTYP.MESSAGES, f'thread:"{thread_id}"', exclude=False))
-        if len(msgs) == 0:
-            abort(404)
-        return messages_to_json(msgs)
+        (num, msgs) = get_query(QTYP.MESSAGES, f'thread:"{thread_id}"', exclude=False)
+        if num == 1:
+            return [message_to_json(m, get_deleted_body=True)]
+        else:
+            return [message_to_json(m) for m in msgs]
 
     @app.route("/api/attachment/<string:message_id>/<int:num>")
     @app.route("/api/attachment/<string:message_id>/<int:num>/<int:scale>")
@@ -525,10 +538,9 @@ def create_app() -> Flask:
 
         if request.values['action'] == "reply" or request.values['action'].startswith("reply-cal-"):
             ref_msg = get_message(request.values['refId'])
-            mid = ref_msg.header("Message-ID").strip()
+            mid = get_header(ref_msg, "Message-ID")
             msg['In-Reply-To'] = f"<{mid}>"
-            if ref_msg.header("References"):
-                refs = ref_msg.header("References").strip()
+            if refs := get_header(ref_msg, "References"):
                 msg['References'] = f"{refs} <{mid}>"
             else:
                 msg['References'] = f"<{mid}>"
@@ -621,8 +633,7 @@ def thread_to_json(t: notmuch2.Thread) -> Dict[str, Any]:
     """Converts a `notmuch2.Thread` to a JSON object."""
     # using dict.fromkeys here to get the original order, which is not
     # necessarily preserved in a set
-    authors = list(dict.fromkeys(msg.header("from").replace('\t', ' ').strip()
-                                for msg in t))
+    authors = list(dict.fromkeys(get_header(msg, "from") for msg in t))
     return {
         "authors": authors,
         "matched_messages": t.matched,
@@ -828,13 +839,6 @@ def get_attachments(email_msg: email.message.Message, content: bool = False) -> 
     return attachments
 
 
-def messages_to_json(msgs: List[notmuch2.Message]) -> List[Dict[str, Any]]:
-    """Converts a list of `notmuch2.Message` instances to a JSON object."""
-    if len(msgs) == 1:
-        return [message_to_json(m, get_deleted_body=True) for m in msgs]
-    return [message_to_json(m) for m in msgs]
-
-
 def smime_verify(part: email.message.Message, accts: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Verify S/MIME signature of signed part, considering CAs in accounts."""
     try:
@@ -1018,8 +1022,7 @@ def message_to_json(msg: notmuch2.Message, get_deleted_body: bool = False) -> Di
                 if "pkcs7-signature" in part.get('Content-Type') or "pkcs7-mime" in part.get('Content-Type'): # type: ignore[operator]
                     try:
                         accounts = current_app.config.custom["accounts"] # type: ignore[attr-defined]
-                        accts = [acct for acct in accounts if acct["email"] in
-                                 msg.header("from").strip().replace('\t', ' ')]
+                        accts = [acct for acct in accounts if acct["email"] in get_header(msg, "from")]
                     except KeyError:
                         accts = []
                     signature = smime_verify(part, accts)
@@ -1028,7 +1031,7 @@ def message_to_json(msg: notmuch2.Message, get_deleted_body: bool = False) -> Di
                     sig = bytes(part.get_payload()[1]) # type: ignore[arg-type, index]
                     gpg = GPG()
                     public_keys = gpg.list_keys()
-                    from_addr = msg.header("from")
+                    from_addr = get_header(msg, "from")
                     try:
                         [_, address] = from_addr.split('<')
                         from_addr = address.split('>')[0]
@@ -1065,25 +1068,24 @@ def message_to_json(msg: notmuch2.Message, get_deleted_body: bool = False) -> Di
                         os.unlink(path)
 
     res = {
-        "from": msg.header("from").strip().replace('\t', ' '),
-        "to": split_email_addresses(msg.header("to")),
-        "cc": split_email_addresses(msg.header("cc")),
-        "bcc": split_email_addresses(msg.header("bcc")),
-        "date": msg.header("date").strip(),
-        "subject": msg.header("subject").strip().replace('\t', ' '),
-        "message_id": msg.header("Message-ID").strip(),
-        "in_reply_to": msg.header("In-Reply-To").strip(),
-        "references": msg.header("References").strip(),
-        "reply_to": msg.header("Reply-To").strip(),
-        "forwarded_to": msg.header("X-Forwarded-To").strip(),
-        "delivered_to": msg.header("Delivered-To").strip(),
+        "from": get_header(msg, "from"),
+        "to": split_email_addresses(hdr) if (hdr := get_header(msg, "to")) else [],
+        "cc": split_email_addresses(hdr) if (hdr := get_header(msg, "cc")) else [],
+        "bcc": split_email_addresses(hdr) if (hdr := get_header(msg, "bcc")) else [],
+        "date": get_header(msg, "date"),
+        "subject": get_header(msg, "subject"),
+        "message_id": get_header(msg, "Message-ID"),
+        "in_reply_to": get_header(msg, "In-Reply-To"),
+        "reply_to": get_header(msg, "Reply-To"),
+        "forwarded_to": get_header(msg, "X-Forwarded-To"),
+        "delivered_to": get_header(msg, "Delivered-To"),
         "body": {
             "text/plain": body,
             "text/html": has_html
         },
         "attachments": attachments,
         "notmuch_id": msg.messageid,
-        "tags": msg.tags,
+        "tags": list(msg.tags),
         "signature": signature
     }
     if f"<{res['message_id']}>" == res['in_reply_to']:
