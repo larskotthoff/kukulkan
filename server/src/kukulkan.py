@@ -132,7 +132,7 @@ class QTYP(enum.Enum):
     THREADS = 1
 
 
-def get_query(typ: QTYP, query_string: str, db: Optional[notmuch2.Database] = None, exclude: bool = True) -> (int, Generator[notmuch2.Message|notmuch2.Thread]):
+def get_query(typ: QTYP, query_string: str, db: Optional[notmuch2.Database] = None, exclude: bool = True) -> Tuple[int, Generator[notmuch2.Message|notmuch2.Thread]]:
     """Get messages or threads matching a query, along with the number matching."""
     db = get_db() if db is None else db
     excluded = []
@@ -151,14 +151,14 @@ def get_query(typ: QTYP, query_string: str, db: Optional[notmuch2.Database] = No
         it = db.threads(query_string,
                         exclude_tags=excluded,
                         sort=notmuch2.Database.SORT.NEWEST_FIRST)
-    return [num, it]
+    return (num, it)
 
 
 def get_message(message_id: str) -> notmuch2.Message:
     """Get a single message."""
     try:
         msg = get_db().find(message_id)
-    except notmuch2.LookupError:
+    except LookupError:
         abort(404)
     return msg
 
@@ -192,7 +192,7 @@ def email_address_complete(query_string: str) -> Dict[str, str]:
     (_, msgs) = get_query(QTYP.MESSAGES, f"from:{query_string} or to:{query_string}")
     for msg in msgs:
         for header in ['from', 'to', 'cc', 'bcc']:
-            value = get_header(msg, header)
+            value = get_header(msg, header) # type: ignore[arg-type]
             if value is not None and qs in value.casefold():
                 for addr in split_email_addresses(value):
                     acf = addr.casefold()
@@ -297,7 +297,7 @@ def create_app() -> Flask:
     @app.route("/api/query/<string:query_string>")
     def query(query_string: str) -> List[Dict[str, Any]]:
         (_, threads) = get_query(QTYP.THREADS, query_string)
-        return [thread_to_json(t) for t in threads]
+        return [thread_to_json(t) for t in threads] # type: ignore[arg-type]
 
     @app.route("/api/address/<string:query_string>")
     def address_complete(query_string: str) -> List[str]:
@@ -311,9 +311,9 @@ def create_app() -> Flask:
     def thread(thread_id: str) -> Any:
         (num, msgs) = get_query(QTYP.MESSAGES, f'thread:"{thread_id}"', exclude=False)
         if num == 1:
-            return [message_to_json(m, get_deleted_body=True)]
+            return [message_to_json(m, get_deleted_body=True) for m in msgs] # type: ignore[arg-type]
         else:
-            return [message_to_json(m) for m in msgs]
+            return [message_to_json(m) for m in msgs] # type: ignore[arg-type]
 
     @app.route("/api/attachment/<string:message_id>/<int:num>")
     @app.route("/api/attachment/<string:message_id>/<int:num>/<int:scale>")
@@ -390,14 +390,13 @@ def create_app() -> Flask:
         db_write = notmuch2.Database(mode=notmuch2.Database.MODE.READ_WRITE)
         msgs = list(db_write.messages(query))
         try:
-            db_write.begin_atomic()
             for msg in msgs:
-                tags = msg.tags
-                if op == "add":
-                    tags.add(tag)
-                elif op == "remove":
-                    tags.discard(tag)
-            db_write.end_atomic()
+                with msg.frozen():
+                    tags = msg.tags
+                    if op == "add":
+                        tags.add(tag)
+                    elif op == "remove":
+                        tags.discard(tag)
         finally:
             db_write.close()
         return escape(tag)
@@ -579,23 +578,22 @@ def create_app() -> Flask:
 
                     db_write = notmuch2.Database(mode=notmuch2.Database.MODE.READ_WRITE)
                     try:
-                        db_write.begin_atomic()
-                        if ra == "reply" or ra.startswith("reply-cal-"):
-                            ref_msgs = db_write.messages(f"id:{rr}")
-                            for ref_msg in ref_msgs:
-                                ref_msg.tags.add("replied")
-                        elif ra == "forward":
-                            ref_msgs = db_write.messages(f"id:{rr}")
-                            for ref_msg in ref_msgs:
-                                ref_msg.tags.add("passed")
+                        with db_write.atomic():
+                            if ra == "reply" or ra.startswith("reply-cal-"):
+                                ref_msgs = db_write.messages(f"id:{rr}")
+                                for ref_msg in ref_msgs:
+                                    ref_msg.tags.add("replied")
+                            elif ra == "forward":
+                                ref_msgs = db_write.messages(f"id:{rr}")
+                                for ref_msg in ref_msgs:
+                                    ref_msg.tags.add("passed")
 
-                        (notmuch_msg, _) = db_write.add(fname)
-                        tags = notmuch_msg.tags
-                        for tag in rt.split(',') + account["additional_sent_tags"]:
-                            if tag != "":
-                                tags.add(tag)
-                        tags.add("sent")
-                        db_write.end_atomic()
+                            (notmuch_msg, _) = db_write.add(fname)
+                            tags = notmuch_msg.tags
+                            for tag in rt.split(',') + account["additional_sent_tags"]:
+                                if tag != "":
+                                    tags.add(tag)
+                            tags.add("sent")
                     finally:
                         db_write.close()
                 else:
@@ -1013,6 +1011,7 @@ def message_to_json(msg: notmuch2.Message, get_deleted_body: bool = False) -> Di
 
         attachments = get_attachments(email_msg)
         body, has_html = get_nested_body(email_msg)
+        from_addr = get_header(msg, "from")
 
         signature = None
         # signature verification
@@ -1022,7 +1021,7 @@ def message_to_json(msg: notmuch2.Message, get_deleted_body: bool = False) -> Di
                 if "pkcs7-signature" in part.get('Content-Type') or "pkcs7-mime" in part.get('Content-Type'): # type: ignore[operator]
                     try:
                         accounts = current_app.config.custom["accounts"] # type: ignore[attr-defined]
-                        accts = [acct for acct in accounts if acct["email"] in get_header(msg, "from")]
+                        accts = [acct for acct in accounts if from_addr and acct["email"] in from_addr]
                     except KeyError:
                         accts = []
                     signature = smime_verify(part, accts)
@@ -1031,22 +1030,24 @@ def message_to_json(msg: notmuch2.Message, get_deleted_body: bool = False) -> Di
                     sig = bytes(part.get_payload()[1]) # type: ignore[arg-type, index]
                     gpg = GPG()
                     public_keys = gpg.list_keys()
-                    from_addr = get_header(msg, "from")
                     try:
-                        [_, address] = from_addr.split('<')
-                        from_addr = address.split('>')[0]
+                        if from_addr is not None:
+                            [_, address] = from_addr.split('<')
+                            addr = address.split('>')[0]
+                        else:
+                            addr = from_addr # type: ignore[assignment]
                     except ValueError:
                         pass
 
                     found = False
                     for pkey in public_keys:
                         for uid in pkey.get('uids'):
-                            if from_addr in uid:
+                            if addr in uid:
                                 found = True
                     if not found and 'gpg-keyserver' in current_app.config.custom: # type: ignore[attr-defined]
-                        current_app.logger.info(f"Key for {from_addr} not found, attempting to download...")
+                        current_app.logger.info(f"Key for {addr} not found, attempting to download...")
                         # TODO: handle case where server is unreachable
-                        keys = gpg.search_keys(from_addr, current_app.config.custom['gpg-keyserver']) # type: ignore[attr-defined]
+                        keys = gpg.search_keys(addr, current_app.config.custom['gpg-keyserver']) # type: ignore[attr-defined]
                         if len(keys) > 0:
                             for key in keys:
                                 current_app.logger.info(f"Getting key {key.get('keyid')}")
@@ -1068,7 +1069,7 @@ def message_to_json(msg: notmuch2.Message, get_deleted_body: bool = False) -> Di
                         os.unlink(path)
 
     res = {
-        "from": get_header(msg, "from"),
+        "from": from_addr,
         "to": split_email_addresses(hdr) if (hdr := get_header(msg, "to")) else [],
         "cc": split_email_addresses(hdr) if (hdr := get_header(msg, "cc")) else [],
         "bcc": split_email_addresses(hdr) if (hdr := get_header(msg, "bcc")) else [],
