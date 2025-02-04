@@ -108,6 +108,7 @@ def email_addresses_header(emails: str) -> str:
 
 
 def get_header(msg: notmuch2.Message, header: str) -> None|str:
+    """Get header from a message, or None if it doesn't exist."""
     try:
         return msg.header(header).replace('\t', ' ').strip()
     except LookupError:
@@ -151,6 +152,7 @@ def get_query(typ: QTYP, query_string: str, db: Optional[notmuch2.Database] = No
         it = db.threads(query_string,
                         exclude_tags=excluded,
                         sort=notmuch2.Database.SORT.NEWEST_FIRST)
+    # pylint: disable=possibly-used-before-assignment
     return (num, it)
 
 
@@ -312,8 +314,7 @@ def create_app() -> Flask:
         (num, msgs) = get_query(QTYP.MESSAGES, f'thread:"{thread_id}"', exclude=False)
         if num == 1:
             return [message_to_json(m, get_deleted_body=True) for m in msgs] # type: ignore[arg-type]
-        else:
-            return [message_to_json(m) for m in msgs] # type: ignore[arg-type]
+        return [message_to_json(m) for m in msgs] # type: ignore[arg-type]
 
     @app.route("/api/attachment/<string:message_id>/<int:num>")
     @app.route("/api/attachment/<string:message_id>/<int:num>/<int:scale>")
