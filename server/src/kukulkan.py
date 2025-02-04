@@ -390,13 +390,12 @@ def create_app() -> Flask:
         query = f"{id_type}:{nid} and {tag_prefix}tag:{tag}"
         db_write = notmuch2.Database(mode=notmuch2.Database.MODE.READ_WRITE)
         try:
-            for msg in db_write.messages(query):
-                with msg.frozen():
-                    tags = msg.tags
+            for msg in get_query(QTYP.MESSAGES, query, db_write):
+                with msg.frozen(): # type: ignore[union-attr]
                     if op == "add":
-                        tags.add(tag)
+                        msg.tags.add(tag) # type: ignore[union-attr]
                     elif op == "remove":
-                        tags.discard(tag)
+                        msg.tags.discard(tag) # type: ignore[union-attr]
         finally:
             db_write.close()
         return escape(tag)
@@ -549,7 +548,7 @@ def create_app() -> Flask:
         if ra == "reply" or ra == "forward" or ra.startswith("reply-cal-"):
             rr = request.values['refId']
         else:
-            rr = ""
+            rr = None
         rt = request.values['tags']
 
         # claude helped with this
@@ -579,14 +578,15 @@ def create_app() -> Flask:
                     db_write = notmuch2.Database(mode=notmuch2.Database.MODE.READ_WRITE)
                     try:
                         with db_write.atomic():
-                            if ra == "reply" or ra.startswith("reply-cal-"):
-                                ref_msgs = db_write.messages(f"id:{rr}")
+                            if rr is not None:
+                                if ra == "reply" or ra.startswith("reply-cal-"):
+                                    reftag = "replied"
+                                elif ra == "forward":
+                                    reftag = "passed"
+                                ref_msgs = get_query(QTYP.MESSAGES, f"id:{rr}", db_write)
                                 for ref_msg in ref_msgs:
-                                    ref_msg.tags.add("replied")
-                            elif ra == "forward":
-                                ref_msgs = db_write.messages(f"id:{rr}")
-                                for ref_msg in ref_msgs:
-                                    ref_msg.tags.add("passed")
+                                    # pylint: disable=possibly-used-before-assignment
+                                    ref_msg.tags.add(reftag) # type: ignore[union-attr]
 
                             (notmuch_msg, _) = db_write.add(fname)
                             tags = notmuch_msg.tags
@@ -637,7 +637,7 @@ def thread_to_json(t: notmuch2.Thread) -> Dict[str, Any]:
         "matched_messages": t.matched,
         "newest_date": t.last,
         "oldest_date": t.first,
-        "subject": t.subject.replace('\t', ' ') if t.subject else "(no subject)",
+        "subject": t.subject if t.subject else "(no subject)",
         "tags": list(t.tags),
         "thread_id": t.threadid,
         "total_messages": len(t)
