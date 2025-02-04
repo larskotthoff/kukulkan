@@ -632,13 +632,15 @@ def thread_to_json(t: notmuch2.Thread) -> Dict[str, Any]:
     # using dict.fromkeys here to get the original order, which is not
     # necessarily preserved in a set
     authors = list(dict.fromkeys(get_header(msg, "from") for msg in t))
+    dates = list(dict.fromkeys(get_header(msg, "date") for msg in t))
+    tags = list(set(tag for msg in t for tag in msg.tags))
     return {
         "authors": authors,
         "matched_messages": t.matched,
-        "newest_date": t.last,
-        "oldest_date": t.first,
+        "newest_date": dates[-1],
+        "oldest_date": dates[0],
         "subject": t.subject if t.subject else "(no subject)",
-        "tags": list(t.tags),
+        "tags": tags,
         "thread_id": t.threadid,
         "total_messages": len(t)
     }
