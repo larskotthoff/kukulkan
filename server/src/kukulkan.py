@@ -644,7 +644,7 @@ def strip_tags(soup: BeautifulSoup) -> None:
     for typ in ["a", "span", "em", "strong", "u", "i", "font", "mark", "label",
                 "s", "sub", "sup", "tt", "bdo", "button", "cite", "del", "b"]:
         for t in soup.find_all(typ):
-            t.unwrap()
+            t.unwrap() # type: ignore[union-attr]
     soup.smooth()
 
 
