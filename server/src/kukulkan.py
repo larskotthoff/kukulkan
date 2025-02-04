@@ -388,9 +388,8 @@ def create_app() -> Flask:
         tag_prefix = 'not ' if op == "add" else ''
         query = f"{id_type}:{nid} and {tag_prefix}tag:{tag}"
         db_write = notmuch2.Database(mode=notmuch2.Database.MODE.READ_WRITE)
-        msgs = list(db_write.messages(query))
         try:
-            for msg in msgs:
+            for msg in db_write.messages(query):
                 with msg.frozen():
                     tags = msg.tags
                     if op == "add":
