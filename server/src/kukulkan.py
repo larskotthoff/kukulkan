@@ -630,7 +630,6 @@ def thread_to_json(t: notmuch2.Thread) -> Dict[str, Any]:
     tags = list(set(tag for msg in msgs for tag in msg.tags))
     return {
         "authors": authors,
-        "matched_messages": t.matched,
         "newest_date": get_header(msgs[-1], "date"),
         "oldest_date": get_header(msgs[0], "date"),
         "subject": t.subject if t.subject else "(no subject)",
