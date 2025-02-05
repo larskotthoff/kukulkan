@@ -627,10 +627,15 @@ def create_app() -> Flask:
 def thread_to_json(t: notmuch2.Thread) -> Dict[str, Any]:
     """Converts a `notmuch2.Thread` to a JSON object."""
     msgs = list(t)
-    # using dict.fromkeys here to get the original order, which is not
-    # necessarily preserved in a set
-    authors = list(dict.fromkeys(get_header(msg, "from") for msg in msgs))
-    tags = list(set(tag for msg in msgs for tag in msg.tags))
+    # using dicts here to get everything in the right order
+    authors = {}
+    tags = {}
+    for msg in msgs:
+        authors[get_header(msg, "from")] = 1
+        for tag in msg.tags:
+            tags[tag] = 1
+    authors = list(authors.keys())
+    tags = list(tags.keys())
     return {
         "authors": authors,
         "newest_date": get_header(msgs[-1], "date"),
