@@ -111,7 +111,7 @@ def get_header(msg: notmuch2.Message, header: str) -> None|str:
     """Get header from a message, or None if it doesn't exist."""
     try:
         return msg.header(header).replace('\t', ' ').strip()
-    except LookupError:
+    except (LookupError, AttributeError):
         return None
 
 def split_email_addresses(header: str) -> List[str]:
@@ -138,8 +138,11 @@ def get_query(typ: QTYP, query_string: str, db: Optional[notmuch2.Database] = No
     db = get_db() if db is None else db
     excluded = []
     if exclude:
-        excluded = [tag for tag in db.config["search.exclude_tags"].split(';')
-                    if tag != '']
+        try:
+            excluded = [tag for tag in db.config["search.exclude_tags"].split(';')
+                        if tag != '']
+        except KeyError:
+            pass
     if typ == QTYP.MESSAGES:
         it = db.messages(query_string,
                          exclude_tags=excluded,
