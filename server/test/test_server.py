@@ -63,7 +63,6 @@ def test_query(setup):
     app, db = setup
 
     mm1 = lambda: None
-    mm1.get_date = MagicMock(return_value="foodate")
     mm1.tags = ["footag"]
     mm1.header = MagicMock()
     mm1.header.side_effect = ["foo bar <foo@bar.com>", "foodate"]
@@ -71,7 +70,6 @@ def test_query(setup):
     mm2.tags = ["footag", "bartag"]
     mm2.header = MagicMock(return_value="bar foo <bar@foo.com>")
     mm3 = lambda: None
-    mm3.get_date = MagicMock(return_value="foobardate")
     mm3.tags = ["foobartag"]
     mm3.header = MagicMock()
     mm3.header.side_effect = ["bar\tfoo <bar@foo.com>", "foobardate"]
@@ -111,7 +109,6 @@ def test_query_empty(setup):
     app, db = setup
 
     mm1 = lambda: None
-    mm1.get_date = MagicMock(return_value="foodate")
     mm1.tags = ["footag"]
     mm1.header = MagicMock()
     mm1.header.side_effect = [None, "foodate", "foodate"]
@@ -177,82 +174,56 @@ def test_query_exclude_tags(setup):
 def test_address(setup):
     app, db = setup
 
-    db.get_config = MagicMock(return_value="foo;bar")
-
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/simple.eml")
-    mf.get_header = MagicMock(return_value="foo@bar.com, \"bar foo\" bar@foo.com, bar@foo.com")
-    mf.get_message_id = MagicMock(return_value="foo")
-    mf.get_tags = MagicMock(return_value=["foo", "bar"])
+    mf.header = MagicMock()
+    mf.header.side_effect = ["foo@bar.com", "\"bar foo\" bar@foo.com", "bar@foo.com", None]
+    mf.tags = ["foo", "bar"]
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
-    mq.exclude_tag = MagicMock()
+    db.config = {}
+    db.messages = MagicMock(return_value=iter([mf]))
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/address/foo')
-            assert response.status_code == 200
-            addrs = json.loads(response.data.decode())
-            assert len(addrs) == 2
-            assert addrs[0] == "foo@bar.com"
-            assert addrs[1] == "\"bar foo\" bar@foo.com"
+    with app.test_client() as test_client:
+        response = test_client.get('/api/address/foo')
+        assert response.status_code == 200
+        addrs = json.loads(response.data.decode())
+        assert len(addrs) == 2
+        assert addrs[0] == "foo@bar.com"
+        assert addrs[1] == "\"bar foo\" bar@foo.com"
 
-        q.assert_called_once_with(db, "from:foo or to:foo")
-
-    mq.search_messages.assert_called_once()
-    db.get_config.assert_called_once_with("search.exclude_tags")
+    mf.header.assert_has_calls([call("from"), call("to"), call("cc"), call("bcc")])
+    db.messages.assert_called_once_with("from:foo or to:foo", exclude_tags=[],
+                                       sort=notmuch2.Database.SORT.OLDEST_FIRST)
 
 
 def test_get_message_none(setup):
     app, db = setup
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([]))
+    db.config = {}
+    db.find = MagicMock(return_value=iter([]))
+    db.find.side_effect = LookupError("foo")
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/message/foo')
-            assert response.status_code == 404
-        q.assert_called_once_with(db, 'id:foo')
-
-    mq.search_messages.assert_called_once()
-
-
-def test_get_message_multiple(setup):
-    app, db = setup
-
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([1, 2]))
-
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/message/foo')
-            assert response.status_code == 500
-        q.assert_called_once_with(db, 'id:foo')
-
-    mq.search_messages.assert_called_once()
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message/foo')
+        assert response.status_code == 404
+    db.find.assert_called_once_with("foo")
 
 
 def test_raw_message(setup):
     app, db = setup
 
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="foo")
+    mf.path = "foofile"
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with patch("builtins.open", mock_open(read_data="This is a test.")):
-            with app.test_client() as test_client:
-                response = test_client.get('/api/raw_message/foo')
-                assert response.status_code == 200
-                assert b'This is a test.' == response.data
-        q.assert_called_once_with(db, 'id:foo')
-
-    mf.get_filename.assert_called_once()
-    mq.search_messages.assert_called_once()
+    with patch("builtins.open", mock_open(read_data="This is a test.")) as o:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/raw_message/foo')
+            assert response.status_code == 200
+            assert b'This is a test.' == response.data
+        o.assert_called_once_with("foofile", "r", encoding="utf8")
+    db.find.assert_called_once_with("foo")
 
 
 def test_tag_add_message(setup):
