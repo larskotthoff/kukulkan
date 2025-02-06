@@ -371,30 +371,39 @@ def create_app() -> Flask:
 
     @app.route("/api/tag_batch/<string:typ>/<string:nids>/<string:tags>")
     def change_tags(typ: str, nids: str, tags: str) -> str:
-        for nid in nids.split(' '):
-            for tag in tags.split(' '):
-                if tag[0] == '-':
-                    change_tag("remove", typ, nid, tag[1:])
-                else:
-                    change_tag("add", typ, nid, tag)
+        dbw = notmuch2.Database(mode=notmuch2.Database.MODE.READ_WRITE)
+        try:
+            for nid in nids.split(' '):
+                for tag in tags.split(' '):
+                    if tag[0] == '-':
+                        change_tag("remove", typ, nid, tag[1:], dbw)
+                    else:
+                        change_tag("add", typ, nid, tag, dbw)
+        finally:
+            dbw.close()
         return f"{escape(nids)}/{escape(tags)}"
 
     @app.route("/api/tag/<op>/<string:typ>/<string:nid>/<string:tag>")
-    def change_tag(op: str, typ: str, nid: str, tag: str) -> str:
+    def change_tag(op: str, typ: str, nid: str, tag: str, dbw: Optional[notmuch2.Database] = None) -> str:
         # pylint: disable=no-member
         id_type = 'id' if typ == "message" else typ
         tag_prefix = 'not ' if op == "add" else ''
         query = f"{id_type}:{nid} and {tag_prefix}tag:{tag}"
-        db_write = notmuch2.Database(mode=notmuch2.Database.MODE.READ_WRITE)
+        should_close = True
+        if dbw is None:
+            dbw = notmuch2.Database(mode=notmuch2.Database.MODE.READ_WRITE)
+        else:
+            should_close = False
         try:
-            for msg in get_query(QTYP.MESSAGES, query, db_write):
+            for msg in get_query(QTYP.MESSAGES, query, dbw):
                 with msg.frozen(): # type: ignore[union-attr]
                     if op == "add":
                         msg.tags.add(tag) # type: ignore[union-attr]
                     elif op == "remove":
                         msg.tags.discard(tag) # type: ignore[union-attr]
         finally:
-            db_write.close()
+            if should_close:
+                dbw.close()
         return escape(tag)
 
     @app.route('/api/edit_external', methods=['POST'])

@@ -3,7 +3,7 @@ import json
 import io
 import os
 import email
-from unittest.mock import MagicMock, mock_open, patch, call
+from unittest.mock import MagicMock, mock_open, patch, call, ANY
 
 import notmuch2
 
@@ -229,227 +229,191 @@ def test_raw_message(setup):
 def test_tag_add_message(setup):
     app, db = setup
 
+    mf = lambda: None
+    mf.frozen = MagicMock()
+    mf.tags = lambda: None
+    mf.tags.add = MagicMock()
+
     dbw = lambda: None
     dbw.close = MagicMock()
-    dbw.begin_atomic = MagicMock()
-    dbw.end_atomic = MagicMock()
+    dbw.messages = MagicMock(return_value=iter([mf]))
+    dbw.config = {}
 
-    mf = lambda: None
-    mf.add_tag = MagicMock()
-    mf.tags_to_maildir_flags = MagicMock()
+    with patch("notmuch2.Database", return_value=dbw) as nmdb:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/tag/add/message/foo/bar')
+            assert response.status_code == 200
+            assert b'bar' == response.data
+        nmdb.assert_called_once()
+    dbw.messages.assert_called_once_with("id:foo and not tag:bar", exclude_tags=[], sort=ANY)
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
+    mf.tags.add.assert_called_once()
+    mf.frozen.assert_called_once()
 
-    with patch("notmuch.Database", return_value=dbw):
-        with patch("notmuch.Query", return_value=mq) as q:
-            with app.test_client() as test_client:
-                response = test_client.get('/api/tag/add/message/foo/bar')
-                assert response.status_code == 200
-                assert b'bar' == response.data
-            q.assert_called_once_with(dbw, 'id:foo and not tag:bar')
-
-    mf.add_tag.assert_called_once()
-    mf.tags_to_maildir_flags.assert_called_once()
-
-    mq.search_messages.assert_called_once()
-
-    dbw.begin_atomic.assert_called_once()
-    dbw.end_atomic.assert_called_once()
     dbw.close.assert_called_once()
 
 
 def test_tag_add_thread(setup):
     app, db = setup
 
+    mf = lambda: None
+    mf.frozen = MagicMock()
+    mf.tags = lambda: None
+    mf.tags.add = MagicMock()
+
     dbw = lambda: None
     dbw.close = MagicMock()
-    dbw.begin_atomic = MagicMock()
-    dbw.end_atomic = MagicMock()
+    dbw.messages = MagicMock(return_value=iter([mf]))
+    dbw.config = {}
 
-    mf = lambda: None
-    mf.add_tag = MagicMock()
-    mf.tags_to_maildir_flags = MagicMock()
+    with patch("notmuch2.Database", return_value=dbw) as nmdb:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/tag/add/thread/foo/bar')
+            assert response.status_code == 200
+            assert b'bar' == response.data
+        nmdb.assert_called_once()
+    dbw.messages.assert_called_once_with("thread:foo and not tag:bar", exclude_tags=[], sort=ANY)
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
+    mf.tags.add.assert_called_once()
+    mf.frozen.assert_called_once()
 
-    with patch("notmuch.Database", return_value=dbw):
-        with patch("notmuch.Query", return_value=mq) as q:
-            with app.test_client() as test_client:
-                response = test_client.get('/api/tag/add/thread/foo/bar')
-                assert response.status_code == 200
-                assert b'bar' == response.data
-            q.assert_called_once_with(dbw, 'thread:foo and not tag:bar')
-
-    mf.add_tag.assert_called_once()
-    mf.tags_to_maildir_flags.assert_called_once()
-
-    mq.search_messages.assert_called_once()
-
-    dbw.begin_atomic.assert_called_once()
-    dbw.end_atomic.assert_called_once()
     dbw.close.assert_called_once()
 
 
 def test_tag_remove_message(setup):
     app, db = setup
 
+    mf = lambda: None
+    mf.frozen = MagicMock()
+    mf.tags = lambda: None
+    mf.tags.discard = MagicMock()
+
     dbw = lambda: None
     dbw.close = MagicMock()
-    dbw.begin_atomic = MagicMock()
-    dbw.end_atomic = MagicMock()
+    dbw.messages = MagicMock(return_value=iter([mf]))
+    dbw.config = {}
 
-    mf = lambda: None
-    mf.remove_tag = MagicMock()
-    mf.tags_to_maildir_flags = MagicMock()
+    with patch("notmuch2.Database", return_value=dbw) as nmdb:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/tag/remove/message/foo/bar')
+            assert response.status_code == 200
+            assert b'bar' == response.data
+        nmdb.assert_called_once()
+    dbw.messages.assert_called_once_with("id:foo and tag:bar", exclude_tags=[], sort=ANY)
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
+    mf.tags.discard.assert_called_once()
+    mf.frozen.assert_called_once()
 
-    with patch("notmuch.Database", return_value=dbw):
-        with patch("notmuch.Query", return_value=mq) as q:
-            with app.test_client() as test_client:
-                response = test_client.get('/api/tag/remove/message/foo/bar')
-                assert response.status_code == 200
-                assert b'bar' == response.data
-            q.assert_called_once_with(dbw, 'id:foo and tag:bar')
-
-    mf.remove_tag.assert_called_once()
-    mf.tags_to_maildir_flags.assert_called_once()
-
-    mq.search_messages.assert_called_once()
-
-    dbw.begin_atomic.assert_called_once()
-    dbw.end_atomic.assert_called_once()
     dbw.close.assert_called_once()
 
 
 def test_tag_remove_thread(setup):
     app, db = setup
 
+    mf = lambda: None
+    mf.frozen = MagicMock()
+    mf.tags = lambda: None
+    mf.tags.discard = MagicMock()
+
     dbw = lambda: None
     dbw.close = MagicMock()
-    dbw.begin_atomic = MagicMock()
-    dbw.end_atomic = MagicMock()
+    dbw.messages = MagicMock(return_value=iter([mf]))
+    dbw.config = {}
 
-    mf = lambda: None
-    mf.remove_tag = MagicMock()
-    mf.tags_to_maildir_flags = MagicMock()
+    with patch("notmuch2.Database", return_value=dbw) as nmdb:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/tag/remove/thread/foo/bar')
+            assert response.status_code == 200
+            assert b'bar' == response.data
+        nmdb.assert_called_once()
+    dbw.messages.assert_called_once_with("thread:foo and tag:bar", exclude_tags=[], sort=ANY)
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
+    mf.tags.discard.assert_called_once()
+    mf.frozen.assert_called_once()
 
-    with patch("notmuch.Database", return_value=dbw):
-        with patch("notmuch.Query", return_value=mq) as q:
-            with app.test_client() as test_client:
-                response = test_client.get('/api/tag/remove/thread/foo/bar')
-                assert response.status_code == 200
-                assert b'bar' == response.data
-            q.assert_called_once_with(dbw, 'thread:foo and tag:bar')
-
-    mf.remove_tag.assert_called_once()
-    mf.tags_to_maildir_flags.assert_called_once()
-
-    mq.search_messages.assert_called_once()
-
-    dbw.begin_atomic.assert_called_once()
-    dbw.end_atomic.assert_called_once()
     dbw.close.assert_called_once()
 
 
-def test_tags_add_message_batch(setup):
+def test_tags_change_message_batch(setup):
     app, db = setup
+
+    mf = lambda: None
+    mf.frozen = MagicMock()
+    mf.tags = lambda: None
+    mf.tags.add = MagicMock()
+    mf.tags.discard = MagicMock()
 
     dbw = lambda: None
     dbw.close = MagicMock()
-    dbw.begin_atomic = MagicMock()
-    dbw.end_atomic = MagicMock()
+    dbw.messages = MagicMock()
+    dbw.messages.side_effect = [iter([mf]), iter([mf]), iter([mf]), iter([mf])]
+    dbw.config = {}
 
-    mf = lambda: None
-    mf.add_tag = MagicMock()
-    mf.remove_tag = MagicMock()
-    mf.tags_to_maildir_flags = MagicMock()
+    with patch("notmuch2.Database", return_value=dbw) as nmdb:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/tag_batch/message/foo1 foo2/bar1 -bar2')
+            assert response.status_code == 200
+            assert b'foo1 foo2/bar1 -bar2' == response.data
+        assert nmdb.call_count == 1
 
-    mq = lambda: None
-    mq.search_messages = MagicMock()
-    mq.search_messages.side_effect = [iter([mf]), iter([mf]), iter([mf]), iter([mf])]
-
-    with patch("notmuch.Database", return_value=dbw):
-        with patch("notmuch.Query", return_value=mq) as q:
-            with app.test_client() as test_client:
-                response = test_client.get('/api/tag_batch/message/foo1 foo2/bar1 -bar2')
-                assert response.status_code == 200
-                assert b'foo1 foo2/bar1 -bar2' == response.data
-            assert q.mock_calls == [
-                call(dbw, 'id:foo1 and not tag:bar1'),
-                call(dbw, 'id:foo1 and tag:bar2'),
-                call(dbw, 'id:foo2 and not tag:bar1'),
-                call(dbw, 'id:foo2 and tag:bar2')
-            ]
-
-    assert mf.add_tag.mock_calls == [
-        call('bar1'),
-        call('bar1'),
+    assert dbw.messages.mock_calls == [
+        call('id:foo1 and not tag:bar1', exclude_tags=[], sort=ANY),
+        call('id:foo1 and tag:bar2', exclude_tags=[], sort=ANY),
+        call('id:foo2 and not tag:bar1', exclude_tags=[], sort=ANY),
+        call('id:foo2 and tag:bar2', exclude_tags=[], sort=ANY)
     ]
-    assert mf.remove_tag.mock_calls == [
-        call('bar2'),
-        call('bar2'),
+    assert dbw.close.call_count == 1
+
+    assert mf.tags.add.mock_calls == [
+        call('bar1'),
+        call('bar1')
     ]
-    assert mf.tags_to_maildir_flags.call_count == 4
-
-    assert mq.search_messages.call_count == 4
-
-    assert dbw.begin_atomic.call_count == 4
-    assert dbw.end_atomic.call_count == 4
-    assert dbw.close.call_count == 4
+    assert mf.tags.discard.mock_calls == [
+        call('bar2'),
+        call('bar2')
+    ]
+    assert mf.frozen.call_count == 4
 
 
 def test_tags_add_thread_batch(setup):
     app, db = setup
 
+    mf = lambda: None
+    mf.frozen = MagicMock()
+    mf.tags = lambda: None
+    mf.tags.add = MagicMock()
+    mf.tags.discard = MagicMock()
+
     dbw = lambda: None
     dbw.close = MagicMock()
-    dbw.begin_atomic = MagicMock()
-    dbw.end_atomic = MagicMock()
+    dbw.messages = MagicMock()
+    dbw.messages.side_effect = [iter([mf]), iter([mf]), iter([mf]), iter([mf])]
+    dbw.config = {}
 
-    mf = lambda: None
-    mf.add_tag = MagicMock()
-    mf.remove_tag = MagicMock()
-    mf.tags_to_maildir_flags = MagicMock()
+    with patch("notmuch2.Database", return_value=dbw) as nmdb:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/tag_batch/thread/foo1 foo2/bar1 -bar2')
+            assert response.status_code == 200
+            assert b'foo1 foo2/bar1 -bar2' == response.data
+        assert nmdb.call_count == 1
 
-    mq = lambda: None
-    mq.search_messages = MagicMock()
-    mq.search_messages.side_effect = [iter([mf]), iter([mf]), iter([mf]), iter([mf])]
-
-    with patch("notmuch.Database", return_value=dbw):
-        with patch("notmuch.Query", return_value=mq) as q:
-            with app.test_client() as test_client:
-                response = test_client.get('/api/tag_batch/thread/foo1 foo2/bar1 -bar2')
-                assert response.status_code == 200
-                assert b'foo1 foo2/bar1 -bar2' == response.data
-            assert q.mock_calls == [
-                call(dbw, 'thread:foo1 and not tag:bar1'),
-                call(dbw, 'thread:foo1 and tag:bar2'),
-                call(dbw, 'thread:foo2 and not tag:bar1'),
-                call(dbw, 'thread:foo2 and tag:bar2')
-            ]
-
-    assert mf.add_tag.mock_calls == [
-        call('bar1'),
-        call('bar1'),
+    assert dbw.messages.mock_calls == [
+        call('thread:foo1 and not tag:bar1', exclude_tags=[], sort=ANY),
+        call('thread:foo1 and tag:bar2', exclude_tags=[], sort=ANY),
+        call('thread:foo2 and not tag:bar1', exclude_tags=[], sort=ANY),
+        call('thread:foo2 and tag:bar2', exclude_tags=[], sort=ANY)
     ]
-    assert mf.remove_tag.mock_calls == [
-        call('bar2'),
-        call('bar2'),
+    assert dbw.close.call_count == 1
+
+    assert mf.tags.add.mock_calls == [
+        call('bar1'),
+        call('bar1')
     ]
-    assert mf.tags_to_maildir_flags.call_count == 4
-
-    assert mq.search_messages.call_count == 4
-
-    assert dbw.begin_atomic.call_count == 4
-    assert dbw.end_atomic.call_count == 4
-    assert dbw.close.call_count == 4
+    assert mf.tags.discard.mock_calls == [
+        call('bar2'),
+        call('bar2')
+    ]
+    assert mf.frozen.call_count == 4
 
 
 def test_attachment_no_attachment(setup):
