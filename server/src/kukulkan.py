@@ -310,7 +310,7 @@ def create_app() -> Flask:
 
     @app.route("/api/thread/<string:thread_id>")
     def thread(thread_id: str) -> Any:
-        msgs = get_query(QTYP.MESSAGES, f'thread:"{thread_id}"', exclude=False)
+        msgs = get_query(QTYP.MESSAGES, f'thread:{thread_id}', exclude=False)
         return [message_to_json(m) for m in msgs] # type: ignore[arg-type]
 
     @app.route("/api/attachment/<string:message_id>/<int:num>")
@@ -995,7 +995,6 @@ def eml_to_json(message_bytes: bytes) -> Dict[str, Any]:
         "subject": email_msg["subject"].strip().replace('\t', ' ') if "subject" in email_msg else "",
         "message_id": email_msg["Message-ID"].strip() if "Message-ID" in email_msg else "",
         "in_reply_to": email_msg["In-Reply-To"].strip() if "In-Reply-To" in email_msg else None,
-        "references": email_msg["References"].strip() if "References" in email_msg else None,
         "reply_to": email_msg["Reply-To"].strip() if "Reply-To" in email_msg else None,
         "forwarded_to": email_msg["X-Forwarded-To"].strip() if "X-Forwarded-To" in email_msg else None,
         "delivered_to": email_msg["Delivered-To"].strip() if "Delivered-To" in email_msg else None,
@@ -1013,6 +1012,7 @@ def eml_to_json(message_bytes: bytes) -> Dict[str, Any]:
 
 def message_to_json(msg: notmuch2.Message, get_deleted_body: bool = False) -> Dict[str, Any]:
     """Converts a `notmuch2.Message` instance to a JSON object."""
+    from_addr = get_header(msg, "from")
     if "deleted" in msg.tags and get_deleted_body is False:
         attachments = []
         body = "(deleted message)"
@@ -1023,7 +1023,6 @@ def message_to_json(msg: notmuch2.Message, get_deleted_body: bool = False) -> Di
 
         attachments = get_attachments(email_msg)
         body, has_html = get_nested_body(email_msg)
-        from_addr = get_header(msg, "from")
 
         signature = None
         # signature verification

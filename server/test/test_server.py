@@ -199,7 +199,7 @@ def test_get_message_none(setup):
     app, db = setup
 
     db.config = {}
-    db.find = MagicMock(return_value=iter([]))
+    db.find = MagicMock()
     db.find.side_effect = LookupError("foo")
 
     with app.test_client() as test_client:
@@ -420,1251 +420,1001 @@ def test_attachment_no_attachment(setup):
     app, db = setup
 
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/simple.eml")
+    mf.path = "test/mails/simple.eml"
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/attachment/foo/0')
-            assert response.status_code == 404
-        q.assert_called_once_with(db, 'id:foo')
+    with app.test_client() as test_client:
+        response = test_client.get('/api/attachment/foo/0')
+        assert response.status_code == 404
 
-    mf.get_filename.assert_called_once()
-    mq.search_messages.assert_called_once()
+    db.find.assert_called_once_with("foo")
 
 
 def test_attachment_invalid_index(setup):
     app, db = setup
 
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/attachment.eml")
+    mf.path = "test/mails/attachment.eml"
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/attachment/foo/1')
-            assert response.status_code == 404
-        q.assert_called_once_with(db, 'id:foo')
+    with app.test_client() as test_client:
+        response = test_client.get('/api/attachment/foo/1')
+        assert response.status_code == 404
 
-    mf.get_filename.assert_called_once()
-    mq.search_messages.assert_called_once()
+    db.find.assert_called_once_with("foo")
 
 
 def test_attachment_single(setup):
     app, db = setup
 
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/attachment.eml")
+    mf.path = "test/mails/attachment.eml"
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/attachment/foo/0')
-            assert response.status_code == 200
-            assert 5368 == len(response.data)
-            assert type(response.data) is bytes
-            assert "application/x-gtar-compressed" == response.mimetype
-            assert "inline; filename=zendesk-email-loop2.tgz" == response.headers['Content-Disposition']
-        q.assert_called_once_with(db, 'id:foo')
+    with app.test_client() as test_client:
+        response = test_client.get('/api/attachment/foo/0')
+        assert response.status_code == 200
+        assert 5368 == len(response.data)
+        assert type(response.data) is bytes
+        assert "application/x-gtar-compressed" == response.mimetype
+        assert "inline; filename=zendesk-email-loop2.tgz" == response.headers['Content-Disposition']
 
-    mf.get_filename.assert_called_once()
-    mq.search_messages.assert_called_once()
+    db.find.assert_called_once_with("foo")
 
 
 def test_attachment_multiple(setup):
     app, db = setup
 
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/attachments.eml")
+    mf.path = "test/mails/attachments.eml"
 
-    mq = lambda: None
-    mq.search_messages = MagicMock()
-    mq.search_messages.side_effect = [iter([mf]), iter([mf]), iter([mf])]
+    db.config = {}
+    db.find = MagicMock()
+    db.find.side_effect = [mf, mf, mf]
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/attachment/foo/0')
-            assert response.status_code == 200
-            assert 445 == len(response.data)
-            assert type(response.data) is bytes
-            assert "text/plain" == response.mimetype
-            assert "inline; filename=text.txt" == response.headers['Content-Disposition']
+    with app.test_client() as test_client:
+        response = test_client.get('/api/attachment/foo/0')
+        assert response.status_code == 200
+        assert 445 == len(response.data)
+        assert type(response.data) is bytes
+        assert "text/plain" == response.mimetype
+        assert "inline; filename=text.txt" == response.headers['Content-Disposition']
 
-            response = test_client.get('/api/attachment/foo/1')
-            assert response.status_code == 200
-            assert 7392 == len(response.data)
-            assert type(response.data) is bytes
-            assert "application/pdf" == response.mimetype
-            assert "inline; filename=document.pdf" == response.headers['Content-Disposition']
+        response = test_client.get('/api/attachment/foo/1')
+        assert response.status_code == 200
+        assert 7392 == len(response.data)
+        assert type(response.data) is bytes
+        assert "application/pdf" == response.mimetype
+        assert "inline; filename=document.pdf" == response.headers['Content-Disposition']
 
-            response = test_client.get('/api/attachment/foo/2')
-            assert response.status_code == 200
-            assert 2391 == len(response.data)
-            assert type(response.data) is bytes
-            assert "text/plain" == response.mimetype
-            assert "inline; filename=test.csv" == response.headers['Content-Disposition']
-        assert q.call_count == 3
-        q.assert_called_with(db, 'id:foo')
+        response = test_client.get('/api/attachment/foo/2')
+        assert response.status_code == 200
+        assert 2391 == len(response.data)
+        assert type(response.data) is bytes
+        assert "text/plain" == response.mimetype
+        assert "inline; filename=test.csv" == response.headers['Content-Disposition']
 
-    assert mf.get_filename.call_count == 3
-    assert mq.search_messages.call_count == 3
+    assert db.find.mock_calls == [
+        call('foo'),
+        call('foo'),
+        call('foo')
+    ]
 
 
 def test_attachment_image_resize(setup):
     app, db = setup
 
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/attachment-image.eml")
+    mf.path = "test/mails/attachment-image.eml"
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/attachment/foo/0/1')
-            assert response.status_code == 200
-            assert 25053 == len(response.data)
-            assert type(response.data) is bytes
-            assert "image/png" == response.mimetype
-            assert "inline; filename=filename.png" == response.headers['Content-Disposition']
-            img = Image.open(io.BytesIO(response.data))
-            assert (499, 402) == img.size
-        q.assert_called_once_with(db, 'id:foo')
+    with app.test_client() as test_client:
+        response = test_client.get('/api/attachment/foo/0/1')
+        assert response.status_code == 200
+        assert 25053 == len(response.data)
+        assert type(response.data) is bytes
+        assert "image/png" == response.mimetype
+        assert "inline; filename=filename.png" == response.headers['Content-Disposition']
+        img = Image.open(io.BytesIO(response.data))
+        assert (499, 402) == img.size
 
-    mf.get_filename.assert_called_once()
-    mq.search_messages.assert_called_once()
+    db.find.assert_called_once_with("foo")
 
 
 def test_attachment_image_no_resize(setup):
     app, db = setup
 
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/attachment-image.eml")
+    mf.path = "test/mails/attachment-image.eml"
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/attachment/foo/0/0')
-            assert response.status_code == 200
-            assert 94590 == len(response.data)
-            assert type(response.data) is bytes
-            assert "image/png" == response.mimetype
-            assert "inline; filename=filename.png" == response.headers['Content-Disposition']
-            img = Image.open(io.BytesIO(response.data))
-            assert (1584, 1274) == img.size
-        q.assert_called_once_with(db, 'id:foo')
+    with app.test_client() as test_client:
+        response = test_client.get('/api/attachment/foo/0/0')
+        assert response.status_code == 200
+        assert 94590 == len(response.data)
+        assert type(response.data) is bytes
+        assert "image/png" == response.mimetype
+        assert "inline; filename=filename.png" == response.headers['Content-Disposition']
+        img = Image.open(io.BytesIO(response.data))
+        assert (1584, 1274) == img.size
 
-    mf.get_filename.assert_called_once()
-    mq.search_messages.assert_called_once()
+    db.find.assert_called_once_with("foo")
 
 
 def test_message_simple(setup):
     app, db = setup
 
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/simple.eml")
-    mf.get_header = MagicMock(return_value="  foo@bar  ")
-    mf.get_message_id = MagicMock(return_value="foo")
-    mf.get_tags = MagicMock(return_value=["foo", "bar"])
+    mf.path = "test/mails/simple.eml"
+    mf.messageid = "foo"
+    mf.tags = ["foo", "bar"]
+    mf.header = MagicMock(return_value="  foo@bar  ")
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/message/foo')
-            assert response.status_code == 200
-            msg = json.loads(response.data.decode())
-            assert msg["from"] == "foo@bar"
-            assert msg["to"] == ["foo@bar"]
-            assert msg["cc"] == ["foo@bar"]
-            assert msg["bcc"] == ["foo@bar"]
-            assert msg["date"] == "foo@bar"
-            assert msg["subject"] == "foo@bar"
-            assert msg["message_id"] == "foo@bar"
-            assert msg["in_reply_to"] == "foo@bar"
-            assert msg["references"] == "foo@bar"
-            assert msg["reply_to"] == "foo@bar"
-            assert msg["delivered_to"] == "foo@bar"
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message/foo')
+        assert response.status_code == 200
+        msg = json.loads(response.data.decode())
+        assert msg["from"] == "foo@bar"
+        assert msg["to"] == ["foo@bar"]
+        assert msg["cc"] == ["foo@bar"]
+        assert msg["bcc"] == ["foo@bar"]
+        assert msg["date"] == "foo@bar"
+        assert msg["subject"] == "foo@bar"
+        assert msg["message_id"] == "foo@bar"
+        assert msg["in_reply_to"] == "foo@bar"
+        assert msg["reply_to"] == "foo@bar"
+        assert msg["delivered_to"] == "foo@bar"
+        assert msg["forwarded_to"] == "foo@bar"
 
-            assert "With the new notmuch_message_get_flags() function" in msg["body"]["text/plain"]
-            assert msg["body"]["text/html"] == False
+        assert "With the new notmuch_message_get_flags() function" in msg["body"]["text/plain"]
+        assert msg["body"]["text/html"] == False
 
-            assert msg["notmuch_id"] == "foo"
-            assert msg["tags"] == ["foo", "bar"]
-            assert msg["attachments"] == []
-            assert msg["signature"] is None
-        q.assert_called_once_with(db, 'id:foo')
+        assert msg["notmuch_id"] == "foo"
+        assert msg["tags"] == ["foo", "bar"]
+        assert msg["attachments"] == []
+        assert msg["signature"] is None
 
-    mf.get_filename.assert_called_once()
-    mf.get_message_id.assert_called_once()
-    mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 17
-
-    mq.search_messages.assert_called_once()
+    assert mf.header.call_count == 11
+    db.find.assert_called_once_with("foo")
 
 
 def test_message_simple_deleted(setup):
     app, db = setup
 
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/simple.eml")
-    mf.get_header = MagicMock(return_value="  foo@bar  ")
-    mf.get_message_id = MagicMock(return_value="foo")
-    mf.get_tags = MagicMock(return_value=["deleted", "bar"])
+    mf.path = "test/mails/simple.eml"
+    mf.messageid = "foo"
+    mf.tags = ["deleted", "bar"]
+    mf.header = MagicMock(return_value="  foo@bar  ")
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/message/foo')
-            assert response.status_code == 200
-            msg = json.loads(response.data.decode())
-            assert msg["from"] == "foo@bar"
-            assert msg["to"] == ["foo@bar"]
-            assert msg["cc"] == ["foo@bar"]
-            assert msg["bcc"] == ["foo@bar"]
-            assert msg["date"] == "foo@bar"
-            assert msg["subject"] == "foo@bar"
-            assert msg["message_id"] == "foo@bar"
-            assert msg["in_reply_to"] == "foo@bar"
-            assert msg["references"] == "foo@bar"
-            assert msg["reply_to"] == "foo@bar"
-            assert msg["delivered_to"] == "foo@bar"
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message/foo')
+        assert response.status_code == 200
+        msg = json.loads(response.data.decode())
+        assert msg["from"] == "foo@bar"
+        assert msg["to"] == ["foo@bar"]
+        assert msg["cc"] == ["foo@bar"]
+        assert msg["bcc"] == ["foo@bar"]
+        assert msg["date"] == "foo@bar"
+        assert msg["subject"] == "foo@bar"
+        assert msg["message_id"] == "foo@bar"
+        assert msg["in_reply_to"] == "foo@bar"
+        assert msg["reply_to"] == "foo@bar"
+        assert msg["delivered_to"] == "foo@bar"
+        assert msg["forwarded_to"] == "foo@bar"
 
-            assert "With the new notmuch_message_get_flags() function" in msg["body"]["text/plain"]
-            assert msg["body"]["text/html"] == False
+        assert "With the new notmuch_message_get_flags() function" in msg["body"]["text/plain"]
+        assert msg["body"]["text/html"] == False
 
-            assert msg["notmuch_id"] == "foo"
-            assert msg["tags"] == ["deleted", "bar"]
-            assert msg["attachments"] == []
-            assert msg["signature"] is None
-        q.assert_called_once_with(db, 'id:foo')
+        assert msg["notmuch_id"] == "foo"
+        assert msg["tags"] == ["deleted", "bar"]
+        assert msg["attachments"] == []
+        assert msg["signature"] is None
 
-    mf.get_filename.assert_called_once()
-    mf.get_message_id.assert_called_once()
-    mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 17
-
-    mq.search_messages.assert_called_once()
+    assert mf.header.call_count == 11
+    db.find.assert_called_once_with("foo")
 
 
 def test_message_forwarded(setup):
     app, db = setup
 
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/forwarded.eml")
-    mf.get_header = MagicMock(return_value="something@other.org")
-    mf.get_message_id = MagicMock(return_value="foo")
-    mf.get_tags = MagicMock(return_value=["foo", "bar"])
+    mf.path = "test/mails/forwarded.eml"
+    mf.messageid = "foo"
+    mf.tags = ["foo", "bar"]
+    mf.header = MagicMock(return_value="something@other.org")
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/message/foo')
-            assert response.status_code == 200
-            msg = json.loads(response.data.decode())
-            assert msg["forwarded_to"] == "something@other.org"
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message/foo')
+        assert response.status_code == 200
+        msg = json.loads(response.data.decode())
+        assert msg["forwarded_to"] == "something@other.org"
 
-            assert "With the new notmuch_message_get_flags() function" in msg["body"]["text/plain"]
-            assert msg["body"]["text/html"] == False
+        assert "With the new notmuch_message_get_flags() function" in msg["body"]["text/plain"]
+        assert msg["body"]["text/html"] == False
 
-            assert msg["notmuch_id"] == "foo"
-            assert msg["tags"] == ["foo", "bar"]
-            assert msg["attachments"] == []
-            assert msg["signature"] is None
-        q.assert_called_once_with(db, 'id:foo')
+        assert msg["notmuch_id"] == "foo"
+        assert msg["tags"] == ["foo", "bar"]
+        assert msg["attachments"] == []
+        assert msg["signature"] is None
 
-    mf.get_filename.assert_called_once()
-    mf.get_message_id.assert_called_once()
-    mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 17
-
-    mq.search_messages.assert_called_once()
+    assert mf.header.call_count == 11
+    db.find.assert_called_once_with("foo")
 
 
 def test_message_attachments(setup):
     app, db = setup
 
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/attachments.eml")
-    mf.get_header = MagicMock(return_value="  foo\tbar  ")
-    mf.get_message_id = MagicMock(return_value="foo")
-    mf.get_tags = MagicMock(return_value=["foo", "bar"])
+    mf.path = "test/mails/attachments.eml"
+    mf.messageid = "foo"
+    mf.tags = ["foo", "bar"]
+    mf.header = MagicMock(return_value="  foo\tbar  ")
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/message/foo')
-            assert response.status_code == 200
-            msg = json.loads(response.data.decode())
-            assert msg["attachments"] == [{'content': None, 'content_size': 445, 'content_type': 'text/plain', 'filename': 'text.txt', 'preview': None},
-                                          {'content': None, 'content_size': 7392, 'content_type': 'application/pdf', 'filename': 'document.pdf', 'preview': None},
-                                          {'content': None, 'content_size': 2391, 'content_type': 'text/plain', 'filename': 'test.csv', 'preview': None}]
-        q.assert_called_once_with(db, 'id:foo')
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message/foo')
+        assert response.status_code == 200
+        msg = json.loads(response.data.decode())
+        assert msg["attachments"] == [{'content': None, 'content_size': 445, 'content_type': 'text/plain', 'filename': 'text.txt', 'preview': None},
+                                      {'content': None, 'content_size': 7392, 'content_type': 'application/pdf', 'filename': 'document.pdf', 'preview': None},
+                                      {'content': None, 'content_size': 2391, 'content_type': 'text/plain', 'filename': 'test.csv', 'preview': None}]
 
-    mf.get_filename.assert_called_once()
-    mf.get_message_id.assert_called_once()
-    mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 17
-
-    mq.search_messages.assert_called_once()
+    assert mf.header.call_count == 11
+    db.find.assert_called_once_with("foo")
 
 
 def test_message_attachment_calendar_preview(setup):
     app, db = setup
 
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/calendar.eml")
-    mf.get_header = MagicMock(return_value="  foo\tbar  ")
-    mf.get_message_id = MagicMock(return_value="foo")
-    mf.get_tags = MagicMock(return_value=["foo", "bar"])
+    mf.path = "test/mails/calendar.eml"
+    mf.messageid = "foo"
+    mf.tags = ["foo", "bar"]
+    mf.header = MagicMock(return_value="  foo\tbar  ")
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
 
     app.config.custom["accounts"] = [{"email": "unittest@tine20.org"}]
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/message/foo')
-            assert response.status_code == 200
-            msg = json.loads(response.data.decode())
-            assert msg["attachments"][0]['content_type'] == 'text/calendar'
-            assert msg["attachments"][0]['filename'] == 'unnamed attachment'
-            assert msg["attachments"][0]['preview']['method'] == "REQUEST"
-            assert msg["attachments"][0]['preview']['status'] == "NEEDS-ACTION"
-            assert msg["attachments"][0]['preview']['summary'] == "testevent"
-            assert msg["attachments"][0]['preview']['location'] == "kskdcsd"
-            assert msg["attachments"][0]['preview']['tz'] == "Europe/Berlin"
-            assert msg["attachments"][0]['preview']['dtstart'] == "20111101T090000"
-            assert msg["attachments"][0]['preview']['dtend'] == "20111101T100000"
-            assert "Tue Nov  1 " in msg["attachments"][0]['preview']['start']
-            assert "2011" in msg["attachments"][0]['preview']['start']
-            assert "Tue Nov  1 " in msg["attachments"][0]['preview']['end']
-            assert "2011" in msg["attachments"][0]['preview']['end']
-            assert msg["attachments"][0]['preview']['recur'] == ""
-            assert msg["attachments"][0]['preview']['attendees'] == "unittest, TRUE, someone"
-        q.assert_called_once_with(db, 'id:foo')
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message/foo')
+        assert response.status_code == 200
+        msg = json.loads(response.data.decode())
+        assert msg["attachments"][0]['content_type'] == 'text/calendar'
+        assert msg["attachments"][0]['filename'] == 'unnamed attachment'
+        assert msg["attachments"][0]['preview']['method'] == "REQUEST"
+        assert msg["attachments"][0]['preview']['status'] == "NEEDS-ACTION"
+        assert msg["attachments"][0]['preview']['summary'] == "testevent"
+        assert msg["attachments"][0]['preview']['location'] == "kskdcsd"
+        assert msg["attachments"][0]['preview']['tz'] == "Europe/Berlin"
+        assert msg["attachments"][0]['preview']['dtstart'] == "20111101T090000"
+        assert msg["attachments"][0]['preview']['dtend'] == "20111101T100000"
+        assert "Tue Nov  1 " in msg["attachments"][0]['preview']['start']
+        assert "2011" in msg["attachments"][0]['preview']['start']
+        assert "Tue Nov  1 " in msg["attachments"][0]['preview']['end']
+        assert "2011" in msg["attachments"][0]['preview']['end']
+        assert msg["attachments"][0]['preview']['recur'] == ""
+        assert msg["attachments"][0]['preview']['attendees'] == "unittest, TRUE, someone"
 
-    mf.get_filename.assert_called_once()
-    mf.get_message_id.assert_called_once()
-    mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 17
-
-    mq.search_messages.assert_called_once()
+    assert mf.header.call_count == 11
+    db.find.assert_called_once_with("foo")
 
 
 def test_message_attachment_calendar_preview_broken(setup):
     app, db = setup
 
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/calendar-broken.eml")
-    mf.get_header = MagicMock(return_value="  foo\tbar  ")
-    mf.get_message_id = MagicMock(return_value="foo")
-    mf.get_tags = MagicMock(return_value=["foo", "bar"])
+    mf.path = "test/mails/calendar-broken.eml"
+    mf.messageid = "foo"
+    mf.tags = ["foo", "bar"]
+    mf.header = MagicMock(return_value="  foo\tbar  ")
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
 
     app.config.custom["accounts"] = [{"email": "unittest@tine20.org"}]
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/message/foo')
-            assert response.status_code == 200
-            msg = json.loads(response.data.decode())
-            assert msg["attachments"][0]['content_type'] == 'text/calendar'
-            assert msg["attachments"][0]['filename'] == 'unnamed attachment'
-            assert msg["attachments"][0]['preview']['method'] == "REQUEST"
-            assert msg["attachments"][0]['preview']['status'] == "NEEDS-ACTION"
-            assert msg["attachments"][0]['preview']['summary'] == "testevent"
-            assert msg["attachments"][0]['preview']['location'] == "kskdcsd"
-            assert msg["attachments"][0]['preview']['tz'] == "Europe/Berlin"
-            assert msg["attachments"][0]['preview']['dtstart'] == "20111101T090000"
-            assert msg["attachments"][0]['preview']['dtend'] == "20111101T100000"
-            assert "Tue Nov  1 " in msg["attachments"][0]['preview']['start']
-            assert "2011" in msg["attachments"][0]['preview']['start']
-            assert "Tue Nov  1 " in msg["attachments"][0]['preview']['end']
-            assert "2011" in msg["attachments"][0]['preview']['end']
-            assert msg["attachments"][0]['preview']['recur'] == ""
-            assert msg["attachments"][0]['preview']['attendees'] == "unittest, TRUE"
-        q.assert_called_once_with(db, 'id:foo')
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message/foo')
+        assert response.status_code == 200
+        msg = json.loads(response.data.decode())
+        assert msg["attachments"][0]['content_type'] == 'text/calendar'
+        assert msg["attachments"][0]['filename'] == 'unnamed attachment'
+        assert msg["attachments"][0]['preview']['method'] == "REQUEST"
+        assert msg["attachments"][0]['preview']['status'] == "NEEDS-ACTION"
+        assert msg["attachments"][0]['preview']['summary'] == "testevent"
+        assert msg["attachments"][0]['preview']['location'] == "kskdcsd"
+        assert msg["attachments"][0]['preview']['tz'] == "Europe/Berlin"
+        assert msg["attachments"][0]['preview']['dtstart'] == "20111101T090000"
+        assert msg["attachments"][0]['preview']['dtend'] == "20111101T100000"
+        assert "Tue Nov  1 " in msg["attachments"][0]['preview']['start']
+        assert "2011" in msg["attachments"][0]['preview']['start']
+        assert "Tue Nov  1 " in msg["attachments"][0]['preview']['end']
+        assert "2011" in msg["attachments"][0]['preview']['end']
+        assert msg["attachments"][0]['preview']['recur'] == ""
+        assert msg["attachments"][0]['preview']['attendees'] == "unittest, TRUE"
 
-    mf.get_filename.assert_called_once()
-    mf.get_message_id.assert_called_once()
-    mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 17
-
-    mq.search_messages.assert_called_once()
+    assert mf.header.call_count == 11
+    db.find.assert_called_once_with("foo")
 
 
 def test_message_attachment_calendar_preview_tz(setup):
     app, db = setup
 
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/calendar-tz.eml")
-    mf.get_header = MagicMock(return_value="  foo\tbar  ")
-    mf.get_message_id = MagicMock(return_value="foo")
-    mf.get_tags = MagicMock(return_value=["foo", "bar"])
+    mf.path = "test/mails/calendar-tz.eml"
+    mf.messageid = "foo"
+    mf.tags = ["foo", "bar"]
+    mf.header = MagicMock(return_value="  foo\tbar  ")
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
 
     app.config.custom["accounts"] = [{"email": "unittest@tine20.org"}]
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/message/foo')
-            assert response.status_code == 200
-            msg = json.loads(response.data.decode())
-            assert msg["attachments"][0]['content_type'] == 'text/calendar'
-            assert msg["attachments"][0]['filename'] == 'unnamed attachment'
-            assert msg["attachments"][0]['preview']['method'] == "REQUEST"
-            assert msg["attachments"][0]['preview']['status'] == "NEEDS-ACTION"
-            assert msg["attachments"][0]['preview']['summary'] == "testevent"
-            assert msg["attachments"][0]['preview']['location'] == "kskdcsd"
-            assert msg["attachments"][0]['preview']['tz'] == "America/New_York"
-            assert msg["attachments"][0]['preview']['dtstart'] == "20111101T090000"
-            assert msg["attachments"][0]['preview']['dtend'] == "20111101T100000"
-            assert "Tue Nov  1 " in msg["attachments"][0]['preview']['start']
-            assert "2011" in msg["attachments"][0]['preview']['start']
-            assert "Tue Nov  1 " in msg["attachments"][0]['preview']['end']
-            assert "2011" in msg["attachments"][0]['preview']['end']
-            assert msg["attachments"][0]['preview']['attendees'] == "unittest, TRUE"
-        q.assert_called_once_with(db, 'id:foo')
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message/foo')
+        assert response.status_code == 200
+        msg = json.loads(response.data.decode())
+        assert msg["attachments"][0]['content_type'] == 'text/calendar'
+        assert msg["attachments"][0]['filename'] == 'unnamed attachment'
+        assert msg["attachments"][0]['preview']['method'] == "REQUEST"
+        assert msg["attachments"][0]['preview']['status'] == "NEEDS-ACTION"
+        assert msg["attachments"][0]['preview']['summary'] == "testevent"
+        assert msg["attachments"][0]['preview']['location'] == "kskdcsd"
+        assert msg["attachments"][0]['preview']['tz'] == "America/New_York"
+        assert msg["attachments"][0]['preview']['dtstart'] == "20111101T090000"
+        assert msg["attachments"][0]['preview']['dtend'] == "20111101T100000"
+        assert "Tue Nov  1 " in msg["attachments"][0]['preview']['start']
+        assert "2011" in msg["attachments"][0]['preview']['start']
+        assert "Tue Nov  1 " in msg["attachments"][0]['preview']['end']
+        assert "2011" in msg["attachments"][0]['preview']['end']
+        assert msg["attachments"][0]['preview']['recur'] == ""
+        assert msg["attachments"][0]['preview']['attendees'] == "unittest, TRUE"
 
-    mf.get_filename.assert_called_once()
-    mf.get_message_id.assert_called_once()
-    mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 17
-
-    mq.search_messages.assert_called_once()
+    assert mf.header.call_count == 11
+    db.find.assert_called_once_with("foo")
 
 
 def test_message_attachment_calendar_preview_no_attendees(setup):
     app, db = setup
 
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/calendar-noattendees.eml")
-    mf.get_header = MagicMock(return_value="  foo\tbar  ")
-    mf.get_message_id = MagicMock(return_value="foo")
-    mf.get_tags = MagicMock(return_value=["foo", "bar"])
+    mf.path = "test/mails/calendar-noattendees.eml"
+    mf.messageid = "foo"
+    mf.tags = ["foo", "bar"]
+    mf.header = MagicMock(return_value="  foo\tbar  ")
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/message/foo')
-            assert response.status_code == 200
-            msg = json.loads(response.data.decode())
-            assert msg["attachments"][0]['content_type'] == 'text/calendar'
-            assert msg["attachments"][0]['filename'] == 'unnamed attachment'
-            assert msg["attachments"][0]['preview']['method'] == "REQUEST"
-            assert msg["attachments"][0]['preview']['status'] == None
-            assert msg["attachments"][0]['preview']['summary'] == "testevent"
-            assert msg["attachments"][0]['preview']['location'] == "kskdcsd"
-            assert msg["attachments"][0]['preview']['tz'] == "Europe/Berlin"
-            assert msg["attachments"][0]['preview']['dtstart'] == "20111101T090000"
-            assert msg["attachments"][0]['preview']['dtend'] == "20111101T100000"
-            assert "Tue Nov  1 " in msg["attachments"][0]['preview']['start']
-            assert "2011" in msg["attachments"][0]['preview']['start']
-            assert "Tue Nov  1 " in msg["attachments"][0]['preview']['end']
-            assert "2011" in msg["attachments"][0]['preview']['end']
-            assert msg["attachments"][0]['preview']['attendees'] == "unittest"
-        q.assert_called_once_with(db, 'id:foo')
+    app.config.custom["accounts"] = [{"email": "unittest@tine20.org"}]
 
-    mf.get_filename.assert_called_once()
-    mf.get_message_id.assert_called_once()
-    mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 17
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message/foo')
+        assert response.status_code == 200
+        msg = json.loads(response.data.decode())
+        assert msg["attachments"][0]['content_type'] == 'text/calendar'
+        assert msg["attachments"][0]['filename'] == 'unnamed attachment'
+        assert msg["attachments"][0]['preview']['method'] == "REQUEST"
+        assert msg["attachments"][0]['preview']['status'] == None
+        assert msg["attachments"][0]['preview']['summary'] == "testevent"
+        assert msg["attachments"][0]['preview']['location'] == "kskdcsd"
+        assert msg["attachments"][0]['preview']['tz'] == "Europe/Berlin"
+        assert msg["attachments"][0]['preview']['dtstart'] == "20111101T090000"
+        assert msg["attachments"][0]['preview']['dtend'] == "20111101T100000"
+        assert "Tue Nov  1 " in msg["attachments"][0]['preview']['start']
+        assert "2011" in msg["attachments"][0]['preview']['start']
+        assert "Tue Nov  1 " in msg["attachments"][0]['preview']['end']
+        assert "2011" in msg["attachments"][0]['preview']['end']
+        assert msg["attachments"][0]['preview']['recur'] == ""
+        assert msg["attachments"][0]['preview']['attendees'] == "unittest"
 
-    mq.search_messages.assert_called_once()
+    assert mf.header.call_count == 11
+    db.find.assert_called_once_with("foo")
 
 
 def test_message_attachment_calendar_preview_no_people(setup):
     app, db = setup
 
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/calendar-nopeople.eml")
-    mf.get_header = MagicMock(return_value="  foo\tbar  ")
-    mf.get_message_id = MagicMock(return_value="foo")
-    mf.get_tags = MagicMock(return_value=["foo", "bar"])
+    mf.path = "test/mails/calendar-nopeople.eml"
+    mf.messageid = "foo"
+    mf.tags = ["foo", "bar"]
+    mf.header = MagicMock(return_value="  foo\tbar  ")
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/message/foo')
-            assert response.status_code == 200
-            msg = json.loads(response.data.decode())
-            assert msg["attachments"][0]['content_type'] == 'text/calendar'
-            assert msg["attachments"][0]['filename'] == 'unnamed attachment'
-            assert msg["attachments"][0]['preview']['method'] == "REQUEST"
-            assert msg["attachments"][0]['preview']['status'] == None
-            assert msg["attachments"][0]['preview']['summary'] == "testevent"
-            assert msg["attachments"][0]['preview']['location'] == "kskdcsd"
-            assert msg["attachments"][0]['preview']['tz'] == "Europe/Berlin"
-            assert msg["attachments"][0]['preview']['dtstart'] == "20111101T090000"
-            assert msg["attachments"][0]['preview']['dtend'] == "20111101T100000"
-            assert "Tue Nov  1 " in msg["attachments"][0]['preview']['start']
-            assert "2011" in msg["attachments"][0]['preview']['start']
-            assert "Tue Nov  1 " in msg["attachments"][0]['preview']['end']
-            assert "2011" in msg["attachments"][0]['preview']['end']
-            assert msg["attachments"][0]['preview']['attendees'] == ""
-        q.assert_called_once_with(db, 'id:foo')
+    app.config.custom["accounts"] = [{"email": "unittest@tine20.org"}]
 
-    mf.get_filename.assert_called_once()
-    mf.get_message_id.assert_called_once()
-    mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 17
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message/foo')
+        assert response.status_code == 200
+        msg = json.loads(response.data.decode())
+        assert msg["attachments"][0]['content_type'] == 'text/calendar'
+        assert msg["attachments"][0]['filename'] == 'unnamed attachment'
+        assert msg["attachments"][0]['preview']['method'] == "REQUEST"
+        assert msg["attachments"][0]['preview']['status'] == None
+        assert msg["attachments"][0]['preview']['summary'] == "testevent"
+        assert msg["attachments"][0]['preview']['location'] == "kskdcsd"
+        assert msg["attachments"][0]['preview']['tz'] == "Europe/Berlin"
+        assert msg["attachments"][0]['preview']['dtstart'] == "20111101T090000"
+        assert msg["attachments"][0]['preview']['dtend'] == "20111101T100000"
+        assert "Tue Nov  1 " in msg["attachments"][0]['preview']['start']
+        assert "2011" in msg["attachments"][0]['preview']['start']
+        assert "Tue Nov  1 " in msg["attachments"][0]['preview']['end']
+        assert "2011" in msg["attachments"][0]['preview']['end']
+        assert msg["attachments"][0]['preview']['recur'] == ""
+        assert msg["attachments"][0]['preview']['attendees'] == ""
 
-    mq.search_messages.assert_called_once()
+    assert mf.header.call_count == 11
+    db.find.assert_called_once_with("foo")
 
 
 def test_message_attachment_calendar_preview_no_time(setup):
     app, db = setup
 
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/calendar-notime.eml")
-    mf.get_header = MagicMock(return_value="  foo\tbar  ")
-    mf.get_message_id = MagicMock(return_value="foo")
-    mf.get_tags = MagicMock(return_value=["foo", "bar"])
+    mf.path = "test/mails/calendar-notime.eml"
+    mf.messageid = "foo"
+    mf.tags = ["foo", "bar"]
+    mf.header = MagicMock(return_value="  foo\tbar  ")
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/message/foo')
-            assert response.status_code == 200
-            msg = json.loads(response.data.decode())
-            assert msg["attachments"][0]['content_type'] == 'text/calendar'
-            assert msg["attachments"][0]['filename'] == 'unnamed attachment'
-            assert msg["attachments"][0]['preview']['method'] == "REQUEST"
-            assert msg["attachments"][0]['preview']['status'] == None
-            assert msg["attachments"][0]['preview']['summary'] == "testevent"
-            assert msg["attachments"][0]['preview']['location'] == "kskdcsd"
-            assert msg["attachments"][0]['preview']['dtstart'] == "19700329"
-            assert msg["attachments"][0]['preview']['dtend'] == "19700330"
-            assert "Sun Mar 29 " in msg["attachments"][0]['preview']['start']
-            assert "1970" in msg["attachments"][0]['preview']['start']
-            assert "Mon Mar 30 " in msg["attachments"][0]['preview']['end']
-            assert "1970" in msg["attachments"][0]['preview']['end']
-        q.assert_called_once_with(db, 'id:foo')
+    app.config.custom["accounts"] = [{"email": "unittest@tine20.org"}]
 
-    mf.get_filename.assert_called_once()
-    mf.get_message_id.assert_called_once()
-    mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 17
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message/foo')
+        assert response.status_code == 200
+        msg = json.loads(response.data.decode())
+        assert msg["attachments"][0]['content_type'] == 'text/calendar'
+        assert msg["attachments"][0]['filename'] == 'unnamed attachment'
+        assert msg["attachments"][0]['preview']['method'] == "REQUEST"
+        assert msg["attachments"][0]['preview']['status'] == None
+        assert msg["attachments"][0]['preview']['summary'] == "testevent"
+        assert msg["attachments"][0]['preview']['location'] == "kskdcsd"
+        assert msg["attachments"][0]['preview']['dtstart'] == "19700329"
+        assert msg["attachments"][0]['preview']['dtend'] == "19700330"
+        assert "Sun Mar 29 " in msg["attachments"][0]['preview']['start']
+        assert "1970" in msg["attachments"][0]['preview']['start']
+        assert "Mon Mar 30 " in msg["attachments"][0]['preview']['end']
+        assert "1970" in msg["attachments"][0]['preview']['end']
 
-    mq.search_messages.assert_called_once()
+    assert mf.header.call_count == 11
+    db.find.assert_called_once_with("foo")
 
 
 def test_message_attachment_calendar_preview_recur(setup):
     app, db = setup
 
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/calendar-recur.eml")
-    mf.get_header = MagicMock(return_value="  foo\tbar  ")
-    mf.get_message_id = MagicMock(return_value="foo")
-    mf.get_tags = MagicMock(return_value=["foo", "bar"])
+    mf.path = "test/mails/calendar-recur.eml"
+    mf.messageid = "foo"
+    mf.tags = ["foo", "bar"]
+    mf.header = MagicMock(return_value="  foo\tbar  ")
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
 
     app.config.custom["accounts"] = [{"email": "unittest@tine20.org"}]
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/message/foo')
-            assert response.status_code == 200
-            msg = json.loads(response.data.decode())
-            assert msg["attachments"][0]['content_type'] == 'text/calendar'
-            assert msg["attachments"][0]['filename'] == 'unnamed attachment'
-            assert msg["attachments"][0]['preview']['method'] == "REQUEST"
-            assert msg["attachments"][0]['preview']['status'] == "NEEDS-ACTION"
-            assert msg["attachments"][0]['preview']['summary'] == "testevent"
-            assert msg["attachments"][0]['preview']['location'] == "kskdcsd"
-            assert msg["attachments"][0]['preview']['tz'] == "Europe/Berlin"
-            assert msg["attachments"][0]['preview']['dtstart'] == "20111101T090000"
-            assert msg["attachments"][0]['preview']['dtend'] == "20111101T100000"
-            assert "Tue Nov  1 " in msg["attachments"][0]['preview']['start']
-            assert "2011" in msg["attachments"][0]['preview']['start']
-            assert "Tue Nov  1 " in msg["attachments"][0]['preview']['end']
-            assert "2011" in msg["attachments"][0]['preview']['end']
-            assert msg["attachments"][0]['preview']['recur'] == "every last Sun in Oct"
-            assert msg["attachments"][0]['preview']['attendees'] == "unittest, TRUE"
-        q.assert_called_once_with(db, 'id:foo')
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message/foo')
+        assert response.status_code == 200
+        msg = json.loads(response.data.decode())
+        assert msg["attachments"][0]['content_type'] == 'text/calendar'
+        assert msg["attachments"][0]['filename'] == 'unnamed attachment'
+        assert msg["attachments"][0]['preview']['method'] == "REQUEST"
+        assert msg["attachments"][0]['preview']['status'] == "NEEDS-ACTION"
+        assert msg["attachments"][0]['preview']['summary'] == "testevent"
+        assert msg["attachments"][0]['preview']['location'] == "kskdcsd"
+        assert msg["attachments"][0]['preview']['tz'] == "Europe/Berlin"
+        assert msg["attachments"][0]['preview']['dtstart'] == "20111101T090000"
+        assert msg["attachments"][0]['preview']['dtend'] == "20111101T100000"
+        assert "Tue Nov  1 " in msg["attachments"][0]['preview']['start']
+        assert "2011" in msg["attachments"][0]['preview']['start']
+        assert "Tue Nov  1 " in msg["attachments"][0]['preview']['end']
+        assert "2011" in msg["attachments"][0]['preview']['end']
+        assert msg["attachments"][0]['preview']['recur'] == "every last Sun in Oct"
+        assert msg["attachments"][0]['preview']['attendees'] == "unittest, TRUE"
 
-    mf.get_filename.assert_called_once()
-    mf.get_message_id.assert_called_once()
-    mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 17
-
-    mq.search_messages.assert_called_once()
+    assert mf.header.call_count == 11
+    db.find.assert_called_once_with("foo")
 
 
 def test_message_attachment_calendar_preview_request_accepted(setup):
     app, db = setup
 
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/calendar-accepted.eml")
-    mf.get_header = MagicMock(return_value="  foo\tbar  ")
-    mf.get_message_id = MagicMock(return_value="foo")
-    mf.get_tags = MagicMock(return_value=["foo", "bar"])
+    mf.path = "test/mails/calendar-accepted.eml"
+    mf.messageid = "foo"
+    mf.tags = ["foo", "bar"]
+    mf.header = MagicMock(return_value="  foo\tbar  ")
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
 
     app.config.custom["accounts"] = [{"email": "unittest@tine20.org"}]
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/message/foo')
-            assert response.status_code == 200
-            msg = json.loads(response.data.decode())
-            assert msg["attachments"][0]['content_type'] == 'text/calendar'
-            assert msg["attachments"][0]['filename'] == 'unnamed attachment'
-            assert msg["attachments"][0]['preview']['method'] == "REQUEST"
-            assert msg["attachments"][0]['preview']['status'] == "ACCEPTED"
-            assert msg["attachments"][0]['preview']['summary'] == "testevent"
-            assert msg["attachments"][0]['preview']['location'] == "kskdcsd"
-            assert msg["attachments"][0]['preview']['tz'] == "Europe/Berlin"
-            assert msg["attachments"][0]['preview']['dtstart'] == "20111101T090000"
-            assert msg["attachments"][0]['preview']['dtend'] == "20111101T100000"
-            assert "Tue Nov  1 " in msg["attachments"][0]['preview']['start']
-            assert "2011" in msg["attachments"][0]['preview']['start']
-            assert "Tue Nov  1 " in msg["attachments"][0]['preview']['end']
-            assert "2011" in msg["attachments"][0]['preview']['end']
-            assert msg["attachments"][0]['preview']['recur'] == ""
-            assert msg["attachments"][0]['preview']['attendees'] == "unittest, TRUE"
-        q.assert_called_once_with(db, 'id:foo')
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message/foo')
+        assert response.status_code == 200
+        msg = json.loads(response.data.decode())
+        assert msg["attachments"][0]['content_type'] == 'text/calendar'
+        assert msg["attachments"][0]['filename'] == 'unnamed attachment'
+        assert msg["attachments"][0]['preview']['method'] == "REQUEST"
+        assert msg["attachments"][0]['preview']['status'] == "ACCEPTED"
+        assert msg["attachments"][0]['preview']['summary'] == "testevent"
+        assert msg["attachments"][0]['preview']['location'] == "kskdcsd"
+        assert msg["attachments"][0]['preview']['tz'] == "Europe/Berlin"
+        assert msg["attachments"][0]['preview']['dtstart'] == "20111101T090000"
+        assert msg["attachments"][0]['preview']['dtend'] == "20111101T100000"
+        assert "Tue Nov  1 " in msg["attachments"][0]['preview']['start']
+        assert "2011" in msg["attachments"][0]['preview']['start']
+        assert "Tue Nov  1 " in msg["attachments"][0]['preview']['end']
+        assert "2011" in msg["attachments"][0]['preview']['end']
+        assert msg["attachments"][0]['preview']['recur'] == ""
+        assert msg["attachments"][0]['preview']['attendees'] == "unittest, TRUE"
 
-    mf.get_filename.assert_called_once()
-    mf.get_message_id.assert_called_once()
-    mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 17
-
-    mq.search_messages.assert_called_once()
+    assert mf.header.call_count == 11
+    db.find.assert_called_once_with("foo")
 
 
 def test_message_attachment_calendar_preview_reply_accepted(setup):
     app, db = setup
 
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/calendar-reply-accepted.eml")
-    mf.get_header = MagicMock(return_value="  foo\tbar  ")
-    mf.get_message_id = MagicMock(return_value="foo")
-    mf.get_tags = MagicMock(return_value=["foo", "bar"])
+    mf.path = "test/mails/calendar-reply-accepted.eml"
+    mf.messageid = "foo"
+    mf.tags = ["foo", "bar"]
+    mf.header = MagicMock(return_value="  foo\tbar  ")
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
 
     app.config.custom["accounts"] = [{"email": "unittest@tine20.org"}]
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/message/foo')
-            assert response.status_code == 200
-            msg = json.loads(response.data.decode())
-            assert msg["attachments"][0]['content_type'] == 'text/calendar'
-            assert msg["attachments"][0]['filename'] == 'unnamed attachment'
-            assert msg["attachments"][0]['preview']['method'] == "REPLY"
-            assert msg["attachments"][0]['preview']['status'] == "ACCEPTED"
-            assert msg["attachments"][0]['preview']['summary'] == "testevent"
-            assert msg["attachments"][0]['preview']['location'] == "kskdcsd"
-            assert msg["attachments"][0]['preview']['tz'] == "Europe/Berlin"
-            assert msg["attachments"][0]['preview']['dtstart'] == "20111101T090000"
-            assert msg["attachments"][0]['preview']['dtend'] == "20111101T100000"
-            assert "Tue Nov  1 " in msg["attachments"][0]['preview']['start']
-            assert "2011" in msg["attachments"][0]['preview']['start']
-            assert "Tue Nov  1 " in msg["attachments"][0]['preview']['end']
-            assert "2011" in msg["attachments"][0]['preview']['end']
-            assert msg["attachments"][0]['preview']['recur'] == ""
-            assert msg["attachments"][0]['preview']['attendees'] == "unittest, TRUE"
-        q.assert_called_once_with(db, 'id:foo')
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message/foo')
+        assert response.status_code == 200
+        msg = json.loads(response.data.decode())
+        assert msg["attachments"][0]['content_type'] == 'text/calendar'
+        assert msg["attachments"][0]['filename'] == 'unnamed attachment'
+        assert msg["attachments"][0]['preview']['method'] == "REPLY"
+        assert msg["attachments"][0]['preview']['status'] == "ACCEPTED"
+        assert msg["attachments"][0]['preview']['summary'] == "testevent"
+        assert msg["attachments"][0]['preview']['location'] == "kskdcsd"
+        assert msg["attachments"][0]['preview']['tz'] == "Europe/Berlin"
+        assert msg["attachments"][0]['preview']['dtstart'] == "20111101T090000"
+        assert msg["attachments"][0]['preview']['dtend'] == "20111101T100000"
+        assert "Tue Nov  1 " in msg["attachments"][0]['preview']['start']
+        assert "2011" in msg["attachments"][0]['preview']['start']
+        assert "Tue Nov  1 " in msg["attachments"][0]['preview']['end']
+        assert "2011" in msg["attachments"][0]['preview']['end']
+        assert msg["attachments"][0]['preview']['recur'] == ""
+        assert msg["attachments"][0]['preview']['attendees'] == "unittest, TRUE"
 
-    mf.get_filename.assert_called_once()
-    mf.get_message_id.assert_called_once()
-    mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 17
-
-    mq.search_messages.assert_called_once()
+    assert mf.header.call_count == 11
+    db.find.assert_called_once_with("foo")
 
 
-@pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="No CA certs on github.")
+@pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="No CA certs on Github.")
 def test_message_signed_self(setup):
     app, db = setup
 
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/signed.eml")
-    mf.get_header = MagicMock(return_value="  foo\tbar  ")
-    mf.get_message_id = MagicMock(return_value="foo")
-    mf.get_tags = MagicMock(return_value=["foo", "bar"])
+    mf.path = "test/mails/signed.eml"
+    mf.messageid = "foo"
+    mf.tags = ["foo", "bar"]
+    mf.header = MagicMock(return_value="  foo\tbar  ")
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
 
     app.config.custom["accounts"] = []
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/message/foo')
-            assert response.status_code == 200
-            msg = json.loads(response.data.decode())
-            assert "Bob, we need to cancel this contract." in msg["body"]["text/plain"]
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message/foo')
+        assert response.status_code == 200
+        msg = json.loads(response.data.decode())
+        assert "Bob, we need to cancel this contract." in msg["body"]["text/plain"]
 
-            assert msg["signature"] == {'message': 'self-signed or unavailable certificate(s): validation failed: required EKU not found (encountered processing <Certificate(subject=<Name(CN=Alice Lovelace)>, ...)>)', 'valid': None}
-        q.assert_called_once_with(db, 'id:foo')
+        assert msg["signature"] == {'message': 'self-signed or unavailable certificate(s): validation failed: required EKU not found (encountered processing <Certificate(subject=<Name(CN=Alice Lovelace)>, ...)>)', 'valid': None}
 
-    mf.get_filename.assert_called_once()
-    mf.get_message_id.assert_called_once()
-    mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 17
-
-    mq.search_messages.assert_called_once()
+    assert mf.header.call_count == 11
+    db.find.assert_called_once_with("foo")
 
 
-@pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="No CA certs on github.")
+@pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="No CA certs on Github.")
 def test_message_signed_expired(setup):
     app, db = setup
 
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/signed-attachment.eml")
-    mf.get_header = MagicMock(return_value="  foo\tbar  ")
-    mf.get_message_id = MagicMock(return_value="foo")
-    mf.get_tags = MagicMock(return_value=["foo", "bar"])
+    mf.path = "test/mails/signed-attachment.eml"
+    mf.messageid = "foo"
+    mf.tags = ["foo", "bar"]
+    mf.header = MagicMock(return_value="  foo\tbar  ")
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
 
     app.config.custom["accounts"] = []
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/message/foo')
-            assert response.status_code == 200
-            msg = json.loads(response.data.decode())
-            assert "Invio messaggio SMIME (signed and clear text)" in msg["body"]["text/plain"]
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message/foo')
+        assert response.status_code == 200
+        msg = json.loads(response.data.decode())
+        assert "Invio messaggio SMIME (signed and clear text)" in msg["body"]["text/plain"]
 
-            assert msg["signature"] == {'message': 'invalid signature: validation failed: cert is not valid at validation time (encountered processing <Certificate(subject=<Name(CN=shatzing5@outlook.com)>, ...)>)', 'valid': False}
-        q.assert_called_once_with(db, 'id:foo')
+        assert msg["signature"] == {'message': 'invalid signature: validation failed: cert is not valid at validation time (encountered processing <Certificate(subject=<Name(CN=shatzing5@outlook.com)>, ...)>)', 'valid': False}
 
-    mf.get_filename.assert_called_once()
-    mf.get_message_id.assert_called_once()
-    mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 17
-
-    mq.search_messages.assert_called_once()
+    assert mf.header.call_count == 11
+    db.find.assert_called_once_with("foo")
 
 
-@pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="No CA certs on github.")
+@pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="No CA certs on Github.")
 def test_message_signed_invalid(setup):
     app, db = setup
 
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/signed-invalid.eml")
-    mf.get_header = MagicMock(return_value="  foo\tbar  ")
-    mf.get_message_id = MagicMock(return_value="foo")
-    mf.get_tags = MagicMock(return_value=["foo", "bar"])
+    mf.path = "test/mails/signed-invalid.eml"
+    mf.messageid = "foo"
+    mf.tags = ["foo", "bar"]
+    mf.header = MagicMock(return_value="  foo\tbar  ")
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
 
     app.config.custom["accounts"] = []
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/message/foo')
-            assert response.status_code == 200
-            msg = json.loads(response.data.decode())
-            assert "Bob, we need to cancel this contract." in msg["body"]["text/plain"]
-            assert msg["signature"] == {'message': 'invalid signature: validation failed: required EKU not found (encountered processing <Certificate(subject=<Name(CN=Alice Lovelace)>, ...)>)', 'valid': False}
-        q.assert_called_once_with(db, 'id:foo')
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message/foo')
+        assert response.status_code == 200
+        msg = json.loads(response.data.decode())
+        assert "Bob, we need to cancel this contract." in msg["body"]["text/plain"]
+        assert msg["signature"] == {'message': 'invalid signature: validation failed: required EKU not found (encountered processing <Certificate(subject=<Name(CN=Alice Lovelace)>, ...)>)', 'valid': False}
 
-    mf.get_filename.assert_called_once()
-    mf.get_message_id.assert_called_once()
-    mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 17
-
-    mq.search_messages.assert_called_once()
+    assert mf.header.call_count == 11
+    db.find.assert_called_once_with("foo")
 
 
+@pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="Fails on Github.")
 def test_message_signed_pgp(setup):
     app, db = setup
 
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/signed-pgp.eml")
-    mf.get_header = MagicMock(return_value="Pierre THIERRY <nowhere.man@levallois.eu.org>")
-    mf.get_message_id = MagicMock(return_value="foo")
-    mf.get_tags = MagicMock(return_value=["foo", "bar"])
+    mf.path = "test/mails/signed-pgp.eml"
+    mf.messageid = "foo"
+    mf.tags = ["foo", "bar"]
+    mf.header = MagicMock(return_value="Pierre THIERRY <nowhere.man@levallois.eu.org>")
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
 
     app.config.custom["accounts"] = []
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/message/foo')
-            assert response.status_code == 200
-            msg = json.loads(response.data.decode())
-            assert "Actually, the text seems to say the contrary" in msg["body"]["text/plain"]
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message/foo')
+        assert response.status_code == 200
+        msg = json.loads(response.data.decode())
+        assert "Actually, the text seems to say the contrary" in msg["body"]["text/plain"]
 
-            # fails on Github
-            if not os.getenv("GITHUB_ACTIONS") == "true":
-                assert msg["signature"] == {'valid': True}
-        q.assert_called_once_with(db, 'id:foo')
+        assert msg["signature"] == {'valid': True}
 
-    mf.get_filename.assert_called_once()
-    mf.get_message_id.assert_called_once()
-    mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 18
-
-    mq.search_messages.assert_called_once()
+    assert mf.header.call_count == 11
+    db.find.assert_called_once_with("foo")
 
 
 def test_message_html_only(setup):
     app, db = setup
 
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/html-only.eml")
-    mf.get_header = MagicMock(return_value="  foo\tbar  ")
-    mf.get_message_id = MagicMock(return_value="foo")
-    mf.get_tags = MagicMock(return_value=["foo", "bar"])
+    mf.path = "test/mails/html-only.eml"
+    mf.messageid = "foo"
+    mf.tags = ["foo", "bar"]
+    mf.header = MagicMock(return_value="  foo\tbar  ")
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/message/foo')
-            assert response.status_code == 200
-            msg = json.loads(response.data.decode())
-            assert "hunter2" == msg["body"]["text/plain"]
-            assert msg["body"]["text/html"] == True
-        q.assert_called_once_with(db, 'id:foo')
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message/foo')
+        assert response.status_code == 200
+        msg = json.loads(response.data.decode())
+        assert "hunter2" == msg["body"]["text/plain"]
+        assert msg["body"]["text/html"] == True
 
-    mf.get_filename.assert_called_once()
-    mf.get_message_id.assert_called_once()
-    mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 17
-
-    mq.search_messages.assert_called_once()
+    assert mf.header.call_count == 11
+    db.find.assert_called_once_with("foo")
 
 
 def test_message_html_broken(setup):
     app, db = setup
 
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/broken-text.eml")
-    mf.get_header = MagicMock(return_value="  foo\tbar  ")
-    mf.get_message_id = MagicMock(return_value="foo")
-    mf.get_tags = MagicMock(return_value=["foo", "bar"])
+    mf.path = "test/mails/broken-text.eml"
+    mf.messageid = "foo"
+    mf.tags = ["foo", "bar"]
+    mf.header = MagicMock(return_value="  foo\tbar  ")
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/message/foo')
-            assert response.status_code == 200
-            msg = json.loads(response.data.decode())
-            assert "hunter2" == msg["body"]["text/plain"]
-            assert msg["body"]["text/html"] == False
-        q.assert_called_once_with(db, 'id:foo')
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message/foo')
+        assert response.status_code == 200
+        msg = json.loads(response.data.decode())
+        assert "hunter2" == msg["body"]["text/plain"]
+        assert msg["body"]["text/html"] == False
 
-    mf.get_filename.assert_called_once()
-    mf.get_message_id.assert_called_once()
-    mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 17
-
-    mq.search_messages.assert_called_once()
+    assert mf.header.call_count == 11
+    db.find.assert_called_once_with("foo")
 
 
 def test_message_filter_text(setup):
     app, db = setup
 
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/simple.eml")
-    mf.get_header = MagicMock(return_value="  foo\tbar  ")
-    mf.get_message_id = MagicMock(return_value="foo")
-    mf.get_tags = MagicMock(return_value=["foo", "bar"])
+    mf.path = "test/mails/simple.eml"
+    mf.messageid = "foo"
+    mf.tags = ["foo", "bar"]
+    mf.header = MagicMock(return_value="  foo\tbar  ")
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
 
-    try:
-        app.config.custom["filter"]["content"]["text/plain"] = ["notmuch_message_get_flags", "somefunc"]
-    except KeyError:
-        app.config.custom["filter"] = {}
-        app.config.custom["filter"]["content"] = {}
-        app.config.custom["filter"]["content"]["text/plain"] = ["notmuch_message_get_flags", "somefunc"]
+    app.config.custom["filter"] = {}
+    app.config.custom["filter"]["content"] = {}
+    app.config.custom["filter"]["content"]["text/plain"] = ["notmuch_message_get_flags", "somefunc"]
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/message/foo')
-            assert response.status_code == 200
-            msg = json.loads(response.data.decode())
-            assert "somefunc" in msg["body"]["text/plain"]
-            assert "notmuch_message_get_flags" not in msg["body"]["text/plain"]
-        q.assert_called_once_with(db, 'id:foo')
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message/foo')
+        assert response.status_code == 200
+        msg = json.loads(response.data.decode())
+        assert "somefunc" in msg["body"]["text/plain"]
+        assert "notmuch_message_get_flags" not in msg["body"]["text/plain"]
 
-    mf.get_filename.assert_called_once()
-    mf.get_message_id.assert_called_once()
-    mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 17
-
-    mq.search_messages.assert_called_once()
+    assert mf.header.call_count == 11
+    db.find.assert_called_once_with("foo")
 
 
 def test_message_attachment_mail(setup):
     app, db = setup
 
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/mail_nested.eml")
+    mf.path = "test/mails/mail_nested.eml"
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/attachment_message/foo/0')
-            assert response.status_code == 200
-            msg = json.loads(response.data.decode())
-            assert msg["from"] == "POSTBAN͟K͟ <gxnwgddl@carcarry.de>"
-            assert msg["to"] == ["2012gdwu <2012gdwu@web.de>"]
-            assert msg["cc"] == []
-            assert msg["bcc"] == []
-            assert msg["date"] == "Mon, 20 Jul 2020 02:15:26 +0000"
-            assert msg["subject"] == "BsetSign App : Y7P32-HTXU2-FRDG7"
-            assert msg["message_id"] == "<1M3lHZ-1jyAPt0pTn-000u1I@mrelayeu.kundenserver.de>"
-            assert msg["in_reply_to"] == None
-            assert msg["references"] == None
-            assert msg["reply_to"] == None
-            assert msg["delivered_to"] == "arne.keller@posteo.de"
+    with app.test_client() as test_client:
+        response = test_client.get('/api/attachment_message/foo/0')
+        assert response.status_code == 200
+        msg = json.loads(response.data.decode())
+        assert msg["from"] == "POSTBAN͟K͟ <gxnwgddl@carcarry.de>"
+        assert msg["to"] == ["2012gdwu <2012gdwu@web.de>"]
+        assert msg["cc"] == []
+        assert msg["bcc"] == []
+        assert msg["date"] == "Mon, 20 Jul 2020 02:15:26 +0000"
+        assert msg["subject"] == "BsetSign App : Y7P32-HTXU2-FRDG7"
+        assert msg["message_id"] == "<1M3lHZ-1jyAPt0pTn-000u1I@mrelayeu.kundenserver.de>"
+        assert msg["in_reply_to"] == None
+        assert msg["reply_to"] == None
+        assert msg["delivered_to"] == "arne.keller@posteo.de"
+        assert msg["forwarded_to"] == None
 
-            assert "Öffnen Sie den unten stehenden Aktivierungslink" in msg["body"]["text/plain"]
-            assert msg["body"]["text/html"] == True
+        assert "Öffnen Sie den unten stehenden Aktivierungslink" in msg["body"]["text/plain"]
+        assert msg["body"]["text/html"] == True
 
-            assert msg["notmuch_id"] == None
-            assert msg["tags"] == []
-            assert msg["attachments"] == []
-            assert msg["signature"] is None
-        q.assert_called_once_with(db, 'id:foo')
+        assert msg["notmuch_id"] == None
+        assert msg["tags"] == []
+        assert msg["attachments"] == []
+        assert msg["signature"] is None
 
-    mf.get_filename.assert_called_once()
-    mq.search_messages.assert_called_once()
+    db.find.assert_called_once_with("foo")
 
 
 def test_message_html_simple(setup):
     app, db = setup
 
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/html-only.eml")
+    mf.path = "test/mails/html-only.eml"
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/message_html/foo')
-            assert response.status_code == 200
-            assert response.data == b'<div>\n  <body>\n    \n  </body><p>\n  hunter2\n</p></div>'
-        q.assert_called_once_with(db, 'id:foo')
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message_html/foo')
+        assert response.status_code == 200
+        assert response.data == b'<div>\n  <body>\n    \n  </body><p>\n  hunter2\n</p></div>'
 
-    mf.get_filename.assert_called_once()
-    mq.search_messages.assert_called_once()
+    db.find.assert_called_once_with("foo")
 
 
 def test_message_html_none(setup):
     app, db = setup
 
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/simple.eml")
+    mf.path = "test/mails/simple.eml"
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/message_html/foo')
-            assert response.status_code == 200
-            assert response.data == b''
-        q.assert_called_once_with(db, 'id:foo')
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message_html/foo')
+        assert response.status_code == 200
+        assert response.data == b''
 
-    mf.get_filename.assert_called_once()
-    mq.search_messages.assert_called_once()
+    db.find.assert_called_once_with("foo")
 
 
 def test_message_html_link_scrubbing(setup):
     app, db = setup
 
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/clean-html.eml")
+    mf.path = "test/mails/clean-html.eml"
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/message_html/foo')
-            assert response.status_code == 200
-            assert "https://example.com" in str(response.data)
-            assert "https://tracking.com" not in str(response.data)
-            assert "http://image.com" not in str(response.data)
-        q.assert_called_once_with(db, 'id:foo')
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message_html/foo')
+        assert response.status_code == 200
+        assert "https://example.com" in str(response.data)
+        assert "https://tracking.com" not in str(response.data)
+        assert "http://image.com" not in str(response.data)
 
-    mf.get_filename.assert_called_once()
-    mq.search_messages.assert_called_once()
+    db.find.assert_called_once_with("foo")
 
 
 def test_message_html_filter_html(setup):
     app, db = setup
 
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/html-only.eml")
+    mf.path = "test/mails/html-only.eml"
 
-    mq = lambda: None
-    mq.search_messages = MagicMock(return_value=iter([mf]))
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
 
-    app.config.custom["accounts"] = []
-    try:
-        app.config.custom["filter"]["content"]["text/html"] = ['<input value="a>swordfish">', "meat"]
-    except KeyError:
-        app.config.custom["filter"] = {}
-        app.config.custom["filter"]["content"] = {}
-        app.config.custom["filter"]["content"]["text/html"] = ['<input value="a>swordfish">', "meat"]
+    app.config.custom["filter"] = {}
+    app.config.custom["filter"]["content"] = {}
+    app.config.custom["filter"]["content"]["text/html"] = ['<input value="a>swordfish">', "meat"]
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/message_html/foo')
-            assert response.status_code == 200
-            assert "meat" in str(response.data)
-            assert "swordfish" not in str(response.data)
-        q.assert_called_once_with(db, 'id:foo')
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message_html/foo')
+        assert response.status_code == 200
+        assert "meat" in str(response.data)
+        assert "swordfish" not in str(response.data)
 
-    mf.get_filename.assert_called_once()
-    mq.search_messages.assert_called_once()
+    db.find.assert_called_once_with("foo")
 
 
 def test_thread(setup):
     app, db = setup
 
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/simple.eml")
-    mf.get_header = MagicMock(return_value="  foo@bar  ")
-    mf.get_message_id = MagicMock(return_value="foo")
-    mf.get_tags = MagicMock(return_value=["foo", "bar"])
+    mf.path = "test/mails/simple.eml"
+    mf.messageid = "foo"
+    mf.tags = ["foo", "bar"]
+    mf.header = MagicMock(return_value="  foo@bar  ")
 
-    mt = lambda: None
-    mt.get_messages = MagicMock(return_value=iter([mf]))
+    db.config = {}
+    db.messages = MagicMock(return_value=iter([mf]))
 
-    mq = lambda: None
-    mq.search_threads = MagicMock(return_value=iter([mt]))
+    with app.test_client() as test_client:
+        response = test_client.get('/api/thread/foo')
+        assert response.status_code == 200
+        msgs = json.loads(response.data.decode())
+        assert len(msgs) == 1
+        msg = msgs[0]
+        assert msg["from"] == "foo@bar"
+        assert msg["to"] == ["foo@bar"]
+        assert msg["cc"] == ["foo@bar"]
+        assert msg["bcc"] == ["foo@bar"]
+        assert msg["date"] == "foo@bar"
+        assert msg["subject"] == "foo@bar"
+        assert msg["message_id"] == "foo@bar"
+        assert msg["in_reply_to"] == "foo@bar"
+        assert msg["reply_to"] == "foo@bar"
+        assert msg["delivered_to"] == "foo@bar"
+        assert msg["forwarded_to"] == "foo@bar"
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/thread/foo')
-            assert response.status_code == 200
-            thread = json.loads(response.data.decode())
-            assert len(thread) == 1
-            msg = thread[0]
-            assert msg["from"] == "foo@bar"
-            assert msg["to"] == ["foo@bar"]
-            assert msg["cc"] == ["foo@bar"]
-            assert msg["bcc"] == ["foo@bar"]
-            assert msg["date"] == "foo@bar"
-            assert msg["subject"] == "foo@bar"
-            assert msg["message_id"] == "foo@bar"
-            assert msg["in_reply_to"] == "foo@bar"
-            assert msg["references"] == "foo@bar"
-            assert msg["reply_to"] == "foo@bar"
+        assert "With the new notmuch_message_get_flags() function" in msg["body"]["text/plain"]
+        assert msg["body"]["text/html"] == False
 
-            assert "With the new notmuch_message_get_flags() function" in msg["body"]["text/plain"]
-            assert msg["body"]["text/html"] == False
+        assert msg["notmuch_id"] == "foo"
+        assert msg["tags"] == ["foo", "bar"]
+        assert msg["attachments"] == []
+        assert msg["signature"] is None
 
-            assert msg["notmuch_id"] == "foo"
-            assert msg["tags"] == ["foo", "bar"]
-            assert msg["attachments"] == []
-            assert msg["signature"] is None
-        q.assert_called_once_with(db, 'thread:"foo"')
-
-    mf.get_filename.assert_called_once()
-    mf.get_message_id.assert_called_once()
-    mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 17
-
-    mt.get_messages.assert_called_once()
-
-    mq.search_threads.assert_called_once()
+    assert mf.header.call_count == 11
+    db.messages.assert_called_once_with("thread:foo", exclude_tags=[],
+                                        sort=notmuch2.Database.SORT.OLDEST_FIRST)
 
 
-def test_thread_deleted_single(setup):
+def test_thread_deleted(setup):
     app, db = setup
 
     mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/simple.eml")
-    mf.get_header = MagicMock(return_value="  foo@bar  ")
-    mf.get_message_id = MagicMock(return_value="foo")
-    mf.get_tags = MagicMock(return_value=["deleted", "bar"])
+    mf.path = "test/mails/simple.eml"
+    mf.messageid = "foo"
+    mf.tags = ["deleted", "bar"]
+    mf.header = MagicMock(return_value="  foo@bar  ")
 
-    mt = lambda: None
-    mt.get_messages = MagicMock(return_value=iter([mf]))
+    db.config = {}
+    db.messages = MagicMock(return_value=iter([mf]))
 
-    mq = lambda: None
-    mq.search_threads = MagicMock(return_value=iter([mt]))
+    with app.test_client() as test_client:
+        response = test_client.get('/api/thread/foo')
+        assert response.status_code == 200
+        msgs = json.loads(response.data.decode())
+        assert len(msgs) == 1
+        msg = msgs[0]
+        assert msg["from"] == "foo@bar"
+        assert msg["to"] == ["foo@bar"]
+        assert msg["cc"] == ["foo@bar"]
+        assert msg["bcc"] == ["foo@bar"]
+        assert msg["date"] == "foo@bar"
+        assert msg["subject"] == "foo@bar"
+        assert msg["message_id"] == "foo@bar"
+        assert msg["in_reply_to"] == "foo@bar"
+        assert msg["reply_to"] == "foo@bar"
+        assert msg["delivered_to"] == "foo@bar"
+        assert msg["forwarded_to"] == "foo@bar"
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/thread/foo')
-            assert response.status_code == 200
-            thread = json.loads(response.data.decode())
-            assert len(thread) == 1
-            msg = thread[0]
-            assert msg["from"] == "foo@bar"
-            assert msg["to"] == ["foo@bar"]
-            assert msg["cc"] == ["foo@bar"]
-            assert msg["bcc"] == ["foo@bar"]
-            assert msg["date"] == "foo@bar"
-            assert msg["subject"] == "foo@bar"
-            assert msg["message_id"] == "foo@bar"
-            assert msg["in_reply_to"] == "foo@bar"
-            assert msg["references"] == "foo@bar"
-            assert msg["reply_to"] == "foo@bar"
+        assert "(deleted message)" in msg["body"]["text/plain"]
+        assert msg["body"]["text/html"] == False
 
-            assert "With the new notmuch_message_get_flags() function" in msg["body"]["text/plain"]
-            assert msg["body"]["text/html"] == False
+        assert msg["notmuch_id"] == "foo"
+        assert msg["tags"] == ["deleted", "bar"]
+        assert msg["attachments"] == []
+        assert msg["signature"] is None
 
-            assert msg["notmuch_id"] == "foo"
-            assert msg["tags"] == ["deleted", "bar"]
-            assert msg["attachments"] == []
-            assert msg["signature"] is None
-        q.assert_called_once_with(db, 'thread:"foo"')
-
-    assert mf.get_filename.call_count == 1
-    mf.get_message_id.assert_called_once()
-    mf.get_tags.assert_called_once()
-    assert mf.get_header.call_count == 17
-
-    mt.get_messages.assert_called_once()
-
-    mq.search_threads.assert_called_once()
+    assert mf.header.call_count == 11
+    db.messages.assert_called_once_with("thread:foo", exclude_tags=[],
+                                        sort=notmuch2.Database.SORT.OLDEST_FIRST)
 
 
 def test_thread_none(setup):
     app, db = setup
 
-    mq = lambda: None
-    mq.search_threads = MagicMock(return_value=iter([]))
+    db.config = {}
+    db.messages = MagicMock(return_value=iter([]))
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/thread/foo')
-            assert response.status_code == 404
-        q.assert_called_once_with(db, 'thread:"foo"')
+    with app.test_client() as test_client:
+        response = test_client.get('/api/thread/foo')
+        assert response.status_code == 200
+        thread = json.loads(response.data.decode())
+        assert len(thread) == 0
 
-    mq.search_threads.assert_called_once()
-
-
-def test_thread_deleted_multiple(setup):
-    app, db = setup
-
-    mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/simple.eml")
-    mf.get_header = MagicMock(return_value="  foo@bar  ")
-    mf.get_message_id = MagicMock(return_value="foo")
-    mf.get_tags = MagicMock(return_value=["deleted", "bar"])
-
-    mt = lambda: None
-    mt.get_messages = MagicMock(return_value=iter([mf, mf]))
-
-    mq = lambda: None
-    mq.search_threads = MagicMock(return_value=iter([mt]))
-
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/thread/foo')
-            assert response.status_code == 200
-            thread = json.loads(response.data.decode())
-            assert len(thread) == 2
-            msg = thread[0]
-            assert msg["from"] == "foo@bar"
-            assert msg["to"] == ["foo@bar"]
-            assert msg["cc"] == ["foo@bar"]
-            assert msg["bcc"] == ["foo@bar"]
-            assert msg["date"] == "foo@bar"
-            assert msg["subject"] == "foo@bar"
-            assert msg["message_id"] == "foo@bar"
-            assert msg["in_reply_to"] == "foo@bar"
-            assert msg["references"] == "foo@bar"
-            assert msg["reply_to"] == "foo@bar"
-
-            assert "(deleted message)" in msg["body"]["text/plain"]
-            assert msg["body"]["text/html"] == False
-
-            assert msg["notmuch_id"] == "foo"
-            assert msg["tags"] == ["deleted", "bar"]
-            assert msg["attachments"] == []
-            assert msg["signature"] is None
-
-            assert thread[0] == thread[1]
-        q.assert_called_once_with(db, 'thread:"foo"')
-
-    assert mf.get_filename.call_count == 0
-    assert mf.get_message_id.call_count == 2
-    assert mf.get_tags.call_count == 2
-    assert mf.get_header.call_count == 17 * 2
-
-    mt.get_messages.assert_called_once()
-
-    mq.search_threads.assert_called_once()
-
-
-def test_thread_none(setup):
-    app, db = setup
-
-    mq = lambda: None
-    mq.search_threads = MagicMock(return_value=iter([]))
-
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/thread/foo')
-            assert response.status_code == 404
-        q.assert_called_once_with(db, 'thread:"foo"')
-
-    mq.search_threads.assert_called_once()
-
-
-def test_thread_duplicate(setup):
-    app, db = setup
-
-    mq = lambda: None
-    mq.search_threads = MagicMock(return_value=iter([1, 2]))
-
-    with patch("notmuch.Query", return_value=mq) as q:
-        with app.test_client() as test_client:
-            response = test_client.get('/api/thread/foo')
-            assert response.status_code == 500
-        q.assert_called_once_with(db, 'thread:"foo"')
-
-    mq.search_threads.assert_called_once()
+    db.messages.assert_called_once_with("thread:foo", exclude_tags=[],
+                                        sort=notmuch2.Database.SORT.OLDEST_FIRST)
 
 
 def test_external_editor(setup):
@@ -1693,6 +1443,7 @@ def test_external_editor(setup):
     assert tmp.read() == "foobar"
     tmp.close()
     os.unlink(fname)
+
 
 def test_send(setup):
     app, db = setup
