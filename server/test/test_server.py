@@ -1428,14 +1428,14 @@ def test_external_editor(setup):
     fname = ""
 
     with patch("os.unlink", return_value=None) as u:
-        with patch("builtins.open", mock_open(read_data="barfoo")) as m:
+        with patch("builtins.open", mock_open(read_data="barfoo")) as o:
             with app.test_client() as test_client:
                 response = test_client.post('/api/edit_external', data=pd)
                 assert response.status_code == 200
                 assert response.data == b'barfoo'
             u.assert_called_once()
-            m.assert_called_once()
-            args = m.call_args.args
+            o.assert_called_once()
+            args = o.call_args.args
             assert "kukulkan-tmp-" in args[0]
             fname = args[0]
 
@@ -1681,16 +1681,15 @@ def test_send_no_account(setup):
 def test_send_base64_transfer(setup):
     app, db = setup
 
-    mm = lambda: None
-    mm.maildir_flags_to_tags = MagicMock()
-    mm.add_tag = MagicMock()
-    mm.tags_to_maildir_flags = MagicMock()
+    mf = lambda: None
+    mf.tags = lambda: None
+    mf.tags.add = MagicMock()
 
     dbw = lambda: None
     dbw.close = MagicMock()
-    dbw.begin_atomic = MagicMock()
-    dbw.end_atomic = MagicMock()
-    dbw.index_file = MagicMock(return_value=(mm, 0))
+    dbw.atomic = MagicMock()
+    dbw.add = MagicMock(return_value=(mf, 0))
+    dbw.config = {}
 
     pd = {"from": "foo", "to": "bar@bar.com", "cc": "", "bcc": "", "subject": "test",
           "body": "täst", "action": "compose", "tags": "foo,bar"}
@@ -1702,8 +1701,8 @@ def test_send_base64_transfer(setup):
                                       "save_sent_to": "folder",
                                       "additional_sent_tags": ["test"]}]
 
-    with patch("notmuch.Database", return_value=dbw):
-        with patch("builtins.open", mock_open()) as m:
+    with patch("notmuch2.Database", return_value=dbw) as nmdb:
+        with patch("builtins.open", mock_open()) as o:
             text = None
             with app.test_client() as test_client:
                 response = test_client.post('/api/send', data=pd)
@@ -1738,39 +1737,47 @@ def test_send_base64_transfer(setup):
                 assert "Date: " in text
                 assert "Message-ID: <" in text
                 assert "\n\ndMOkc3QK\n" in text
-            m.assert_called_once()
-            args = m.call_args.args
+            o.assert_called_once()
+            args = o.call_args.args
             assert "kukulkan" in args[0]
-            assert "folder" in args[0]
+            assert "folder/" in args[0]
             assert ":2,S" in args[0]
             assert args[1] == "w"
-            hdl = m()
+            hdl = o()
             hdl.write.assert_called_once()
             args = hdl.write.call_args.args
             assert text == args[0]
 
-    mm.maildir_flags_to_tags.assert_called_once()
-    mm.tags_to_maildir_flags.assert_called_once()
-    mm.add_tag.assert_has_calls([call("foo"), call("bar"), call("test"), call("sent")])
+    nmdb.assert_called_once()
 
-    dbw.begin_atomic.assert_called_once()
-    dbw.end_atomic.assert_called_once()
+    assert mf.tags.add.mock_calls == [
+        call('foo'),
+        call('bar'),
+        call('test'),
+        call('sent')
+    ]
+
+    dbw.add.assert_called_once()
+    args = dbw.add.call_args.args
+    assert "kukulkan" in args[0]
+    assert "folder/" in args[0]
+    assert ":2,S" in args[0]
+    dbw.atomic.assert_called_once()
     dbw.close.assert_called_once()
 
 
 def test_send_addresses(setup):
-    app, db = setup
+    app, _ = setup
 
-    mm = lambda: None
-    mm.maildir_flags_to_tags = MagicMock()
-    mm.add_tag = MagicMock()
-    mm.tags_to_maildir_flags = MagicMock()
+    mf = lambda: None
+    mf.tags = lambda: None
+    mf.tags.add = MagicMock()
 
     dbw = lambda: None
     dbw.close = MagicMock()
-    dbw.begin_atomic = MagicMock()
-    dbw.end_atomic = MagicMock()
-    dbw.index_file = MagicMock(return_value=(mm, 0))
+    dbw.atomic = MagicMock()
+    dbw.add = MagicMock(return_value=(mf, 0))
+    dbw.config = {}
 
     pd = {"from": "foo", "to": "Foo bar <foo@bar.com>\ntäst <test@bar.com>", "cc": "Föö, Bår <foo@bar.com>",
           "bcc": "Føø Bär <foo@bar.com>\n<test@test.com>\ntest1@test1.com", "subject": "test",
@@ -1783,8 +1790,8 @@ def test_send_addresses(setup):
                                       "save_sent_to": "folder",
                                       "additional_sent_tags": ["test"]}]
 
-    with patch("notmuch.Database", return_value=dbw):
-        with patch("builtins.open", mock_open()) as m:
+    with patch("notmuch2.Database", return_value=dbw) as nmdb:
+        with patch("builtins.open", mock_open()) as o:
             text = None
             with app.test_client() as test_client:
                 response = test_client.post('/api/send', data=pd)
@@ -1819,28 +1826,37 @@ def test_send_addresses(setup):
                 assert "Date: " in text
                 assert "Message-ID: <" in text
                 assert "\n\nfoobar\n" in text
-            m.assert_called_once()
-            args = m.call_args.args
+            o.assert_called_once()
+            args = o.call_args.args
             assert "kukulkan" in args[0]
-            assert "folder" in args[0]
+            assert "folder/" in args[0]
             assert ":2,S" in args[0]
             assert args[1] == "w"
-            hdl = m()
+            hdl = o()
             hdl.write.assert_called_once()
             args = hdl.write.call_args.args
             assert text == args[0]
 
-    mm.maildir_flags_to_tags.assert_called_once()
-    mm.tags_to_maildir_flags.assert_called_once()
-    mm.add_tag.assert_has_calls([call("foo"), call("bar"), call("test"), call("sent")])
+    nmdb.assert_called_once()
 
-    dbw.begin_atomic.assert_called_once()
-    dbw.end_atomic.assert_called_once()
+    assert mf.tags.add.mock_calls == [
+        call('foo'),
+        call('bar'),
+        call('test'),
+        call('sent')
+    ]
+
+    dbw.add.assert_called_once()
+    args = dbw.add.call_args.args
+    assert "kukulkan" in args[0]
+    assert "folder/" in args[0]
+    assert ":2,S" in args[0]
+    dbw.atomic.assert_called_once()
     dbw.close.assert_called_once()
 
 
 def test_send_fail(setup):
-    app, db = setup
+    app, _ = setup
 
     pd = {"from": "foo", "to": "bar@bar.com", "cc": "", "bcc": "", "subject": "test",
           "body": "foobar", "action": "compose", "tags": "foo,bar"}
@@ -1876,18 +1892,17 @@ def test_send_fail(setup):
 
 
 def test_send_attachment(setup):
-    app, db = setup
+    app, _ = setup
 
-    mm = lambda: None
-    mm.maildir_flags_to_tags = MagicMock()
-    mm.add_tag = MagicMock()
-    mm.tags_to_maildir_flags = MagicMock()
+    mf = lambda: None
+    mf.tags = lambda: None
+    mf.tags.add = MagicMock()
 
     dbw = lambda: None
     dbw.close = MagicMock()
-    dbw.begin_atomic = MagicMock()
-    dbw.end_atomic = MagicMock()
-    dbw.index_file = MagicMock(return_value=(mm, 0))
+    dbw.atomic = MagicMock()
+    dbw.add = MagicMock(return_value=(mf, 0))
+    dbw.config = {}
 
     pd = {"from": "foo", "to": "bar@bar.com", "cc": "", "bcc": "", "subject": "test",
           "body": "foobar", "action": "compose", "tags": "foo,bar"}
@@ -1901,8 +1916,8 @@ def test_send_attachment(setup):
                                       "save_sent_to": "folder",
                                       "additional_sent_tags": ["test"]}]
 
-    with patch("notmuch.Database", return_value=dbw):
-        with patch("builtins.open", mock_open()) as m:
+    with patch("notmuch2.Database", return_value=dbw) as nmdb:
+        with patch("builtins.open", mock_open()) as o:
             text = None
             with app.test_client() as test_client:
                 response = test_client.post('/api/send', data=pd)
@@ -1940,39 +1955,57 @@ def test_send_attachment(setup):
                 assert "Content-Transfer-Encoding: base64" in text
                 assert "Content-Disposition: attachment; filename=\"test.txt\"" in text
                 assert "\nVGhpcyBpcyBhIGZpbGUu\n" in text
-            assert m.call_count == 2
-            args = m.call_args.args
+            assert o.call_count == 2
+            args = o.call_args.args
             assert "kukulkan" in args[0]
-            assert "folder" in args[0]
+            assert "folder/" in args[0]
             assert ":2,S" in args[0]
             assert args[1] == "w"
-            hdl = m()
+            hdl = o()
             hdl.write.assert_called_once()
             args = hdl.write.call_args.args
             assert text == args[0]
 
-    mm.maildir_flags_to_tags.assert_called_once()
-    mm.tags_to_maildir_flags.assert_called_once()
-    mm.add_tag.assert_has_calls([call("foo"), call("bar"), call("test"), call("sent")])
+    nmdb.assert_called_once()
 
-    dbw.begin_atomic.assert_called_once()
-    dbw.end_atomic.assert_called_once()
+    assert mf.tags.add.mock_calls == [
+        call('foo'),
+        call('bar'),
+        call('test'),
+        call('sent')
+    ]
+
+    dbw.add.assert_called_once()
+    args = dbw.add.call_args.args
+    assert "kukulkan" in args[0]
+    assert "folder/" in args[0]
+    assert ":2,S" in args[0]
+    dbw.atomic.assert_called_once()
     dbw.close.assert_called_once()
 
 
 def test_send_reply(setup):
     app, db = setup
 
-    mm = lambda: None
-    mm.maildir_flags_to_tags = MagicMock()
-    mm.add_tag = MagicMock()
-    mm.tags_to_maildir_flags = MagicMock()
+    mf = lambda: None
+    mf.tags = lambda: None
+    mf.tags.add = MagicMock()
+
+    mq = lambda: None
+    mq.tags = lambda: None
+    mq.tags.add = MagicMock()
+    mq.header = MagicMock()
+    mq.header.side_effect = ["oldFoo", None]
+
+    db.config = {}
+    db.find = MagicMock(return_value=mq)
 
     dbw = lambda: None
     dbw.close = MagicMock()
-    dbw.begin_atomic = MagicMock()
-    dbw.end_atomic = MagicMock()
-    dbw.index_file = MagicMock(return_value=(mm, 0))
+    dbw.atomic = MagicMock()
+    dbw.add = MagicMock(return_value=(mf, 0))
+    dbw.config = {}
+    dbw.messages = MagicMock(return_value=iter([mq]))
 
     pd = {"from": "foo", "to": "bar@bar.com", "cc": "", "bcc": "", "subject": "test",
           "body": "foobar", "action": "reply", "tags": "foo,bar", "refId": "oldFoo"}
@@ -1984,95 +2017,103 @@ def test_send_reply(setup):
                                       "save_sent_to": "folder",
                                       "additional_sent_tags": ["test"]}]
 
-    mf = lambda: None
-    mf.add_tag = MagicMock()
-    mf.tags_to_maildir_flags = MagicMock()
-    mf.get_header = MagicMock()
-    mf.get_header.side_effect = ["oldFoo", None]
+    with patch("notmuch2.Database", return_value=dbw) as nmdb:
+        with patch("builtins.open", mock_open()) as o:
+            text = None
+            with app.test_client() as test_client:
+                response = test_client.post('/api/send', data=pd)
+                assert response.status_code == 202
+                sid = response.json["send_id"]
+                assert sid != None
+                response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
+                assert response.status_code == 200
+                status = None
+                response_iter = response.response.__iter__()
+                try:
+                    while (chunk := next(response_iter)) is not None:
+                        lines = chunk.decode().strip().split('\n\n')
+                        for line in lines:
+                            if line.startswith('data: '):
+                                data = json.loads(line[6:])
+                                if 'send_status' in data and data['send_status'] != 'sending':
+                                    status = data['send_status']
+                                    text = data['send_output']
+                                    break
+                except StopIteration:
+                    pass
+                assert status == 0
+                assert "Content-Type: text/plain; charset=\"utf-8\"" in text
+                assert "Content-Transfer-Encoding: 7bit" in text
+                assert "MIME-Version: 1.0" in text
+                assert "Subject: test" in text
+                assert "From: Foo Bar <foo@bar.com>" in text
+                assert "To: bar" in text
+                assert "Cc:" in text
+                assert "Bcc:" in text
+                assert "Date: " in text
+                assert "Message-ID: <" in text
+                assert "In-Reply-To: <oldFoo>" in text
+                assert "References: <oldFoo>" in text
+                assert "\n\nfoobar\n" in text
+            o.assert_called_once()
+            args = o.call_args.args
+            assert "kukulkan" in args[0]
+            assert "folder/" in args[0]
+            assert ":2,S" in args[0]
+            assert args[1] == "w"
+            hdl = o()
+            hdl.write.assert_called_once()
+            args = hdl.write.call_args.args
+            assert text == args[0]
 
-    mq = lambda: None
-    mq.search_messages = MagicMock()
-    mq.search_messages.side_effect = [iter([mf]), iter([mf])]
+    db.find.assert_called_once_with("oldFoo")
+    mq.tags.add.assert_called_once_with("replied")
+    assert mq.header.mock_calls == [
+        call('Message-ID'),
+        call('References')
+    ]
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with patch("notmuch.Database", return_value=dbw):
-            with patch("builtins.open", mock_open()) as m:
-                text = None
-                with app.test_client() as test_client:
-                    response = test_client.post('/api/send', data=pd)
-                    assert response.status_code == 202
-                    sid = response.json["send_id"]
-                    assert sid != None
-                    response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
-                    assert response.status_code == 200
-                    status = None
-                    response_iter = response.response.__iter__()
-                    try:
-                        while (chunk := next(response_iter)) is not None:
-                            lines = chunk.decode().strip().split('\n\n')
-                            for line in lines:
-                                if line.startswith('data: '):
-                                    data = json.loads(line[6:])
-                                    if 'send_status' in data and data['send_status'] != 'sending':
-                                        status = data['send_status']
-                                        text = data['send_output']
-                                        break
-                    except StopIteration:
-                        pass
-                    assert status == 0
-                    assert "Content-Type: text/plain; charset=\"utf-8\"" in text
-                    assert "Content-Transfer-Encoding: 7bit" in text
-                    assert "MIME-Version: 1.0" in text
-                    assert "Subject: test" in text
-                    assert "From: Foo Bar <foo@bar.com>" in text
-                    assert "To: bar" in text
-                    assert "Cc:" in text
-                    assert "Bcc:" in text
-                    assert "Date: " in text
-                    assert "Message-ID: <" in text
-                    assert "In-Reply-To: <oldFoo>" in text
-                    assert "References: <oldFoo>" in text
-                    assert "\n\nfoobar\n" in text
-                m.assert_called_once()
-                args = m.call_args.args
-                assert "kukulkan" in args[0]
-                assert "folder" in args[0]
-                assert ":2,S" in args[0]
-                assert args[1] == "w"
-                hdl = m()
-                hdl.write.assert_called_once()
-                args = hdl.write.call_args.args
-                assert text == args[0]
+    nmdb.assert_called_once()
 
-        q.assert_has_calls([call(db, 'id:oldFoo'), call(dbw, "id:oldFoo")])
+    assert mf.tags.add.mock_calls == [
+        call('foo'),
+        call('bar'),
+        call('test'),
+        call('sent')
+    ]
 
-    assert mq.search_messages.call_count == 2
-
-    mf.add_tag.assert_called_once_with("replied")
-    mf.tags_to_maildir_flags.assert_called_once()
-
-    mm.maildir_flags_to_tags.assert_called_once()
-    mm.tags_to_maildir_flags.assert_called_once()
-    mm.add_tag.assert_has_calls([call("foo"), call("bar"), call("test"), call("sent")])
-
-    dbw.begin_atomic.assert_called_once()
-    dbw.end_atomic.assert_called_once()
+    dbw.add.assert_called_once()
+    args = dbw.add.call_args.args
+    assert "kukulkan" in args[0]
+    assert "folder/" in args[0]
+    assert ":2,S" in args[0]
+    dbw.messages.assert_called_once_with("id:oldFoo", exclude_tags=[], sort=ANY)
+    dbw.atomic.assert_called_once()
     dbw.close.assert_called_once()
 
 
 def test_send_reply_more_refs(setup):
     app, db = setup
 
-    mm = lambda: None
-    mm.maildir_flags_to_tags = MagicMock()
-    mm.add_tag = MagicMock()
-    mm.tags_to_maildir_flags = MagicMock()
+    mf = lambda: None
+    mf.tags = lambda: None
+    mf.tags.add = MagicMock()
+
+    mq = lambda: None
+    mq.tags = lambda: None
+    mq.tags.add = MagicMock()
+    mq.header = MagicMock()
+    mq.header.side_effect = ["oldFoo", "<olderFoo>"]
+
+    db.config = {}
+    db.find = MagicMock(return_value=mq)
 
     dbw = lambda: None
     dbw.close = MagicMock()
-    dbw.begin_atomic = MagicMock()
-    dbw.end_atomic = MagicMock()
-    dbw.index_file = MagicMock(return_value=(mm, 0))
+    dbw.atomic = MagicMock()
+    dbw.add = MagicMock(return_value=(mf, 0))
+    dbw.config = {}
+    dbw.messages = MagicMock(return_value=iter([mq]))
 
     pd = {"from": "foo", "to": "bar@bar.com", "cc": "", "bcc": "", "subject": "test",
           "body": "foobar", "action": "reply", "tags": "foo,bar", "refId": "oldFoo"}
@@ -2084,95 +2125,103 @@ def test_send_reply_more_refs(setup):
                                       "save_sent_to": "folder",
                                       "additional_sent_tags": ["test"]}]
 
-    mf = lambda: None
-    mf.add_tag = MagicMock()
-    mf.tags_to_maildir_flags = MagicMock()
-    mf.get_header = MagicMock()
-    mf.get_header.side_effect = ["oldFoo", "olderFoo", "olderFoo"]
+    with patch("notmuch2.Database", return_value=dbw) as nmdb:
+        with patch("builtins.open", mock_open()) as o:
+            text = None
+            with app.test_client() as test_client:
+                response = test_client.post('/api/send', data=pd)
+                assert response.status_code == 202
+                sid = response.json["send_id"]
+                assert sid != None
+                response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
+                assert response.status_code == 200
+                status = None
+                response_iter = response.response.__iter__()
+                try:
+                    while (chunk := next(response_iter)) is not None:
+                        lines = chunk.decode().strip().split('\n\n')
+                        for line in lines:
+                            if line.startswith('data: '):
+                                data = json.loads(line[6:])
+                                if 'send_status' in data and data['send_status'] != 'sending':
+                                    status = data['send_status']
+                                    text = data['send_output']
+                                    break
+                except StopIteration:
+                    pass
+                assert status == 0
+                assert "Content-Type: text/plain; charset=\"utf-8\"" in text
+                assert "Content-Transfer-Encoding: 7bit" in text
+                assert "MIME-Version: 1.0" in text
+                assert "Subject: test" in text
+                assert "From: Foo Bar <foo@bar.com>" in text
+                assert "To: bar" in text
+                assert "Cc:" in text
+                assert "Bcc:" in text
+                assert "Date: " in text
+                assert "Message-ID: <" in text
+                assert "In-Reply-To: <oldFoo>" in text
+                assert "References: <olderFoo> <oldFoo>" in text
+                assert "\n\nfoobar\n" in text
+            o.assert_called_once()
+            args = o.call_args.args
+            assert "kukulkan" in args[0]
+            assert "folder/" in args[0]
+            assert ":2,S" in args[0]
+            assert args[1] == "w"
+            hdl = o()
+            hdl.write.assert_called_once()
+            args = hdl.write.call_args.args
+            assert text == args[0]
 
-    mq = lambda: None
-    mq.search_messages = MagicMock()
-    mq.search_messages.side_effect = [iter([mf]), iter([mf])]
+    db.find.assert_called_once_with("oldFoo")
+    mq.tags.add.assert_called_once_with("replied")
+    assert mq.header.mock_calls == [
+        call('Message-ID'),
+        call('References')
+    ]
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with patch("notmuch.Database", return_value=dbw):
-            with patch("builtins.open", mock_open()) as m:
-                text = None
-                with app.test_client() as test_client:
-                    response = test_client.post('/api/send', data=pd)
-                    assert response.status_code == 202
-                    sid = response.json["send_id"]
-                    assert sid != None
-                    response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
-                    assert response.status_code == 200
-                    status = None
-                    response_iter = response.response.__iter__()
-                    try:
-                        while (chunk := next(response_iter)) is not None:
-                            lines = chunk.decode().strip().split('\n\n')
-                            for line in lines:
-                                if line.startswith('data: '):
-                                    data = json.loads(line[6:])
-                                    if 'send_status' in data and data['send_status'] != 'sending':
-                                        status = data['send_status']
-                                        text = data['send_output']
-                                        break
-                    except StopIteration:
-                        pass
-                    assert status == 0
-                    assert "Content-Type: text/plain; charset=\"utf-8\"" in text
-                    assert "Content-Transfer-Encoding: 7bit" in text
-                    assert "MIME-Version: 1.0" in text
-                    assert "Subject: test" in text
-                    assert "From: Foo Bar <foo@bar.com>" in text
-                    assert "To: bar" in text
-                    assert "Cc:" in text
-                    assert "Bcc:" in text
-                    assert "Date: " in text
-                    assert "Message-ID: <" in text
-                    assert "In-Reply-To: <oldFoo>" in text
-                    assert "References: olderFoo <oldFoo>" in text
-                    assert "\n\nfoobar\n" in text
-                m.assert_called_once()
-                args = m.call_args.args
-                assert "kukulkan" in args[0]
-                assert "folder" in args[0]
-                assert ":2,S" in args[0]
-                assert args[1] == "w"
-                hdl = m()
-                hdl.write.assert_called_once()
-                args = hdl.write.call_args.args
-                assert text == args[0]
+    nmdb.assert_called_once()
 
-        q.assert_has_calls([call(db, 'id:oldFoo'), call(dbw, "id:oldFoo")])
+    assert mf.tags.add.mock_calls == [
+        call('foo'),
+        call('bar'),
+        call('test'),
+        call('sent')
+    ]
 
-    assert mq.search_messages.call_count == 2
-
-    mf.add_tag.assert_called_once_with("replied")
-    mf.tags_to_maildir_flags.assert_called_once()
-
-    mm.maildir_flags_to_tags.assert_called_once()
-    mm.tags_to_maildir_flags.assert_called_once()
-    mm.add_tag.assert_has_calls([call("foo"), call("bar"), call("test"), call("sent")])
-
-    dbw.begin_atomic.assert_called_once()
-    dbw.end_atomic.assert_called_once()
+    dbw.add.assert_called_once()
+    args = dbw.add.call_args.args
+    assert "kukulkan" in args[0]
+    assert "folder/" in args[0]
+    assert ":2,S" in args[0]
+    dbw.messages.assert_called_once_with("id:oldFoo", exclude_tags=[], sort=ANY)
+    dbw.atomic.assert_called_once()
     dbw.close.assert_called_once()
 
 
 def test_send_reply_cal(setup):
     app, db = setup
 
-    mm = lambda: None
-    mm.maildir_flags_to_tags = MagicMock()
-    mm.add_tag = MagicMock()
-    mm.tags_to_maildir_flags = MagicMock()
+    mf = lambda: None
+    mf.tags = lambda: None
+    mf.tags.add = MagicMock()
+
+    mq = lambda: None
+    mq.tags = lambda: None
+    mq.tags.add = MagicMock()
+    mq.header = MagicMock()
+    mq.header.side_effect = ["oldFoo", None]
+
+    db.config = {}
+    db.find = MagicMock(return_value=mq)
 
     dbw = lambda: None
     dbw.close = MagicMock()
-    dbw.begin_atomic = MagicMock()
-    dbw.end_atomic = MagicMock()
-    dbw.index_file = MagicMock(return_value=(mm, 0))
+    dbw.atomic = MagicMock()
+    dbw.add = MagicMock(return_value=(mf, 0))
+    dbw.config = {}
+    dbw.messages = MagicMock(return_value=iter([mq]))
 
     pd = {"from": "foo", "to": "bar@bar.com", "cc": "", "bcc": "", "subject": "Accept: test",
           "body": "foobar", "action": "reply-cal-accept", "tags": "foo,bar",
@@ -2185,121 +2234,129 @@ def test_send_reply_cal(setup):
                                       "save_sent_to": "folder",
                                       "additional_sent_tags": ["test"]}]
 
-    mf = lambda: None
-    mf.add_tag = MagicMock()
-    mf.tags_to_maildir_flags = MagicMock()
-    mf.get_header = MagicMock()
-    mf.get_header.side_effect = ["oldFoo", None]
+    with patch("src.kukulkan.message_attachments",
+               return_value=[{"filename": "unnamed attachment", "content_type": "text/calendar",
+                              "content": "BEGIN:VCALENDAR\n" +
+                                         "METHOD:REQUEST\n" +
+                                         "BEGIN:VEVENT\n" +
+                                         "UID:6f59364f-987e-48bb-a0d1-5512a2ba5570\n" +
+                                         "SEQUENCE:1\n" +
+                                         "SUMMARY:testevent\n" +
+                                         "ORGANIZER;CN=3DTRUE;CN=3Dunittest;PARTSTAT=3DACCEPTED;ROLE=3DCHAIR:mail=\n" +
+                                         "to:pwulf@tine20.org\n" +
+                                         "ATTENDEE;CN=3DTRUE;PARTSTAT=3DNEEDS-ACTION;ROLE=3DREQ-PARTICIPANT:mailt=\n" +
+                                         "o:unittest@tine20.org\n" +
+                                         "DTSTART;TZID=3DEurope/Berlin:20111101T090000\n" +
+                                         "DTEND;TZID=3DEurope/Berlin:20111101T100000\n" +
+                                         "LOCATION:kskdcsd\n" +
+                                         "DESCRIPTION:adsddsadsd\n" +
+                                         "END:VEVENT\n" +
+                                         "END:VCALENDAR"}]) as ma:
+        with patch("notmuch2.Database", return_value=dbw) as nmdb:
+            with patch("builtins.open", mock_open()) as o:
+                text = None
+                with app.test_client() as test_client:
+                    response = test_client.post('/api/send', data=pd)
+                    assert response.status_code == 202
+                    sid = response.json["send_id"]
+                    assert sid != None
+                    response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
+                    assert response.status_code == 200
+                    status = None
+                    response_iter = response.response.__iter__()
+                    try:
+                        while (chunk := next(response_iter)) is not None:
+                            lines = chunk.decode().strip().split('\n\n')
+                            for line in lines:
+                                if line.startswith('data: '):
+                                    data = json.loads(line[6:])
+                                    if 'send_status' in data and data['send_status'] != 'sending':
+                                        status = data['send_status']
+                                        text = data['send_output']
+                                        break
+                    except StopIteration:
+                        pass
+                    assert status == 0
+                    assert "Content-Type: text/plain" in text
+                    assert "Content-Type: multipart/mixed" in text
+                    assert "Content-Transfer-Encoding: 7bit" in text
+                    assert "Subject: Accept: test" in text
+                    assert "From: Foo Bar <unittest@tine20.org>" in text
+                    assert "To: bar" in text
+                    assert "Cc:" in text
+                    assert "Bcc:" in text
+                    assert "Date: " in text
+                    assert "Message-ID: <" in text
+                    assert "In-Reply-To: <oldFoo>" in text
+                    assert "References: <oldFoo>" in text
+                    assert "\n\nfoobar\n" in text
+                    assert "METHOD:REPLY" in text
+                    assert "DTSTAMP:" in text
+                    assert 'ATTENDEE;CN="Foo Bar";PARTSTAT=ACCEPTED:MAILTO:unittest@tine20.org' in text
+                    assert "SUMMARY:Accept: testevent" in text
+                    assert "SEQUENCE:1" in text
+                    assert "UID:6f59364f-987e-48bb-a0d1-5512a2ba5570" in text
+                args = o.call_args.args
+                assert "kukulkan" in args[0]
+                assert "folder/" in args[0]
+                assert ":2,S" in args[0]
+                assert args[1] == "w"
+                hdl = o()
+                hdl.write.assert_called_once()
+                args = hdl.write.call_args.args
+                assert text == args[0]
 
-    mq = lambda: None
-    mq.search_messages = MagicMock()
-    mq.search_messages.side_effect = [iter([mf]), iter([mf]), iter([mf])]
+        ma.assert_called_once_with(mq)
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with patch("src.kukulkan.message_attachments",
-                   return_value=[{"filename": "unnamed attachment", "content_type": "text/calendar",
-                                  "content": "BEGIN:VCALENDAR\n" +
-                                             "METHOD:REQUEST\n" +
-                                             "BEGIN:VEVENT\n" +
-                                             "UID:6f59364f-987e-48bb-a0d1-5512a2ba5570\n" +
-                                             "SEQUENCE:1\n" +
-                                             "SUMMARY:testevent\n" +
-                                             "ORGANIZER;CN=3DTRUE;CN=3Dunittest;PARTSTAT=3DACCEPTED;ROLE=3DCHAIR:mail=\n" +
-                                             "to:pwulf@tine20.org\n" +
-                                             "ATTENDEE;CN=3DTRUE;PARTSTAT=3DNEEDS-ACTION;ROLE=3DREQ-PARTICIPANT:mailt=\n" +
-                                             "o:unittest@tine20.org\n" +
-                                             "DTSTART;TZID=3DEurope/Berlin:20111101T090000\n" +
-                                             "DTEND;TZID=3DEurope/Berlin:20111101T100000\n" +
-                                             "LOCATION:kskdcsd\n" +
-                                             "DESCRIPTION:adsddsadsd\n" +
-                                             "END:VEVENT\n" +
-                                             "END:VCALENDAR"}]) as ma:
-            with patch("notmuch.Database", return_value=dbw):
-                with patch("builtins.open", mock_open()) as m:
-                    text = None
-                    with app.test_client() as test_client:
-                        response = test_client.post('/api/send', data=pd)
-                        assert response.status_code == 202
-                        sid = response.json["send_id"]
-                        assert sid != None
-                        response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
-                        assert response.status_code == 200
-                        status = None
-                        response_iter = response.response.__iter__()
-                        try:
-                            while (chunk := next(response_iter)) is not None:
-                                lines = chunk.decode().strip().split('\n\n')
-                                for line in lines:
-                                    if line.startswith('data: '):
-                                        data = json.loads(line[6:])
-                                        if 'send_status' in data and data['send_status'] != 'sending':
-                                            status = data['send_status']
-                                            text = data['send_output']
-                                            break
-                        except StopIteration:
-                            pass
-                        assert status == 0
-                        assert "Content-Type: text/plain" in text
-                        assert "Content-Type: multipart/mixed" in text
-                        assert "Content-Transfer-Encoding: 7bit" in text
-                        assert "Subject: Accept: test" in text
-                        assert "From: Foo Bar <unittest@tine20.org>" in text
-                        assert "To: bar" in text
-                        assert "Cc:" in text
-                        assert "Bcc:" in text
-                        assert "Date: " in text
-                        assert "Message-ID: <" in text
-                        assert "In-Reply-To: <oldFoo>" in text
-                        assert "References: <oldFoo>" in text
-                        assert "\n\nfoobar\n" in text
-                        assert "METHOD:REPLY" in text
-                        assert "DTSTAMP:" in text
-                        assert 'ATTENDEE;CN="Foo Bar";PARTSTAT=ACCEPTED:MAILTO:unittest@tine20.org' in text
-                        assert "SUMMARY:Accept: testevent" in text
-                        assert "SEQUENCE:1" in text
-                        assert "UID:6f59364f-987e-48bb-a0d1-5512a2ba5570" in text
-                    m.assert_called_once()
-                    args = m.call_args.args
-                    assert "kukulkan" in args[0]
-                    assert "folder" in args[0]
-                    assert ":2,S" in args[0]
-                    assert args[1] == "w"
-                    hdl = m()
-                    hdl.write.assert_called_once()
-                    args = hdl.write.call_args.args
-                    assert text == args[0]
+    assert db.find.mock_calls == [
+        call('oldFoo'),
+        call('oldFoo')
+    ]
+    mq.tags.add.assert_called_once_with("replied")
+    assert mq.header.mock_calls == [
+        call('Message-ID'),
+        call('References')
+    ]
 
-            ma.assert_called_once_with(mf)
+    nmdb.assert_called_once()
 
-        q.assert_has_calls([call(db, 'id:oldFoo'), call(dbw, "id:oldFoo")])
+    assert mf.tags.add.mock_calls == [
+        call('foo'),
+        call('bar'),
+        call('test'),
+        call('sent')
+    ]
 
-    assert mq.search_messages.call_count == 3
-
-    mf.add_tag.assert_called_once_with("replied")
-    mf.tags_to_maildir_flags.assert_called_once()
-
-    mm.maildir_flags_to_tags.assert_called_once()
-    mm.tags_to_maildir_flags.assert_called_once()
-    mm.add_tag.assert_has_calls([call("foo"), call("bar"), call("test"), call("sent")])
-
-    dbw.begin_atomic.assert_called_once()
-    dbw.end_atomic.assert_called_once()
+    dbw.add.assert_called_once()
+    args = dbw.add.call_args.args
+    assert "kukulkan" in args[0]
+    assert "folder/" in args[0]
+    assert ":2,S" in args[0]
+    dbw.messages.assert_called_once_with("id:oldFoo", exclude_tags=[], sort=ANY)
+    dbw.atomic.assert_called_once()
     dbw.close.assert_called_once()
 
 
 def test_send_forward(setup):
     app, db = setup
 
-    mm = lambda: None
-    mm.maildir_flags_to_tags = MagicMock()
-    mm.add_tag = MagicMock()
-    mm.tags_to_maildir_flags = MagicMock()
+    mf = lambda: None
+    mf.tags = lambda: None
+    mf.tags.add = MagicMock()
+
+    mq = lambda: None
+    mq.tags = lambda: None
+    mq.tags.add = MagicMock()
+
+    db.config = {}
+    db.find = MagicMock(return_value=mq)
 
     dbw = lambda: None
     dbw.close = MagicMock()
-    dbw.begin_atomic = MagicMock()
-    dbw.end_atomic = MagicMock()
-    dbw.index_file = MagicMock(return_value=(mm, 0))
+    dbw.atomic = MagicMock()
+    dbw.add = MagicMock(return_value=(mf, 0))
+    dbw.config = {}
+    dbw.messages = MagicMock(return_value=iter([mq]))
 
     pd = {"from": "foo", "to": "bar@bar.com", "cc": "", "bcc": "", "subject": "test",
           "body": "foobar", "action": "forward", "tags": "foo,bar",
@@ -2312,97 +2369,101 @@ def test_send_forward(setup):
                                       "save_sent_to": "folder",
                                       "additional_sent_tags": ["test"]}]
 
-    mf = lambda: None
-    mf.add_tag = MagicMock()
-    mf.tags_to_maildir_flags = MagicMock()
+    with patch("src.kukulkan.message_attachments", return_value=[{"filename": "testfile", "content_type": "text/plain", "content": b"This is content."}]) as ma:
+        with patch("notmuch2.Database", return_value=dbw) as nmdb:
+            with patch("builtins.open", mock_open()) as o:
+                text = None
+                with app.test_client() as test_client:
+                    response = test_client.post('/api/send', data=pd)
+                    assert response.status_code == 202
+                    sid = response.json["send_id"]
+                    assert sid != None
+                    response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
+                    assert response.status_code == 200
+                    status = None
+                    response_iter = response.response.__iter__()
+                    try:
+                        while (chunk := next(response_iter)) is not None:
+                            lines = chunk.decode().strip().split('\n\n')
+                            for line in lines:
+                                if line.startswith('data: '):
+                                    data = json.loads(line[6:])
+                                    if 'send_status' in data and data['send_status'] != 'sending':
+                                        status = data['send_status']
+                                        text = data['send_output']
+                                        break
+                    except StopIteration:
+                        pass
+                    assert status == 0
+                    assert "Content-Type: text/plain; charset=\"utf-8\"" in text
+                    assert "Content-Transfer-Encoding: 7bit" in text
+                    assert "MIME-Version: 1.0" in text
+                    assert "Subject: test" in text
+                    assert "From: Foo Bar <foo@bar.com>" in text
+                    assert "To: bar" in text
+                    assert "Cc:" in text
+                    assert "Bcc:" in text
+                    assert "Date: " in text
+                    assert "Message-ID: <" in text
+                    assert "Content-Transfer-Encoding: base64" in text
+                    assert "Content-Disposition: attachment; filename=\"testfile\"" in text
+                    assert "\nVGhpcyBpcyBjb250ZW50Lg==\n" in text
+                    assert "\n\nfoobar\n" in text
+                o.assert_called_once()
+                args = o.call_args.args
+                assert "kukulkan" in args[0]
+                assert "folder/" in args[0]
+                assert ":2,S" in args[0]
+                assert args[1] == "w"
+                hdl = o()
+                hdl.write.assert_called_once()
+                args = hdl.write.call_args.args
+                assert text == args[0]
 
-    mq = lambda: None
-    mq.search_messages = MagicMock()
-    mq.search_messages.side_effect = [iter([mf]), iter([mf])]
+        ma.assert_called_once_with(mq)
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with patch("src.kukulkan.message_attachments", return_value=[{"filename": "testfile", "content_type": "text/plain", "content": b"This is content."}]) as ma:
-            with patch("notmuch.Database", return_value=dbw):
-                with patch("builtins.open", mock_open()) as m:
-                    text = None
-                    with app.test_client() as test_client:
-                        response = test_client.post('/api/send', data=pd)
-                        assert response.status_code == 202
-                        sid = response.json["send_id"]
-                        assert sid != None
-                        response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
-                        assert response.status_code == 200
-                        status = None
-                        response_iter = response.response.__iter__()
-                        try:
-                            while (chunk := next(response_iter)) is not None:
-                                lines = chunk.decode().strip().split('\n\n')
-                                for line in lines:
-                                    if line.startswith('data: '):
-                                        data = json.loads(line[6:])
-                                        if 'send_status' in data and data['send_status'] != 'sending':
-                                            status = data['send_status']
-                                            text = data['send_output']
-                                            break
-                        except StopIteration:
-                            pass
-                        assert status == 0
-                        assert "Content-Type: text/plain; charset=\"utf-8\"" in text
-                        assert "Content-Transfer-Encoding: 7bit" in text
-                        assert "MIME-Version: 1.0" in text
-                        assert "Subject: test" in text
-                        assert "From: Foo Bar <foo@bar.com>" in text
-                        assert "To: bar" in text
-                        assert "Cc:" in text
-                        assert "Bcc:" in text
-                        assert "Date: " in text
-                        assert "Message-ID: <" in text
-                        assert "Content-Transfer-Encoding: base64" in text
-                        assert "Content-Disposition: attachment; filename=\"testfile\"" in text
-                        assert "\nVGhpcyBpcyBjb250ZW50Lg==\n" in text
-                        assert "\n\nfoobar\n" in text
-                    m.assert_called_once()
-                    args = m.call_args.args
-                    assert "kukulkan" in args[0]
-                    assert "folder" in args[0]
-                    assert ":2,S" in args[0]
-                    assert args[1] == "w"
-                    hdl = m()
-                    hdl.write.assert_called_once()
-                    args = hdl.write.call_args.args
-                    assert text == args[0]
+    db.find.assert_called_once_with("oldFoo")
+    mq.tags.add.assert_called_once_with("passed")
 
-            ma.assert_called_once_with(mf)
+    nmdb.assert_called_once()
 
-        q.assert_has_calls([call(db, 'id:oldFoo'), call(dbw, "id:oldFoo")])
+    assert mf.tags.add.mock_calls == [
+        call('foo'),
+        call('bar'),
+        call('test'),
+        call('sent')
+    ]
 
-    assert mq.search_messages.call_count == 2
-
-    mf.add_tag.assert_called_once_with("passed")
-    mf.tags_to_maildir_flags.assert_called_once()
-
-    mm.maildir_flags_to_tags.assert_called_once()
-    mm.tags_to_maildir_flags.assert_called_once()
-    mm.add_tag.assert_has_calls([call("foo"), call("bar"), call("test"), call("sent")])
-
-    dbw.begin_atomic.assert_called_once()
-    dbw.end_atomic.assert_called_once()
+    dbw.add.assert_called_once()
+    args = dbw.add.call_args.args
+    assert "kukulkan" in args[0]
+    assert "folder/" in args[0]
+    assert ":2,S" in args[0]
+    dbw.messages.assert_called_once_with("id:oldFoo", exclude_tags=[], sort=ANY)
+    dbw.atomic.assert_called_once()
     dbw.close.assert_called_once()
 
 
 def test_send_forward_text_attachment(setup):
     app, db = setup
 
-    mm = lambda: None
-    mm.maildir_flags_to_tags = MagicMock()
-    mm.add_tag = MagicMock()
-    mm.tags_to_maildir_flags = MagicMock()
+    mf = lambda: None
+    mf.tags = lambda: None
+    mf.tags.add = MagicMock()
+
+    mq = lambda: None
+    mq.tags = lambda: None
+    mq.tags.add = MagicMock()
+
+    db.config = {}
+    db.find = MagicMock(return_value=mq)
 
     dbw = lambda: None
     dbw.close = MagicMock()
-    dbw.begin_atomic = MagicMock()
-    dbw.end_atomic = MagicMock()
-    dbw.index_file = MagicMock(return_value=(mm, 0))
+    dbw.atomic = MagicMock()
+    dbw.add = MagicMock(return_value=(mf, 0))
+    dbw.config = {}
+    dbw.messages = MagicMock(return_value=iter([mq]))
 
     pd = {"from": "foo", "to": "bar@bar.com", "cc": "", "bcc": "", "subject": "test",
           "body": "foobar", "action": "forward", "tags": "foo,bar",
@@ -2415,99 +2476,104 @@ def test_send_forward_text_attachment(setup):
                                       "save_sent_to": "folder",
                                       "additional_sent_tags": ["test"]}]
 
-    mf = lambda: None
-    mf.add_tag = MagicMock()
-    mf.tags_to_maildir_flags = MagicMock()
+    with patch("src.kukulkan.message_attachments", return_value=[{"filename": "unnamed attachment", "content_type": "text/plain", "content": "This is content."}]) as ma:
+        with patch("notmuch2.Database", return_value=dbw) as nmdb:
+            with patch("builtins.open", mock_open()) as o:
+                text = None
+                with app.test_client() as test_client:
+                    response = test_client.post('/api/send', data=pd)
+                    assert response.status_code == 202
+                    sid = response.json["send_id"]
+                    assert sid != None
+                    response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
+                    assert response.status_code == 200
+                    status = None
+                    response_iter = response.response.__iter__()
+                    try:
+                        while (chunk := next(response_iter)) is not None:
+                            lines = chunk.decode().strip().split('\n\n')
+                            for line in lines:
+                                if line.startswith('data: '):
+                                    data = json.loads(line[6:])
+                                    if 'send_status' in data and data['send_status'] != 'sending':
+                                        status = data['send_status']
+                                        text = data['send_output']
+                                        break
+                    except StopIteration:
+                        pass
+                    assert status == 0
+                    assert "Content-Type: text/plain; charset=\"utf-8\"" in text
+                    assert "Content-Transfer-Encoding: 7bit" in text
+                    assert "MIME-Version: 1.0" in text
+                    assert "Subject: test" in text
+                    assert "From: Foo Bar <foo@bar.com>" in text
+                    assert "To: bar" in text
+                    assert "Cc:" in text
+                    assert "Bcc:" in text
+                    assert "Date: " in text
+                    assert "Message-ID: <" in text
+                    assert "\n\nfoobar\n" in text
+                    assert "Content-Type: text/plain; charset=\"utf-8\"" in text
+                    assert "Content-Transfer-Encoding: 7bit" in text
+                    assert "Content-Disposition: attachment; filename=\"unnamed attachment\"" in text
+                    assert "MIME-Version: 1.0" in text
+                    assert "\n\nThis is content.\n" in text
+                o.assert_called_once()
+                args = o.call_args.args
+                assert "kukulkan" in args[0]
+                assert "folder/" in args[0]
+                assert ":2,S" in args[0]
+                assert args[1] == "w"
+                hdl = o()
+                hdl.write.assert_called_once()
+                args = hdl.write.call_args.args
+                assert text == args[0]
 
-    mq = lambda: None
-    mq.search_messages = MagicMock()
-    mq.search_messages.side_effect = [iter([mf]), iter([mf])]
+        ma.assert_called_once_with(mq)
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with patch("src.kukulkan.message_attachments", return_value=[{"filename": "unnamed attachment", "content_type": "text/plain", "content": "This is content."}]) as ma:
-            with patch("notmuch.Database", return_value=dbw):
-                with patch("builtins.open", mock_open()) as m:
-                    text = None
-                    with app.test_client() as test_client:
-                        response = test_client.post('/api/send', data=pd)
-                        assert response.status_code == 202
-                        sid = response.json["send_id"]
-                        assert sid != None
-                        response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
-                        assert response.status_code == 200
-                        status = None
-                        response_iter = response.response.__iter__()
-                        try:
-                            while (chunk := next(response_iter)) is not None:
-                                lines = chunk.decode().strip().split('\n\n')
-                                for line in lines:
-                                    if line.startswith('data: '):
-                                        data = json.loads(line[6:])
-                                        if 'send_status' in data and data['send_status'] != 'sending':
-                                            status = data['send_status']
-                                            text = data['send_output']
-                                            break
-                        except StopIteration:
-                            pass
-                        assert status == 0
-                        assert "Content-Type: text/plain; charset=\"utf-8\"" in text
-                        assert "Content-Transfer-Encoding: 7bit" in text
-                        assert "MIME-Version: 1.0" in text
-                        assert "Subject: test" in text
-                        assert "From: Foo Bar <foo@bar.com>" in text
-                        assert "To: bar" in text
-                        assert "Cc:" in text
-                        assert "Bcc:" in text
-                        assert "Date: " in text
-                        assert "Message-ID: <" in text
-                        assert "\n\nfoobar\n" in text
-                        assert "Content-Type: text/plain; charset=\"utf-8\"" in text
-                        assert "Content-Transfer-Encoding: 7bit" in text
-                        assert "Content-Disposition: attachment; filename=\"unnamed attachment\"" in text
-                        assert "MIME-Version: 1.0" in text
-                        assert "\n\nThis is content.\n" in text
-                    m.assert_called_once()
-                    args = m.call_args.args
-                    assert "kukulkan" in args[0]
-                    assert "folder" in args[0]
-                    assert ":2,S" in args[0]
-                    assert args[1] == "w"
-                    hdl = m()
-                    hdl.write.assert_called_once()
-                    args = hdl.write.call_args.args
-                    assert text == args[0]
+    db.find.assert_called_once_with("oldFoo")
+    mq.tags.add.assert_called_once_with("passed")
 
-            ma.assert_called_once_with(mf)
+    nmdb.assert_called_once()
 
-        q.assert_has_calls([call(db, 'id:oldFoo'), call(dbw, "id:oldFoo")])
+    assert mf.tags.add.mock_calls == [
+        call('foo'),
+        call('bar'),
+        call('test'),
+        call('sent')
+    ]
 
-    assert mq.search_messages.call_count == 2
-
-    mf.add_tag.assert_called_once_with("passed")
-    mf.tags_to_maildir_flags.assert_called_once()
-
-    mm.maildir_flags_to_tags.assert_called_once()
-    mm.tags_to_maildir_flags.assert_called_once()
-    mm.add_tag.assert_has_calls([call("foo"), call("bar"), call("test"), call("sent")])
-
-    dbw.begin_atomic.assert_called_once()
-    dbw.end_atomic.assert_called_once()
+    dbw.add.assert_called_once()
+    args = dbw.add.call_args.args
+    assert "kukulkan" in args[0]
+    assert "folder/" in args[0]
+    assert ":2,S" in args[0]
+    dbw.messages.assert_called_once_with("id:oldFoo", exclude_tags=[], sort=ANY)
+    dbw.atomic.assert_called_once()
     dbw.close.assert_called_once()
 
 
 def test_send_forward_original_html(setup):
     app, db = setup
 
-    mm = lambda: None
-    mm.maildir_flags_to_tags = MagicMock()
-    mm.add_tag = MagicMock()
-    mm.tags_to_maildir_flags = MagicMock()
+    mf = lambda: None
+    mf.tags = lambda: None
+    mf.tags.add = MagicMock()
+
+    mq = lambda: None
+    mq.tags = lambda: None
+    mq.tags.add = MagicMock()
+    mq.path = "test/mails/multipart-html-text.eml"
+
+    db.config = {}
+    db.find = MagicMock(return_value=mq)
 
     dbw = lambda: None
     dbw.close = MagicMock()
-    dbw.begin_atomic = MagicMock()
-    dbw.end_atomic = MagicMock()
-    dbw.index_file = MagicMock(return_value=(mm, 0))
+    dbw.atomic = MagicMock()
+    dbw.add = MagicMock(return_value=(mf, 0))
+    dbw.config = {}
+    dbw.messages = MagicMock(return_value=iter([mq]))
 
     pd = {"from": "foo", "to": "bar@bar.com", "cc": "", "bcc": "", "subject": "test",
           "body": "foobar", "action": "forward", "tags": "foo,bar",
@@ -2520,106 +2586,101 @@ def test_send_forward_original_html(setup):
                                       "save_sent_to": "folder",
                                       "additional_sent_tags": ["test"]}]
 
-    mf = lambda: None
-    mf.get_filename = MagicMock(return_value="test/mails/multipart-html-text.eml")
-    mf.add_tag = MagicMock()
-    mf.tags_to_maildir_flags = MagicMock()
-
     # need to do this here before open() is mocked
-    email = k.email_from_notmuch(mf)
+    email = k.email_from_notmuch(mq)
 
-    mq = lambda: None
-    mq.search_messages = MagicMock()
-    mq.search_messages.side_effect = [iter([mf]), iter([mf])]
+    with patch("src.kukulkan.email_from_notmuch", return_value=email) as efn:
+        with patch("notmuch2.Database", return_value=dbw) as nmdb:
+            with patch("builtins.open", mock_open()) as o:
+                text = None
+                with app.test_client() as test_client:
+                    response = test_client.post('/api/send', data=pd)
+                    assert response.status_code == 202
+                    sid = response.json["send_id"]
+                    assert sid != None
+                    response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
+                    assert response.status_code == 200
+                    status = None
+                    response_iter = response.response.__iter__()
+                    try:
+                        while (chunk := next(response_iter)) is not None:
+                            lines = chunk.decode().strip().split('\n\n')
+                            for line in lines:
+                                if line.startswith('data: '):
+                                    data = json.loads(line[6:])
+                                    if 'send_status' in data and data['send_status'] != 'sending':
+                                        status = data['send_status']
+                                        text = data['send_output']
+                                        break
+                    except StopIteration:
+                        pass
+                    assert status == 0
+                    assert "Content-Type: text/plain; charset=\"utf-8\"" in text
+                    assert "Content-Transfer-Encoding: 7bit" in text
+                    assert "MIME-Version: 1.0" in text
+                    assert "Subject: test" in text
+                    assert "From: Foo Bar <foo@bar.com>" in text
+                    assert "To: bar" in text
+                    assert "Cc:" in text
+                    assert "Bcc:" in text
+                    assert "Date: " in text
+                    assert "Message-ID: <" in text
+                    assert "\n\nfoobar\n" in text
+                    assert "Content-Type: text/html; charset=\"utf-8\"" in text
+                    assert "Content-Transfer-Encoding: 7bit" in text
+                    assert "Content-Disposition: attachment" in text
+                    assert "MIME-Version: 1.0" in text
+                    assert "<div dir=3D\"ltr\">credit card: 123456098712<div>" in text
+                o.assert_called_once()
+                args = o.call_args.args
+                assert "kukulkan" in args[0]
+                assert "folder/" in args[0]
+                assert ":2,S" in args[0]
+                assert args[1] == "w"
+                hdl = o()
+                hdl.write.assert_called_once()
+                args = hdl.write.call_args.args
+                assert text == args[0]
 
-    with patch("notmuch.Query", return_value=mq) as q:
-        with patch("src.kukulkan.email_from_notmuch", return_value=email) as efn:
-            with patch("notmuch.Database", return_value=dbw):
-                with patch("builtins.open", mock_open()) as m:
-                    text = None
-                    with app.test_client() as test_client:
-                        response = test_client.post('/api/send', data=pd)
-                        assert response.status_code == 202
-                        sid = response.json["send_id"]
-                        assert sid != None
-                        response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
-                        assert response.status_code == 200
-                        status = None
-                        response_iter = response.response.__iter__()
-                        try:
-                            while (chunk := next(response_iter)) is not None:
-                                lines = chunk.decode().strip().split('\n\n')
-                                for line in lines:
-                                    if line.startswith('data: '):
-                                        data = json.loads(line[6:])
-                                        if 'send_status' in data and data['send_status'] != 'sending':
-                                            status = data['send_status']
-                                            text = data['send_output']
-                                            break
-                        except StopIteration:
-                            pass
-                        assert status == 0
-                        assert "Content-Type: text/plain; charset=\"utf-8\"" in text
-                        assert "Content-Transfer-Encoding: 7bit" in text
-                        assert "MIME-Version: 1.0" in text
-                        assert "Subject: test" in text
-                        assert "From: Foo Bar <foo@bar.com>" in text
-                        assert "To: bar" in text
-                        assert "Cc:" in text
-                        assert "Bcc:" in text
-                        assert "Date: " in text
-                        assert "Message-ID: <" in text
-                        assert "\n\nfoobar\n" in text
-                        assert "Content-Type: text/html; charset=\"utf-8\"" in text
-                        assert "Content-Transfer-Encoding: 7bit" in text
-                        assert "Content-Disposition: attachment" in text
-                        assert "MIME-Version: 1.0" in text
-                        assert "<div dir=3D\"ltr\">credit card: 123456098712<div>" in text
-                    m.assert_called_once()
-                    args = m.call_args.args
-                    assert "kukulkan" in args[0]
-                    assert "folder" in args[0]
-                    assert ":2,S" in args[0]
-                    assert args[1] == "w"
-                    hdl = m()
-                    hdl.write.assert_called_once()
-                    args = hdl.write.call_args.args
-                    assert text == args[0]
+        assert efn.mock_calls == [
+            call(mq),
+            call(mq)
+        ]
 
-            assert efn.mock_calls == [
-                call(mf),
-                call(mf)
-            ]
+    db.find.assert_called_once_with("oldFoo")
+    mq.tags.add.assert_called_once_with("passed")
 
-        q.assert_has_calls([call(db, 'id:oldFoo'), call(dbw, "id:oldFoo")])
+    nmdb.assert_called_once()
 
-    assert mq.search_messages.call_count == 2
+    assert mf.tags.add.mock_calls == [
+        call('foo'),
+        call('bar'),
+        call('test'),
+        call('sent')
+    ]
 
-    mf.add_tag.assert_called_once_with("passed")
-    mf.tags_to_maildir_flags.assert_called_once()
-
-    mm.maildir_flags_to_tags.assert_called_once()
-    mm.tags_to_maildir_flags.assert_called_once()
-    mm.add_tag.assert_has_calls([call("foo"), call("bar"), call("test"), call("sent")])
-
-    dbw.begin_atomic.assert_called_once()
-    dbw.end_atomic.assert_called_once()
+    dbw.add.assert_called_once()
+    args = dbw.add.call_args.args
+    assert "kukulkan" in args[0]
+    assert "folder/" in args[0]
+    assert ":2,S" in args[0]
+    dbw.messages.assert_called_once_with("id:oldFoo", exclude_tags=[], sort=ANY)
+    dbw.atomic.assert_called_once()
     dbw.close.assert_called_once()
 
 
-def test_send_sign(setup):
-    app, db = setup
+def test_send_sign_self(setup):
+    app, _ = setup
 
-    mm = lambda: None
-    mm.maildir_flags_to_tags = MagicMock()
-    mm.add_tag = MagicMock()
-    mm.tags_to_maildir_flags = MagicMock()
+    mf = lambda: None
+    mf.tags = lambda: None
+    mf.tags.add = MagicMock()
 
     dbw = lambda: None
     dbw.close = MagicMock()
-    dbw.begin_atomic = MagicMock()
-    dbw.end_atomic = MagicMock()
-    dbw.index_file = MagicMock(return_value=(mm, 0))
+    dbw.atomic = MagicMock()
+    dbw.add = MagicMock(return_value=(mf, 0))
+    dbw.config = {}
 
     pd = {"from": "foo", "to": "bar@bar.com", "cc": "", "bcc": "", "subject": "test",
           "body": "foobar", "action": "compose", "tags": "foo,bar"}
@@ -2651,8 +2712,8 @@ def test_send_sign(setup):
     mo = mock_open()
     handle = mo.return_value
     handle.read.side_effect = crypto_open_vals
-    with patch("notmuch.Database", return_value=dbw):
-        with patch("builtins.open", mo) as m:
+    with patch("notmuch2.Database", return_value=dbw) as nmdb:
+        with patch("builtins.open", mo) as o:
             text = None
             with app.test_client() as test_client:
                 response = test_client.post('/api/send', data=pd)
@@ -2693,9 +2754,9 @@ def test_send_sign(setup):
                 assert "Content-Transfer-Encoding: base64" in text
                 assert "Content-Disposition: attachment; filename=\"smime.p7s\"" in text
 
-                args = m.call_args.args
+                args = o.call_args.args
                 assert "kukulkan" in args[0]
-                assert "folder" in args[0]
+                assert "folder/" in args[0]
                 assert ":2,S" in args[0]
                 assert args[1] == "w"
 
@@ -2706,143 +2767,43 @@ def test_send_sign(setup):
                         assert signature['valid'] == None
                         assert signature['message'] == 'self-signed or unavailable certificate(s): validation failed: basicConstraints.cA must not be asserted in an EE certificate (encountered processing <Certificate(subject=<Name(C=AU,ST=Some-State,O=Internet Widgits Pty Ltd)>, ...)>)'
 
-            assert m.call_count == 4
-            hdl = m()
+            assert o.call_count == 4
+            hdl = o()
             hdl.write.assert_called_once()
             args = hdl.write.call_args.args
             assert text == args[0]
 
-    mm.maildir_flags_to_tags.assert_called_once()
-    mm.tags_to_maildir_flags.assert_called_once()
-    mm.add_tag.assert_has_calls([call("foo"), call("bar"), call("test"), call("sent")])
+    nmdb.assert_called_once()
 
-    dbw.begin_atomic.assert_called_once()
-    dbw.end_atomic.assert_called_once()
-    dbw.close.assert_called_once()
+    assert mf.tags.add.mock_calls == [
+        call('foo'),
+        call('bar'),
+        call('test'),
+        call('sent')
+    ]
 
-
-def test_send_sign_self(setup):
-    app, db = setup
-
-    mm = lambda: None
-    mm.maildir_flags_to_tags = MagicMock()
-    mm.add_tag = MagicMock()
-    mm.tags_to_maildir_flags = MagicMock()
-
-    dbw = lambda: None
-    dbw.close = MagicMock()
-    dbw.begin_atomic = MagicMock()
-    dbw.end_atomic = MagicMock()
-    dbw.index_file = MagicMock(return_value=(mm, 0))
-
-    pd = {"from": "foo", "to": "bar@bar.com", "cc": "", "bcc": "", "subject": "test",
-          "body": "foobar", "action": "compose", "tags": "foo,bar"}
-
-    try:
-        del app.config.custom["ca-bundle"]
-    except KeyError:
-        pass
-    app.config.custom["accounts"] = [{"id": "foo",
-                                      "name": "Foo Bar",
-                                      "email": "foo@bar.com",
-                                      "key": "test/mails/cert.key",
-                                      "cert": "test/mails/cert.crt",
-                                      "sendmail": "cat",
-                                      "save_sent_to": "folder",
-                                      "additional_sent_tags": ["test"]}]
-
-    crypto_open_vals = []
-    with open(app.config.custom["accounts"][0]["key"], "rb") as tmp:
-        crypto_open_vals.append(tmp.read())
-    with open(app.config.custom["accounts"][0]["cert"], "rb") as tmp:
-        crypto_open_vals.append(tmp.read())
-
-    mo = mock_open()
-    handle = mo.return_value
-    handle.read.side_effect = crypto_open_vals
-    with patch("notmuch.Database", return_value=dbw):
-        with patch("builtins.open", mo) as m:
-            text = None
-            with app.test_client() as test_client:
-                response = test_client.post('/api/send', data=pd)
-                assert response.status_code == 202
-                sid = response.json["send_id"]
-                assert sid != None
-                response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
-                assert response.status_code == 200
-                status = None
-                response_iter = response.response.__iter__()
-                try:
-                    while (chunk := next(response_iter)) is not None:
-                        lines = chunk.decode().strip().split('\n\n')
-                        for line in lines:
-                            if line.startswith('data: '):
-                                data = json.loads(line[6:])
-                                if 'send_status' in data and data['send_status'] != 'sending':
-                                    status = data['send_status']
-                                    text = data['send_output']
-                                    break
-                except StopIteration:
-                    pass
-                assert status == 0
-                assert "Content-Type: text/plain; charset=\"utf-8\"" in text
-                assert "Content-Transfer-Encoding: 7bit" in text
-                assert "MIME-Version: 1.0" in text
-                assert "Subject: test" in text
-                assert "From: Foo Bar <foo@bar.com>" in text
-                assert "To: bar" in text
-                assert "Cc:" in text
-                assert "Bcc:" in text
-                assert "Date: " in text
-                assert "Message-ID: <" in text
-                assert "\n\nfoobar\n" in text
-
-                assert "\n\nThis is an S/MIME signed message\n" in text
-                assert "Content-Type: application/x-pkcs7-signature; name=\"smime.p7s\"" in text
-                assert "Content-Transfer-Encoding: base64" in text
-                assert "Content-Disposition: attachment; filename=\"smime.p7s\"" in text
-
-                email_msg = email.message_from_string(text)
-                for part in email_msg.walk():
-                    if "signed" in part.get('Content-Type') and "pkcs7-signature" in part.get('Content-Type'):
-                        signature = k.smime_verify(part, app.config.custom["accounts"])
-                        assert signature['message'] == 'self-signed or unavailable certificate(s): can\'t create an empty store'
-                        assert signature['valid'] == None
-
-            assert m.call_count == 3
-            args = m.call_args.args
-            assert "kukulkan" in args[0]
-            assert "folder" in args[0]
-            assert ":2,S" in args[0]
-            assert args[1] == "w"
-            hdl = m()
-            hdl.write.assert_called_once()
-            args = hdl.write.call_args.args
-            assert text == args[0]
-
-    mm.maildir_flags_to_tags.assert_called_once()
-    mm.tags_to_maildir_flags.assert_called_once()
-    mm.add_tag.assert_has_calls([call("foo"), call("bar"), call("test"), call("sent")])
-
-    dbw.begin_atomic.assert_called_once()
-    dbw.end_atomic.assert_called_once()
+    dbw.add.assert_called_once()
+    args = dbw.add.call_args.args
+    assert "kukulkan" in args[0]
+    assert "folder/" in args[0]
+    assert ":2,S" in args[0]
+    dbw.atomic.assert_called_once()
     dbw.close.assert_called_once()
 
 
 @pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="Doesn't base64 encode and messes up UTF8.")
 def test_send_sign_base64_transfer(setup):
-    app, db = setup
+    app, _ = setup
 
-    mm = lambda: None
-    mm.maildir_flags_to_tags = MagicMock()
-    mm.add_tag = MagicMock()
-    mm.tags_to_maildir_flags = MagicMock()
+    mf = lambda: None
+    mf.tags = lambda: None
+    mf.tags.add = MagicMock()
 
     dbw = lambda: None
     dbw.close = MagicMock()
-    dbw.begin_atomic = MagicMock()
-    dbw.end_atomic = MagicMock()
-    dbw.index_file = MagicMock(return_value=(mm, 0))
+    dbw.atomic = MagicMock()
+    dbw.add = MagicMock(return_value=(mf, 0))
+    dbw.config = {}
 
     pd = {"from": "foo", "to": "bar@bar.com", "cc": "", "bcc": "", "subject": "test",
           "body": "täst", "action": "compose", "tags": "foo,bar"}
@@ -2869,8 +2830,8 @@ def test_send_sign_base64_transfer(setup):
     mo = mock_open()
     handle = mo.return_value
     handle.read.side_effect = crypto_open_vals
-    with patch("notmuch.Database", return_value=dbw):
-        with patch("builtins.open", mo) as m:
+    with patch("notmuch2.Database", return_value=dbw) as nmdb:
+        with patch("builtins.open", mo) as o:
             text = None
             with app.test_client() as test_client:
                 response = test_client.post('/api/send', data=pd)
@@ -2917,39 +2878,47 @@ def test_send_sign_base64_transfer(setup):
                         signature = k.smime_verify(part, app.config.custom["accounts"])
                         assert signature['message'] == 'self-signed or unavailable certificate(s): can\'t create an empty store'
                         assert signature['valid'] == None
-            assert m.call_count == 3
-            args = m.call_args.args
+            assert o.call_count == 3
+            args = o.call_args.args
             assert "kukulkan" in args[0]
-            assert "folder" in args[0]
+            assert "folder/" in args[0]
             assert ":2,S" in args[0]
             assert args[1] == "w"
-            hdl = m()
+            hdl = o()
             hdl.write.assert_called_once()
             args = hdl.write.call_args.args
             assert text == args[0]
 
-    mm.maildir_flags_to_tags.assert_called_once()
-    mm.tags_to_maildir_flags.assert_called_once()
-    mm.add_tag.assert_has_calls([call("foo"), call("bar"), call("test"), call("sent")])
+    nmdb.assert_called_once()
 
-    dbw.begin_atomic.assert_called_once()
-    dbw.end_atomic.assert_called_once()
+    assert mf.tags.add.mock_calls == [
+        call('foo'),
+        call('bar'),
+        call('test'),
+        call('sent')
+    ]
+
+    dbw.add.assert_called_once()
+    args = dbw.add.call_args.args
+    assert "kukulkan" in args[0]
+    assert "folder/" in args[0]
+    assert ":2,S" in args[0]
+    dbw.atomic.assert_called_once()
     dbw.close.assert_called_once()
 
 
 def test_send_sign_attachment(setup):
-    app, db = setup
+    app, _ = setup
 
-    mm = lambda: None
-    mm.maildir_flags_to_tags = MagicMock()
-    mm.add_tag = MagicMock()
-    mm.tags_to_maildir_flags = MagicMock()
+    mf = lambda: None
+    mf.tags = lambda: None
+    mf.tags.add = MagicMock()
 
     dbw = lambda: None
     dbw.close = MagicMock()
-    dbw.begin_atomic = MagicMock()
-    dbw.end_atomic = MagicMock()
-    dbw.index_file = MagicMock(return_value=(mm, 0))
+    dbw.atomic = MagicMock()
+    dbw.add = MagicMock(return_value=(mf, 0))
+    dbw.config = {}
 
     pd = {"from": "foo", "to": "bar@bar.com", "cc": "", "bcc": "", "subject": "test",
           "body": "foobar", "action": "compose", "tags": "foo,bar"}
@@ -2977,8 +2946,8 @@ def test_send_sign_attachment(setup):
     mo = mock_open()
     handle = mo.return_value
     handle.read.side_effect = crypto_open_vals
-    with patch("notmuch.Database", return_value=dbw):
-        with patch("builtins.open", mo) as m:
+    with patch("notmuch2.Database", return_value=dbw) as nmdb:
+        with patch("builtins.open", mo) as o:
             text = None
             with app.test_client() as test_client:
                 response = test_client.post('/api/send', data=pd)
@@ -3029,39 +2998,56 @@ def test_send_sign_attachment(setup):
                         assert signature['message'] == 'self-signed or unavailable certificate(s): can\'t create an empty store'
                         assert signature['valid'] == None
 
-            assert m.call_count == 3
-            args = m.call_args.args
+            args = o.call_args.args
             assert "kukulkan" in args[0]
-            assert "folder" in args[0]
+            assert "folder/" in args[0]
             assert ":2,S" in args[0]
             assert args[1] == "w"
-            hdl = m()
+            hdl = o()
             hdl.write.assert_called_once()
             args = hdl.write.call_args.args
             assert text == args[0]
 
-    mm.maildir_flags_to_tags.assert_called_once()
-    mm.tags_to_maildir_flags.assert_called_once()
-    mm.add_tag.assert_has_calls([call("foo"), call("bar"), call("test"), call("sent")])
+    nmdb.assert_called_once()
 
-    dbw.begin_atomic.assert_called_once()
-    dbw.end_atomic.assert_called_once()
+    assert mf.tags.add.mock_calls == [
+        call('foo'),
+        call('bar'),
+        call('test'),
+        call('sent')
+    ]
+
+    dbw.add.assert_called_once()
+    args = dbw.add.call_args.args
+    assert "kukulkan" in args[0]
+    assert "folder/" in args[0]
+    assert ":2,S" in args[0]
+    dbw.atomic.assert_called_once()
     dbw.close.assert_called_once()
 
 
 def test_send_sign_reply_cal(setup):
     app, db = setup
 
-    mm = lambda: None
-    mm.maildir_flags_to_tags = MagicMock()
-    mm.add_tag = MagicMock()
-    mm.tags_to_maildir_flags = MagicMock()
+    mf = lambda: None
+    mf.tags = lambda: None
+    mf.tags.add = MagicMock()
+
+    mq = lambda: None
+    mq.tags = lambda: None
+    mq.tags.add = MagicMock()
+    mq.header = MagicMock()
+    mq.header.side_effect = ["oldFoo", None]
+
+    db.config = {}
+    db.find = MagicMock(return_value=mq)
 
     dbw = lambda: None
     dbw.close = MagicMock()
-    dbw.begin_atomic = MagicMock()
-    dbw.end_atomic = MagicMock()
-    dbw.index_file = MagicMock(return_value=(mm, 0))
+    dbw.atomic = MagicMock()
+    dbw.add = MagicMock(return_value=(mf, 0))
+    dbw.config = {}
+    dbw.messages = MagicMock(return_value=iter([mq]))
 
     pd = {"from": "foo", "to": "bar@bar.com", "cc": "", "bcc": "", "subject": "Accept: test",
           "body": "foobar", "action": "reply-cal-accept", "tags": "foo,bar",
@@ -3080,16 +3066,6 @@ def test_send_sign_reply_cal(setup):
                                       "save_sent_to": "folder",
                                       "additional_sent_tags": ["test"]}]
 
-    mf = lambda: None
-    mf.add_tag = MagicMock()
-    mf.tags_to_maildir_flags = MagicMock()
-    mf.get_header = MagicMock()
-    mf.get_header.side_effect = ["oldFoo", None]
-
-    mq = lambda: None
-    mq.search_messages = MagicMock()
-    mq.search_messages.side_effect = [iter([mf]), iter([mf]), iter([mf])]
-
     crypto_open_vals = []
     with open(app.config.custom["accounts"][0]["key"], "rb") as tmp:
         crypto_open_vals.append(tmp.read())
@@ -3099,106 +3075,117 @@ def test_send_sign_reply_cal(setup):
     mo = mock_open()
     handle = mo.return_value
     handle.read.side_effect = crypto_open_vals
-    with patch("notmuch.Query", return_value=mq) as q:
-        with patch("src.kukulkan.message_attachments",
-                   return_value=[{"filename": "unnamed attachment", "content_type": "text/calendar",
-                                  "content": "BEGIN:VCALENDAR\n" +
-                                             "METHOD:REQUEST\n" +
-                                             "BEGIN:VEVENT\n" +
-                                             "UID:6f59364f-987e-48bb-a0d1-5512a2ba5570\n" +
-                                             "SEQUENCE:1\n" +
-                                             "SUMMARY:testevent\n" +
-                                             "ORGANIZER;CN=3DTRUE;CN=3Dunittest;PARTSTAT=3DACCEPTED;ROLE=3DCHAIR:mail=\n" +
-                                             "to:pwulf@tine20.org\n" +
-                                             "ATTENDEE;CN=3DTRUE;PARTSTAT=3DNEEDS-ACTION;ROLE=3DREQ-PARTICIPANT:mailt=\n" +
-                                             "o:unittest@tine20.org\n" +
-                                             "DTSTART;TZID=3DEurope/Berlin:20111101T090000\n" +
-                                             "DTEND;TZID=3DEurope/Berlin:20111101T100000\n" +
-                                             "LOCATION:kskdcsd\n" +
-                                             "DESCRIPTION:adsddsadsd\n" +
-                                             "END:VEVENT\n" +
-                                             "END:VCALENDAR"}]) as ma:
-            with patch("notmuch.Database", return_value=dbw):
-                with patch("builtins.open", mo) as m:
-                    text = None
-                    with app.test_client() as test_client:
-                        response = test_client.post('/api/send', data=pd)
-                        assert response.status_code == 202
-                        sid = response.json["send_id"]
-                        assert sid != None
-                        response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
-                        assert response.status_code == 200
-                        status = None
-                        response_iter = response.response.__iter__()
-                        try:
-                            while (chunk := next(response_iter)) is not None:
-                                lines = chunk.decode().strip().split('\n\n')
-                                for line in lines:
-                                    if line.startswith('data: '):
-                                        data = json.loads(line[6:])
-                                        if 'send_status' in data and data['send_status'] != 'sending':
-                                            status = data['send_status']
-                                            text = data['send_output']
-                                            break
-                        except StopIteration:
-                            pass
-                        assert status == 0
-                        assert "Content-Type: text/plain" in text
-                        assert "Content-Type: multipart/mixed" in text
-                        assert "Content-Transfer-Encoding: 7bit" in text
-                        assert "Subject: Accept: test" in text
-                        assert "From: Foo Bar <unittest@tine20.org>" in text
-                        assert "To: bar" in text
-                        assert "Cc:" in text
-                        assert "Bcc:" in text
-                        assert "Date: " in text
-                        assert "Message-ID: <" in text
-                        assert "In-Reply-To: <oldFoo>" in text
-                        assert "References: <oldFoo>" in text
-                        assert "\n\nfoobar\n" in text
-                        assert "METHOD:REPLY" in text
-                        assert "DTSTAMP:" in text
-                        assert 'ATTENDEE;CN="Foo Bar";PARTSTAT=ACCEPTED:MAILTO:unittest@tine20.org' in text
-                        assert "SUMMARY:Accept: testevent" in text
-                        assert "SEQUENCE:1" in text
-                        assert "UID:6f59364f-987e-48bb-a0d1-5512a2ba5570" in text
+    with patch("src.kukulkan.message_attachments",
+               return_value=[{"filename": "unnamed attachment", "content_type": "text/calendar",
+                              "content": "BEGIN:VCALENDAR\n" +
+                                         "METHOD:REQUEST\n" +
+                                         "BEGIN:VEVENT\n" +
+                                         "UID:6f59364f-987e-48bb-a0d1-5512a2ba5570\n" +
+                                         "SEQUENCE:1\n" +
+                                         "SUMMARY:testevent\n" +
+                                         "ORGANIZER;CN=3DTRUE;CN=3Dunittest;PARTSTAT=3DACCEPTED;ROLE=3DCHAIR:mail=\n" +
+                                         "to:pwulf@tine20.org\n" +
+                                         "ATTENDEE;CN=3DTRUE;PARTSTAT=3DNEEDS-ACTION;ROLE=3DREQ-PARTICIPANT:mailt=\n" +
+                                         "o:unittest@tine20.org\n" +
+                                         "DTSTART;TZID=3DEurope/Berlin:20111101T090000\n" +
+                                         "DTEND;TZID=3DEurope/Berlin:20111101T100000\n" +
+                                         "LOCATION:kskdcsd\n" +
+                                         "DESCRIPTION:adsddsadsd\n" +
+                                         "END:VEVENT\n" +
+                                         "END:VCALENDAR"}]) as ma:
+        with patch("notmuch2.Database", return_value=dbw) as nmdb:
+            with patch("builtins.open", mo) as o:
+                text = None
+                with app.test_client() as test_client:
+                    response = test_client.post('/api/send', data=pd)
+                    assert response.status_code == 202
+                    sid = response.json["send_id"]
+                    assert sid != None
+                    response = test_client.get(f'/api/send_progress/{sid}', headers={'Accept': 'text/event-stream'})
+                    assert response.status_code == 200
+                    status = None
+                    response_iter = response.response.__iter__()
+                    try:
+                        while (chunk := next(response_iter)) is not None:
+                            lines = chunk.decode().strip().split('\n\n')
+                            for line in lines:
+                                if line.startswith('data: '):
+                                    data = json.loads(line[6:])
+                                    if 'send_status' in data and data['send_status'] != 'sending':
+                                        status = data['send_status']
+                                        text = data['send_output']
+                                        break
+                    except StopIteration:
+                        pass
+                    assert status == 0
+                    assert "Content-Type: text/plain" in text
+                    assert "Content-Type: multipart/mixed" in text
+                    assert "Content-Transfer-Encoding: 7bit" in text
+                    assert "Subject: Accept: test" in text
+                    assert "From: Foo Bar <unittest@tine20.org>" in text
+                    assert "To: bar" in text
+                    assert "Cc:" in text
+                    assert "Bcc:" in text
+                    assert "Date: " in text
+                    assert "Message-ID: <" in text
+                    assert "In-Reply-To: <oldFoo>" in text
+                    assert "References: <oldFoo>" in text
+                    assert "\n\nfoobar\n" in text
+                    assert "METHOD:REPLY" in text
+                    assert "DTSTAMP:" in text
+                    assert 'ATTENDEE;CN="Foo Bar";PARTSTAT=ACCEPTED:MAILTO:unittest@tine20.org' in text
+                    assert "SUMMARY:Accept: testevent" in text
+                    assert "SEQUENCE:1" in text
+                    assert "UID:6f59364f-987e-48bb-a0d1-5512a2ba5570" in text
 
-                        assert "\n\nThis is an S/MIME signed message\n" in text
-                        assert "Content-Type: application/x-pkcs7-signature; name=\"smime.p7s\"" in text
-                        assert "Content-Transfer-Encoding: base64" in text
-                        assert "Content-Disposition: attachment; filename=\"smime.p7s\"" in text
+                    assert "\n\nThis is an S/MIME signed message\n" in text
+                    assert "Content-Type: application/x-pkcs7-signature; name=\"smime.p7s\"" in text
+                    assert "Content-Transfer-Encoding: base64" in text
+                    assert "Content-Disposition: attachment; filename=\"smime.p7s\"" in text
 
-                        email_msg = email.message_from_string(text)
-                        for part in email_msg.walk():
-                            if "signed" in part.get('Content-Type') and "pkcs7-signature" in part.get('Content-Type'):
-                                signature = k.smime_verify(part, app.config.custom["accounts"])
-                                assert signature['message'] == 'self-signed or unavailable certificate(s): can\'t create an empty store'
-                                assert signature['valid'] == None
+                    email_msg = email.message_from_string(text)
+                    for part in email_msg.walk():
+                        if "signed" in part.get('Content-Type') and "pkcs7-signature" in part.get('Content-Type'):
+                            signature = k.smime_verify(part, app.config.custom["accounts"])
+                            assert signature['message'] == 'self-signed or unavailable certificate(s): can\'t create an empty store'
+                            assert signature['valid'] == None
 
-                    assert m.call_count == 3
-                    args = m.call_args.args
-                    assert "kukulkan" in args[0]
-                    assert "folder" in args[0]
-                    assert ":2,S" in args[0]
-                    assert args[1] == "w"
-                    hdl = m()
-                    hdl.write.assert_called_once()
-                    args = hdl.write.call_args.args
-                    assert text == args[0]
+                args = o.call_args.args
+                assert "kukulkan" in args[0]
+                assert "folder/" in args[0]
+                assert ":2,S" in args[0]
+                assert args[1] == "w"
+                hdl = o()
+                hdl.write.assert_called_once()
+                args = hdl.write.call_args.args
+                assert text == args[0]
 
-            ma.assert_called_once_with(mf)
+        ma.assert_called_once_with(mq)
 
-        q.assert_has_calls([call(db, 'id:oldFoo'), call(dbw, "id:oldFoo")])
+    assert db.find.mock_calls == [
+        call('oldFoo'),
+        call('oldFoo')
+    ]
+    mq.tags.add.assert_called_once_with("replied")
+    assert mq.header.mock_calls == [
+        call('Message-ID'),
+        call('References')
+    ]
 
-    assert mq.search_messages.call_count == 3
+    nmdb.assert_called_once()
 
-    mf.add_tag.assert_called_once_with("replied")
-    mf.tags_to_maildir_flags.assert_called_once()
+    assert mf.tags.add.mock_calls == [
+        call('foo'),
+        call('bar'),
+        call('test'),
+        call('sent')
+    ]
 
-    mm.maildir_flags_to_tags.assert_called_once()
-    mm.tags_to_maildir_flags.assert_called_once()
-    mm.add_tag.assert_has_calls([call("foo"), call("bar"), call("test"), call("sent")])
-
-    dbw.begin_atomic.assert_called_once()
-    dbw.end_atomic.assert_called_once()
+    dbw.add.assert_called_once()
+    args = dbw.add.call_args.args
+    assert "kukulkan" in args[0]
+    assert "folder/" in args[0]
+    assert ":2,S" in args[0]
+    dbw.messages.assert_called_once_with("id:oldFoo", exclude_tags=[], sort=ANY)
+    dbw.atomic.assert_called_once()
     dbw.close.assert_called_once()
