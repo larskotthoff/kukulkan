@@ -90,7 +90,8 @@ in the array is what to replace it with (leave empty to remove matches).
             "cert": "/path/to/cert.cert", # optional
             "sendmail": "msmtp --account=foo -t",
             "default": "true",
-            "save_sent_to": "/path/to/mail/foo/cur/", # where should saved mail be put
+            # where to save sent mail -- if missing, use database.path from the notmuch config
+            "save_sent_to": "/path/to/mail/foo/cur/",
             "additional_sent_tags": [ "foo" ] # tags to apply in addition to the ones specified in the user interface
         },
 

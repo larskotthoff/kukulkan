@@ -577,7 +577,18 @@ def create_app() -> Flask:
                 send_output = out.decode("utf8") + err.decode("utf8")
 
                 if p.returncode == 0:
-                    fname = f'{account["save_sent_to"]}{msg_id[1:-1]}:2,S'
+                    prefix = ""
+                    try:
+                        prefix = account["save_sent_to"]
+                    except KeyError:
+                        try:
+                            db = notmuch2.Database()
+                            prefix = db.config["database.path"]
+                        except KeyError:
+                            pass
+                        finally:
+                            db.close()
+                    fname = os.path.join(prefix, f"{msg_id[1:-1]}:2,S")
                     with open(fname, "w", encoding="utf8") as f:
                         f.write(msg.as_string(policy=policy))
 
