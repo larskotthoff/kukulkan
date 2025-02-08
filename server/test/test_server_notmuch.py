@@ -176,8 +176,9 @@ def test_message_raw(setup):
 
 def test_change_tag_message(setup):
     app = setup
+    q = "id:874llc2bkp.fsf@curie.anarc.at"
     db = notmuch2.Database()
-    iter = db.messages("id:874llc2bkp.fsf@curie.anarc.at")
+    iter = db.messages(q)
     assert list(next(iter).tags) == ["attachment", "inbox", "unread"]
     db.close()
 
@@ -185,22 +186,23 @@ def test_change_tag_message(setup):
         response = test_client.get('/api/tag/remove/message/874llc2bkp.fsf@curie.anarc.at/unread')
         assert response.status_code == 200
         db = notmuch2.Database()
-        iter = db.messages("id:874llc2bkp.fsf@curie.anarc.at")
+        iter = db.messages(q)
         assert list(next(iter).tags) == ["attachment", "inbox"]
         db.close()
 
         response = test_client.get('/api/tag/add/message/874llc2bkp.fsf@curie.anarc.at/foobar')
         assert response.status_code == 200
         db = notmuch2.Database()
-        iter = db.messages("id:874llc2bkp.fsf@curie.anarc.at")
+        iter = db.messages(q)
         assert list(next(iter).tags) == ["attachment", "foobar", "inbox"]
         db.close()
 
 
 def test_change_tag_message_batch(setup):
     app = setup
+    q = "id:874llc2bkp.fsf@curie.anarc.at"
     db = notmuch2.Database()
-    iter = db.messages("id:874llc2bkp.fsf@curie.anarc.at")
+    iter = db.messages(q)
     assert list(next(iter).tags) == ["attachment", "inbox", "unread"]
     db.close()
 
@@ -208,15 +210,16 @@ def test_change_tag_message_batch(setup):
         response = test_client.get('/api/tag_batch/message/874llc2bkp.fsf@curie.anarc.at/-unread foobar')
         assert response.status_code == 200
         db = notmuch2.Database()
-        iter = db.messages("id:874llc2bkp.fsf@curie.anarc.at")
+        iter = db.messages(q)
         assert list(next(iter).tags) == ["attachment", "foobar", "inbox"]
         db.close()
 
 
 def test_change_tag_thread(setup):
     app = setup
+    q = "from:stefan@datenfreihafen.org"
     db = notmuch2.Database()
-    threads = list(db.threads("from:stefan@datenfreihafen.org"))
+    threads = list(db.threads(q))
     assert list(threads[0].tags) == ["inbox", "unread"]
     id = threads[0].threadid
     db.close()
@@ -225,22 +228,23 @@ def test_change_tag_thread(setup):
         response = test_client.get(f'/api/tag/remove/thread/{id}/unread')
         assert response.status_code == 200
         db = notmuch2.Database()
-        threads = list(db.threads("from:stefan@datenfreihafen.org"))
+        threads = list(db.threads(q))
         assert list(threads[0].tags) == ["inbox"]
         db.close()
 
         response = test_client.get(f'/api/tag/add/thread/{id}/foobar')
         assert response.status_code == 200
         db = notmuch2.Database()
-        threads = list(db.threads("from:stefan@datenfreihafen.org"))
+        threads = list(db.threads(q))
         assert list(threads[0].tags) == ["foobar", "inbox"]
         db.close()
 
 
 def test_change_tag_thread_batch(setup):
     app = setup
+    q = "from:stefan@datenfreihafen.org"
     db = notmuch2.Database()
-    threads = list(db.threads("from:stefan@datenfreihafen.org"))
+    threads = list(db.threads(q))
     assert list(threads[0].tags) == ["inbox", "unread"]
     id = threads[0].threadid
     db.close()
@@ -249,7 +253,7 @@ def test_change_tag_thread_batch(setup):
         response = test_client.get(f'/api/tag_batch/thread/{id}/-unread foobar')
         assert response.status_code == 200
         db = notmuch2.Database()
-        threads = list(db.threads("from:stefan@datenfreihafen.org"))
+        threads = list(db.threads(q))
         assert list(threads[0].tags) == ["foobar", "inbox"]
         db.close()
 
