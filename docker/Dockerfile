@@ -14,6 +14,7 @@ RUN apt-get update -qq && apt-get install -y --no-install-recommends \
     gunicorn \
     nodejs \
     npm \
+    gcc \
     && rm -rf /var/lib/apt/lists/*
 
 RUN cd \
