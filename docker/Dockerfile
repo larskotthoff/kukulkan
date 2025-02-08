@@ -14,7 +14,7 @@ RUN apt-get update -qq && apt-get install -y --no-install-recommends \
     gunicorn \
     nodejs \
     npm \
-    build-essential python3-dev \
+    build-essential python-dev \
     && rm -rf /var/lib/apt/lists/*
 
 RUN cd \
