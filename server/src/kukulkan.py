@@ -226,8 +226,7 @@ def create_app() -> Flask:
         else os.path.join(os.getenv("HOME", ""), ".config")
     )
     try:
-        # type: ignore[arg-type]
-        with open(os.path.join(config_path, "kukulkan", "config"), "r", encoding="utf8") as f:
+        with open(os.path.join(config_path, "kukulkan", "config"), "r", encoding="utf8") as f: # type: ignore[arg-type]
             app.config.custom = json.load(f) # type: ignore[attr-defined]
     except FileNotFoundError:
         app.logger.warning("Configuration file not found, setting empty config.")
