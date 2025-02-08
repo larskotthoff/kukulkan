@@ -7,7 +7,7 @@ Flask-Compress
 icalendar
 lxml
 lxml_html_clean
-notmuch
+notmuch2
 pytest
 python_dateutil
 Werkzeug

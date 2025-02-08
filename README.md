@@ -90,7 +90,8 @@ in the array is what to replace it with (leave empty to remove matches).
             "cert": "/path/to/cert.cert", # optional
             "sendmail": "msmtp --account=foo -t",
             "default": "true",
-            "save_sent_to": "/path/to/mail/foo/cur/", # where should saved mail be put
+            # where to save sent mail -- if missing, use database.path from the notmuch config
+            "save_sent_to": "/path/to/mail/foo/cur/",
             "additional_sent_tags": [ "foo" ] # tags to apply in addition to the ones specified in the user interface
         },
 
@@ -267,10 +268,9 @@ box is determined by the temporal order in the thread, the x position by the
 fiber it belongs to. All but the active fiber (whose messages are shown) are
 shown with reduced opacity.
 
-Deleted messages will be shown with a body of "(deleted message)", unless
-there's only a single deleted message in the thread. You can still get the
-message by either removing the "deleted" tag or by opening the message view
-(e.g. through the "print" shortcut/icon).
+Deleted messages will be shown with a body of "(deleted message)". You can still
+get the message by either removing the "deleted" tag or by opening the message
+view (e.g. through the "print" shortcut/icon).
 
 Shortcuts:
 - Home/1: go to first message in fiber
