@@ -225,14 +225,14 @@ def test_change_tag_thread(setup):
         response = test_client.get(f'/api/tag/remove/thread/{id}/unread')
         assert response.status_code == 200
         db = notmuch2.Database()
-        threads = list(db.threads("to:notmuch"))
+        threads = list(db.threads("from:stefan@datenfreihafen.org"))
         assert list(threads[0].tags) == ["inbox"]
         db.close()
 
         response = test_client.get(f'/api/tag/add/thread/{id}/foobar')
         assert response.status_code == 200
         db = notmuch2.Database()
-        threads = list(db.threads("to:notmuch"))
+        threads = list(db.threads("from:stefan@datenfreihafen.org"))
         assert list(threads[0].tags) == ["foobar", "inbox"]
         db.close()
 
@@ -249,7 +249,7 @@ def test_change_tag_thread_batch(setup):
         response = test_client.get(f'/api/tag_batch/thread/{id}/-unread foobar')
         assert response.status_code == 200
         db = notmuch2.Database()
-        threads = list(db.threads("to:notmuch"))
+        threads = list(db.threads("from:stefan@datenfreihafen.org"))
         assert list(threads[0].tags) == ["foobar", "inbox"]
         db.close()
 
