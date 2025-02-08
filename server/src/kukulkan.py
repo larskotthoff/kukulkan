@@ -226,7 +226,7 @@ def create_app() -> Flask:
         else os.path.join(os.getenv("HOME", ""), ".config")
     )
     try:
-        with open(f"{config_path}{os.path.sep}kukulkan{os.path.sep}config", "r", encoding="utf8") as f:
+        with open(os.path.join(config_path, "kukulkan", "config"), "r", encoding="utf8") as f:
             app.config.custom = json.load(f) # type: ignore[attr-defined]
     except FileNotFoundError:
         app.logger.warning("Configuration file not found, setting empty config.")
@@ -383,7 +383,7 @@ def create_app() -> Flask:
             dbw.close()
         return f"{escape(nids)}/{escape(tags)}"
 
-    @app.route("/api/tag/<op>/<string:typ>/<string:nid>/<string:tag>")
+    @app.route("/api/tag/<string:op>/<string:typ>/<string:nid>/<string:tag>")
     def change_tag(op: str, typ: str, nid: str, tag: str, dbw: Optional[notmuch2.Database] = None) -> str:
         # pylint: disable=no-member
         id_type = 'id' if typ == "message" else typ
@@ -654,14 +654,14 @@ def thread_to_json(t: notmuch2.Thread) -> Dict[str, Any]:
         authors[get_header(msg, "from")] = 1
         for tag in msg.tags:
             tags[tag] = 1
-    authors = list(authors.keys())
-    tags = list(tags.keys())
+    author_list = list(authors.keys())
+    tag_list = list(tags.keys())
     return {
-        "authors": authors,
+        "authors": author_list,
         "newest_date": get_header(msgs[-1], "date"),
         "oldest_date": get_header(msgs[0], "date"),
-        "subject": t.subject if t.subject else "(no subject)",
-        "tags": tags,
+        "subject": t.subject.replace('\t', ' ') if t.subject else "(no subject)",
+        "tags": tag_list,
         "thread_id": t.threadid,
         "total_messages": len(msgs)
     }
