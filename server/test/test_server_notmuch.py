@@ -216,7 +216,7 @@ def test_change_tag_message_batch(setup):
 def test_change_tag_thread(setup):
     app = setup
     db = notmuch2.Database()
-    threads = list(db.threads("to:notmuch"))
+    threads = list(db.threads("from:stefan@datenfreihafen.org"))
     assert list(threads[0].tags) == ["inbox", "unread"]
     id = threads[0].threadid
     db.close()
@@ -240,7 +240,7 @@ def test_change_tag_thread(setup):
 def test_change_tag_thread_batch(setup):
     app = setup
     db = notmuch2.Database()
-    threads = list(db.threads("to:notmuch"))
+    threads = list(db.threads("from:stefan@datenfreihafen.org"))
     assert list(threads[0].tags) == ["inbox", "unread"]
     id = threads[0].threadid
     db.close()
