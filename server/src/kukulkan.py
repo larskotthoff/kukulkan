@@ -133,7 +133,7 @@ class QTYP(enum.Enum):
     THREADS = 1
 
 
-def get_query(typ: QTYP, query_string: str, db: Optional[notmuch2.Database] = None, exclude: bool = True) -> Generator[notmuch2.Message|notmuch2.Thread]:
+def get_query(typ: QTYP, query_string: str, db: Optional[notmuch2.Database] = None, exclude: bool = True) -> Generator[notmuch2.Message|notmuch2.Thread, None, None]:
     """Get messages or threads matching a query, along with the number matching."""
     db = get_db() if db is None else db
     excluded = []
