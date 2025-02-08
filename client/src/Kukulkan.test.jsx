@@ -99,6 +99,16 @@ test("general shortcuts work", async () => {
   expect(window.open).toHaveBeenCalledWith('/write', '_self');
 });
 
+test("shortcuts that expect selection don't break if nothing selected", async () => {
+  const { container } = render(() => <Kukulkan Threads={SearchThreads}/>);
+  await vi.waitFor(() => {
+    expect(container.querySelector("input")).not.toBe(null);
+  });
+  await userEvent.type(document.body, "d");
+  await userEvent.type(document.body, "t");
+  await userEvent.type(document.body, "{delete}");
+});
+
 test("provides tag completions", async () => {
   const { container } = render(() => <Kukulkan Threads={SearchThreads}/>);
   await vi.waitFor(() => {

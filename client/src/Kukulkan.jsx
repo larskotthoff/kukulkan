@@ -123,23 +123,27 @@ export function Kukulkan(props) {
   mkShortcut([["t"]], tagActive, true);
 
   function deleteActive() {
-    setEditingTags("deleted -unread");
-    makeTagEdits();
+    if(threads().length > 0) {
+      setEditingTags("deleted -unread");
+      makeTagEdits();
+    }
   }
 
   // eslint-disable-next-line solid/reactivity
   mkShortcut([["Delete"]], deleteActive, true);
 
   function doneActive() {
-    let edits = "-todo",
-        affectedThreads = selectedThreads();
-    if(affectedThreads.length === 0) affectedThreads = [activeThread()];
-    affectedThreads.forEach(affectedThread => {
-      let due = threads()[affectedThread].tags.find((tag) => tag.startsWith("due:"));
-      if(due) edits += " -" + due;
-    });
-    setEditingTags(edits);
-    makeTagEdits();
+    if(threads().length > 0) {
+      let edits = "-todo",
+          affectedThreads = selectedThreads();
+      if(affectedThreads.length === 0) affectedThreads = [activeThread()];
+      affectedThreads.forEach(affectedThread => {
+        let due = threads()[affectedThread].tags.find((tag) => tag.startsWith("due:"));
+        if(due) edits += " -" + due;
+      });
+      setEditingTags(edits);
+      makeTagEdits();
+    }
   }
 
   // eslint-disable-next-line solid/reactivity
