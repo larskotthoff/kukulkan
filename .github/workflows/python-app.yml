@@ -29,7 +29,7 @@ jobs:
         python-version: "3.11"
     - name: Install dependencies
       run: |
-        sudo apt-get install -y notmuch
+        sudo apt-get install -y notmuch python3-notmuch
         python -m pip install --upgrade pip
         pip install flake8 pytest mypy
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
