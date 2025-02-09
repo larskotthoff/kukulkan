@@ -65,31 +65,31 @@ def test_query(setup):
     mm1 = lambda: None
     mm1.tags = ["footag"]
     mm1.date = 0
+    mm1.threadid = "id"
     mm1.header = MagicMock()
-    mm1.header.side_effect = ["foo bar <foo@bar.com>", "foosubject"]
+    mm1.header.side_effect = ["foosubject", "foo bar <foo@bar.com>"]
     mm2 = lambda: None
     mm2.date = 1
     mm2.tags = ["footag", "bartag"]
+    mm2.threadid = "id"
     mm2.header = MagicMock()
     mm2.header.side_effect = ["bar foo <bar@foo.com>"]
     mm3 = lambda: None
     mm3.date = 2
     mm3.tags = ["foobartag"]
+    mm3.threadid = "id"
     mm3.header = MagicMock()
     mm3.header.side_effect = ["bar\tfoo <bar@foo.com>"]
 
-    mt = MagicMock()
-    mt.threadid = "id"
-
     db.config = {}
     db.messages = MagicMock()
-    db.messages.side_effect = [iter([mt]), iter([mm1, mm2, mm3])]
+    db.messages.side_effect = [iter([mm1, mm2, mm3])]
 
     with app.test_client() as test_client:
         response = test_client.get('/api/query/foo')
         assert response.status_code == 200
         thrds = json.loads(response.data.decode())
-        assert thrds[0]["authors"] == ["foo bar <foo@bar.com>", "bar foo <bar@foo.com>"]
+        assert thrds[0]["authors"] == ["bar foo <bar@foo.com>", "foo bar <foo@bar.com>"]
         #assert thrds[0]["newest_date"] == "Wed Dec 31 17:00:02 1969"
         #assert thrds[0]["oldest_date"] == "Wed Dec 31 17:00:00 1969"
         assert thrds[0]["subject"] == "foosubject"
@@ -99,11 +99,10 @@ def test_query(setup):
         assert thrds[0]["total_messages"] == 3
 
     assert db.messages.mock_calls == [
-        call('foo', exclude_tags=[], sort=notmuch2.Database.SORT.NEWEST_FIRST),
-        call('thread:id', exclude_tags=[], sort=notmuch2.Database.SORT.OLDEST_FIRST)
+        call('thread:"{foo}"', exclude_tags=[], sort=notmuch2.Database.SORT.NEWEST_FIRST)
     ]
 
-    mm1.header.assert_has_calls([call("from"), call("subject")])
+    mm1.header.assert_has_calls([call("subject"), call("from")])
     mm2.header.assert_has_calls([call("from")])
     mm3.header.assert_has_calls([call("from")])
 
@@ -114,15 +113,13 @@ def test_query_empty(setup):
     mm1 = lambda: None
     mm1.tags = ["footag"]
     mm1.date = 0
+    mm1.threadid = "id"
     mm1.header = MagicMock()
     mm1.header.side_effect = [None, None]
 
-    mt = MagicMock()
-    mt.threadid = "id"
-
     db.config = {}
     db.messages = MagicMock()
-    db.messages.side_effect = [iter([mt]), iter([mm1])]
+    db.messages.side_effect = [iter([mm1])]
 
     with app.test_client() as test_client:
         response = test_client.get('/api/query/foo')
@@ -137,11 +134,10 @@ def test_query_empty(setup):
         assert thrds[0]["total_messages"] == 1
 
     assert db.messages.mock_calls == [
-        call('foo', exclude_tags=[], sort=notmuch2.Database.SORT.NEWEST_FIRST),
-        call('thread:id', exclude_tags=[], sort=notmuch2.Database.SORT.OLDEST_FIRST)
+        call('thread:"{foo}"', exclude_tags=[], sort=notmuch2.Database.SORT.NEWEST_FIRST)
     ]
 
-    mm1.header.assert_has_calls([call("from"), call("subject")])
+    mm1.header.assert_has_calls([call("subject"), call("from")])
 
 
 def test_query_none(setup):
@@ -155,7 +151,22 @@ def test_query_none(setup):
         assert response.status_code == 200
         assert b'[]\n' == response.data
 
-    db.messages.assert_called_once_with("foo", exclude_tags=[],
+    db.messages.assert_called_once_with('thread:"{foo}"', exclude_tags=[],
+                                        sort=notmuch2.Database.SORT.NEWEST_FIRST)
+
+
+def test_query_escaped_quotes(setup):
+    app, db = setup
+
+    db.config = {}
+    db.messages = MagicMock(return_value=iter([]))
+
+    with app.test_client() as test_client:
+        response = test_client.get('/api/query/"foo bar"')
+        assert response.status_code == 200
+        assert b'[]\n' == response.data
+
+    db.messages.assert_called_once_with('thread:"{""foo bar""}"', exclude_tags=[],
                                         sort=notmuch2.Database.SORT.NEWEST_FIRST)
 
 
@@ -170,7 +181,7 @@ def test_query_exclude_tags(setup):
         assert response.status_code == 200
         assert b'[]\n' == response.data
 
-    db.messages.assert_called_once_with("foo", exclude_tags=["foo", "bar"],
+    db.messages.assert_called_once_with('thread:"{foo}"', exclude_tags=["foo", "bar"],
                                         sort=notmuch2.Database.SORT.NEWEST_FIRST)
 
 

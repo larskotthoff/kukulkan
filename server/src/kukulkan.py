@@ -281,11 +281,35 @@ def create_app() -> Flask:
 
     @app.route("/api/query/<string:query_string>")
     def query(query_string: str) -> List[Dict[str, Any]]:
-        tmp = get_query(query_string)
+        msgs = get_query('thread:"{' + query_string.replace('"', '""') + '}"')
+        # using dicts here to get everything in the order in which it occured
         threads = {}
-        for msg in tmp:
-            threads[msg.threadid] = 1
-        return [thread_to_json(t) for t in list(threads.keys())]
+        for msg in msgs:
+            if msg.threadid not in threads:
+                subject = get_header(msg, "subject")
+                threads[msg.threadid] = {
+                    "authors": {},
+                    "newest_date": datetime.datetime.fromtimestamp(msg.date).strftime("%c"),
+                    "subject": subject if subject else "(no subject)",
+                    "tags": {},
+                    "thread_id": msg.threadid,
+                    "total_messages": 0
+                }
+            threads[msg.threadid]["authors"][get_header(msg, "from")] = 1
+            threads[msg.threadid]["oldest_date"] = msg.date
+            threads[msg.threadid]["total_messages"] += 1
+            for tag in msg.tags:
+                threads[msg.threadid]["tags"][tag] = 1
+
+        return [{"authors": list(threads[t]["authors"].keys())[::-1],
+                 "newest_date": threads[t]["newest_date"],
+                 "oldest_date": datetime.datetime.fromtimestamp(threads[t]["oldest_date"]).strftime("%c"),
+                 "subject": threads[t]["subject"],
+                 "tags": list(threads[t]["tags"].keys()),
+                 "thread_id": threads[t]["thread_id"],
+                 "total_messages": threads[t]["total_messages"]
+             } for t in list(threads.keys()) ]
+
 
     @app.route("/api/address/<string:query_string>")
     def address_complete(query_string: str) -> List[str]:
@@ -631,40 +655,6 @@ def create_app() -> Flask:
         return Response(generate(), mimetype='text/event-stream')
 
     return app
-
-
-def thread_to_json(t: str) -> Dict[str, Any]:
-    """Converts a thread to a JSON object."""
-    # this may seem like a roundabout way to do this, but it's much faster than
-    # getting the threads through notmuch
-    msgs = get_query(f"thread:{t}", sort=notmuch2.Database.SORT.OLDEST_FIRST)
-    # using dicts here to get everything in the right order
-    authors = {}
-    tags = {}
-    num = 0
-    oldest_date = 0
-    newest_date = 0
-    subject = None
-    for msg in msgs:
-        num += 1
-        authors[get_header(msg, "from")] = 1
-        newest_date = msg.date
-        if num == 1:
-            oldest_date = newest_date
-            subject = get_header(msg, "subject")
-        for tag in msg.tags:
-            tags[tag] = 1
-    author_list = list(authors.keys())
-    tag_list = list(tags.keys())
-    return {
-        "authors": author_list,
-        "newest_date": datetime.datetime.fromtimestamp(newest_date).strftime("%c"),
-        "oldest_date": datetime.datetime.fromtimestamp(oldest_date).strftime("%c"),
-        "subject": subject if subject else "(no subject)",
-        "tags": tag_list,
-        "thread_id": t,
-        "total_messages": num
-    }
 
 
 def strip_tags(soup: BeautifulSoup) -> None:
