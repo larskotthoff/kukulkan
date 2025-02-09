@@ -7,7 +7,6 @@ import os
 import subprocess
 import threading
 import queue
-import enum
 
 import json
 import re
@@ -137,7 +136,7 @@ def get_query(query_string: str, sort: Any = notmuch2.Database.SORT.NEWEST_FIRST
                         if tag != '']
         except KeyError:
             pass
-    return(db.messages(query_string, exclude_tags=excluded, sort=sort))
+    return db.messages(query_string, exclude_tags=excluded, sort=sort)
 
 
 def get_message(message_id: str) -> notmuch2.Message:
