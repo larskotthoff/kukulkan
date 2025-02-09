@@ -127,14 +127,8 @@ def get_db() -> notmuch2.Database:
     return g.db
 
 
-class QTYP(enum.Enum):
-    """What should the query return?"""
-    MESSAGES = 0
-    THREADS = 1
-
-
-def get_query(typ: QTYP, query_string: str, db: Optional[notmuch2.Database] = None, exclude: bool = True) -> Generator[notmuch2.Message|notmuch2.Thread, None, None]:
-    """Get messages or threads matching a query, along with the number matching."""
+def get_query(query_string: str, sort: Any = notmuch2.Database.SORT.NEWEST_FIRST, db: Optional[notmuch2.Database] = None, exclude: bool = True) -> Generator[notmuch2.Message, None, None]:
+    """Get messages matching a query."""
     db = get_db() if db is None else db
     excluded = []
     if exclude:
@@ -143,16 +137,7 @@ def get_query(typ: QTYP, query_string: str, db: Optional[notmuch2.Database] = No
                         if tag != '']
         except KeyError:
             pass
-    if typ == QTYP.MESSAGES:
-        it = db.messages(query_string,
-                         exclude_tags=excluded,
-                         sort=notmuch2.Database.SORT.OLDEST_FIRST)
-    elif typ == QTYP.THREADS:
-        it = db.threads(query_string,
-                        exclude_tags=excluded,
-                        sort=notmuch2.Database.SORT.NEWEST_FIRST)
-    # pylint: disable=possibly-used-before-assignment
-    return it
+    return(db.messages(query_string, exclude_tags=excluded, sort=sort))
 
 
 def get_message(message_id: str) -> notmuch2.Message:
@@ -190,7 +175,7 @@ def email_address_complete(query_string: str) -> Dict[str, str]:
     qs = query_string.casefold()
     addrs: Dict[str, str] = {}
     i = 0
-    msgs = get_query(QTYP.MESSAGES, f"from:{query_string} or to:{query_string}")
+    msgs = get_query(f"from:{query_string} or to:{query_string}")
     for msg in msgs:
         for header in ['from', 'to', 'cc', 'bcc']:
             value = get_header(msg, header) # type: ignore[arg-type]
@@ -297,8 +282,11 @@ def create_app() -> Flask:
 
     @app.route("/api/query/<string:query_string>")
     def query(query_string: str) -> List[Dict[str, Any]]:
-        threads = get_query(QTYP.THREADS, query_string)
-        return [thread_to_json(t) for t in threads] # type: ignore[arg-type]
+        tmp = get_query(query_string)
+        threads = {}
+        for msg in tmp:
+            threads[msg.threadid] = 1
+        return [thread_to_json(t) for t in list(threads.keys())]
 
     @app.route("/api/address/<string:query_string>")
     def address_complete(query_string: str) -> List[str]:
@@ -310,7 +298,9 @@ def create_app() -> Flask:
 
     @app.route("/api/thread/<string:thread_id>")
     def thread(thread_id: str) -> Any:
-        msgs = get_query(QTYP.MESSAGES, f'thread:{thread_id}', exclude=False)
+        msgs = get_query(f'thread:{thread_id}',
+                         sort=notmuch2.Database.SORT.OLDEST_FIRST,
+                         exclude=False)
         return [message_to_json(m) for m in msgs] # type: ignore[arg-type]
 
     @app.route("/api/attachment/<string:message_id>/<int:num>")
@@ -395,7 +385,7 @@ def create_app() -> Flask:
         else:
             should_close = False
         try:
-            for msg in get_query(QTYP.MESSAGES, query, dbw):
+            for msg in get_query(query, db=dbw):
                 with msg.frozen(): # type: ignore[union-attr]
                     if op == "add":
                         msg.tags.add(tag) # type: ignore[union-attr]
@@ -600,7 +590,7 @@ def create_app() -> Flask:
                                     reftag = "replied"
                                 elif ra == "forward":
                                     reftag = "passed"
-                                ref_msgs = get_query(QTYP.MESSAGES, f"id:{rr}", db_write)
+                                ref_msgs = get_query(f"id:{rr}", db=db_write)
                                 for ref_msg in ref_msgs:
                                     # pylint: disable=possibly-used-before-assignment
                                     ref_msg.tags.add(reftag) # type: ignore[union-attr]
@@ -644,26 +634,37 @@ def create_app() -> Flask:
     return app
 
 
-def thread_to_json(t: notmuch2.Thread) -> Dict[str, Any]:
-    """Converts a `notmuch2.Thread` to a JSON object."""
-    msgs = list(t)
+def thread_to_json(t: str) -> Dict[str, Any]:
+    """Converts a thread to a JSON object."""
+    # this may seem like a roundabout way to do this, but it's much faster than
+    # getting the threads through notmuch
+    msgs = get_query(f"thread:{t}", sort=notmuch2.Database.SORT.OLDEST_FIRST)
     # using dicts here to get everything in the right order
     authors = {}
     tags = {}
+    num = 0
+    oldest_date = 0
+    newest_date = 0
+    subject = None
     for msg in msgs:
+        num += 1
         authors[get_header(msg, "from")] = 1
+        newest_date = msg.date
+        if num == 1:
+            oldest_date = newest_date
+            subject = get_header(msg, "subject")
         for tag in msg.tags:
             tags[tag] = 1
     author_list = list(authors.keys())
     tag_list = list(tags.keys())
     return {
         "authors": author_list,
-        "newest_date": get_header(msgs[-1], "date"),
-        "oldest_date": get_header(msgs[0], "date"),
-        "subject": t.subject.replace('\t', ' ') if t.subject else "(no subject)",
+        "newest_date": datetime.datetime.fromtimestamp(newest_date).strftime("%c"),
+        "oldest_date": datetime.datetime.fromtimestamp(oldest_date).strftime("%c"),
+        "subject": subject if subject else "(no subject)",
         "tags": tag_list,
-        "thread_id": t.threadid,
-        "total_messages": len(msgs)
+        "thread_id": t,
+        "total_messages": num
     }
 
 
