@@ -1073,7 +1073,7 @@ def message_to_json(msg: notmuch2.Message, get_deleted_body: bool = False) -> Di
                             if verified.valid:
                                 signature = {"valid": True}
                             else:
-                                signature = {"valid": False, "message": verified.status}
+                                signature = {"valid": False, "message": f"{verified.status}, {verified.problems[0]["status"]}"}
                     except Exception as e:
                         current_app.logger.error(f"Exception in gpg_verify: {str(e)}")
                         signature = {"valid": False, "message": "An internal error has occurred."}
