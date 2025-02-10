@@ -22,12 +22,8 @@ render(() => {
 
   return (
   <>
-    <div style={{
-      "width": "100%",
-      "height": "8px",
-      "position": "sticky",
-      "top": "0",
-      "background": progress() === 1 ? "var(--primary-background)" : `linear-gradient(to right, var(--primary-background-darker) ${Math.max(progress(), 0.01) * 100}%, var(--primary-background) 0%)`
+    <div class="progress" style={{
+      "width": progress() === 1 ? 0 : `${Math.max(progress(), 0.01) * 100}%`
     }}/>
     <ErrorBoundary fallback={(error) => <Alert severity="error">Error: {error}<pre>{error.stack}</pre></Alert>}>
       <Router>
