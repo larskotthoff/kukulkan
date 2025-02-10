@@ -1,5 +1,6 @@
 :root {
     --fonts: Fira Sans, Roboto, Hack, sans;
+    --primary-foreground: #558b2f;
     --primary-background: #fff8e1;
     --primary-background-darker: oklch(from var(--primary-background) calc(l * 0.6) c h);
     --secondary-background: #f0f4c3;
@@ -57,8 +58,8 @@ button {
     border-radius: 5px;
     padding: 3px 5px 3px 5px;
     display: flex;
-    color: rgb(85, 139, 47);
-    border-color: rgb(85, 139, 47);
+    color: var(--primary-foreground);
+    border-color: var(--primary-foreground);
 
     background-color: inherit;
     width: inherit;
@@ -76,7 +77,7 @@ button > span {
     position: sticky;
     top: 0;
     left: 0;
-    background: var(--primary-background-darker);
+    background: var(--primary-foreground);
     border-radius: 0 10em 10em 0;
     box-shadow: 0px 1px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 1px 0px rgba(0,0,0,0.12);
 }
@@ -231,7 +232,7 @@ button > span {
 }
 
 .autocomplete-popup > .selected {
-    background-color: rgba(85, 139, 47, 0.4);
+    background-color: rgb(from var(--primary-foreground) r g b / 40%);
 }
 
 .alert {
@@ -310,23 +311,23 @@ button > span {
 }
 
 .thread.active {
-    background-color: rgba(85, 139, 47, 0.4);
+    background-color: rgb(from var(--primary-foreground) r g b / 40%);
 }
 
 .thread.active:hover {
-    background-color: rgba(85, 139, 47, 0.5);
+    background-color: rgb(from var(--primary-foreground) r g b / 50%);
 }
 
 .thread.selected.active {
-    background-color: rgba(85, 139, 47, 0.45);
+    background-color: rgb(from var(--primary-foreground) r g b / 45%);
 }
 
 .thread.selected {
-    background-color: rgba(85, 139, 47, 0.3);
+    background-color: rgb(from var(--primary-foreground) r g b / 30%);
 }
 
 .thread:hover {
-    background-color: rgba(85, 139, 47, 0.2);
+    background-color: rgb(from var(--primary-foreground) r g b / 20%);
 }
 
 .thread.due {
@@ -449,8 +450,8 @@ button > span {
 }
 
 label {
-    color: rgb(85, 139, 47);
-    border-color: rgb(85, 139, 47);
+    color: var(--primary-foreground);
+    border-color: var(--primary-foreground);
 }
 
 .today {
@@ -458,7 +459,7 @@ label {
 }
 
 .weekend {
-    background-color: rgba(85, 139, 47, 0.4);
+    background-color: rgb(from var(--primary-foreground) r g b / 40%);
 }
 
 .sticky {
