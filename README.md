@@ -175,10 +175,6 @@ There are two ways to make this work:
 
 ## Usage
 
-Demo at
-[https://kukulkan-840786380000.us-west1.run.app/](https://kukulkan-840786380000.us-west1.run.app/),
-with the [notmuch mailing list archive](https://nmbug.notmuchmail.org/archive/notmuch-list.tar.xz).
-
 Note that by default, actions that go to a new page (open thread, reply, etc)
 open a new tab, so you may need to allow this. You can change this in settings.
 Also note that whenever an autocompletion popup is visible, Enter selects the
