@@ -1289,7 +1289,7 @@ test("external editing w/ client config override internal", async () => {
   });
   expect(localStorage.getItem("draft-compose-body")).toBe("foobar");
 
-  localStorage.setItem("settings-externalCompose", false);
+  localStorage.setItem("settings-externalCompose", "0");
   await fireEvent.focus(getByTestId("body"));
   await userEvent.type(getByTestId("body"), "foobar");
   expect(getByTestId("body").value).toBe("foobarfoobar");
@@ -1311,7 +1311,7 @@ test("external editing w/ client config override external", async () => {
   expect(getByTestId("body").value).toBe("bar");
   expect(global.fetch).toHaveBeenCalledTimes(0);
 
-  localStorage.setItem("settings-externalCompose", true);
+  localStorage.setItem("settings-externalCompose", "1");
 
   global.fetch.mockResolvedValue({ ok: true, text: () => "foobar" });
 

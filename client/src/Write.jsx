@@ -422,14 +422,14 @@ export function Write(props) {
           ref={setBodyRef}
           data-testid="body"
           onFocus={async (ev) => {
-            if((getSetting("externalCompose") === -1 && data.compose["external-editor"]) || (getSetting("externalCompose") === true)) {
+            if((getSetting("externalCompose") === "-1" && data.compose["external-editor"]) || (getSetting("externalCompose") === "1")) {
               const formData = new FormData();
               formData.append('body', ev.target.value);
 
               ev.target.disabled = true;
               document.getElementById("send").disabled = true;
               ev.target.value = "[Editing externally...]";
-              const url = getSetting("externalCompose") === true ?
+              const url = getSetting("externalCompose") === "1" ?
                 `${window.location.protocol}//localhost:${window.location.port}/api/edit_external` :
                 apiURL("api/edit_external");
               const response = await fetch(url, { method: 'POST', body: formData });

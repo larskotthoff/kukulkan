@@ -15,14 +15,7 @@ export function getSetting(setting) {
         return val === "true";
       }
     case "externalCompose":
-      val = localStorage.getItem("settings-externalCompose");
-      if(val === null) {
-        return -1;
-      } else if(val === "-1") {
-        return -1;
-      } else {
-        return val === "true";
-      }
+      return localStorage.getItem("settings-externalCompose") || "-1";
     case "abbreviateQuoted":
       val = localStorage.getItem("settings-abbreviateQuoted");
       if(val === null) {
@@ -86,10 +79,10 @@ export function Settings() {
           setShowNestedThread(ev.target.value);
           localStorage.setItem("settings-showNestedThread", showNestedThread());
         }}>
-        <option value={true}>
+        <option value="true">
           nested
         </option>
-        <option value={false}>
+        <option value="false">
           flattened
         </option>
       </select> thread on thread page.
@@ -102,13 +95,13 @@ export function Settings() {
           setExternalCompose(ev.target.value);
           localStorage.setItem("settings-externalCompose", externalCompose());
         }}>
-        <option value={-1}>
+        <option value="-1">
           backend configuration
         </option>
-        <option value={false}>
+        <option value="0">
           internal browser editor
         </option>
-        <option value={true}>
+        <option value="1">
           external editor on localhost
         </option>
       </select>.
@@ -121,10 +114,10 @@ export function Settings() {
           setAbbreviateQuoted(ev.target.value);
           localStorage.setItem("settings-abbreviateQuoted", abbreviateQuoted());
         }}>
-        <option value={true}>
+        <option value="true">
           abbreviate with [...]
         </option>
-        <option value={false}>
+        <option value="false">
           show in full
         </option>
       </select> quoted text beyond the first level.
@@ -137,10 +130,10 @@ export function Settings() {
           setShowSerpent(ev.target.value);
           localStorage.setItem("settings-showSerpent", showSerpent());
         }}>
-        <option value={true}>
+        <option value="true">
           Do
         </option>
-        <option value={false}>
+        <option value="false">
           Do not
         </option>
       </select> show Kukulkan background.

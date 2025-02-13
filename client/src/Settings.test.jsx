@@ -20,8 +20,9 @@ test("gets settings", () => {
   expect(getSetting("numQueries")).toBe(10);
   expect(getSetting("openInTab")).toBe("_self");
   expect(getSetting("showNestedThread")).toBe(true);
-  expect(getSetting("externalCompose")).toBe(-1);
+  expect(getSetting("externalCompose")).toBe("-1");
   expect(getSetting("abbreviateQuoted")).toBe(true);
+  expect(getSetting("showSerpent")).toBe(false);
 });
 
 test("shows settings", () => {
@@ -31,6 +32,7 @@ test("shows settings", () => {
   expect(screen.getByTestId("showNestedThread")).toBeInTheDocument();
   expect(screen.getByTestId("externalCompose")).toBeInTheDocument();
   expect(screen.getByTestId("abbreviateQuoted")).toBeInTheDocument();
+  expect(screen.getByTestId("showSerpent")).toBeInTheDocument();
 });
 
 test("allows to change settings", async () => {
@@ -50,13 +52,13 @@ test("allows to change settings", async () => {
   await fireEvent.change(screen.getByTestId("showNestedThread"));
   expect(getSetting("showNestedThread")).toBe(false);
 
-  expect(getSetting("externalCompose")).toBe(-1);
+  expect(getSetting("externalCompose")).toBe("-1");
   screen.getByText("internal browser editor").selected = true;
   await fireEvent.change(screen.getByTestId("externalCompose"));
-  expect(getSetting("externalCompose")).toBe(false);
+  expect(getSetting("externalCompose")).toBe("0");
   screen.getByText("external editor on localhost").selected = true;
   await fireEvent.change(screen.getByTestId("externalCompose"));
-  expect(getSetting("externalCompose")).toBe(true);
+  expect(getSetting("externalCompose")).toBe("1");
 
   expect(getSetting("abbreviateQuoted")).toBe(true);
   screen.getByText("show in full").selected = true;
