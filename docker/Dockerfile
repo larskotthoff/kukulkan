@@ -24,10 +24,9 @@ RUN cd \
     && ./deploy.sh
 
 RUN cd \
-    && mkdir -p .config/kukulkan
-
-RUN cd \
+    && mkdir -p .config/kukulkan \
     && cd kukulkan/docker \
+    && ls \
     && cp .notmuch-config /root/.notmuch-config \
     && config /root/.config/kukulkan/config
 
