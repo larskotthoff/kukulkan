@@ -27,7 +27,7 @@ RUN cd \
     && mkdir -p .config/kukulkan
 
 RUN cd \
-    && cd kukulkan \
+    && cd kukulkan/docker \
     && cp .notmuch-config /root/.notmuch-config \
     && config /root/.config/kukulkan/config
 
