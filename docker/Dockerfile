@@ -26,9 +26,8 @@ RUN cd \
 RUN cd \
     && mkdir -p .config/kukulkan \
     && cd kukulkan/docker \
-    && ls \
     && cp .notmuch-config /root/.notmuch-config \
-    && config /root/.config/kukulkan/config
+    && cp config /root/.config/kukulkan/config
 
 RUN cd \
     && wget https://nmbug.notmuchmail.org/archive/notmuch-list.tar.xz \
