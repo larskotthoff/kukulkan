@@ -133,7 +133,7 @@ def get_query(query_string: str, sort: Any = notmuch2.Database.SORT.NEWEST_FIRST
     if exclude:
         try:
             excluded = [tag for tag in db.config["search.exclude_tags"].split(';')
-                        if tag != '']
+                        if tag != '' and f'tag:{tag}' not in query_string]
         except KeyError:
             pass
     return db.messages(query_string, exclude_tags=excluded, sort=sort)

@@ -14,11 +14,37 @@ def setup():
     conf = "test/mails/.notmuch-config"
     os.environ["NOTMUCH_CONFIG"] = conf
     with open(conf, "w", encoding="utf8") as f:
-        f.write(f'[database]\npath={os.path.join(wd, "test/mails/")}')
+        f.write(f'[database]\npath={os.path.join(wd, "test/mails/")}\n[search]\nexclude_tags=deleted')
 
     os.system("notmuch new")
 
     flask_app = k.create_app()
+    db = notmuch2.Database()
+    with flask_app.app_context() as c:
+        c.g.db = db
+        yield flask_app
+
+    os.unlink("test/mails/.notmuch-config")
+    shutil.rmtree("test/mails/.notmuch")
+
+
+@pytest.fixture
+def setup_deleted():
+    wd = os.getcwd()
+    conf = "test/mails/.notmuch-config"
+    os.environ["NOTMUCH_CONFIG"] = conf
+    with open(conf, "w", encoding="utf8") as f:
+        f.write(f'[database]\npath={os.path.join(wd, "test/mails/")}\n[search]\nexclude_tags=deleted')
+
+    os.system("notmuch new")
+
+    flask_app = k.create_app()
+    q = "id:874llc2bkp.fsf@curie.anarc.at"
+    db = notmuch2.Database(mode=notmuch2.Database.MODE.READ_WRITE)
+    iter = db.messages(q)
+    next(iter).tags.add("deleted")
+    db.close()
+
     db = notmuch2.Database()
     with flask_app.app_context() as c:
         c.g.db = db
@@ -48,6 +74,31 @@ def test_query(setup):
         assert thrds[1]["tags"] == ["inbox", "unread"]
         assert thrds[1]["total_messages"] == 1
 
+
+def test_query_deleted(setup_deleted):
+    app = setup_deleted
+    with app.test_client() as test_client:
+        response = test_client.get('/api/query/to:notmuch')
+        assert response.status_code == 200
+        thrds = json.loads(response.data.decode())
+        assert len(thrds) == 1
+        assert thrds[0]["authors"] == ["Stefan Schmidt <stefan@datenfreihafen.org>"]
+        #assert thrds[0]["newest_date"] == "Sat Nov 21 17:11:01 2009"
+        #assert thrds[0]["oldest_date"] == "Sat Nov 21 17:11:01 2009"
+        assert thrds[0]["subject"] == "[notmuch] [PATCH 2/2] notmuch-new: Tag mails not as unread when the seen flag in the maildir is set."
+        assert thrds[0]["tags"] == ["inbox", "unread"]
+        assert thrds[0]["total_messages"] == 1
+
+        response = test_client.get('/api/query/to:notmuch and tag:deleted')
+        assert response.status_code == 200
+        thrds = json.loads(response.data.decode())
+        assert len(thrds) == 1
+        assert thrds[0]["authors"] == ["Antoine Beaupré <anarcat@orangeseeds.org>"]
+        #assert thrds[0]["newest_date"] == "Mon Mar 19 11:56:54 2018"
+        #assert thrds[0]["oldest_date"] == "Mon Mar 19 11:56:54 2018"
+        assert thrds[0]["subject"] == 'Re: bug: "no top level messages" crash on Zen email loops'
+        assert thrds[0]["tags"] == ["attachment", "deleted", "inbox", "unread"]
+        assert thrds[0]["total_messages"] == 1
 
 def test_address(setup):
     app = setup
