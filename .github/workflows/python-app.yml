@@ -42,8 +42,8 @@ jobs:
     - name: Type check
       run: |
         mypy --follow-untyped-imports src/kukulkan.py
-    - name: Set env
-      run: echo "NOTMUCH_CONFIG=test/mails/.notmuch-config" >> $GITHUB_ENV
     - name: Test with pytest
+      env:
+        NOTMUCH_CONFIG: "test/mails/.notmuch-config"
       run: |
         pytest
