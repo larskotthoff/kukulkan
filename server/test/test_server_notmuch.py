@@ -37,9 +37,7 @@ def setup_deleted():
         f.write(f'[database]\npath={os.path.join(wd, "test", "mails")}\n[search]\nexclude_tags=deleted')
 
     os.system("notmuch new")
-
-    with open(conf) as f:
-        print(f.read())
+    os.system("notmuch config list")
 
     flask_app = k.create_app()
     q = "id:874llc2bkp.fsf@curie.anarc.at"
