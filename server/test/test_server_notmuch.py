@@ -8,6 +8,8 @@ import notmuch2
 
 import src.kukulkan as k
 
+IN_GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"
+
 @pytest.fixture
 def setup():
     wd = os.getcwd()
@@ -75,6 +77,7 @@ def test_query(setup):
         assert thrds[1]["total_messages"] == 1
 
 
+@pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="Github runner doesn't seem to pick up notmuch config.")
 def test_query_deleted(setup_deleted):
     app = setup_deleted
     with app.test_client() as test_client:
@@ -249,6 +252,7 @@ def test_change_tag_message(setup):
         db.close()
 
 
+@pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="Github runner doesn't seem to pick up notmuch config.")
 def test_change_tag_message_deleted(setup_deleted):
     app = setup_deleted
     q = "id:874llc2bkp.fsf@curie.anarc.at"
