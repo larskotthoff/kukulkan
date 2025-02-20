@@ -228,6 +228,38 @@ def test_message_raw(setup):
             assert f.read() == response.data.decode()
 
 
+def test_change_tag_message_no_match(setup):
+    app = setup
+
+    with app.test_client() as test_client:
+        response = test_client.get('/api/tag/remove/message/llc2bkp.fsf@curie.anarc.at/unread')
+        assert response.status_code == 404
+
+
+def test_change_tag_message_fail(setup):
+    app = setup
+    q = "id:874llc2bkp.fsf@curie.anarc.at"
+    db = notmuch2.Database()
+    iter = db.messages(q)
+    assert list(next(iter).tags) == ["attachment", "inbox", "unread"]
+    db.close()
+
+    with app.test_client() as test_client:
+        response = test_client.get('/api/tag/remove/message/874llc2bkp.fsf@curie.anarc.at/unread')
+        assert response.status_code == 200
+        db = notmuch2.Database()
+        iter = db.messages(q)
+        assert list(next(iter).tags) == ["attachment", "inbox"]
+        db.close()
+
+        response = test_client.get('/api/tag/add/message/874llc2bkp.fsf@curie.anarc.at/foobar')
+        assert response.status_code == 200
+        db = notmuch2.Database()
+        iter = db.messages(q)
+        assert list(next(iter).tags) == ["attachment", "foobar", "inbox"]
+        db.close()
+
+
 def test_change_tag_message(setup):
     app = setup
     q = "id:874llc2bkp.fsf@curie.anarc.at"
@@ -292,6 +324,14 @@ def test_change_tag_message_batch(setup):
         iter = db.messages(q)
         assert list(next(iter).tags) == ["attachment", "foobar", "inbox"]
         db.close()
+
+
+def test_change_tag_thread_no_match(setup):
+    app = setup
+
+    with app.test_client() as test_client:
+        response = test_client.get(f'/api/tag/remove/thread/lksdfhlkh/unread')
+        assert response.status_code == 404
 
 
 def test_change_tag_thread(setup):

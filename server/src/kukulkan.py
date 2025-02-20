@@ -408,12 +408,17 @@ def create_app() -> Flask:
         else:
             should_close = False
         try:
+            changes = 0
             for msg in get_query(query, db=dbw, exclude=False):
+                changes += 1
                 with msg.frozen(): # type: ignore[union-attr]
                     if op == "add":
                         msg.tags.add(tag) # type: ignore[union-attr]
                     elif op == "remove":
                         msg.tags.discard(tag) # type: ignore[union-attr]
+
+            if changes == 0:
+                abort(404)
         finally:
             if should_close:
                 dbw.close()
