@@ -14,7 +14,7 @@ def setup():
     conf = "test/mails/.notmuch-config"
     os.environ["NOTMUCH_CONFIG"] = conf
     with open(conf, "w", encoding="utf8") as f:
-        f.write(f'[database]\npath={os.path.join(wd, "test/mails/")}\n[search]\nexclude_tags=deleted')
+        f.write(f'[database]\npath={os.path.join(wd, "test", "mails")}\n[search]\nexclude_tags=deleted')
 
     os.system("notmuch new")
 
@@ -34,7 +34,7 @@ def setup_deleted():
     conf = "test/mails/.notmuch-config"
     os.environ["NOTMUCH_CONFIG"] = conf
     with open(conf, "w", encoding="utf8") as f:
-        f.write(f'[database]\npath={os.path.join(wd, "test/mails/")}\n[search]\nexclude_tags=deleted')
+        f.write(f'[database]\npath={os.path.join(wd, "test", "mails")}\n[search]\nexclude_tags=deleted')
 
     os.system("notmuch new")
 
