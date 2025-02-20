@@ -11,7 +11,7 @@ import src.kukulkan as k
 @pytest.fixture
 def setup():
     wd = os.getcwd()
-    conf = "test/mails/.notmuch-config"
+    conf = os.path.join(wd, "test", "mails", ".notmuch-config")
     os.environ["NOTMUCH_CONFIG"] = conf
     with open(conf, "w", encoding="utf8") as f:
         f.write(f'[database]\npath={os.path.join(wd, "test", "mails")}\n[search]\nexclude_tags=deleted')
@@ -24,14 +24,14 @@ def setup():
         c.g.db = db
         yield flask_app
 
-    os.unlink("test/mails/.notmuch-config")
-    shutil.rmtree("test/mails/.notmuch")
+    os.unlink(os.path.join(wd, "test", "mails", ".notmuch-config"))
+    shutil.rmtree(os.path.join(wd, "test", "mails", ".notmuch"))
 
 
 @pytest.fixture
 def setup_deleted():
     wd = os.getcwd()
-    conf = "test/mails/.notmuch-config"
+    conf = os.path.join(wd, "test", "mails", ".notmuch-config")
     os.environ["NOTMUCH_CONFIG"] = conf
     with open(conf, "w", encoding="utf8") as f:
         f.write(f'[database]\npath={os.path.join(wd, "test", "mails")}\n[search]\nexclude_tags=deleted')
@@ -50,8 +50,8 @@ def setup_deleted():
         c.g.db = db
         yield flask_app
 
-    os.unlink("test/mails/.notmuch-config")
-    shutil.rmtree("test/mails/.notmuch")
+    os.unlink(os.path.join(wd, "test", "mails", ".notmuch-config"))
+    shutil.rmtree(os.path.join(wd, "test", "mails", ".notmuch"))
 
 
 def test_query(setup):
