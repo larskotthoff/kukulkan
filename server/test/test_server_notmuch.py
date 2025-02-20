@@ -13,7 +13,6 @@ def setup():
     wd = os.getcwd()
     conf = os.path.join(wd, "test", "mails", ".notmuch-config")
     os.environ["NOTMUCH_CONFIG"] = conf
-    print(conf)
     with open(conf, "w", encoding="utf8") as f:
         f.write(f'[database]\npath={os.path.join(wd, "test", "mails")}\n[search]\nexclude_tags=deleted')
 
@@ -21,12 +20,11 @@ def setup():
 
     flask_app = k.create_app()
     db = notmuch2.Database()
-    print(db.config["search.exclude_tags"])
     with flask_app.app_context() as c:
         c.g.db = db
         yield flask_app
 
-    os.unlink(os.path.join(wd, "test", "mails", ".notmuch-config"))
+    os.unlink(conf)
     shutil.rmtree(os.path.join(wd, "test", "mails", ".notmuch"))
 
 
@@ -40,6 +38,9 @@ def setup_deleted():
 
     os.system("notmuch new")
 
+    with open(conf) as f:
+        print(f.read())
+
     flask_app = k.create_app()
     q = "id:874llc2bkp.fsf@curie.anarc.at"
     db = notmuch2.Database(mode=notmuch2.Database.MODE.READ_WRITE)
@@ -52,7 +53,7 @@ def setup_deleted():
         c.g.db = db
         yield flask_app
 
-    os.unlink(os.path.join(wd, "test", "mails", ".notmuch-config"))
+    os.unlink(conf)
     shutil.rmtree(os.path.join(wd, "test", "mails", ".notmuch"))
 
 
