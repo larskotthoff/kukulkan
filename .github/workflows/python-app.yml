@@ -29,7 +29,7 @@ jobs:
         python-version: "3.13"
     - name: Install dependencies
       run: |
-        sudo apt-get install -y notmuch libnotmuch-dev python3-notmuch
+        sudo apt-get install -y notmuch libnotmuch-dev python3-notmuch2
         python -m pip install --upgrade pip
         pip install flake8 pytest mypy
         grep -v notmuch2 requirements.txt > requirements-mod.txt
