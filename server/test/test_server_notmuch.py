@@ -249,6 +249,30 @@ def test_change_tag_message(setup):
         db.close()
 
 
+def test_change_tag_message_deleted(setup_deleted):
+    app = setup_deleted
+    q = "id:874llc2bkp.fsf@curie.anarc.at"
+    db = notmuch2.Database()
+    iter = db.messages(q)
+    assert list(next(iter).tags) == ["attachment", "deleted", "inbox", "unread"]
+    db.close()
+
+    with app.test_client() as test_client:
+        response = test_client.get('/api/tag/remove/message/874llc2bkp.fsf@curie.anarc.at/unread')
+        assert response.status_code == 200
+        db = notmuch2.Database()
+        iter = db.messages(q)
+        assert list(next(iter).tags) == ["attachment", "deleted", "inbox"]
+        db.close()
+
+        response = test_client.get('/api/tag/add/message/874llc2bkp.fsf@curie.anarc.at/foobar')
+        assert response.status_code == 200
+        db = notmuch2.Database()
+        iter = db.messages(q)
+        assert list(next(iter).tags) == ["attachment", "deleted", "foobar", "inbox"]
+        db.close()
+
+
 def test_change_tag_message_batch(setup):
     app = setup
     q = "id:874llc2bkp.fsf@curie.anarc.at"

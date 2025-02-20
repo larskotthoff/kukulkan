@@ -408,7 +408,7 @@ def create_app() -> Flask:
         else:
             should_close = False
         try:
-            for msg in get_query(query, db=dbw):
+            for msg in get_query(query, db=dbw, exclude=False):
                 with msg.frozen(): # type: ignore[union-attr]
                     if op == "add":
                         msg.tags.add(tag) # type: ignore[union-attr]
@@ -613,7 +613,8 @@ def create_app() -> Flask:
                                     reftag = "replied"
                                 elif ra == "forward":
                                     reftag = "passed"
-                                ref_msgs = get_query(f"id:{rr}", db=db_write)
+                                ref_msgs = get_query(f"id:{rr}", db=db_write,
+                                                     exclude=False)
                                 for ref_msg in ref_msgs:
                                     # pylint: disable=possibly-used-before-assignment
                                     ref_msg.tags.add(reftag) # type: ignore[union-attr]
