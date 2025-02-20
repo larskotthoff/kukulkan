@@ -19,7 +19,7 @@ def setup():
     os.system("notmuch new")
 
     flask_app = k.create_app()
-    db = notmuch2.Database()
+    db = notmuch2.Database(config=conf)
     with flask_app.app_context() as c:
         c.g.db = db
         yield flask_app
@@ -37,16 +37,15 @@ def setup_deleted():
         f.write(f'[database]\npath={os.path.join(wd, "test", "mails")}\n[search]\nexclude_tags=deleted')
 
     os.system("notmuch new")
-    os.system("notmuch config list")
 
     flask_app = k.create_app()
     q = "id:874llc2bkp.fsf@curie.anarc.at"
-    db = notmuch2.Database(mode=notmuch2.Database.MODE.READ_WRITE)
+    db = notmuch2.Database(mode=notmuch2.Database.MODE.READ_WRITE, config=conf)
     iter = db.messages(q)
     next(iter).tags.add("deleted")
     db.close()
 
-    db = notmuch2.Database()
+    db = notmuch2.Database(config=conf)
     with flask_app.app_context() as c:
         c.g.db = db
         yield flask_app
