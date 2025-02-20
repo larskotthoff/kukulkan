@@ -43,7 +43,5 @@ jobs:
       run: |
         mypy --follow-untyped-imports src/kukulkan.py
     - name: Test with pytest
-      env:
-        NOTMUCH_CONFIG: "test/mails/.notmuch-config"
       run: |
         pytest

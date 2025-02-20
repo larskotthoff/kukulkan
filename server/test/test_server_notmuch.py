@@ -13,6 +13,7 @@ def setup():
     wd = os.getcwd()
     conf = os.path.join(wd, "test", "mails", ".notmuch-config")
     os.environ["NOTMUCH_CONFIG"] = conf
+    print(conf)
     with open(conf, "w", encoding="utf8") as f:
         f.write(f'[database]\npath={os.path.join(wd, "test", "mails")}\n[search]\nexclude_tags=deleted')
 
@@ -20,6 +21,7 @@ def setup():
 
     flask_app = k.create_app()
     db = notmuch2.Database()
+    print(db.config["search.exclude_tags"])
     with flask_app.app_context() as c:
         c.g.db = db
         yield flask_app
