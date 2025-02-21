@@ -84,6 +84,7 @@ def test_query(setup):
     db.config = {}
     db.messages = MagicMock()
     db.messages.side_effect = [iter([mm1, mm2, mm3])]
+    db.count_messages = MagicMock(return_value=3)
 
     with app.test_client() as test_client:
         response = test_client.get('/api/query/foo')
@@ -101,6 +102,7 @@ def test_query(setup):
     assert db.messages.mock_calls == [
         call('thread:"{foo}"', exclude_tags=[], sort=notmuch2.Database.SORT.NEWEST_FIRST)
     ]
+    db.count_messages.assert_called_once_with("thread:id")
 
     mm1.header.assert_has_calls([call("subject"), call("from")])
     mm2.header.assert_has_calls([call("from")])
@@ -120,6 +122,7 @@ def test_query_empty(setup):
     db.config = {}
     db.messages = MagicMock()
     db.messages.side_effect = [iter([mm1])]
+    db.count_messages = MagicMock(return_value=1)
 
     with app.test_client() as test_client:
         response = test_client.get('/api/query/foo')
@@ -136,6 +139,7 @@ def test_query_empty(setup):
     assert db.messages.mock_calls == [
         call('thread:"{foo}"', exclude_tags=[], sort=notmuch2.Database.SORT.NEWEST_FIRST)
     ]
+    db.count_messages.assert_called_once_with("thread:id")
 
     mm1.header.assert_has_calls([call("subject"), call("from")])
 
