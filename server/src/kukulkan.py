@@ -292,14 +292,16 @@ def create_app() -> Flask:
                     "newest_date": datetime.datetime.fromtimestamp(msg.date).strftime("%c"),
                     "subject": subject if subject else "(no subject)",
                     "tags": {},
-                    "thread_id": msg.threadid,
-                    "total_messages": 0
+                    "thread_id": msg.threadid
                 }
             threads[msg.threadid]["authors"][get_header(msg, "from")] = 1
             threads[msg.threadid]["oldest_date"] = msg.date
-            threads[msg.threadid]["total_messages"] += 1
             for tag in msg.tags:
                 threads[msg.threadid]["tags"][tag] = 1
+
+        for t in list(threads.keys()):
+            db = get_db()
+            threads[t]["total_messages"] = db.count_messages(f'thread:{threads[t]["thread_id"]}')
 
         return [{"authors": list(threads[t]["authors"].keys())[::-1],
                  "newest_date": threads[t]["newest_date"],
