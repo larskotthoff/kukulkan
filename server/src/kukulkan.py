@@ -281,36 +281,52 @@ def create_app() -> Flask:
 
     @app.route("/api/query/<string:query_string>")
     def query(query_string: str) -> List[Dict[str, Any]]:
-        msgs = get_query('thread:"{' + query_string.replace('"', '""') + '}"')
-        # using dicts here to get everything in the order in which it occured
-        threads = {}
-        for msg in msgs:
-            if msg.threadid not in threads:
-                subject = get_header(msg, "subject")
-                threads[msg.threadid] = {
-                    "authors": {},
-                    "newest_date": datetime.datetime.fromtimestamp(msg.date).strftime("%c"),
-                    "subject": subject if subject else "(no subject)",
-                    "tags": {},
-                    "thread_id": msg.threadid
-                }
-            threads[msg.threadid]["authors"][get_header(msg, "from")] = 1
-            threads[msg.threadid]["oldest_date"] = msg.date
-            for tag in msg.tags:
-                threads[msg.threadid]["tags"][tag] = 1
+        def get_threads(q, in_group=False):
+            msgs = get_query('thread:"{' + q.replace('"', '""') + '}"')
+            # using dicts here to get everything in the order in which it occured
+            threads = {}
+            seen_groups = []
+            for msg in msgs:
+                update = True
+                if msg.threadid not in threads:
+                    grps = [ t for t in msg.tags if t.startswith('grp:') ]
+                    if len(grps) > 0 and grps[0] in seen_groups:
+                        # we have seen this group, the thread will already be there
+                        continue
+                    if len(grps) > 0 and not in_group:
+                        seen_groups.append(grps[0])
+                        threads[msg.threadid] = get_threads(f'tag:{grps[0]}', in_group=True)
+                        update = False
+                    else:
+                        subject = get_header(msg, "subject")
+                        threads[msg.threadid] = {
+                            "authors": {},
+                            "newest_date": datetime.datetime.fromtimestamp(msg.date).strftime("%c"),
+                            "subject": subject if subject else "(no subject)",
+                            "tags": {}
+                        }
+                if update:
+                    threads[msg.threadid]["authors"][get_header(msg, "from")] = 1
+                    threads[msg.threadid]["oldest_date"] = msg.date
+                    for tag in msg.tags:
+                        threads[msg.threadid]["tags"][tag] = 1
+            return threads
 
-        for t in list(threads.keys()):
-            db = get_db()
-            threads[t]["total_messages"] = db.count_messages(f'thread:{threads[t]["thread_id"]}')
+        threads = get_threads(query_string)
 
-        return [{"authors": list(threads[t]["authors"].keys())[::-1],
-                 "newest_date": threads[t]["newest_date"],
-                 "oldest_date": datetime.datetime.fromtimestamp(threads[t]["oldest_date"]).strftime("%c"),
-                 "subject": threads[t]["subject"],
-                 "tags": list(threads[t]["tags"].keys()),
-                 "thread_id": threads[t]["thread_id"],
-                 "total_messages": threads[t]["total_messages"]
-             } for t in list(threads.keys()) ]
+        db = get_db()
+        def get_threads_ret(threads):
+            return [ get_threads_ret(threads[t])
+                     if "authors" not in threads[t].keys()
+                     else {"authors": list(threads[t]["authors"].keys())[::-1],
+                           "newest_date": threads[t]["newest_date"],
+                           "oldest_date": datetime.datetime.fromtimestamp(threads[t]["oldest_date"]).strftime("%c"),
+                           "subject": threads[t]["subject"],
+                           "tags": list(threads[t]["tags"].keys()),
+                           "thread_id": t,
+                           "total_messages": db.count_messages(f'thread:{t}')}
+                     for t in list(threads.keys()) ]
+        return get_threads_ret(threads)
 
 
     @app.route("/api/address/<string:query_string>")
