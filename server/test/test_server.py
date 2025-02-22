@@ -434,6 +434,141 @@ def test_tags_add_thread_batch(setup):
     assert mf.frozen.call_count == 4
 
 
+def test_group_new_initial(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.frozen = MagicMock()
+    mf.tags = MagicMock()
+    mf.tags.add = MagicMock()
+
+    mt = lambda: None
+    mt.tags = MagicMock()
+    mt.toplevel = MagicMock(return_value=iter([mf]))
+
+    db.threads = MagicMock(return_value=iter([mt]))
+    db.tags = ['foo', 'bar']
+
+    dbw = lambda: None
+    dbw.close = MagicMock()
+    dbw.threads = MagicMock(return_value=iter([mt]))
+
+    with patch("notmuch2.Database", return_value=dbw) as nmdb:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/group/foo1')
+            assert response.status_code == 200
+            assert b'grp:0' == response.data
+        assert nmdb.call_count == 1
+
+    assert db.threads.mock_calls == [
+        call('thread:foo1')
+    ]
+    assert dbw.threads.mock_calls == [
+        call('thread:foo1')
+    ]
+    assert dbw.close.call_count == 1
+
+    mt.toplevel.assert_called_once()
+
+    assert mf.tags.add.mock_calls == [
+        call('grp:0')
+    ]
+    assert mf.frozen.call_count == 1
+
+
+def test_group_new_subsequent(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.frozen = MagicMock()
+    mf.tags = MagicMock()
+    mf.tags.add = MagicMock()
+
+    mt = lambda: None
+    mt.tags = MagicMock()
+    mt.toplevel = MagicMock(return_value=iter([mf]))
+
+    db.threads = MagicMock(return_value=iter([mt]))
+    db.tags = ['foo', 'bar', 'grp:ae']
+
+    dbw = lambda: None
+    dbw.close = MagicMock()
+    dbw.threads = MagicMock(return_value=iter([mt]))
+
+    with patch("notmuch2.Database", return_value=dbw) as nmdb:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/group/foo1')
+            assert response.status_code == 200
+            assert b'grp:af' == response.data
+        assert nmdb.call_count == 1
+
+    assert db.threads.mock_calls == [
+        call('thread:foo1')
+    ]
+    assert dbw.threads.mock_calls == [
+        call('thread:foo1')
+    ]
+    assert dbw.close.call_count == 1
+
+    mt.toplevel.assert_called_once()
+
+    assert mf.tags.add.mock_calls == [
+        call('grp:af')
+    ]
+    assert mf.frozen.call_count == 1
+
+
+def test_group_existing(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.frozen = MagicMock()
+    mf.tags = MagicMock(spec=list)
+    mf.tags.__iter__.return_value = iter(['grp:ae'])
+    mf.tags.add = MagicMock()
+
+    mf1 = lambda: None
+    mf1.frozen = MagicMock()
+    mf1.tags = MagicMock()
+    mf1.tags.add = MagicMock()
+
+    mt = lambda: None
+    mt.tags = ['grp:ae']
+    mt.toplevel = MagicMock(return_value=iter([mf, mf1]))
+
+    db.threads = MagicMock(return_value=iter([mt]))
+
+    dbw = lambda: None
+    dbw.close = MagicMock()
+    dbw.threads = MagicMock(return_value=iter([mt]))
+
+    with patch("notmuch2.Database", return_value=dbw) as nmdb:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/group/foo1')
+            assert response.status_code == 200
+            assert b'grp:ae' == response.data
+        assert nmdb.call_count == 1
+
+    assert db.threads.mock_calls == [
+        call('thread:foo1')
+    ]
+    assert dbw.threads.mock_calls == [
+        call('thread:foo1')
+    ]
+    assert dbw.close.call_count == 1
+
+    mt.toplevel.assert_called_once()
+
+    assert mf.tags.add.mock_calls == [
+        call('grp:ae')
+    ]
+    assert mf.frozen.call_count == 1
+    assert mf1.tags.add.mock_calls == [
+        call('grp:ae')
+    ]
+    assert mf1.frozen.call_count == 1
+
+
 def test_attachment_no_attachment(setup):
     app, db = setup
 

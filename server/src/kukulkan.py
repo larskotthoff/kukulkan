@@ -384,6 +384,42 @@ def create_app() -> Flask:
         # https://npm.io/package/mailauth
         return json.loads(os.popen(f"mailauth {msg.path}").read())['arc']['authResults']
 
+    @app.route("/api/group/<string:tids>")
+    def group(tids: str) -> str:
+        db = get_db()
+        def tmp():
+            for tid in tids.split(' '):
+                threads = db.threads(f'thread:{tid}')
+                for thread in threads:
+                    for tag in thread.tags:
+                        if tag.startswith("grp:"):
+                            # assume that there is only one group tag
+                            return tag
+            return None
+        gtag = tmp()
+
+        if gtag is None:
+            # new group, generate new group tag
+            tags = [tag for tag in db.tags if tag.startswith("grp:")]
+            if len(tags) == 0:
+                gtag = "grp:0" # OG group
+            else:
+                tags.sort(reverse=True)
+                ltag_num = int(tags[0].split(':')[1], base=16)
+                gtag = f"grp:{(ltag_num + 1):x}"
+
+        dbw = notmuch2.Database(mode=notmuch2.Database.MODE.READ_WRITE)
+        try:
+            for tid in tids.split(' '):
+                threads = dbw.threads(f'thread:{tid}')
+                for thread in threads:
+                    for m in thread.toplevel():
+                        with m.frozen(): # type: ignore[union-attr]
+                            m.tags.add(gtag) # type: ignore[union-attr]
+        finally:
+            dbw.close()
+        return gtag
+
     @app.route("/api/tag_batch/<string:typ>/<string:nids>/<string:tags>")
     def change_tags(typ: str, nids: str, tags: str) -> str:
         dbw = notmuch2.Database(mode=notmuch2.Database.MODE.READ_WRITE)
