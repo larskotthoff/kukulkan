@@ -348,19 +348,10 @@ export function Message(props) {
               <a id="security" href={secUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
                 <Icon icon={Security}/>
               </a>
-              <a id="unread" href="#" onClick={() => { if(props.active && !msg.tags.includes("unread")) { changeTags("unread"); }}}>
+              <a id="unread" href="#" onClick={() => { if(props.active) { changeTags("unread"); }}}>
                 <Icon icon={MarkUnread}/>
               </a>
-              <a id="delete" href="#" onClick={() => { if(props.active) {
-                  let ctags = [];
-                  if(msg.tags.includes("unread")) {
-                    ctags.push("-unread");
-                  }
-                  if(!msg.tags.includes("deleted")) {
-                    ctags.push("deleted");
-                  }
-                  if(ctags.length > 0) changeTags(ctags.join(" "));
-                }}}>
+              <a id="delete" href="#" onClick={() => { if(props.active) { changeTags("-unread deleted"); }}}>
                 <Icon icon={Trash}/>
               </a>
             </div>
