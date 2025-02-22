@@ -387,19 +387,26 @@ def create_app() -> Flask:
     @app.route("/api/tag_batch/<string:typ>/<string:nids>/<string:tags>")
     def change_tags(typ: str, nids: str, tags: str) -> str:
         dbw = notmuch2.Database(mode=notmuch2.Database.MODE.READ_WRITE)
+        any_changed = False
         try:
             for nid in nids.split(' '):
                 for tag in tags.split(' '):
                     if tag[0] == '-':
-                        change_tag("remove", typ, nid, tag[1:], dbw)
+                        res = change_tag("remove", typ, nid, tag[1:], dbw, False)
                     else:
-                        change_tag("add", typ, nid, tag, dbw)
+                        res = change_tag("add", typ, nid, tag, dbw, False)
+                    if res != "":
+                        any_changed = True
         finally:
             dbw.close()
+        if not any_changed:
+            abort(404)
         return f"{escape(nids)}/{escape(tags)}"
 
     @app.route("/api/tag/<string:op>/<string:typ>/<string:nid>/<string:tag>")
-    def change_tag(op: str, typ: str, nid: str, tag: str, dbw: Optional[notmuch2.Database] = None) -> str:
+    def change_tag(op: str, typ: str, nid: str, tag: str, dbw:
+                   Optional[notmuch2.Database] = None, fail: Optional[bool] =
+                   True) -> str:
         # pylint: disable=no-member
         id_type = 'id' if typ == "message" else typ
         tag_prefix = 'not ' if op == "add" else ''
@@ -409,8 +416,8 @@ def create_app() -> Flask:
             dbw = notmuch2.Database(mode=notmuch2.Database.MODE.READ_WRITE)
         else:
             should_close = False
+        changes = 0
         try:
-            changes = 0
             for msg in get_query(query, db=dbw, exclude=False):
                 changes += 1
                 with msg.frozen(): # type: ignore[union-attr]
@@ -419,11 +426,14 @@ def create_app() -> Flask:
                     elif op == "remove":
                         msg.tags.discard(tag) # type: ignore[union-attr]
 
-            if changes == 0:
-                abort(404)
         finally:
             if should_close:
                 dbw.close()
+        if changes == 0:
+            if fail:
+                abort(404)
+            else:
+                return ""
         return escape(tag)
 
     @app.route('/api/edit_external', methods=['POST'])

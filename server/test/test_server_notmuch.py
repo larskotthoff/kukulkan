@@ -234,6 +234,12 @@ def test_change_tag_message_no_match(setup):
     with app.test_client() as test_client:
         response = test_client.get('/api/tag/remove/message/llc2bkp.fsf@curie.anarc.at/unread')
         assert response.status_code == 404
+        response = test_client.get('/api/tag/remove/message/874llc2bkp.fsf@curie.anarc.at/blurg')
+        assert response.status_code == 404
+        response = test_client.get('/api/tag_batch/message/874llc2bkp.fsf@curie.anarc.at/-blurg -blarge')
+        assert response.status_code == 404
+        response = test_client.get('/api/tag_batch/message/874llc2bkp.fsf@curie.anarc.at/-blurg -unread')
+        assert response.status_code == 200
 
 
 def test_change_tag_message_fail(setup):
@@ -328,10 +334,22 @@ def test_change_tag_message_batch(setup):
 
 def test_change_tag_thread_no_match(setup):
     app = setup
+    q = "from:stefan@datenfreihafen.org"
+    db = notmuch2.Database()
+    threads = list(db.threads(q))
+    assert list(threads[0].tags) == ["inbox", "unread"]
+    id = threads[0].threadid
+    db.close()
 
     with app.test_client() as test_client:
         response = test_client.get(f'/api/tag/remove/thread/lksdfhlkh/unread')
         assert response.status_code == 404
+        response = test_client.get(f'/api/tag/remove/thread/{id}/blurg')
+        assert response.status_code == 404
+        response = test_client.get(f'/api/tag_batch/thread/{id}/-blurg -blarg')
+        assert response.status_code == 404
+        response = test_client.get(f'/api/tag_batch/thread/{id}/-blurg -unread')
+        assert response.status_code == 200
 
 
 def test_change_tag_thread(setup):
