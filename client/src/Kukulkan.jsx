@@ -17,7 +17,7 @@ export function Kukulkan(props) {
         [showEditingTagModal, setShowEditingTagModal] = createSignal(false),
         [threads, setThreads] = createSignal(data.threads || []);
 
-  function makeTagEdits() {
+  function makeTagEdits(ignoreErrors = false) {
     let affectedThreads = selectedThreads();
     if(affectedThreads.length === 0) affectedThreads = [activeThread()];
     const affectedThreadIds = affectedThreads.map(t => threads()[t].thread_id),
@@ -25,7 +25,7 @@ export function Kukulkan(props) {
     props.sp?.(0);
 
     fetch(url).then((response) => {
-      if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
+      if(!response.ok && !ignoreErrors) throw new Error(`${response.status}: ${response.statusText}`);
     // eslint-disable-next-line solid/reactivity
     }).then(() => {
       affectedThreads.forEach(affectedThread => {
@@ -125,7 +125,7 @@ export function Kukulkan(props) {
   function deleteActive() {
     if(threads().length > 0) {
       setEditingTags("deleted -unread");
-      makeTagEdits();
+      makeTagEdits(true);
     }
   }
 
