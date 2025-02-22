@@ -403,7 +403,7 @@ def create_app() -> Flask:
     @app.route("/api/group/<string:tids>")
     def group(tids: str) -> str:
         db = get_db()
-        def tmp():
+        def get_gtag():
             for tid in tids.split(' '):
                 threads = db.threads(f'thread:{tid}')
                 for thread in threads:
@@ -412,7 +412,7 @@ def create_app() -> Flask:
                             # assume that there is only one group tag
                             return tag
             return None
-        gtag = tmp()
+        gtag = get_gtag()
 
         if gtag is None:
             # new group, generate new group tag
