@@ -276,6 +276,14 @@ button > span {
     overflow: clip;
 }
 
+.thread-group {
+    border-left: 3px solid var(--primary-foreground);
+}
+
+.thread-group.collapsed > .thread:not(:first-child) {
+    display: none;
+}
+
 .thread {
     display: grid;
     @media (min-width: 900px) {

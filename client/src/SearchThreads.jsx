@@ -1,4 +1,4 @@
-import { createSignal, For } from 'solid-js';
+import { createEffect, createSignal, For, on } from 'solid-js';
 
 import { ColorChip } from "./ColorChip.jsx";
 import { Autocomplete } from "./Autocomplete.jsx";
@@ -74,6 +74,57 @@ export function SearchThreads(props) {
   // eslint-disable-next-line solid/reactivity
   handleSwipe(document.body, (el) => el.closest(".thread"), props.deleteActive, Trash, props.tagActive, Tag);
 
+  function threadListElem(tprops) {
+    const authors = tprops.thread.authors.map(splitAddressHeader),
+          dateNum = renderDateNumThread(tprops.thread);
+    return (
+      <div classList={{
+          'thread': true,
+          'width-100': true,
+          'active': tprops.thread.thread_id === props.activeThread(),
+          'selected': props.selectedThreads().indexOf(tprops.thread.thread_id) !== -1
+        }}
+        data-id={tprops.thread.thread_id}
+        onClick={() => {
+          props.setActiveThread(tprops.thread.thread_id);
+          props.openActive();
+        }}
+        onTouchStart={() => {
+          props.setActiveThread(tprops.thread.thread_id);
+        }}
+      >
+        <div ref={e => wideNarrowObserver?.observe(e)}>
+          <div class="narrow">
+            {dateNum[0]}
+          </div>
+          <div class="wide">
+            {dateNum.join(" ")}
+          </div>
+        </div>
+        <div class="grid-authors" ref={e => wideNarrowObserver?.observe(e)}>
+          <div class="narrow">
+            <For each={authors}>
+              {(author) => <ColorChip key={author[0]} value={author[2]}/>}
+            </For>
+          </div>
+          <div class="wide">
+            <For each={authors}>
+              {(author) => <ColorChip key={author[0]} value={author[1]}/>}
+            </For>
+          </div>
+        </div>
+        <div class="grid-subject">
+          {tprops.thread.subject}
+        </div>
+        <div>
+          <For each={tprops.thread.tags.sort()}>
+            {(tag) => <ColorChip value={tag}/>}
+          </For>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div class="centered clipped vertical-stack" style={{ 'width': "95%" }}>
       <div class="centered horizontal-stack" style={{ 'width': "80%" }}>
@@ -85,57 +136,9 @@ export function SearchThreads(props) {
       <a href="/settings" class="top-right" target={getSetting("openInTab")} rel="noreferrer">
         <Icon icon={Settings}/>
       </a>
-      <div class="horizontal-stack justify-end width-100">{props.threads().length} thread{props.threads().length === 1 ? "" : "s"}.</div>
+      <div class="horizontal-stack justify-end width-100">{props.threads().length} thread group{props.threads().length === 1 ? "" : "s"}.</div>
       <For each={props.threads()}>
-        {(thread, index) => {
-          const authors = thread.authors.map(splitAddressHeader),
-                dateNum = renderDateNumThread(thread);
-          return (
-            <div classList={{
-                'thread': true,
-                'width-100': true,
-                'active': index() === props.activeThread(),
-                'selected': props.selectedThreads().indexOf(index()) !== -1
-              }}
-              onClick={() => {
-                props.setActiveThread(index());
-                props.openActive();
-              }}
-              onTouchStart={() => {
-                props.setActiveThread(index());
-              }}
-            >
-              <div ref={e => wideNarrowObserver?.observe(e)}>
-                <div class="narrow">
-                  {dateNum[0]}
-                </div>
-                <div class="wide">
-                  {dateNum.join(" ")}
-                </div>
-              </div>
-              <div class="grid-authors" ref={e => wideNarrowObserver?.observe(e)}>
-                <div class="narrow">
-                  <For each={authors}>
-                    {(author) => <ColorChip key={author[0]} value={author[2]}/>}
-                  </For>
-                </div>
-                <div class="wide">
-                  <For each={authors}>
-                    {(author) => <ColorChip key={author[0]} value={author[1]}/>}
-                  </For>
-                </div>
-              </div>
-              <div class="grid-subject">
-                {thread.subject}
-              </div>
-              <div>
-                <For each={thread.tags.sort()}>
-                  {(tag) => <ColorChip value={tag}/>}
-                </For>
-              </div>
-            </div>
-          );
-        }}
+        {(thread) => <props.ThreadGroup thread={thread} threadListElem={threadListElem}/>}
       </For>
     </div>
   );

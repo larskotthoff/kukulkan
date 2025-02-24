@@ -11,25 +11,41 @@ import { mkShortcut } from "./UiUtils.jsx";
 
 export function Kukulkan(props) {
   const [query, setQuery] = createSignal(),
-        [activeThread, setActiveThread] = createSignal(0),
         [selectedThreads, setSelectedThreads] = createSignal([]),
         [editingTags, setEditingTags] = createSignal(null),
         [showEditingTagModal, setShowEditingTagModal] = createSignal(false),
-        [threads, setThreads] = createSignal(data.threads || []);
+        [threads, setThreads] = createSignal(data.threads || []),
+        [activeThread, setActiveThread] = createSignal(threads().length > 0 ? threads().flat()[0].thread_id : null);
+
+  function getAffectedThreads() {
+    if(threads().length > 0) {
+      let tmp = selectedThreads(),
+          retval = [];
+      if(tmp.length === 0) tmp = [activeThread()];
+      tmp.forEach(at => {
+        let parent = document.querySelector(`[data-id='${at}']`).parentElement;
+        if(parent.classList.contains("thread-group") && parent.classList.contains("collapsed")) {
+          [...parent.querySelectorAll(".thread")].forEach(gt => retval.push(gt.dataset.id));
+        } else {
+          retval.push(at);
+        }
+      });
+      return retval;
+    } else {
+      return [];
+    }
+  }
 
   function makeTagEdits() {
-    let affectedThreads = selectedThreads();
-    if(affectedThreads.length === 0) affectedThreads = [activeThread()];
-    const affectedThreadIds = affectedThreads.map(t => threads()[t].thread_id),
-          url = apiURL(`api/tag_batch/thread/${encodeURIComponent(affectedThreadIds.join(' '))}/${encodeURIComponent(editingTags())}`);
+    let affectedThreads = getAffectedThreads();
+    if(affectedThreads.length === 0) return;
+    const url = apiURL(`api/tag_batch/thread/${encodeURIComponent(affectedThreads.join(' '))}/${encodeURIComponent(editingTags())}`);
     props.sp?.(0);
 
     fetch(url).then((response) => {
       if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
-    // eslint-disable-next-line solid/reactivity
-    }).then(() => {
       affectedThreads.forEach(affectedThread => {
-        const thread = JSON.parse(JSON.stringify(threads()[affectedThread]));
+        const thread = threads().flat().find(t => t.thread_id === affectedThread);
         editingTags().split(' ').map((edit) => {
           if(edit[0] === '-') {
             thread.tags = thread.tags.filter(t => t !== edit.substring(1));
@@ -37,8 +53,8 @@ export function Kukulkan(props) {
             if(thread.tags.indexOf(edit) === -1) thread.tags.push(edit);
           }
         });
-        setThreads([...threads().slice(0, affectedThread), thread, ...threads().slice(affectedThread + 1)]);
       });
+      setThreads(JSON.parse(JSON.stringify(threads())));
       setEditingTags("");
       setSelectedThreads([]);
     // eslint-disable-next-line solid/reactivity
@@ -54,33 +70,72 @@ export function Kukulkan(props) {
   }));
 
   mkShortcut([["Home"]],
-    () => setActiveThread(0)
+    () => threads().length > 0 && setActiveThread(threads().flat()[0].thread_id)
   );
   mkShortcut([["k"], ["ArrowUp"]],
-    // eslint-disable-next-line solid/reactivity
-    () => setActiveThread(Math.max(0, activeThread() - 1))
-  );
-  mkShortcut([["Shift", "K"]],
-    // eslint-disable-next-line solid/reactivity
-    () => setActiveThread(Math.max(0, activeThread() - 10))
+    () => {
+      if(threads().length > 0) {
+        let prev = document.querySelector(".thread.active").previousElementSibling;
+        if(prev === null) {
+          prev = document.querySelector(".thread.active").parentElement.previousElementSibling;
+        }
+        if(prev.classList.contains("thread-group")) {
+          if(prev.classList.contains("collapsed")) {
+            prev = prev.firstElementChild;
+          } else {
+            prev = prev.lastElementChild;
+          }
+        }
+        if(prev.classList.contains("thread")) {
+          setActiveThread(prev.dataset.id);
+        }
+      }
+    }
   );
   mkShortcut([["j"], ["ArrowDown"]],
-    // eslint-disable-next-line solid/reactivity
-    () => setActiveThread(Math.min(threads().length - 1, activeThread() + 1))
-  );
-  mkShortcut([["Shift", "J"]],
-    // eslint-disable-next-line solid/reactivity
-    () => setActiveThread(Math.min(threads().length - 1, activeThread() + 10))
+    () => {
+      if(threads().length > 0) {
+        let next = document.querySelector(".thread.active").nextElementSibling;
+        if(next === null || next.parentElement.classList.contains("collapsed")) {
+          next = document.querySelector(".thread.active").parentElement.nextElementSibling;
+        }
+        if(next === null) return;
+        if(next.classList.contains("thread-group")) {
+          next = next.firstElementChild;
+        }
+        if(next.classList.contains("thread")) {
+          setActiveThread(next.dataset.id);
+        }
+      }
+    }
   );
   mkShortcut([["End"], ["0"]],
     // eslint-disable-next-line solid/reactivity
-    () => setActiveThread(threads().length - 1)
+    () => {
+      if(threads().length > 0) {
+        let ti = threads().flat().at(-1).thread_id,
+            el = document.querySelector(`[data-id='${ti}']`);
+        if(!el.checkVisibility()) {
+          ti = el.parentElement.firstElementChild.dataset.id;
+        }
+        setActiveThread(ti);
+      }
+    }
+  );
+
+  mkShortcut([["h"], ["ArrowLeft"], ["l"], ["ArrowRight"]],
+    () => {
+      if(threads().length > 0) {
+        let parent = document.querySelector(".thread.active").parentElement;
+        if(parent.classList.contains("thread-group")) {
+          parent.dispatchEvent(new CustomEvent("toggle"));
+        }
+      }
+    }
   );
 
   function openActive() {
-    if(threads()[activeThread()]) {
-      window.open(`/thread?id=${encodeURIComponent(threads()[activeThread()].thread_id)}`, getSetting("openInTab"));
-    }
+    window.open(`/thread?id=${encodeURIComponent(activeThread())}`, getSetting("openInTab"));
   }
 
   // eslint-disable-next-line solid/reactivity
@@ -95,7 +150,7 @@ export function Kukulkan(props) {
       if(idx === -1) {
         setSelectedThreads([...curSelThreads, activeThread()]);
       } else {
-        setSelectedThreads(curSelThreads.filter((item, index) => index !== idx));
+        setSelectedThreads(curSelThreads.filter((item) => item !== activeThread()));
       }
     }
   });
@@ -133,21 +188,40 @@ export function Kukulkan(props) {
   mkShortcut([["Delete"]], deleteActive, true);
 
   function doneActive() {
-    if(threads().length > 0) {
-      let edits = "-todo",
-          affectedThreads = selectedThreads();
-      if(affectedThreads.length === 0) affectedThreads = [activeThread()];
-      affectedThreads.forEach(affectedThread => {
-        let due = threads()[affectedThread].tags.find((tag) => tag.startsWith("due:"));
-        if(due) edits += " -" + due;
-      });
-      setEditingTags(edits);
-      makeTagEdits();
-    }
+    let edits = "-todo",
+        affectedThreads = getAffectedThreads();
+    if(affectedThreads.length === 0) return;
+    affectedThreads.forEach(affectedThread => {
+      let due = threads().find(t => t.thread_id === affectedThread)?.tags.find((tag) => tag.startsWith("due:"));
+      if(due) edits += " -" + due;
+    });
+    setEditingTags(edits);
+    makeTagEdits();
   }
 
   // eslint-disable-next-line solid/reactivity
   mkShortcut([["d"]], doneActive, true);
+
+  async function groupActive() {
+    let affectedThreads = getAffectedThreads();
+    if(affectedThreads.length === 0) return;
+    const url = apiURL(`api/group/${encodeURIComponent(affectedThreads.join(' '))}`);
+    props.sp?.(0);
+
+    const response = await fetch(url);
+    props.sp?.(1);
+    if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
+    let grp = await response.text();
+    affectedThreads.forEach(affectedThread => {
+      const thread = threads().flat().find(t => t.thread_id === affectedThread);
+      thread.tags.push(grp);
+    });
+    setThreads(JSON.parse(JSON.stringify(threads())));
+    setSelectedThreads([]);
+  }
+
+  // eslint-disable-next-line solid/reactivity
+  mkShortcut([["g"]], groupActive, true);
 
   createEffect(on(showEditingTagModal, () => {
     if(showEditingTagModal()) document.querySelector("#edit-tag-box > input").focus();
@@ -194,12 +268,46 @@ export function Kukulkan(props) {
     );
   }
 
+  function ThreadGroup(tprops) {
+    if(Object.prototype.toString.call(tprops.thread) === '[object Array]') {
+      if(tprops.thread[0].collapsed === undefined) tprops.thread[0].collapsed = true;
+      let [collapsed, setCollapsed] = createSignal(tprops.thread[0].collapsed);
+
+      createEffect(on(collapsed, () => {
+        tprops.thread[0].collapsed = collapsed();
+      }));
+
+      return (
+        <div classList={{
+            'thread-group': true,
+            'width-100': true,
+            'collapsed': collapsed()
+          }}
+          onToggle={() => {
+            setCollapsed(!collapsed());
+            if(collapsed()) {
+              setActiveThread(tprops.thread[0].thread_id);
+            }
+          }}
+        >
+          <For each={tprops.thread}>
+            {(t) => <ThreadGroup thread={t} threadListElem={tprops.threadListElem}/>}
+          </For>
+        </div>
+      );
+    }
+
+    return tprops.threadListElem(tprops);
+  }
+
   return (
     <>
       <TagEditingModal/>
-      <props.Threads threads={threads} activeThread={activeThread} setActiveThread={setActiveThread}
+      <props.Threads threads={threads} ThreadGroup={ThreadGroup}
+        activeThread={activeThread} setActiveThread={setActiveThread}
         selectedThreads={selectedThreads} setQuery={setQuery} sp={props.sp}
-        openActive={openActive} deleteActive={deleteActive} doneActive={doneActive} tagActive={tagActive}/>
+        openActive={openActive} deleteActive={deleteActive} doneActive={doneActive}
+        tagActive={tagActive}/>
     </>
   );
 }
