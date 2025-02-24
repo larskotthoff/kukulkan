@@ -132,6 +132,14 @@ test("renders additional message components", () => {
   expect(screen.getByText("BCC@BCC")).toBeInTheDocument();
 });
 
+test("renders message text with <>", () => {
+  const msg1 = JSON.parse(JSON.stringify(msg));
+  msg1.body["text/plain"] = "Test <test>";
+
+  render(() => <Message msg={msg1} active={true}/>);
+  expect(screen.getByText("Test <test>")).toBeInTheDocument();
+});
+
 test("renders message signature", () => {
   msg.signature = { valid: true, message: "" };
   let { container } = render(() => <Message msg={msg} active={true}/>);

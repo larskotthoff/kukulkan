@@ -76,6 +76,10 @@ function formatAddrs(addrs) {
   });
 }
 
+function angles(text) {
+  return text.replace('<', '&lt;').replace('>', '&gt;');
+}
+
 function printUrl(id) {
   return `/message?id=${encodeURIComponent(id)}&print=true`;
 }
@@ -399,7 +403,7 @@ export function Message(props) {
         <Show when={!html()}>
           <div class="message-text"
             // eslint-disable-next-line solid/no-innerhtml
-            innerHTML={linkifyUrlsToHtml(mainPart, linkifyOpts)}/>
+            innerHTML={linkifyUrlsToHtml(angles(mainPart), linkifyOpts)}/>
           <Show when={quotedPart}>
             <div classList={{
                 'message-text': true,
@@ -414,7 +418,7 @@ export function Message(props) {
                 }
               }}
               // eslint-disable-next-line solid/no-innerhtml
-              innerHTML={linkifyUrlsToHtml(quotedPart, linkifyOpts)}/>
+              innerHTML={linkifyUrlsToHtml(angles(quotedPart), linkifyOpts)}/>
           </Show>
         </Show>
       </Show>
@@ -441,7 +445,7 @@ export function Message(props) {
               'text-preview': true
             }}
             // eslint-disable-next-line solid/no-innerhtml
-            innerHTML={linkifyUrlsToHtml(mainPart, linkifyOpts)}/>
+            innerHTML={linkifyUrlsToHtml(angles(mainPart), linkifyOpts)}/>
         </div>
       </Show>
     </div>
