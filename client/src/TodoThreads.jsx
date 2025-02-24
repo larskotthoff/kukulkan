@@ -1,4 +1,4 @@
-import { createEffect, createSignal, For, on, Show } from 'solid-js';
+import { createEffect, createSignal, For, on, onMount, Show } from 'solid-js';
 
 import { ColorChip } from "./ColorChip.jsx";
 
@@ -42,8 +42,8 @@ export function sortThreadsByDueDate(a, b) {
 }
 
 export function TodoThreads(props) {
-  const [latest, setLatest] = createSignal(),
-        [years, setYears] = createSignal(),
+  const [years, setYears] = createSignal([]),
+        [latest, setLatest] = createSignal(null),
         dueMap = new Map();
 
   // eslint-disable-next-line solid/reactivity
@@ -53,29 +53,6 @@ export function TodoThreads(props) {
   today.setHours(0, 0, 0, 0);
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
-
-  function processDueDate(thread) {
-    if(Object.prototype.toString.call(thread) === '[object Array]') {
-      thread.forEach(processDueDate);
-    } else {
-      const due = findEarliestDue(thread);
-      if(due !== undefined) {
-        const dueDate = dateFromDue(due);
-        if(dueMap.has(dueDate)) {
-          dueMap.get(dueDate).push(thread.thread_id);
-        } else {
-          dueMap.set(dueDate, [thread.thread_id]);
-        }
-
-        let dur = formatDuration(today, dueDate);
-        if(dueDate < today) dur = "overdue!";
-        else if(dueDate.getTime() === today.getTime()) dur = "今日";
-        else if(dueDate.getTime() === tomorrow.getTime()) dur = "明日";
-        else if(dueDate - today < 1000 * 60 * 60 * 24 * 7) dur = dueDate.toLocaleDateString([], { weekday: 'short' });
-        dueMap.set(thread.thread_id, dur);
-      }
-    }
-  }
 
   // claude helped with this
   function getIntervalBetweenDates(startDate, endDate, interval) {
@@ -116,27 +93,46 @@ export function TodoThreads(props) {
     return retval;
   }
 
-  function updateDuesEtc() {
-    dueMap.clear();
-    props.threads().forEach(processDueDate);
-    const dues = Array.from(dueMap.keys()),
-          earliest = new Date(Math.min(dues.concat(today)));
-    setLatest(new Date(Math.max(dues)));
-    setYears(getIntervalBetweenDates(earliest, endOfYear(latest()), "FullYear"));
+  onMount(() => {
     const ts = props.threads().sort(sortThreadsByDueDate).flat();
     if(ts.length > 0) props.setActiveThread(ts[0].thread_id);
+  });
+
+  function processDueDate(thread) {
+    if(Object.prototype.toString.call(thread) === '[object Array]') {
+      thread.forEach(processDueDate);
+    } else {
+      const due = findEarliestDue(thread);
+      if(due !== undefined) {
+        const dueDate = dateFromDue(due).toString();
+        if(dueMap.has(dueDate)) {
+          dueMap.get(dueDate).push(thread.thread_id);
+        } else {
+          dueMap.set(dueDate, [thread.thread_id]);
+        }
+      }
+    }
   }
 
   // eslint-disable-next-line solid/reactivity
-  updateDuesEtc();
-  // eslint-disable-next-line solid/reactivity
-  createEffect(on(props.threads, updateDuesEtc));
+  createEffect(on(props.threads, () => {
+    dueMap.clear();
+    props.threads().forEach(processDueDate);
+    if(dueMap.size > 0) {
+      const dues = Array.from(dueMap.keys()).map(d => new Date(d)),
+            earliest = new Date(Math.min(...dues, today));
+      setLatest(new Date(Math.max(...dues)));
+      setYears(getIntervalBetweenDates(earliest, endOfYear(latest()), "FullYear"));
+    } else {
+      setYears([]);
+    }
+  }));
 
   let prevScrollPos = undefined;
 
   function Calendar() {
     return (
-      <Show when={dueMap.size > 0}>
+      <Show when={years().length > 0}>
         <div class="calendar">
           <For each={years()}>
             {(year, yi) =>
@@ -158,9 +154,9 @@ export function TodoThreads(props) {
                                   {day.getDate().toString().padStart(2, '0')}
                                 </div>
                                 <div data-testid={`${day.toDateString()}-boxes`} class="boxes">
-                                  <For each={dueMap.get(day)}>
+                                  <For each={dueMap.get(day.toString())}>
                                     {id =>
-                                      <div class="calendar-box" onMouseOver={() => props.setActiveThread(id)}/>
+                                      <div class="calendar-box" data-id={id} onMouseOver={() => props.setActiveThread(id)}/>
                                     }
                                   </For>
                                 </div>
@@ -198,6 +194,16 @@ export function TodoThreads(props) {
     const authors = tprops.thread.authors.map(splitAddressHeader),
           due = findEarliestDue(tprops.thread),
           dueDate = due !== undefined ? dateFromDue(due) : null;
+
+    let dur = "";
+    if(due !== undefined) {
+      dur = formatDuration(today, dueDate);
+      if(dueDate < today) dur = "overdue!";
+      else if(dueDate.getTime() === today.getTime()) dur = "今日";
+      else if(dueDate.getTime() === tomorrow.getTime()) dur = "明日";
+      else if(dueDate - today < 1000 * 60 * 60 * 24 * 7) dur = dueDate.toLocaleDateString([], { weekday: 'short' });
+    }
+
     return (
       <div classList={{
           'thread': true,
@@ -215,18 +221,19 @@ export function TodoThreads(props) {
           props.setActiveThread(tprops.thread.thread_id);
         }}
         onMouseEnter={() => {
-          const calElem = document.getElementsByClassName("calendar")[0];
+          const calElem = document.getElementsByClassName("calendar")[0],
+                boxElem = document.querySelector(`.calendar-box[data-id='${tprops.thread.thread_id}']`);
           prevScrollPos = { left: calElem?.scrollLeft, top: calElem?.scrollTop };
-          document.getElementsByClassName("calendar-box")[index()]?.classList.add("highlight");
-          document.getElementsByClassName("calendar-box")[index()]?.scrollIntoView({block: "nearest"});
+          boxElem?.classList.add("highlight");
+          boxElem?.scrollIntoView({block: "nearest"});
         }}
         onMouseLeave={() => {
           if(prevScrollPos) document.getElementsByClassName("calendar")[0].scrollTo(prevScrollPos);
-          document.getElementsByClassName("calendar-box")[index()]?.classList.remove("highlight");
+          document.querySelector(`.calendar-box[data-id='${tprops.thread.thread_id}']`)?.classList.remove("highlight");
         }}
       >
         <div>
-          {dueMap.get(tprops.thread.thread_id) || ""}
+          {dur}
         </div>
         <div class="grid-authors" ref={e => wideNarrowObserver?.observe(e)}>
           <div class="narrow">
