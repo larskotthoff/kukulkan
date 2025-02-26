@@ -256,6 +256,84 @@ def test_query_group(setup):
     mm3.header.assert_has_calls([call("subject"), call("from")])
 
 
+def test_query_group_multiple_in_thread(setup):
+    app, db = setup
+
+    mm0 = lambda: None
+    mm0.tags = ["bartag"]
+    mm0.date = 0
+    mm0.threadid = "id1"
+    mm0.header = MagicMock()
+    mm0.header.side_effect = ["foosubject", "foo bar <foo@bar.com>",
+                              "foosubject", "foo bar <foo@bar.com>"]
+    mm1 = lambda: None
+    mm1.tags = ["grp:0"]
+    mm1.date = 0
+    mm1.threadid = "id1"
+    mm1.header = MagicMock()
+    mm1.header.side_effect = ["bar foo <bar@foo.com>"]
+    mm2 = lambda: None
+    mm2.date = 1
+    mm2.tags = ["grp:0", "bartag"]
+    mm2.threadid = "id2"
+    mm2.header = MagicMock()
+    mm2.header.side_effect = ["foosubject", "bar foo <bar@foo.com>"]
+    mm3 = lambda: None
+    mm3.date = 2
+    mm3.tags = ["foobartag"]
+    mm3.threadid = "id3"
+    mm3.header = MagicMock()
+    mm3.header.side_effect = ["foosubject", "bar\tfoo <bar@foo.com>"]
+
+    db.config = {}
+    db.messages = MagicMock()
+    db.messages.side_effect = [iter([mm0, mm1, mm2, mm3]), iter([mm0, mm1, mm2])]
+    db.count_messages = MagicMock(return_value=1)
+
+    with app.test_client() as test_client:
+        response = test_client.get('/api/query/foo')
+        assert response.status_code == 200
+        thrds = json.loads(response.data.decode())
+        assert len(thrds) == 2
+        assert len(thrds[0]) == 2
+
+        assert thrds[0][0]["authors"] == ["bar foo <bar@foo.com>", "foo bar <foo@bar.com>"]
+        assert thrds[0][0]["subject"] == "foosubject"
+        thrds[0][0]["tags"].sort()
+        assert thrds[0][0]["tags"] == ["bartag", "grp:0"]
+        assert thrds[0][0]["thread_id"] == "id1"
+        assert thrds[0][0]["total_messages"] == 1
+
+        assert thrds[0][1]["authors"] == ["bar foo <bar@foo.com>"]
+        assert thrds[0][1]["subject"] == "foosubject"
+        thrds[0][1]["tags"].sort()
+        assert thrds[0][1]["tags"] == ["bartag", "grp:0"]
+        assert thrds[0][1]["thread_id"] == "id2"
+        assert thrds[0][1]["total_messages"] == 1
+
+        assert thrds[1]["authors"] == ["bar foo <bar@foo.com>"]
+        assert thrds[1]["subject"] == "foosubject"
+        thrds[1]["tags"].sort()
+        assert thrds[1]["tags"] == ["foobartag"]
+        assert thrds[1]["thread_id"] == "id3"
+        assert thrds[1]["total_messages"] == 1
+
+    assert db.messages.mock_calls == [
+        call('thread:"{foo}"', exclude_tags=[], sort=notmuch2.Database.SORT.NEWEST_FIRST),
+        call('thread:"{tag:grp:0}"', exclude_tags=[], sort=notmuch2.Database.SORT.NEWEST_FIRST)
+    ]
+    assert db.count_messages.mock_calls == [
+        call('thread:id1'),
+        call('thread:id2'),
+        call('thread:id3')
+    ]
+
+    mm0.header.assert_has_calls([call("subject"), call("from")])
+    mm1.header.assert_has_calls([call("from")])
+    mm2.header.assert_has_calls([call("subject"), call("from")])
+    mm3.header.assert_has_calls([call("subject"), call("from")])
+
+
 def test_address(setup):
     app, db = setup
 

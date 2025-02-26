@@ -287,16 +287,15 @@ def create_app() -> Flask:
             threads = {}
             seen_groups = []
             for msg in msgs:
-                update = True
-                if msg.threadid not in threads:
-                    grps = [ t for t in msg.tags if t.startswith('grp:') ]
-                    if len(grps) > 0 and grps[0] in seen_groups:
-                        # we have seen this group, the thread will already be there
-                        continue
+                grps = [ t for t in msg.tags if t.startswith('grp:') ]
+                # we might have seen the thread before, but without the group tag
+                if (msg.threadid not in threads) or (len(grps) > 0 and "authors" in threads[msg.threadid] and not in_group):
                     if len(grps) > 0 and not in_group:
-                        seen_groups.append(grps[0])
-                        threads[msg.threadid] = get_threads(f'tag:{grps[0]}', in_group=True)
-                        update = False
+                        if grps[0] in seen_groups:
+                            continue
+                        else:
+                            seen_groups.append(grps[0])
+                            threads[msg.threadid] = get_threads(f'tag:{grps[0]}', in_group=True)
                     else:
                         subject = get_header(msg, "subject")
                         threads[msg.threadid] = {
@@ -305,7 +304,7 @@ def create_app() -> Flask:
                             "subject": subject if subject else "(no subject)",
                             "tags": {}
                         }
-                if update:
+                if "authors" in threads[msg.threadid]: # if it's not a thread group
                     threads[msg.threadid]["authors"][get_header(msg, "from")] = 1
                     threads[msg.threadid]["oldest_date"] = msg.date
                     for tag in msg.tags:
