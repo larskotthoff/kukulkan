@@ -156,7 +156,15 @@ export function TodoThreads(props) {
                                 <div data-testid={`${day.toDateString()}-boxes`} class="boxes">
                                   <For each={dueMap.get(day.toString())}>
                                     {id =>
-                                      <div class="calendar-box" data-id={id} onMouseOver={() => props.setActiveThread(id)}/>
+                                      <div class="calendar-box"
+                                        data-id={id}
+                                        onMouseOver={() => {
+                                          props.setActiveThread(id);
+                                          let el = document.querySelector(".thread.active");
+                                          if(!el.checkVisibility() && el.parentElement.classList.contains("thread-group")) {
+                                            el.parentElement.dispatchEvent(new CustomEvent("toggle"));
+                                          }
+                                        }}/>
                                     }
                                   </For>
                                 </div>
