@@ -203,19 +203,65 @@ export function Kukulkan(props) {
   mkShortcut([["d"]], doneActive, true);
 
   async function groupActive() {
-    let affectedThreads = getAffectedThreads();
+    const affectedThreads = getAffectedThreads();
     if(affectedThreads.length === 0) return;
-    const url = apiURL(`api/group/${encodeURIComponent(affectedThreads.join(' '))}`);
-    props.sp?.(0);
 
-    const response = await fetch(url);
-    props.sp?.(1);
-    if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
-    let grp = await response.text();
-    affectedThreads.forEach(affectedThread => {
-      const thread = threads().flat().find(t => t.thread_id === affectedThread);
-      thread.tags.push(grp);
+    const groupMap = new Map();
+    affectedThread.forEach((at) => {
+      const thread = threads().flat().find(t => t.thread_id === at),
+            groupTags = thread.tags.filter((t) => t.startsWith("grp:"));
+      groupTags.forEach((gt) => {
+        if(groupMap.has(gt)) {
+          groupMap.get(gt).push(at);
+        } else {
+          groupMap.set(gt, [at]);
+        }
+      });
     });
+
+    const firstGroup = groupMap.keys().next().value;
+    if(groupMap.size === 1 && groupMap.get(firstGroup).length === affectedThreads.length) {
+      // ungroup
+        const url = apiURL(`api/tag_batch/thread/${encodeURIComponent(groupMap.get(firstGroup).join(' '))}/-${encodeURIComponent(firstGroup)}`);
+      });
+
+      fetch(url).then((response) => {
+        if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
+        groupMap.get(gt).forEach(at => {
+          const thread = threads().flat().find(t => t.thread_id === at);
+          thread.tags = thread.tags.filter(t => t !== firstGroup);
+        });
+      });
+    } else {
+      // more than one group selected, assume that we want to create a new group
+      // from all threads
+      if(groupMap.size > 1) {
+        groupMap.keys().forEach((gt) => {
+          const url = apiURL(`api/tag_batch/thread/${encodeURIComponent(groupMap.get(gt).join(' '))}/-${encodeURIComponent(gt)}`);
+        });
+
+        fetch(url).then((response) => {
+          if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
+          groupMap.get(gt).forEach(at => {
+            const thread = threads().flat().find(t => t.thread_id === at);
+            thread.tags = thread.tags.filter(t => t !== gt);
+          });
+        });
+      }
+
+      // group all affected threads
+      const url = apiURL(`api/group/${encodeURIComponent(affectedThreads.join(' '))}`);
+      props.sp?.(0);
+
+      const response = await fetch(url);
+      props.sp?.(1);
+      if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
+      const grp = await response.text();
+      affectedThreads.forEach(affectedThread => {
+        const thread = threads().flat().find(t => t.thread_id === affectedThread);
+        thread.tags.push(grp);
+      });
+    }
     setThreads(JSON.parse(JSON.stringify(threads())));
     setSelectedThreads([]);
   }
