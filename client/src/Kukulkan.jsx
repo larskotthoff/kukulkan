@@ -83,7 +83,7 @@ export function Kukulkan(props) {
           if(prev.classList.contains("collapsed")) {
             prev = prev.firstElementChild;
           } else {
-            prev = prev.lastElementChild;
+            prev = prev.lastElementChild.previousElementSibling;
           }
         }
         if(prev.classList.contains("thread")) {
@@ -96,7 +96,7 @@ export function Kukulkan(props) {
     () => {
       if(threads().length > 0) {
         let next = document.querySelector(".thread.active").nextElementSibling;
-        if(next === null || next.parentElement.classList.contains("collapsed")) {
+        if(next === null || next.classList.contains("thread-group-expander") || next.parentElement.classList.contains("collapsed")) {
           next = document.querySelector(".thread.active").parentElement.nextElementSibling;
         }
         if(next === null) return;
@@ -293,6 +293,10 @@ export function Kukulkan(props) {
           <For each={tprops.thread}>
             {(t) => <ThreadGroup thread={t} threadListElem={tprops.threadListElem}/>}
           </For>
+          <div class="thread-group-expander"
+              onClick={() => setCollapsed(!collapsed())}>
+            {collapsed() ? "🞃" : "🞁"}
+          </div>
         </div>
       );
     }

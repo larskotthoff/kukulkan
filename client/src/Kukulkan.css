@@ -280,6 +280,12 @@ button > span {
     border-left: 3px solid var(--primary-foreground);
 }
 
+.thread-group-expander {
+    margin-left: 1em;
+    line-height: 70%;
+    cursor: pointer;
+}
+
 .thread-group.collapsed > .thread:not(:first-child) {
     display: none;
 }
