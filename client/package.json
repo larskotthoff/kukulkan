@@ -18,9 +18,9 @@
     "eslint-plugin-solid": "^0.14.3",
     "rollup-plugin-visualizer": "^5.12.0",
     "shadow-dom-testing-library": "^1.11.3",
-    "solid-devtools": "^0.30.1",
+    "solid-devtools": "^0.33.0",
     "terser": "^5.36.0",
-    "vite": "^5.4.10",
+    "vite": "^6.2.0",
     "vite-plugin-solid": "^2.10.2"
   },
   "dependencies": {
@@ -32,7 +32,7 @@
     "jsdom": "^25.0.1",
     "linkify-urls": "^5.0.0",
     "solid-js": "^1.9.3",
-    "vitest": "^2.1.4"
+    "vitest": "^3.0.7"
   },
   "pnpm": {
     "overrides": {
