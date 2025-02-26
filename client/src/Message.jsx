@@ -77,7 +77,7 @@ function formatAddrs(addrs) {
 }
 
 function angles(text) {
-  return text.replace('<', '&lt;').replace('>', '&gt;');
+  return text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 function printUrl(id) {
