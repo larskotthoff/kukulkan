@@ -272,7 +272,7 @@ export function TodoThreads(props) {
       <Calendar/>
       <div class="vertical-stack clipped todo-threads">
         <For each={props.threads().sort(sortThreadsByDueDate)}>
-          {(thread) => <props.ThreadGroup thread={thread} threadListElem={threadListElem}/>}
+          {(thread) => <props.ThreadGroup thread={thread} threadListElem={threadListElem} setActiveThread={props.setActiveThread}/>}
         </For>
       </div>
     </div>

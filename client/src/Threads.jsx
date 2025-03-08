@@ -17,24 +17,24 @@ export function ThreadGroup(tprops) {
       tprops.thread[0].collapsed = collapsed();
     }));
 
+    function toggle() {
+      setCollapsed(!collapsed());
+      if(collapsed()) {
+        tprops.setActiveThread(tprops.thread[0].thread_id);
+      }
+    }
+
     return (
       <div classList={{
           'thread-group': true,
           'width-100': true,
           'collapsed': collapsed()
         }}
-        onToggle={() => {
-          setCollapsed(!collapsed());
-          if(collapsed()) {
-            setActiveThread(tprops.thread[0].thread_id);
-          }
-        }}
-      >
+        onToggle={toggle}>
         <For each={tprops.thread}>
-          {(t) => <ThreadGroup thread={t} threadListElem={tprops.threadListElem}/>}
+          {(t) => <ThreadGroup thread={t} threadListElem={tprops.threadListElem} setActiveThread={tprops.setActiveThread}/>}
         </For>
-        <div class="thread-group-expander"
-            onClick={() => setCollapsed(!collapsed())}>
+        <div class="thread-group-expander" onClick={toggle}>
           {collapsed() ? "🞃" : "🞁"}
         </div>
       </div>

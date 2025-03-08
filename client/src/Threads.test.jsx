@@ -155,6 +155,36 @@ test("shows threads", async () => {
   expect(screen.getAllByText("foobar").length).toBe(1);
 });
 
+test("shows thread groups", async () => {
+  vi.stubGlobal('location', {
+    ...window.location,
+    search: '?query=foo'
+  });
+  vi.stubGlobal("data", {"allTags": tags, "threads": [
+    [{authors: ["foo@Author", "bar@Author"], subject: "test", tags: ["grp:0"], total_messages: 2, newest_date: 1000, oldest_date: 100, thread_id: 0},
+    {authors: ["test@1", "test@2"], subject: "foobar", tags: ["grp:0"], total_messages: 1, newest_date: 1000, oldest_date: 100, thread_id: 1}]
+  ]});
+
+  const { container } = render(() => <Threads Threads={SearchThreads}/>);
+  await vi.waitFor(() => {
+    expect(container.querySelector("input")).not.toBe(null);
+  });
+
+  expect(screen.getByText("1 thread group.")).toBeInTheDocument();
+
+  expect(container.querySelectorAll(".thread-group.collapsed").length).toBe(1);
+
+  expect(container.querySelectorAll(".thread").length).toBe(2);
+  expect(container.querySelectorAll(".chip").length).toBe(10);
+  expect(screen.getAllByText("foo@Author").length).toBe(2);
+  expect(screen.getAllByText("bar@Author").length).toBe(2);
+  expect(screen.getAllByText("test").length).toBe(1);
+
+  expect(screen.getAllByText("test@1").length).toBe(2);
+  expect(screen.getAllByText("test@2").length).toBe(2);
+  expect(screen.getAllByText("foobar").length).toBe(1);
+});
+
 test("opens thread on enter and click", async () => {
   vi.stubGlobal('location', {
     ...window.location,
@@ -233,11 +263,6 @@ test("navigation and selection shortcuts work", async () => {
   await userEvent.type(document.body, "{ArrowUp}");
   expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@1");
 
-  await userEvent.type(document.body, "J");
-  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@2");
-  await userEvent.type(document.body, "K");
-  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@1");
-
   await userEvent.type(document.body, "0");
   expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@2");
   await userEvent.type(document.body, "{home}");
@@ -255,6 +280,102 @@ test("navigation and selection shortcuts work", async () => {
   await userEvent.type(document.body, "{enter}");
   expect(window.open).toHaveBeenCalledTimes(1);
   expect(window.open).toHaveBeenCalledWith('/thread?id=bar', '_self');
+});
+
+test("thread groups can be expanded and collapsed", async () => {
+  vi.stubGlobal('location', {
+    ...window.location,
+    search: '?query=foo'
+  });
+  vi.stubGlobal("data", {"allTags": tags, "threads": [
+    [{thread_id: "foo1", authors: ["test@1"], subject: "foobar1", tags: ["grp:0"], total_messages: 1, newest_date: 1000, oldest_date: 100},
+    {thread_id: "foo2", authors: ["test@2"], subject: "foobar2", tags: ["grp:0"], total_messages: 1, newest_date: 1000, oldest_date: 100}]
+  ]});
+  const { container } = render(() => <Threads Threads={SearchThreads}/>);
+  await vi.waitFor(() => {
+    expect(container.querySelector("input")).not.toBe(null);
+  });
+
+  expect(screen.getByText("1 thread group.")).toBeInTheDocument();
+
+  // threads collapsed
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@1");
+  await userEvent.type(document.body, "j");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@1");
+  await userEvent.type(document.body, "l");
+  await userEvent.type(document.body, "j");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@2");
+  await userEvent.type(document.body, "h");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@1");
+  await userEvent.type(document.body, "j");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@1");
+
+  await userEvent.click(container.querySelector(".thread-group-expander"));
+  await userEvent.type(document.body, "j");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@2");
+  await userEvent.click(container.querySelector(".thread-group-expander"));
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@1");
+  await userEvent.type(document.body, "j");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@1");
+});
+
+test("navigation shortcuts work with thread groups", async () => {
+  vi.stubGlobal('location', {
+    ...window.location,
+    search: '?query=foo'
+  });
+  vi.stubGlobal("data", {"allTags": tags, "threads": [
+    [{thread_id: "foo1", authors: ["test@1"], subject: "foobar1", tags: ["grp:0"], total_messages: 1, newest_date: 1000, oldest_date: 100},
+    {thread_id: "foo2", authors: ["test@2"], subject: "foobar2", tags: ["grp:0"], total_messages: 1, newest_date: 1000, oldest_date: 100}],
+    [{thread_id: "foo3", authors: ["test@3"], subject: "foobar3", tags: ["grp:1"], total_messages: 1, newest_date: 1000, oldest_date: 100},
+    {thread_id: "foo4", authors: ["test@4"], subject: "foobar4", tags: ["grp:1"], total_messages: 1, newest_date: 1000, oldest_date: 100}]
+  ]});
+  const { container } = render(() => <Threads Threads={SearchThreads}/>);
+  await vi.waitFor(() => {
+    expect(container.querySelector("input")).not.toBe(null);
+  });
+
+  expect(screen.getByText("2 thread groups.")).toBeInTheDocument();
+
+  // threads collapsed
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@1");
+
+  await userEvent.type(document.body, "j");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@3");
+  await userEvent.type(document.body, "k");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@1");
+
+  await userEvent.type(document.body, "{ArrowDown}");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@3");
+  await userEvent.type(document.body, "{ArrowUp}");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@1");
+
+  await userEvent.type(document.body, "0");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@3");
+  await userEvent.type(document.body, "{home}");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@1");
+  await userEvent.type(document.body, "{end}");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@3");
+
+  // threads expanded
+  await userEvent.type(document.body, "{home}");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@1");
+  await userEvent.type(document.body, "l");
+  await userEvent.type(document.body, "j");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@2");
+  await userEvent.type(document.body, "j");
+  await userEvent.type(document.body, "l");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@3");
+  await userEvent.type(document.body, "j");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@4");
+  await userEvent.type(document.body, "k");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@3");
+  await userEvent.type(document.body, "k");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@2");
+  await userEvent.type(document.body, "{home}");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@1");
+  await userEvent.type(document.body, "{end}");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@4");
 });
 
 test("delete thread works", async () => {

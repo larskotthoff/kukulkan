@@ -138,7 +138,7 @@ export function SearchThreads(props) {
       </a>
       <div class="horizontal-stack justify-end width-100">{props.threads().length} thread group{props.threads().length === 1 ? "" : "s"}.</div>
       <For each={props.threads()}>
-        {(thread) => <props.ThreadGroup thread={thread} threadListElem={threadListElem}/>}
+        {(thread) => <props.ThreadGroup thread={thread} threadListElem={threadListElem} setActiveThread={props.setActiveThread}/>}
       </For>
     </div>
   );
