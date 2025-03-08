@@ -696,6 +696,9 @@ test("group threads -- new group", async () => {
   expect(screen.getAllByText("grp:0").length).toBe(2);
 
   expect(container.querySelectorAll(".thread.selected").length).toBe(0);
+
+  expect(screen.queryByText("2 thread groups.")).not.toBeInTheDocument();
+  expect(screen.getByText("1 thread group.")).toBeInTheDocument();
 });
 
 test("group threads -- add to group", async () => {
@@ -726,6 +729,9 @@ test("group threads -- add to group", async () => {
   expect(screen.getAllByText("grp:0").length).toBe(2);
 
   expect(container.querySelectorAll(".thread.selected").length).toBe(0);
+
+  expect(screen.queryByText("2 thread groups.")).not.toBeInTheDocument();
+  expect(screen.getByText("1 thread group.")).toBeInTheDocument();
 });
 
 test("group threads -- ungroup", async () => {
@@ -756,6 +762,9 @@ test("group threads -- ungroup", async () => {
   expect(screen.queryAllByText("grp:0").length).toBe(0);
 
   expect(container.querySelectorAll(".thread.selected").length).toBe(0);
+
+  expect(screen.queryByText("1 thread group.")).not.toBeInTheDocument();
+  expect(screen.getByText("2 thread groups.")).toBeInTheDocument();
 });
 
 test("group threads -- ungroup then new group", async () => {
@@ -766,11 +775,12 @@ test("group threads -- ungroup then new group", async () => {
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
   vi.stubGlobal("data", {"allTags": tags, "threads": [
     {thread_id: "foo1", authors: ["autho@s"], subject: "subject", tags: ["grp:0"], total_messages: 1, newest_date: 1000, oldest_date: 100},
-    {thread_id: "foo2", authors: ["autho@s"], subject: "subject", tags: ["grp:1"], total_messages: 1, newest_date: 1000, oldest_date: 100}
+    {thread_id: "foo2", authors: ["autho@s"], subject: "subject", tags: ["grp:1"], total_messages: 1, newest_date: 1000, oldest_date: 100},
+    {thread_id: "foo3", authors: ["autho@s"], subject: "subject", tags: [], total_messages: 1, newest_date: 1000, oldest_date: 100}
   ]});
   const { container } = render(() => <Threads Threads={SearchThreads}/>);
   await vi.waitFor(() => {
-    expect(screen.getByText("2 thread groups.")).toBeInTheDocument();
+    expect(screen.getByText("3 thread groups.")).toBeInTheDocument();
   });
   expect(screen.getByText("grp:0")).toBeInTheDocument();
   expect(screen.getByText("grp:1")).toBeInTheDocument();
@@ -778,19 +788,24 @@ test("group threads -- ungroup then new group", async () => {
   await userEvent.type(document.body, " ");
   await userEvent.type(document.body, "j");
   await userEvent.type(document.body, " ");
-  expect(container.querySelectorAll(".thread.selected").length).toBe(2);
+  await userEvent.type(document.body, "j");
+  await userEvent.type(document.body, " ");
+  expect(container.querySelectorAll(".thread.selected").length).toBe(3);
 
   global.fetch.mockResolvedValue({ ok: true, text: () => "grp:2" });
   await userEvent.type(document.body, "g");
   expect(global.fetch).toHaveBeenCalledTimes(3);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/thread/foo1/-grp%3A0");
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/thread/foo2/-grp%3A1");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/group/foo1%20foo2");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/group/foo1%20foo2%20foo3");
   expect(screen.queryByText("grp:0")).not.toBeInTheDocument();
   expect(screen.queryByText("grp:1")).not.toBeInTheDocument();
-  expect(screen.getAllByText("grp:2").length).toBe(2);
+  expect(screen.getAllByText("grp:2").length).toBe(3);
 
   expect(container.querySelectorAll(".thread.selected").length).toBe(0);
+
+  expect(screen.queryByText("2 thread groups.")).not.toBeInTheDocument();
+  expect(screen.getByText("1 thread group.")).toBeInTheDocument();
 });
 
 // vim: tabstop=2 shiftwidth=2 expandtab

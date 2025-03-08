@@ -294,7 +294,23 @@ export function Threads(props) {
         }
       });
     }
-    setThreads(JSON.parse(JSON.stringify(threads())));
+
+    // create new hierarchical thread structure
+    let old = JSON.parse(JSON.stringify(threads().flat())),
+        newThreads = [];
+    while(old.length > 0) {
+      const next = old.shift(),
+            // only take the first, ignore any other group tags
+            grp = next.tags.find(t => t.startsWith("grp:"));
+      if(grp === undefined) {
+        newThreads.push(next);
+      } else {
+        newThreads = [...newThreads, [next, ...old.filter(t => t.tags.includes(grp))]];
+        old = old.filter(t => !t.tags.includes(grp));
+      }
+    }
+
+    setThreads(newThreads);
     setSelectedThreads([]);
   }
 
