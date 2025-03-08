@@ -118,7 +118,7 @@ export function SearchThreads(props) {
         </div>
         <div>
           <For each={tprops.thread.tags.sort()}>
-            {(tag) => <ColorChip value={tag}/>}
+            {(tag) => <ColorChip class={tag.startsWith("grp:") ? "hide-if-narrow" : ""} value={tag}/>}
           </For>
         </div>
       </div>
