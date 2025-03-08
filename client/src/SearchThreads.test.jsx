@@ -2,6 +2,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { cleanup, render, screen } from "@solidjs/testing-library";
 import { userEvent } from "@testing-library/user-event";
 
+import { ThreadGroup } from "./Kukulkan.jsx";
 import { SearchThreads } from "./SearchThreads.jsx";
 import { renderDateNumThread } from "./utils.js";
 
@@ -24,14 +25,14 @@ afterEach(() => {
 });
 
 const threads = [{authors: ["foo@Author", "bar@Author"], subject: "test", tags:
-  ["fooTag", "barTag"], total_messages: 2, newest_date: 1000, oldest_date: 100}];
+  ["fooTag", "barTag"], total_messages: 2, newest_date: 1000, oldest_date: 100, thread_id: 0}];
 
 test("exports SearchThreads", () => {
   expect(SearchThreads).not.toBe(undefined);
 });
 
 test("renders components", () => {
-  const { container } = render(() => <SearchThreads threads={() => threads} index={() => 0} activeThread={() => 0}
+  const { container } = render(() => <SearchThreads ThreadGroup={ThreadGroup} threads={() => threads} activeThread={() => 0}
     selectedThreads={() => []} setQuery={() => []}/>);
   expect(container.querySelector("div")).not.toBe(undefined);
   expect(container.querySelector("#query-box")).not.toBe(undefined);
@@ -39,7 +40,7 @@ test("renders components", () => {
 });
 
 test("shows completions and allows to select", async () => {
-  const { container } = render(() => <SearchThreads threads={() => []} index={() => 0} activeThread={() => 0}
+  const { container } = render(() => <SearchThreads ThreadGroup={ThreadGroup} threads={() => []} activeThread={() => 0}
     selectedThreads={() => []} setQuery={() => []}/>);
   await userEvent.type(container.querySelector("#query-box > input"), "t");
   expect(screen.getByText("tag:unread")).toBeInTheDocument();
@@ -54,7 +55,7 @@ test("shows completions and allows to select", async () => {
 });
 
 test("shows tag completions and allows to select", async () => {
-  const { container } = render(() => <SearchThreads threads={() => []} index={() => 0} activeThread={() => 0}
+  const { container } = render(() => <SearchThreads ThreadGroup={ThreadGroup} threads={() => []} activeThread={() => 0}
     selectedThreads={() => []} setQuery={() => []}/>);
   await userEvent.type(container.querySelector("#query-box > input"), "tag:f");
   expect(screen.getByText("tag:foo")).toBeInTheDocument();
@@ -64,7 +65,7 @@ test("shows tag completions and allows to select", async () => {
 });
 
 test("shows adress completions and allows to select", async () => {
-  const { container } = render(() => <SearchThreads threads={() => []} index={() => 0} activeThread={() => 0}
+  const { container } = render(() => <SearchThreads ThreadGroup={ThreadGroup} threads={() => []} activeThread={() => 0}
     selectedThreads={() => []} setQuery={() => []}/>);
   global.fetch.mockResolvedValue({ ok: true, json: () => ["tester@test.com", "foo@bar.com"] });
   await userEvent.type(container.querySelector("#query-box > input"), "from:test");
@@ -82,7 +83,7 @@ test("shows adress completions and allows to select", async () => {
 });
 
 test("shows combined completions and allows to select", async () => {
-  const { container } = render(() => <SearchThreads threads={() => []} index={() => 0} activeThread={() => 0}
+  const { container } = render(() => <SearchThreads ThreadGroup={ThreadGroup} threads={() => []} activeThread={() => 0}
     selectedThreads={() => []} setQuery={() => []}/>);
   global.fetch.mockResolvedValue({ ok: true, json: () => ["tester@test.com", "foo@bar.com"] });
 
@@ -106,7 +107,7 @@ test("shows combined completions and allows to select", async () => {
 });
 
 test("saves queries for completion", async () => {
-  let { container } = render(() => <SearchThreads threads={() => []} index={() => 0} activeThread={() => 0}
+  let { container } = render(() => <SearchThreads ThreadGroup={ThreadGroup} threads={() => []} activeThread={() => 0}
     selectedThreads={() => []} setQuery={() => []}/>);
   await userEvent.type(container.querySelector("#query-box > input"), "t");
   expect(screen.queryByText("tag:foo")).not.toBeInTheDocument();
@@ -116,7 +117,7 @@ test("saves queries for completion", async () => {
     ...window.location,
     search: '?query=tag:foo'
   });
-  container = render(() => <SearchThreads threads={() => []} index={() => 0} activeThread={() => 0}
+  container = render(() => <SearchThreads ThreadGroup={ThreadGroup} threads={() => []} activeThread={() => 0}
     selectedThreads={() => []} setQuery={() => []}/>).container;
   container.querySelector("#query-box > input").value = "";
   await userEvent.type(container.querySelector("#query-box > input"), "t");
@@ -124,7 +125,7 @@ test("saves queries for completion", async () => {
 });
 
 test("shows threads", () => {
-  const { container } = render(() => <SearchThreads threads={() => [threads[0], threads[0]]} index={() => 0} activeThread={() => 2}
+  const { container } = render(() => <SearchThreads ThreadGroup={ThreadGroup} threads={() => [threads[0], threads[0]]} activeThread={() => 2}
     selectedThreads={() => []} setQuery={() => []}/>);
 
   expect(container.querySelectorAll(".thread").length).toBe(2);
@@ -140,7 +141,7 @@ test("shows threads", () => {
 });
 
 test("sets active and selected classes", () => {
-  const { container } = render(() => <SearchThreads threads={() => threads} index={() => 0} activeThread={() => 0}
+  const { container } = render(() => <SearchThreads ThreadGroup={ThreadGroup} threads={() => threads} activeThread={() => 0}
     selectedThreads={() => [0]} setQuery={() => []}/>);
 
   expect(container.querySelectorAll(".thread").length).toBe(1);
@@ -150,7 +151,7 @@ test("sets active and selected classes", () => {
 
 test("sets active threads on click", async () => {
   const setActiveThread = vi.fn(),
-        { container } = render(() => <SearchThreads threads={() => threads} index={() => 0} activeThread={() => 0}
+        { container } = render(() => <SearchThreads ThreadGroup={ThreadGroup} threads={() => threads} activeThread={() => 0}
           selectedThreads={() => []} setActiveThread={setActiveThread} setQuery={() => []} openActive={() => 0}/>);
 
   expect(container.querySelectorAll(".thread").length).toBe(1);

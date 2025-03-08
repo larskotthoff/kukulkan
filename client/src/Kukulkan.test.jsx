@@ -2,7 +2,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { cleanup, render, screen } from "@solidjs/testing-library";
 import { userEvent } from "@testing-library/user-event";
 
-import { Kukulkan } from "./Kukulkan.jsx";
+import { Kukulkan, ThreadGroup } from "./Kukulkan.jsx";
 import { SearchThreads } from "./SearchThreads.jsx";
 import { TodoThreads } from "./TodoThreads.jsx";
 
@@ -29,6 +29,7 @@ afterEach(() => {
 
 test("exports Kukulkan", () => {
   expect(Kukulkan).not.toBe(undefined);
+  expect(ThreadGroup).not.toBe(undefined);
 });
 
 test("renders components", async () => {
@@ -137,7 +138,7 @@ test("shows threads", async () => {
     expect(container.querySelector("input")).not.toBe(null);
   });
 
-  expect(screen.getByText("2 threads.")).toBeInTheDocument();
+  expect(screen.getByText("2 thread groups.")).toBeInTheDocument();
 
   expect(container.querySelectorAll(".thread").length).toBe(2);
   expect(container.querySelectorAll(".chip").length).toBe(12);
@@ -166,7 +167,7 @@ test("opens thread on enter and click", async () => {
   await vi.waitFor(() => {
     expect(container.querySelector("input")).not.toBe(null);
   });
-  expect(screen.getByText("1 thread.")).toBeInTheDocument();
+  expect(screen.getByText("1 thread group.")).toBeInTheDocument();
 
   await userEvent.type(document.body, "{enter}");
   expect(window.open).toHaveBeenCalledTimes(1);
@@ -192,7 +193,7 @@ test("opens thread on enter and click in same tab with config", async () => {
     expect(container.querySelector("input")).not.toBe(null);
   });
 
-  expect(screen.getByText("1 thread.")).toBeInTheDocument();
+  expect(screen.getByText("1 thread group.")).toBeInTheDocument();
 
   await userEvent.type(document.body, "{enter}");
   expect(window.open).toHaveBeenCalledTimes(1);
@@ -218,7 +219,7 @@ test("navigation and selection shortcuts work", async () => {
     expect(container.querySelector("input")).not.toBe(null);
   });
 
-  expect(screen.getByText("2 threads.")).toBeInTheDocument();
+  expect(screen.getByText("2 thread groups.")).toBeInTheDocument();
 
   expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@1");
 
@@ -267,7 +268,7 @@ test("delete thread works", async () => {
   ]});
   render(() => <Kukulkan Threads={SearchThreads}/>);
   await vi.waitFor(() => {
-    expect(screen.getByText("1 thread.")).toBeInTheDocument();
+    expect(screen.getByText("1 thread group.")).toBeInTheDocument();
   });
 
   await userEvent.type(document.body, "{delete}");
@@ -288,7 +289,7 @@ test("mark thread done works", async () => {
   ]});
   render(() => <Kukulkan Threads={SearchThreads}/>);
   await vi.waitFor(() => {
-    expect(screen.getByText("1 thread.")).toBeInTheDocument();
+    expect(screen.getByText("1 thread group.")).toBeInTheDocument();
   });
 
   expect(screen.getByText("todo")).toBeInTheDocument();
@@ -312,7 +313,7 @@ test("tag edits work", async () => {
   ]});
   render(() => <Kukulkan Threads={SearchThreads}/>);
   await vi.waitFor(() => {
-    expect(screen.getByText("1 thread.")).toBeInTheDocument();
+    expect(screen.getByText("1 thread group.")).toBeInTheDocument();
   });
 
   await userEvent.type(document.body, "t");
@@ -335,7 +336,7 @@ test("tag edit box not shown when nothing there", async () => {
   vi.stubGlobal("data", {"allTags": tags, "threads": []});
   render(() => <Kukulkan Threads={SearchThreads}/>);
   await vi.waitFor(() => {
-    expect(screen.getByText("0 threads.")).toBeInTheDocument();
+    expect(screen.getByText("0 thread groups.")).toBeInTheDocument();
   });
 
   await userEvent.type(document.body, "t");
@@ -356,7 +357,7 @@ test("tag edits with multiple selection work", async () => {
   ]});
   const { container } = render(() => <Kukulkan Threads={SearchThreads}/>);
   await vi.waitFor(() => {
-    expect(screen.getByText("2 threads.")).toBeInTheDocument();
+    expect(screen.getByText("2 thread groups.")).toBeInTheDocument();
   });
 
   await userEvent.type(document.body, " ");
@@ -385,7 +386,7 @@ test("tag edits completions work", async () => {
   ]});
   render(() => <Kukulkan Threads={SearchThreads}/>);
   await vi.waitFor(() => {
-    expect(screen.getByText("1 thread.")).toBeInTheDocument();
+    expect(screen.getByText("1 thread group.")).toBeInTheDocument();
   });
 
   await userEvent.type(document.body, "t");

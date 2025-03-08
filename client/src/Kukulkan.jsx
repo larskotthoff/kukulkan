@@ -9,6 +9,42 @@ import "./Kukulkan.css";
 import { apiURL } from "./utils.js";
 import { mkShortcut } from "./UiUtils.jsx";
 
+export function ThreadGroup(tprops) {
+  if(Object.prototype.toString.call(tprops.thread) === '[object Array]') {
+    if(tprops.thread[0].collapsed === undefined) tprops.thread[0].collapsed = true;
+    let [collapsed, setCollapsed] = createSignal(tprops.thread[0].collapsed);
+
+    createEffect(on(collapsed, () => {
+      tprops.thread[0].collapsed = collapsed();
+    }));
+
+    return (
+      <div classList={{
+          'thread-group': true,
+          'width-100': true,
+          'collapsed': collapsed()
+        }}
+        onToggle={() => {
+          setCollapsed(!collapsed());
+          if(collapsed()) {
+            setActiveThread(tprops.thread[0].thread_id);
+          }
+        }}
+      >
+        <For each={tprops.thread}>
+          {(t) => <ThreadGroup thread={t} threadListElem={tprops.threadListElem}/>}
+        </For>
+        <div class="thread-group-expander"
+            onClick={() => setCollapsed(!collapsed())}>
+          {collapsed() ? "🞃" : "🞁"}
+        </div>
+      </div>
+    );
+  }
+
+  return tprops.threadListElem(tprops);
+}
+
 export function Kukulkan(props) {
   const [query, setQuery] = createSignal(),
         [selectedThreads, setSelectedThreads] = createSignal([]),
@@ -115,7 +151,7 @@ export function Kukulkan(props) {
       if(threads().length > 0) {
         let ti = threads().flat().at(-1).thread_id,
             el = document.querySelector(`[data-id='${ti}']`);
-        if(!el.checkVisibility()) {
+        if(el.parentElement.classList.contains("thread-group") && el.parentElement.classList.contains("collapsed")) {
           ti = el.parentElement.firstElementChild.dataset.id;
         }
         setActiveThread(ti);
@@ -222,9 +258,7 @@ export function Kukulkan(props) {
     const firstGroup = groupMap.keys().next().value;
     if(groupMap.size === 1 && groupMap.get(firstGroup).length === affectedThreads.length) {
       // ungroup
-        const url = apiURL(`api/tag_batch/thread/${encodeURIComponent(groupMap.get(firstGroup).join(' '))}/-${encodeURIComponent(firstGroup)}`);
-      });
-
+      const url = apiURL(`api/tag_batch/thread/${encodeURIComponent(groupMap.get(firstGroup).join(' '))}/-${encodeURIComponent(firstGroup)}`);
       fetch(url).then((response) => {
         if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
         groupMap.get(gt).forEach(at => {
@@ -312,42 +346,6 @@ export function Kukulkan(props) {
         />
       </Show>
     );
-  }
-
-  function ThreadGroup(tprops) {
-    if(Object.prototype.toString.call(tprops.thread) === '[object Array]') {
-      if(tprops.thread[0].collapsed === undefined) tprops.thread[0].collapsed = true;
-      let [collapsed, setCollapsed] = createSignal(tprops.thread[0].collapsed);
-
-      createEffect(on(collapsed, () => {
-        tprops.thread[0].collapsed = collapsed();
-      }));
-
-      return (
-        <div classList={{
-            'thread-group': true,
-            'width-100': true,
-            'collapsed': collapsed()
-          }}
-          onToggle={() => {
-            setCollapsed(!collapsed());
-            if(collapsed()) {
-              setActiveThread(tprops.thread[0].thread_id);
-            }
-          }}
-        >
-          <For each={tprops.thread}>
-            {(t) => <ThreadGroup thread={t} threadListElem={tprops.threadListElem}/>}
-          </For>
-          <div class="thread-group-expander"
-              onClick={() => setCollapsed(!collapsed())}>
-            {collapsed() ? "🞃" : "🞁"}
-          </div>
-        </div>
-      );
-    }
-
-    return tprops.threadListElem(tprops);
   }
 
   return (

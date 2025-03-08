@@ -161,7 +161,7 @@ export function TodoThreads(props) {
                                         onMouseOver={() => {
                                           props.setActiveThread(id);
                                           let el = document.querySelector(".thread.active");
-                                          if(!el.checkVisibility() && el.parentElement.classList.contains("thread-group")) {
+                                          if(el.parentElement.classList.contains("thread-group") && el.parentElement.classList.contains("collapsed")) {
                                             el.parentElement.dispatchEvent(new CustomEvent("toggle"));
                                           }
                                         }}/>
