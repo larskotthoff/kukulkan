@@ -299,21 +299,26 @@ test("thread groups can be expanded and collapsed", async () => {
   expect(screen.getByText("1 thread group.")).toBeInTheDocument();
 
   // threads collapsed
+  expect(container.querySelectorAll(".thread-group.collapsed").length).toBe(1);
   expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@1");
   await userEvent.type(document.body, "j");
   expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@1");
   await userEvent.type(document.body, "l");
+  expect(container.querySelectorAll(".thread-group.collapsed").length).toBe(0);
   await userEvent.type(document.body, "j");
   expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@2");
   await userEvent.type(document.body, "h");
+  expect(container.querySelectorAll(".thread-group.collapsed").length).toBe(1);
   expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@1");
   await userEvent.type(document.body, "j");
   expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@1");
 
   await userEvent.click(container.querySelector(".thread-group-expander"));
+  expect(container.querySelectorAll(".thread-group.collapsed").length).toBe(0);
   await userEvent.type(document.body, "j");
   expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@2");
   await userEvent.click(container.querySelector(".thread-group-expander"));
+  expect(container.querySelectorAll(".thread-group.collapsed").length).toBe(1);
   expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@1");
   await userEvent.type(document.body, "j");
   expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@1");
@@ -396,6 +401,49 @@ test("delete thread works", async () => {
   expect(global.fetch).toHaveBeenCalledTimes(1);
   expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/thread/foo/deleted%20-unread");
   expect(screen.queryByText("unread")).not.toBeInTheDocument();
+  expect(screen.getByText("deleted")).toBeInTheDocument();
+});
+
+test("delete thread group works", async () => {
+  vi.stubGlobal('location', {
+    ...window.location,
+    search: '?query=foo'
+  });
+  global.fetch.mockResolvedValue({ ok: true, json: () => [] });
+  vi.stubGlobal("data", {"allTags": tags, "threads": [
+    [{thread_id: "foo", authors: ["te@t"], subject: "foobar", tags: ["grp:0"], total_messages: 1, newest_date: 1000, oldest_date: 100},
+    {thread_id: "bar", authors: ["te@t"], subject: "foobar", tags: ["grp:0"], total_messages: 1, newest_date: 1000, oldest_date: 100}]
+  ]});
+  render(() => <Threads Threads={SearchThreads}/>);
+  await vi.waitFor(() => {
+    expect(screen.getByText("1 thread group.")).toBeInTheDocument();
+  });
+
+  await userEvent.type(document.body, "{delete}");
+  expect(global.fetch).toHaveBeenCalledTimes(1);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/thread/foo%20bar/deleted%20-unread");
+  expect(screen.getAllByText("deleted").length).toBe(2);
+});
+
+test("delete expanded thread group works", async () => {
+  vi.stubGlobal('location', {
+    ...window.location,
+    search: '?query=foo'
+  });
+  global.fetch.mockResolvedValue({ ok: true, json: () => [] });
+  vi.stubGlobal("data", {"allTags": tags, "threads": [
+    [{thread_id: "foo", authors: ["te@t"], subject: "foobar", tags: ["grp:0"], total_messages: 1, newest_date: 1000, oldest_date: 100},
+    {thread_id: "bar", authors: ["te@t"], subject: "foobar", tags: ["grp:0"], total_messages: 1, newest_date: 1000, oldest_date: 100}]
+  ]});
+  render(() => <Threads Threads={SearchThreads}/>);
+  await vi.waitFor(() => {
+    expect(screen.getByText("1 thread group.")).toBeInTheDocument();
+  });
+
+  await userEvent.type(document.body, "l");
+  await userEvent.type(document.body, "{delete}");
+  expect(global.fetch).toHaveBeenCalledTimes(1);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/thread/foo/deleted%20-unread");
   expect(screen.getByText("deleted")).toBeInTheDocument();
 });
 
@@ -500,6 +548,40 @@ test("tag edits with multiple selection work", async () => {
   expect(window.open).toHaveBeenCalledTimes(0);
 });
 
+test("tag edits with multiple selection and thread groups work", async () => {
+  vi.stubGlobal('location', {
+    ...window.location,
+    search: '?query=foo'
+  });
+  global.fetch.mockResolvedValue({ ok: true, json: () => [] });
+  vi.stubGlobal("data", {"allTags": tags, "threads": [
+    [{thread_id: "foo1", authors: ["autho@s"], subject: "subject", tags: ["grp:0"], total_messages: 1, newest_date: 1000, oldest_date: 100},
+    {thread_id: "foo2", authors: ["autho@s"], subject: "subject", tags: ["grp:0"], total_messages: 1, newest_date: 1000, oldest_date: 100}],
+    {thread_id: "bar", authors: ["autho@s"], subject: "subject", tags: ["test2"], total_messages: 1, newest_date: 1000, oldest_date: 100}
+  ]});
+  const { container } = render(() => <Threads Threads={SearchThreads}/>);
+  await vi.waitFor(() => {
+    expect(screen.getByText("2 thread groups.")).toBeInTheDocument();
+  });
+
+  await userEvent.type(document.body, " ");
+  await userEvent.type(document.body, "j");
+  await userEvent.type(document.body, " ");
+  expect(container.querySelectorAll(".thread.selected").length).toBe(2);
+
+  await userEvent.type(document.body, "t");
+  await userEvent.type(document.querySelector("#edit-tag-box > input"), "-test2 foobar{enter}{enter}");
+
+  expect(global.fetch).toHaveBeenCalledTimes(1);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/thread/foo1%20foo2%20bar/-test2%20foobar");
+  expect(screen.queryByText("test2")).not.toBeInTheDocument();
+  expect(screen.queryAllByText("foobar").length).toBe(3);
+
+  expect(container.querySelectorAll(".thread.selected").length).toBe(0);
+
+  expect(window.open).toHaveBeenCalledTimes(0);
+});
+
 test("tag edits completions work", async () => {
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
   vi.stubGlobal("data", {"allTags": tags, "threads": [
@@ -585,6 +667,100 @@ test("shows todo due dates correctly after marking done", async () => {
   expect(container.querySelectorAll(".thread")[1].querySelectorAll("div")[5].innerHTML).toBe("");
   expect(container.querySelectorAll(".thread")[2].querySelector("div").innerHTML).toBe("");
   expect(container.querySelectorAll(".thread")[2].querySelectorAll("div")[4].innerHTML).toBe("test3");
+});
+
+test("group threads -- new group", async () => {
+  vi.stubGlobal('location', {
+    ...window.location,
+    search: '?query=foo'
+  });
+  global.fetch.mockResolvedValue({ ok: true, json: () => [] });
+  vi.stubGlobal("data", {"allTags": tags, "threads": [
+    {thread_id: "foo1", authors: ["autho@s"], subject: "subject", tags: ["foo"], total_messages: 1, newest_date: 1000, oldest_date: 100},
+    {thread_id: "foo2", authors: ["autho@s"], subject: "subject", tags: ["bar"], total_messages: 1, newest_date: 1000, oldest_date: 100}
+  ]});
+  const { container } = render(() => <Threads Threads={SearchThreads}/>);
+  await vi.waitFor(() => {
+    expect(screen.getByText("2 thread groups.")).toBeInTheDocument();
+  });
+
+  await userEvent.type(document.body, " ");
+  await userEvent.type(document.body, "j");
+  await userEvent.type(document.body, " ");
+  expect(container.querySelectorAll(".thread.selected").length).toBe(2);
+
+  global.fetch.mockResolvedValue({ ok: true, text: () => "grp:0" });
+  await userEvent.type(document.body, "g");
+  expect(global.fetch).toHaveBeenCalledTimes(1);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/group/foo1%20foo2");
+  expect(screen.getAllByText("grp:0").length).toBe(2);
+
+  expect(container.querySelectorAll(".thread.selected").length).toBe(0);
+});
+
+test("group threads -- ungroup", async () => {
+  vi.stubGlobal('location', {
+    ...window.location,
+    search: '?query=foo'
+  });
+  global.fetch.mockResolvedValue({ ok: true, json: () => [] });
+  vi.stubGlobal("data", {"allTags": tags, "threads": [
+    [{thread_id: "foo1", authors: ["autho@s"], subject: "subject", tags: ["grp:0"], total_messages: 1, newest_date: 1000, oldest_date: 100},
+    {thread_id: "foo2", authors: ["autho@s"], subject: "subject", tags: ["grp:0"], total_messages: 1, newest_date: 1000, oldest_date: 100}]
+  ]});
+  const { container } = render(() => <Threads Threads={SearchThreads}/>);
+  await vi.waitFor(() => {
+    expect(screen.getByText("1 thread group.")).toBeInTheDocument();
+  });
+
+  expect(screen.getAllByText("grp:0").length).toBe(2);
+  await userEvent.type(document.body, "l");
+  await userEvent.type(document.body, " ");
+  await userEvent.type(document.body, "j");
+  await userEvent.type(document.body, " ");
+  expect(container.querySelectorAll(".thread.selected").length).toBe(2);
+
+  await userEvent.type(document.body, "g");
+  expect(global.fetch).toHaveBeenCalledTimes(1);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/thread/foo1%20foo2/-grp%3A0");
+  expect(screen.queryAllByText("grp:0").length).toBe(0);
+
+  expect(container.querySelectorAll(".thread.selected").length).toBe(0);
+});
+
+test("group threads -- ungroup then new group", async () => {
+  vi.stubGlobal('location', {
+    ...window.location,
+    search: '?query=foo'
+  });
+  global.fetch.mockResolvedValue({ ok: true, json: () => [] });
+  vi.stubGlobal("data", {"allTags": tags, "threads": [
+    {thread_id: "foo1", authors: ["autho@s"], subject: "subject", tags: ["grp:0"], total_messages: 1, newest_date: 1000, oldest_date: 100},
+    {thread_id: "foo2", authors: ["autho@s"], subject: "subject", tags: ["grp:1"], total_messages: 1, newest_date: 1000, oldest_date: 100}
+  ]});
+  const { container } = render(() => <Threads Threads={SearchThreads}/>);
+  await vi.waitFor(() => {
+    expect(screen.getByText("2 thread groups.")).toBeInTheDocument();
+  });
+  expect(screen.getByText("grp:0")).toBeInTheDocument();
+  expect(screen.getByText("grp:1")).toBeInTheDocument();
+
+  await userEvent.type(document.body, " ");
+  await userEvent.type(document.body, "j");
+  await userEvent.type(document.body, " ");
+  expect(container.querySelectorAll(".thread.selected").length).toBe(2);
+
+  global.fetch.mockResolvedValue({ ok: true, text: () => "grp:2" });
+  await userEvent.type(document.body, "g");
+  expect(global.fetch).toHaveBeenCalledTimes(3);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/thread/foo1/-grp%3A0");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/thread/foo2/-grp%3A1");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/group/foo1%20foo2");
+  expect(screen.queryByText("grp:0")).not.toBeInTheDocument();
+  expect(screen.queryByText("grp:1")).not.toBeInTheDocument();
+  expect(screen.getAllByText("grp:2").length).toBe(2);
+
+  expect(container.querySelectorAll(".thread.selected").length).toBe(0);
 });
 
 // vim: tabstop=2 shiftwidth=2 expandtab

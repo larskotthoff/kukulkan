@@ -242,7 +242,7 @@ export function Threads(props) {
     if(affectedThreads.length === 0) return;
 
     const groupMap = new Map();
-    affectedThread.forEach((at) => {
+    affectedThreads.forEach((at) => {
       const thread = threads().flat().find(t => t.thread_id === at),
             groupTags = thread.tags.filter((t) => t.startsWith("grp:"));
       groupTags.forEach((gt) => {
@@ -257,23 +257,20 @@ export function Threads(props) {
     const firstGroup = groupMap.keys().next().value;
     if(groupMap.size === 1 && groupMap.get(firstGroup).length === affectedThreads.length) {
       // ungroup
-      const url = apiURL(`api/tag_batch/thread/${encodeURIComponent(groupMap.get(firstGroup).join(' '))}/-${encodeURIComponent(firstGroup)}`);
-      fetch(url).then((response) => {
-        if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
-        groupMap.get(gt).forEach(at => {
-          const thread = threads().flat().find(t => t.thread_id === at);
-          thread.tags = thread.tags.filter(t => t !== firstGroup);
-        });
+      const url = apiURL(`api/tag_batch/thread/${encodeURIComponent(groupMap.get(firstGroup).join(' '))}/-${encodeURIComponent(firstGroup)}`),
+            response = await fetch(url);
+      if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
+      groupMap.get(firstGroup).forEach(at => {
+        const thread = threads().flat().find(t => t.thread_id === at);
+        thread.tags = thread.tags.filter(t => t !== firstGroup);
       });
     } else {
       // more than one group selected, assume that we want to create a new group
-      // from all threads
+      // from all threads after removing all exising groups
       if(groupMap.size > 1) {
-        groupMap.keys().forEach((gt) => {
-          const url = apiURL(`api/tag_batch/thread/${encodeURIComponent(groupMap.get(gt).join(' '))}/-${encodeURIComponent(gt)}`);
-        });
-
-        fetch(url).then((response) => {
+        groupMap.keys().forEach(async (gt) => {
+          const url = apiURL(`api/tag_batch/thread/${encodeURIComponent(groupMap.get(gt).join(' '))}/-${encodeURIComponent(gt)}`),
+                response = await fetch(url);
           if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
           groupMap.get(gt).forEach(at => {
             const thread = threads().flat().find(t => t.thread_id === at);
