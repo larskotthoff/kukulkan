@@ -249,4 +249,25 @@ test("clicking on todo boxes changes active thread", async () => {
   expect(setActiveThread).toHaveBeenCalledWith(2);
 });
 
+test("clicking on todo boxes changes active thread w/ thread group", async () => {
+  const thr1 = JSON.parse(JSON.stringify(threads[0])),
+        thr2 = JSON.parse(JSON.stringify(threads[0])),
+        tags = JSON.parse(JSON.stringify(threads[0].tags)),
+        setActiveThread = vi.fn();
+
+  thr1.tags = tags.concat("due:1970-01-01");
+  thr2.tags = tags.concat("due:1970-01-02");
+  thr2.thread_id = 1;
+  const { container } = render(() => <TodoThreads ThreadGroup={ThreadGroup} threads={() => [[thr1, thr2]]} activeThread={() => 0}
+    selectedThreads={() => []} setActiveThread={setActiveThread} setQuery={() => []}/>);
+  expect(container.querySelectorAll(".calendar-box").length).toBe(2);
+
+  expect(setActiveThread).toHaveBeenCalledTimes(1);
+  expect(container.querySelectorAll(".thread-group.collapsed").length).toBe(1);
+
+  await userEvent.click(container.querySelectorAll(".calendar-box")[1]);
+  expect(setActiveThread).toHaveBeenCalledTimes(2);
+  expect(setActiveThread).toHaveBeenCalledWith(1);
+  expect(container.querySelectorAll(".thread-group.collapsed").length).toBe(0);
+});
 // vim: tabstop=2 shiftwidth=2 expandtab

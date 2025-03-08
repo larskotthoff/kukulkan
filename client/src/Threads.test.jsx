@@ -698,6 +698,36 @@ test("group threads -- new group", async () => {
   expect(container.querySelectorAll(".thread.selected").length).toBe(0);
 });
 
+test("group threads -- add to group", async () => {
+  vi.stubGlobal('location', {
+    ...window.location,
+    search: '?query=foo'
+  });
+  global.fetch.mockResolvedValue({ ok: true, json: () => [] });
+  vi.stubGlobal("data", {"allTags": tags, "threads": [
+    [{thread_id: "foo1", authors: ["autho@s"], subject: "subject", tags: ["grp:0"], total_messages: 1, newest_date: 1000, oldest_date: 100}],
+    {thread_id: "foo2", authors: ["autho@s"], subject: "subject", tags: [], total_messages: 1, newest_date: 1000, oldest_date: 100}
+  ]});
+  const { container } = render(() => <Threads Threads={SearchThreads}/>);
+  await vi.waitFor(() => {
+    expect(screen.getByText("2 thread groups.")).toBeInTheDocument();
+  });
+  expect(screen.getAllByText("grp:0").length).toBe(1);
+
+  await userEvent.type(document.body, " ");
+  await userEvent.type(document.body, "j");
+  await userEvent.type(document.body, " ");
+  expect(container.querySelectorAll(".thread.selected").length).toBe(2);
+
+  global.fetch.mockResolvedValue({ ok: true, text: () => "grp:0" });
+  await userEvent.type(document.body, "g");
+  expect(global.fetch).toHaveBeenCalledTimes(1);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/group/foo1%20foo2");
+  expect(screen.getAllByText("grp:0").length).toBe(2);
+
+  expect(container.querySelectorAll(".thread.selected").length).toBe(0);
+});
+
 test("group threads -- ungroup", async () => {
   vi.stubGlobal('location', {
     ...window.location,

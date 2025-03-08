@@ -289,7 +289,9 @@ export function Threads(props) {
       const grp = await response.text();
       affectedThreads.forEach(affectedThread => {
         const thread = threads().flat().find(t => t.thread_id === affectedThread);
-        thread.tags.push(grp);
+        if(!thread.tags.includes(grp)) {
+          thread.tags.push(grp);
+        }
       });
     }
     setThreads(JSON.parse(JSON.stringify(threads())));
