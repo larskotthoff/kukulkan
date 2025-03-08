@@ -5,13 +5,15 @@ import { createSignal, ErrorBoundary } from "solid-js";
 
 import { Alert } from "./Alert.jsx";
 import { FetchedMessage } from "./Message.jsx";
-import { Kukulkan } from "./Kukulkan.jsx";
+import { Threads } from "./Threads.jsx";
 import { SearchThreads } from "./SearchThreads.jsx";
 import { Settings } from "./Settings.jsx";
 import { Thread } from "./Thread.jsx";
 import { TodoThreads } from "./TodoThreads.jsx";
 import { Write } from "./Write.jsx";
 import { getSetting } from "./Settings.jsx";
+
+import "./Kukulkan.css";
 
 render(() => {
   const [progress, setProgress] = createSignal(1);
@@ -27,8 +29,8 @@ render(() => {
     }}/>
     <ErrorBoundary fallback={(error) => <Alert severity="error">Error: {error}<pre>{error.stack}</pre></Alert>}>
       <Router>
-        <Route path="/" component={() => <Kukulkan Threads={SearchThreads} sp={setProgress}/>}/>
-        <Route path="/todo" component={() => <Kukulkan Threads={TodoThreads} sp={setProgress}/>}/>
+        <Route path="/" component={() => <Threads Threads={SearchThreads} sp={setProgress}/>}/>
+        <Route path="/todo" component={() => <Threads Threads={TodoThreads} sp={setProgress}/>}/>
         <Route path="/thread" component={() => <Thread sp={setProgress}/>}/>
         <Route path="/message" component={() => <FetchedMessage sp={setProgress}/>}/>
         <Route path="/write" component={() => <Write sp={setProgress}/>}/>

@@ -7,7 +7,6 @@ import { ColorChip } from "./ColorChip.jsx";
 
 import { getSetting } from "./Settings.jsx";
 
-import "./Kukulkan.css";
 import { separateQuotedNonQuoted } from "./Message.jsx";
 import { apiURL, delayedDebouncedFetch, filterAdminTags, formatFSz, splitAddressHeader } from "./utils.js";
 import { mkShortcut, Icon, AttachFile, Send } from "./UiUtils.jsx";

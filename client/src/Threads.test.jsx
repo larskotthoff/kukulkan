@@ -2,7 +2,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { cleanup, render, screen } from "@solidjs/testing-library";
 import { userEvent } from "@testing-library/user-event";
 
-import { Kukulkan, ThreadGroup } from "./Kukulkan.jsx";
+import { Threads, ThreadGroup } from "./Threads.jsx";
 import { SearchThreads } from "./SearchThreads.jsx";
 import { TodoThreads } from "./TodoThreads.jsx";
 
@@ -27,14 +27,14 @@ afterEach(() => {
   window.location = originalLocation;
 });
 
-test("exports Kukulkan", () => {
-  expect(Kukulkan).not.toBe(undefined);
+test("exports Threads", () => {
+  expect(Threads).not.toBe(undefined);
   expect(ThreadGroup).not.toBe(undefined);
 });
 
 test("renders components", async () => {
   vi.stubGlobal("data", {"allTags": tags});
-  const { container } = render(() => <Kukulkan Threads={SearchThreads}/>);
+  const { container } = render(() => <Threads Threads={SearchThreads}/>);
   await vi.waitFor(() => {
     expect(container.querySelector("input")).not.toBe(null);
   });
@@ -43,7 +43,7 @@ test("renders components", async () => {
 });
 
 test("sets query and title based on URL", async () => {
-  let { container } = render(() => <Kukulkan Threads={SearchThreads}/>);
+  let { container } = render(() => <Threads Threads={SearchThreads}/>);
   await vi.waitFor(() => {
     expect(container.querySelector("input")).not.toBe(null);
   });
@@ -53,7 +53,7 @@ test("sets query and title based on URL", async () => {
     ...window.location,
     search: '?query=foo'
   });
-  container = render(() => <Kukulkan Threads={SearchThreads}/>).container;
+  container = render(() => <Threads Threads={SearchThreads}/>).container;
   await vi.waitFor(() => {
     expect(container.querySelector("input")).not.toBe(null);
   });
@@ -63,7 +63,7 @@ test("sets query and title based on URL", async () => {
 });
 
 test("sets query on submit", async () => {
-  const { container } = render(() => <Kukulkan Threads={SearchThreads}/>);
+  const { container } = render(() => <Threads Threads={SearchThreads}/>);
   await vi.waitFor(() => {
     expect(container.querySelector("input")).not.toBe(null);
   });
@@ -73,7 +73,7 @@ test("sets query on submit", async () => {
 });
 
 test("shows predefined query completions", async () => {
-  const { container } = render(() => <Kukulkan Threads={SearchThreads}/>);
+  const { container } = render(() => <Threads Threads={SearchThreads}/>);
   await vi.waitFor(() => {
     expect(container.querySelector("input")).not.toBe(null);
   });
@@ -86,7 +86,7 @@ test("shows predefined query completions", async () => {
 });
 
 test("general shortcuts work", async () => {
-  const { container } = render(() => <Kukulkan Threads={SearchThreads}/>);
+  const { container } = render(() => <Threads Threads={SearchThreads}/>);
   await vi.waitFor(() => {
     expect(container.querySelector("input")).not.toBe(null);
   });
@@ -101,7 +101,7 @@ test("general shortcuts work", async () => {
 });
 
 test("shortcuts that expect selection don't break if nothing selected", async () => {
-  const { container } = render(() => <Kukulkan Threads={SearchThreads}/>);
+  const { container } = render(() => <Threads Threads={SearchThreads}/>);
   await vi.waitFor(() => {
     expect(container.querySelector("input")).not.toBe(null);
   });
@@ -111,7 +111,7 @@ test("shortcuts that expect selection don't break if nothing selected", async ()
 });
 
 test("provides tag completions", async () => {
-  const { container } = render(() => <Kukulkan Threads={SearchThreads}/>);
+  const { container } = render(() => <Threads Threads={SearchThreads}/>);
   await vi.waitFor(() => {
     expect(container.querySelector("input")).not.toBe(null);
   });
@@ -133,7 +133,7 @@ test("shows threads", async () => {
     {authors: ["test@1", "test@2"], subject: "foobar", tags: ["unread", "new"], total_messages: 1, newest_date: 1000, oldest_date: 100}
   ]});
 
-  const { container } = render(() => <Kukulkan Threads={SearchThreads}/>);
+  const { container } = render(() => <Threads Threads={SearchThreads}/>);
   await vi.waitFor(() => {
     expect(container.querySelector("input")).not.toBe(null);
   });
@@ -163,7 +163,7 @@ test("opens thread on enter and click", async () => {
   vi.stubGlobal("data", {"allTags": tags, "threads": [
     {thread_id: "foo", authors: ["te@t"], subject: "foobar", tags: ["test"], total_messages: 1, newest_date: 1000, oldest_date: 100}
   ]});
-  const { container } = render(() => <Kukulkan Threads={SearchThreads}/>);
+  const { container } = render(() => <Threads Threads={SearchThreads}/>);
   await vi.waitFor(() => {
     expect(container.querySelector("input")).not.toBe(null);
   });
@@ -188,7 +188,7 @@ test("opens thread on enter and click in same tab with config", async () => {
     {thread_id: "foo", authors: ["te@t"], subject: "foobar", tags: ["test"], total_messages: 1, newest_date: 1000, oldest_date: 100}
   ]});
   localStorage.setItem("settings-openInTab", "_self");
-  const { container } = render(() => <Kukulkan Threads={SearchThreads}/>);
+  const { container } = render(() => <Threads Threads={SearchThreads}/>);
   await vi.waitFor(() => {
     expect(container.querySelector("input")).not.toBe(null);
   });
@@ -214,7 +214,7 @@ test("navigation and selection shortcuts work", async () => {
     {thread_id: "foo", authors: ["test@1"], subject: "foobar1", tags: ["test1"], total_messages: 1, newest_date: 1000, oldest_date: 100},
     {thread_id: "bar", authors: ["test@2"], subject: "foobar2", tags: ["test2"], total_messages: 1, newest_date: 1000, oldest_date: 100}
   ]});
-  const { container } = render(() => <Kukulkan Threads={SearchThreads}/>);
+  const { container } = render(() => <Threads Threads={SearchThreads}/>);
   await vi.waitFor(() => {
     expect(container.querySelector("input")).not.toBe(null);
   });
@@ -266,7 +266,7 @@ test("delete thread works", async () => {
   vi.stubGlobal("data", {"allTags": tags, "threads": [
     {thread_id: "foo", authors: ["te@t"], subject: "foobar", tags: ["unread"], total_messages: 1, newest_date: 1000, oldest_date: 100}
   ]});
-  render(() => <Kukulkan Threads={SearchThreads}/>);
+  render(() => <Threads Threads={SearchThreads}/>);
   await vi.waitFor(() => {
     expect(screen.getByText("1 thread group.")).toBeInTheDocument();
   });
@@ -287,7 +287,7 @@ test("mark thread done works", async () => {
   vi.stubGlobal("data", {"allTags": tags, "threads": [
     {thread_id: "foo", authors: ["te@t"], subject: "foobar", tags: ["todo", "due:1970-01-01"], total_messages: 1, newest_date: 1000, oldest_date: 100}
   ]});
-  render(() => <Kukulkan Threads={SearchThreads}/>);
+  render(() => <Threads Threads={SearchThreads}/>);
   await vi.waitFor(() => {
     expect(screen.getByText("1 thread group.")).toBeInTheDocument();
   });
@@ -311,7 +311,7 @@ test("tag edits work", async () => {
   vi.stubGlobal("data", {"allTags": tags, "threads": [
     {thread_id: "foo", authors: ["autho@s"], subject: "subject", tags: ["test"], total_messages: 1, newest_date: 1000, oldest_date: 100}
   ]});
-  render(() => <Kukulkan Threads={SearchThreads}/>);
+  render(() => <Threads Threads={SearchThreads}/>);
   await vi.waitFor(() => {
     expect(screen.getByText("1 thread group.")).toBeInTheDocument();
   });
@@ -334,7 +334,7 @@ test("tag edit box not shown when nothing there", async () => {
   });
   global.fetch.mockResolvedValue({ ok: true, json: () => [] });
   vi.stubGlobal("data", {"allTags": tags, "threads": []});
-  render(() => <Kukulkan Threads={SearchThreads}/>);
+  render(() => <Threads Threads={SearchThreads}/>);
   await vi.waitFor(() => {
     expect(screen.getByText("0 thread groups.")).toBeInTheDocument();
   });
@@ -355,7 +355,7 @@ test("tag edits with multiple selection work", async () => {
     {thread_id: "foo", authors: ["autho@s"], subject: "subject", tags: ["test1"], total_messages: 1, newest_date: 1000, oldest_date: 100},
     {thread_id: "bar", authors: ["autho@s"], subject: "subject", tags: ["test2"], total_messages: 1, newest_date: 1000, oldest_date: 100}
   ]});
-  const { container } = render(() => <Kukulkan Threads={SearchThreads}/>);
+  const { container } = render(() => <Threads Threads={SearchThreads}/>);
   await vi.waitFor(() => {
     expect(screen.getByText("2 thread groups.")).toBeInTheDocument();
   });
@@ -384,7 +384,7 @@ test("tag edits completions work", async () => {
   vi.stubGlobal("data", {"allTags": tags, "threads": [
     {thread_id: "foo", authors: ["autho@s"], subject: "subject", tags: ["test"], total_messages: 1, newest_date: 1000, oldest_date: 100}
   ]});
-  render(() => <Kukulkan Threads={SearchThreads}/>);
+  render(() => <Threads Threads={SearchThreads}/>);
   await vi.waitFor(() => {
     expect(screen.getByText("1 thread group.")).toBeInTheDocument();
   });
@@ -439,7 +439,7 @@ test("shows todo due dates correctly after marking done", async () => {
   thr3.subject = "test3";
 
   vi.stubGlobal("data", {"allTags": [], "threads": [thr1, thr2, thr3]});
-  const { container } = render(() => <Kukulkan Threads={TodoThreads}/>);
+  const { container } = render(() => <Threads Threads={TodoThreads}/>);
   await vi.waitFor(() => {
     expect(screen.getByText("test1")).toBeInTheDocument();
   });

@@ -2,7 +2,7 @@ import { afterEach, expect, test, vi } from "vitest";
 import { cleanup, render, screen } from "@solidjs/testing-library";
 import { userEvent } from "@testing-library/user-event";
 
-import { ThreadGroup } from "./Kukulkan.jsx";
+import { ThreadGroup } from "./Threads.jsx";
 import { TodoThreads, sortThreadsByDueDate } from "./TodoThreads.jsx";
 
 afterEach(() => {

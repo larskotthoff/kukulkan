@@ -4,7 +4,6 @@ import { Message } from "./Message.jsx";
 
 import { getSetting } from "./Settings.jsx";
 
-import "./Kukulkan.css";
 import { extractEmailsSort, filterSubjectColor, filterAdminTags, getColor } from "./utils.js";
 import { handleSwipe, mkShortcut } from "./UiUtils.jsx";
 

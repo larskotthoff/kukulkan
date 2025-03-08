@@ -9,7 +9,6 @@ import { Alert } from "./Alert.jsx";
 import { ColorChip } from "./ColorChip.jsx";
 import { TagComplete } from "./Autocomplete.jsx";
 
-import "./Kukulkan.css";
 import { apiURL, formatDate, formatFSz, splitAddressHeader, strip } from "./utils.js";
 import { mkShortcut, Icon, AttachFile, Cancel, CheckCircle, Forward, Help, MarkUnread, Print, ReplyAll, Security, Trash } from "./UiUtils.jsx";
 

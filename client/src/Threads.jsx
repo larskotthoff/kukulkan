@@ -5,7 +5,6 @@ import { Autocomplete } from "./Autocomplete.jsx";
 
 import { getSetting } from "./Settings.jsx";
 
-import "./Kukulkan.css";
 import { apiURL } from "./utils.js";
 import { mkShortcut } from "./UiUtils.jsx";
 
@@ -45,7 +44,7 @@ export function ThreadGroup(tprops) {
   return tprops.threadListElem(tprops);
 }
 
-export function Kukulkan(props) {
+export function Threads(props) {
   const [query, setQuery] = createSignal(),
         [selectedThreads, setSelectedThreads] = createSignal([]),
         [editingTags, setEditingTags] = createSignal(null),
