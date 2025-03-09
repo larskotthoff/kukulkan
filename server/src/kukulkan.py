@@ -343,7 +343,7 @@ def create_app() -> Flask:
         if len(sq) == 0:
             msgs = get_query("tag:/grp:.*/")
         else:
-            msgs = get_query(f"tag:/grp:.*/ and subject:{sq}")
+            msgs = get_query(f'tag:/grp:.*/ and subject:"{sq}"')
         for msg in msgs:
             subject = get_header(msg, "subject")
             grp = [tag for tag in msg.tags if tag.startswith("grp:")][0]

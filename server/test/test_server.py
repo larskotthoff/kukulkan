@@ -454,7 +454,7 @@ def test_complete_groups_subject(setup):
     mf1.header.assert_called_once_with("subject")
     mf2.header.assert_called_once_with("subject")
     mf3.header.assert_called_once_with("subject")
-    db.messages.assert_called_once_with("tag:/grp:.*/ and subject:subj", exclude_tags=[],
+    db.messages.assert_called_once_with('tag:/grp:.*/ and subject:"subj"', exclude_tags=[],
                                        sort=notmuch2.Database.SORT.NEWEST_FIRST)
 
 
