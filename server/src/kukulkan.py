@@ -293,9 +293,8 @@ def create_app() -> Flask:
                     if len(grps) > 0 and not in_group:
                         if grps[0] in seen_groups:
                             continue
-                        else:
-                            seen_groups.append(grps[0])
-                            threads[msg.threadid] = get_threads(f'tag:{grps[0]}', in_group=True)
+                        seen_groups.append(grps[0])
+                        threads[msg.threadid] = get_threads(f'tag:{grps[0]}', in_group=True)
                     else:
                         subject = get_header(msg, "subject")
                         threads[msg.threadid] = {
