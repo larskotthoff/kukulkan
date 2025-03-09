@@ -6,7 +6,7 @@ import { Autocomplete } from "./Autocomplete.jsx";
 import { getSetting } from "./Settings.jsx";
 
 import { apiURL } from "./utils.js";
-import { mkShortcut } from "./UiUtils.jsx";
+import { Collapse, Expand, Icon, mkShortcut } from "./UiUtils.jsx";
 
 export function ThreadGroup(props) {
   // eslint-disable-next-line solid/reactivity
@@ -39,7 +39,7 @@ export function ThreadGroup(props) {
           {(t) => <ThreadGroup thread={t} threadListElem={props.threadListElem} setActiveThread={props.setActiveThread}/>}
         </For>
         <div class="thread-group-expander" onClick={toggle}>
-          {collapsed() ? "🞃" : "🞁"}
+          {collapsed() ? <Icon icon={Expand}/> : <Icon icon={Collapse}/>}
         </div>
       </div>
     );

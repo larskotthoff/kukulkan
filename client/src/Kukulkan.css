@@ -282,7 +282,7 @@ button > span {
 
 .thread-group-expander {
     margin-left: 1em;
-    line-height: 70%;
+    line-height: 50%;
     cursor: pointer;
 }
 
