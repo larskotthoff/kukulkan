@@ -41,7 +41,7 @@ export function Autocomplete(props) {
     return posa;
   }
 
-  async function getSortedOptions() {
+  async function updateOptions() {
     const options = await getOptions(text());
     if(sort === false) {
       setSortedOptions(options);
@@ -121,7 +121,7 @@ export function Autocomplete(props) {
         onFocus={onFocus}
         onInput={(ev) => {
           setText(ev.target.value);
-          getSortedOptions();
+          updateOptions();
           if(typeof onInput === 'function') onInput(ev);
         }}
         onKeyDown={handleKeydown}
