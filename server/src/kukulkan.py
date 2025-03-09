@@ -328,11 +328,11 @@ def create_app() -> Flask:
 
 
     @app.route("/api/address/<string:query_string>")
-    def address_complete(query_string: str) -> List[str]:
+    def complete_address(query_string: str) -> List[str]:
         return list(email_address_complete(query_string).values())
 
     @app.route("/api/email/<string:query_string>")
-    def email_complete(query_string: str) -> List[str]:
+    def complete_email(query_string: str) -> List[str]:
         return list(email_address_complete(query_string).keys())
 
     @app.route("/api/thread/<string:thread_id>")
