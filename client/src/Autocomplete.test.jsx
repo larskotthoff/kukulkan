@@ -275,8 +275,14 @@ test("TagComplete completes group tags", async () => {
 
   const input = container.querySelector("input");
   await userEvent.type(input, "grp:");
+  await vi.waitFor(() => {
+    expect(screen.getByText("foo bar")).toBeInTheDocument();
+  });
   expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/group_complete/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/group_complete/",
+    expect.objectContaining({
+      signal: expect.any(AbortSignal),
+    }));
   expect(input.value).toEqual("grp:");
   let completions = document.querySelector(".autocomplete-popup").children;
   expect(completions.length).toBe(2);
@@ -299,11 +305,16 @@ test("TagComplete completes group tags with subject", async () => {
       removeTag={() => null}/>);
 
   const input = container.querySelector("input");
-  await userEvent.type(input, "grp:a");
-  expect(global.fetch).toHaveBeenCalledTimes(2);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/group_complete/");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/group_complete/a");
-  expect(input.value).toEqual("grp:a");
+  await userEvent.type(input, "grp:aaa");
+  await vi.waitFor(() => {
+    expect(screen.getByText("foo bar")).toBeInTheDocument();
+  });
+  expect(global.fetch).toHaveBeenCalledTimes(1);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/group_complete/aaa",
+    expect.objectContaining({
+      signal: expect.any(AbortSignal),
+    }));
+  expect(input.value).toEqual("grp:aaa");
   let completions = document.querySelector(".autocomplete-popup").children;
   expect(completions.length).toBe(2);
   expect(completions[0]).toHaveTextContent("foo bar");

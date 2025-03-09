@@ -4,7 +4,7 @@ import * as chrono from 'chrono-node';
 
 import { ColorChip } from "./ColorChip.jsx";
 
-import { apiURL } from "./utils.js";
+import { apiURL, delayedDebouncedFetch } from "./utils.js";
 
 export function Autocomplete(props) {
   const [showPopover, setShowPopover] = createSignal(false),
@@ -216,11 +216,9 @@ export function TagComplete(props) {
           const parsed = chrono.parseDate(text.split(':')[1])?.toISOString().split('T')[0];
           if(parsed) opts.unshift(`due:${parsed}`);
         } else if(text.startsWith("grp:")) {
-          props.sp?.(0);
-          const response = await fetch(apiURL(`api/group_complete/${encodeURIComponent(text.split(':')[1])}`));
-          if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
-          opts = await response.json();
-          props.sp?.(1);
+          opts = await
+            delayedDebouncedFetch(apiURL(`api/group_complete/${encodeURIComponent(text.split(':')[1])}`),
+              200, props.sp);
         }
         return opts;
       }}
