@@ -1,6 +1,7 @@
 import { createEffect, createSignal, For, on, onMount, Show } from 'solid-js';
 
 import { ColorChip } from "./ColorChip.jsx";
+import { ThreadGroup } from "./Threads.jsx";
 
 import { formatDuration, splitAddressHeader } from "./utils.js";
 import { handleSwipe, Tag, TaskAlt, wideNarrowObserver } from "./UiUtils.jsx";
@@ -274,7 +275,7 @@ export function TodoThreads(props) {
       <Calendar/>
       <div class="vertical-stack clipped todo-threads">
         <For each={props.threads().sort(sortThreadsByDueDate)}>
-          {(thread) => <props.ThreadGroup thread={thread} threadListElem={threadListElem} setActiveThread={props.setActiveThread}/>}
+          {(thread) => <ThreadGroup thread={thread} threadListElem={threadListElem} setActiveThread={props.setActiveThread}/>}
         </For>
       </div>
     </div>

@@ -8,22 +8,22 @@ import { getSetting } from "./Settings.jsx";
 import { apiURL } from "./utils.js";
 import { mkShortcut } from "./UiUtils.jsx";
 
-export function ThreadGroup(tprops) {
+export function ThreadGroup(props) {
   // eslint-disable-next-line solid/reactivity
-  if(tprops.thread.length !== undefined) {
+  if(props.thread.length !== undefined) {
     // eslint-disable-next-line solid/reactivity
-    if(tprops.thread[0].collapsed === undefined) tprops.thread[0].collapsed = true;
+    if(props.thread[0].collapsed === undefined) props.thread[0].collapsed = true;
     // eslint-disable-next-line solid/reactivity
-    let [collapsed, setCollapsed] = createSignal(tprops.thread[0].collapsed);
+    let [collapsed, setCollapsed] = createSignal(props.thread[0].collapsed);
 
     createEffect(on(collapsed, () => {
-      tprops.thread[0].collapsed = collapsed();
+      props.thread[0].collapsed = collapsed();
     }));
 
     function toggle() {
       setCollapsed(!collapsed());
       if(collapsed()) {
-        tprops.setActiveThread(tprops.thread[0].thread_id);
+        props.setActiveThread(props.thread[0].thread_id);
       }
     }
 
@@ -35,8 +35,8 @@ export function ThreadGroup(tprops) {
           'collapsed': collapsed()
         }}
         onToggle={toggle}>
-        <For each={tprops.thread}>
-          {(t) => <ThreadGroup thread={t} threadListElem={tprops.threadListElem} setActiveThread={tprops.setActiveThread}/>}
+        <For each={props.thread}>
+          {(t) => <ThreadGroup thread={t} threadListElem={props.threadListElem} setActiveThread={props.setActiveThread}/>}
         </For>
         <div class="thread-group-expander" onClick={toggle}>
           {collapsed() ? "🞃" : "🞁"}
@@ -46,7 +46,7 @@ export function ThreadGroup(tprops) {
   }
 
   // eslint-disable-next-line solid/reactivity
-  return tprops.threadListElem(tprops);
+  return props.threadListElem(props);
 }
 
 export function Threads(props) {
@@ -377,11 +377,10 @@ export function Threads(props) {
   return (
     <>
       <TagEditingModal/>
-      <props.Threads threads={threads} ThreadGroup={ThreadGroup}
-        activeThread={activeThread} setActiveThread={setActiveThread}
-        selectedThreads={selectedThreads} setQuery={setQuery} sp={props.sp}
-        openActive={openActive} deleteActive={deleteActive} doneActive={doneActive}
-        tagActive={tagActive}/>
+      <props.Threads threads={threads} activeThread={activeThread}
+        setActiveThread={setActiveThread} selectedThreads={selectedThreads}
+        setQuery={setQuery} sp={props.sp} openActive={openActive}
+        deleteActive={deleteActive} doneActive={doneActive} tagActive={tagActive}/>
     </>
   );
 }

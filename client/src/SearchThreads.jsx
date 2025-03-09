@@ -2,6 +2,7 @@ import { createSignal, For } from 'solid-js';
 
 import { ColorChip } from "./ColorChip.jsx";
 import { Autocomplete } from "./Autocomplete.jsx";
+import { ThreadGroup } from "./Threads.jsx";
 
 import { getSetting } from "./Settings.jsx";
 
@@ -140,7 +141,7 @@ export function SearchThreads(props) {
       </a>
       <div class="horizontal-stack justify-end width-100">{props.threads().length} thread group{props.threads().length === 1 ? "" : "s"}.</div>
       <For each={props.threads()}>
-        {(thread) => <props.ThreadGroup thread={thread} threadListElem={threadListElem} setActiveThread={props.setActiveThread}/>}
+        {(thread) => <ThreadGroup thread={thread} threadListElem={threadListElem} setActiveThread={props.setActiveThread}/>}
       </For>
     </div>
   );
