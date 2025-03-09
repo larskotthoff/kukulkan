@@ -265,41 +265,31 @@ export function Threads(props) {
       });
     });
 
-    const firstGroup = groupMap.keys().next().value;
-    if(groupMap.size === 1 && groupMap.get(firstGroup).length === affectedThreads.length) {
-      props.sp?.(0);
-      // ungroup
-      const url = apiURL(`api/tag_batch/thread/${encodeURIComponent(groupMap.get(firstGroup).join(' '))}/-${encodeURIComponent(firstGroup)}`),
+    async function ungroup(gt) {
+      const url = apiURL(`api/tag_batch/thread/${encodeURIComponent(groupMap.get(gt).join(' '))}/-${encodeURIComponent(gt)}`),
             response = await fetch(url);
-      props.sp?.(1);
       if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
-      groupMap.get(firstGroup).forEach(at => {
+      groupMap.get(gt).forEach(at => {
         const thread = threads().flat().find(t => t.thread_id === at);
-        thread.tags = thread.tags.filter(t => t !== firstGroup);
+        thread.tags = thread.tags.filter(t => t !== gt);
       });
+    }
+
+    const firstGroup = groupMap.keys().next().value;
+    props.sp?.(0);
+    if(groupMap.size === 1 && groupMap.get(firstGroup).length === affectedThreads.length) {
+      // ungroup
+      await ungroup(firstGroup);
     } else {
       // more than one group selected, assume that we want to create a new group
       // from all threads after removing all exising groups
       if(groupMap.size > 1) {
-        props.sp?.(0);
-        // eslint-disable-next-line solid/reactivity
-        groupMap.keys().forEach(async (gt) => {
-          const url = apiURL(`api/tag_batch/thread/${encodeURIComponent(groupMap.get(gt).join(' '))}/-${encodeURIComponent(gt)}`),
-                response = await fetch(url);
-          if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
-          groupMap.get(gt).forEach(at => {
-            const thread = threads().flat().find(t => t.thread_id === at);
-            thread.tags = thread.tags.filter(t => t !== gt);
-          });
-        });
-        props.sp?.(1);
+        await groupMap.keys().forEach(ungroup);
       }
 
       // group all affected threads
-      props.sp?.(0);
       const url = apiURL(`api/group/${encodeURIComponent(affectedThreads.join(' '))}`),
             response = await fetch(url);
-      props.sp?.(1);
       if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
       const grp = await response.text();
       affectedThreads.forEach(affectedThread => {
@@ -309,6 +299,7 @@ export function Threads(props) {
         }
       });
     }
+    props.sp?.(1);
 
     // create new hierarchical thread structure
     let old = JSON.parse(JSON.stringify(threads().flat())),
