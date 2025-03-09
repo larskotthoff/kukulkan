@@ -25,7 +25,7 @@ Email Client for Notmuch
 - external editor support
 - TODO view -- lists emails tagged "todo", sorted by due date (specified in
   another tag), shows calendar overview and time until due
-- thread groups -- ad-hoc tags for threads that belong together, but you don't
+- thread groups -- "ad-hoc tags" for threads that belong together, but you don't
   want to create a new tag (e.g. single threads that are broken into multiple
   because of broken email clients, or an order confirmation and the
   corresponding cancellation)
