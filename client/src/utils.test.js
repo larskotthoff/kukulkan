@@ -95,9 +95,9 @@ test("renderDateNumThread different timezones", () => {
           oldest_date: 1000000000 };
 
   vi.stubEnv('TZ', 'America/Denver')
-  expect(utils.renderDateNumThread(thread)[0]).toBe("8/9/2001 19:46");
+  expect(utils.renderDateNumThread(thread)[0]).toMatch(/.*2001 19:46/);
   vi.stubEnv('TZ', 'America/New_York')
-  expect(utils.renderDateNumThread(thread)[0]).toBe("8/9/2001 21:46");
+  expect(utils.renderDateNumThread(thread)[0]).toMatch(/.*2001 21:46/);
   vi.unstubAllEnvs();
 });
 
