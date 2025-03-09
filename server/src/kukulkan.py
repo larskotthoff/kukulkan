@@ -160,7 +160,8 @@ def get_globals() -> Dict[str, Any]:
         accts = current_app.config.custom["accounts"] # type: ignore[attr-defined]
     except KeyError:
         accts = []
-    tags = [tag for tag in get_db().tags if tag != "(null)" and not tag.startswith("due:")]
+    tags = [tag for tag in get_db().tags if tag != "(null)" and not
+            tag.startswith("due:") and not tag.startswith("grp:")]
     try:
         cmp = current_app.config.custom["compose"] # type: ignore[attr-defined]
     except KeyError:
@@ -281,45 +282,76 @@ def create_app() -> Flask:
 
     @app.route("/api/query/<string:query_string>")
     def query(query_string: str) -> List[Dict[str, Any]]:
-        msgs = get_query('thread:"{' + query_string.replace('"', '""') + '}"')
-        # using dicts here to get everything in the order in which it occured
-        threads = {}
-        for msg in msgs:
-            if msg.threadid not in threads:
-                subject = get_header(msg, "subject")
-                threads[msg.threadid] = {
-                    "authors": {},
-                    "newest_date": datetime.datetime.fromtimestamp(msg.date).strftime("%c"),
-                    "subject": subject if subject else "(no subject)",
-                    "tags": {},
-                    "thread_id": msg.threadid
-                }
-            threads[msg.threadid]["authors"][get_header(msg, "from")] = 1
-            threads[msg.threadid]["oldest_date"] = msg.date
-            for tag in msg.tags:
-                threads[msg.threadid]["tags"][tag] = 1
+        def get_threads(q, in_group=False):
+            msgs = get_query('thread:"{' + q.replace('"', '""') + '}"')
+            # using dicts here to get everything in the order in which it occured
+            threads = {}
+            seen_groups = []
+            for msg in msgs:
+                grps = [ t for t in msg.tags if t.startswith('grp:') ]
+                # we might have seen the thread before, but without the group tag
+                if (msg.threadid not in threads) or (len(grps) > 0 and "authors" in threads[msg.threadid] and not in_group):
+                    if len(grps) > 0 and not in_group:
+                        if grps[0] in seen_groups:
+                            continue
+                        seen_groups.append(grps[0])
+                        threads[msg.threadid] = get_threads(f'tag:{grps[0]}', in_group=True)
+                    else:
+                        subject = get_header(msg, "subject")
+                        threads[msg.threadid] = {
+                            "authors": {},
+                            "newest_date": datetime.datetime.fromtimestamp(msg.date).strftime("%c"),
+                            "subject": subject if subject else "(no subject)",
+                            "tags": {}
+                        }
+                if "authors" in threads[msg.threadid]: # if it's not a thread group
+                    threads[msg.threadid]["authors"][get_header(msg, "from")] = 1
+                    threads[msg.threadid]["oldest_date"] = msg.date
+                    for tag in msg.tags:
+                        threads[msg.threadid]["tags"][tag] = 1
+            return threads
 
-        for t in list(threads.keys()):
-            db = get_db()
-            threads[t]["total_messages"] = db.count_messages(f'thread:{threads[t]["thread_id"]}')
+        threads = get_threads(query_string)
 
-        return [{"authors": list(threads[t]["authors"].keys())[::-1],
-                 "newest_date": threads[t]["newest_date"],
-                 "oldest_date": datetime.datetime.fromtimestamp(threads[t]["oldest_date"]).strftime("%c"),
-                 "subject": threads[t]["subject"],
-                 "tags": list(threads[t]["tags"].keys()),
-                 "thread_id": threads[t]["thread_id"],
-                 "total_messages": threads[t]["total_messages"]
-             } for t in list(threads.keys()) ]
+        db = get_db()
+        def get_threads_ret(threads):
+            return [ get_threads_ret(threads[t])
+                     if "authors" not in threads[t].keys()
+                     else {"authors": list(threads[t]["authors"].keys())[::-1],
+                           "newest_date": threads[t]["newest_date"],
+                           "oldest_date": datetime.datetime.fromtimestamp(threads[t]["oldest_date"]).strftime("%c"),
+                           "subject": threads[t]["subject"],
+                           "tags": list(threads[t]["tags"].keys()),
+                           "thread_id": t,
+                           "total_messages": db.count_messages(f'thread:{t}')}
+                     for t in list(threads.keys()) ]
+        return get_threads_ret(threads)
 
 
     @app.route("/api/address/<string:query_string>")
-    def address_complete(query_string: str) -> List[str]:
+    def complete_address(query_string: str) -> List[str]:
         return list(email_address_complete(query_string).values())
 
     @app.route("/api/email/<string:query_string>")
-    def email_complete(query_string: str) -> List[str]:
+    def complete_email(query_string: str) -> List[str]:
         return list(email_address_complete(query_string).keys())
+
+    @app.route("/api/group_complete/")
+    @app.route("/api/group_complete/<string:sq>")
+    def complete_group(sq: str = "") -> Dict[Any, str | None]:
+        grps = {}
+        if len(sq) == 0:
+            msgs = get_query("tag:/grp:.*/")
+        else:
+            msgs = get_query(f'tag:/grp:.*/ and subject:"{sq}"')
+        for msg in msgs:
+            subject = get_header(msg, "subject")
+            grp = [tag for tag in msg.tags if tag.startswith("grp:")][0]
+            if not grp in grps:
+                grps[grp] = subject
+            if len(grps) > 9:
+                break
+        return dict((v, k) for k, v in grps.items())
 
     @app.route("/api/thread/<string:thread_id>")
     def thread(thread_id: str) -> Any:
@@ -383,6 +415,42 @@ def create_app() -> Flask:
         msg = get_message(message_id)
         # https://npm.io/package/mailauth
         return json.loads(os.popen(f"mailauth {msg.path}").read())['arc']['authResults']
+
+    @app.route("/api/group/<string:tids>")
+    def group(tids: str) -> str:
+        db = get_db()
+        def get_gtag():
+            for tid in tids.split(' '):
+                threads = db.threads(f'thread:{tid}')
+                for thread in threads:
+                    for tag in thread.tags:
+                        if tag.startswith("grp:"):
+                            # assume that there is only one group tag
+                            return tag
+            return None
+        gtag = get_gtag()
+
+        if gtag is None:
+            # new group, generate new group tag
+            tags = [tag for tag in db.tags if tag.startswith("grp:")]
+            if len(tags) == 0:
+                gtag = "grp:0" # OG group
+            else:
+                tags.sort(reverse=True)
+                ltag_num = int(tags[0].split(':')[1], base=16)
+                gtag = f"grp:{(ltag_num + 1):x}"
+
+        dbw = notmuch2.Database(mode=notmuch2.Database.MODE.READ_WRITE)
+        try:
+            for tid in tids.split(' '):
+                threads = dbw.threads(f'thread:{tid}')
+                for thread in threads:
+                    for m in thread.toplevel():
+                        with m.frozen(): # type: ignore[union-attr]
+                            m.tags.add(gtag) # type: ignore[union-attr]
+        finally:
+            dbw.close()
+        return gtag
 
     @app.route("/api/tag_batch/<string:typ>/<string:nids>/<string:tags>")
     def change_tags(typ: str, nids: str, tags: str) -> str:

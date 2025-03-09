@@ -46,7 +46,7 @@ def setup():
 def test_globals(setup):
     app, db = setup
 
-    db.tags = ['foo', 'bar', '(null)', 'due:2222-22-22']
+    db.tags = ['foo', 'bar', '(null)', 'due:2222-22-22', 'grp:0']
 
     app.config.custom["accounts"] = "foo"
     app.config.custom["compose"] = {}
@@ -189,7 +189,152 @@ def test_query_exclude_tags(setup):
                                         sort=notmuch2.Database.SORT.NEWEST_FIRST)
 
 
-def test_address(setup):
+def test_query_group(setup):
+    app, db = setup
+
+    mm1 = lambda: None
+    mm1.tags = ["grp:0"]
+    mm1.date = 0
+    mm1.threadid = "id1"
+    mm1.header = MagicMock()
+    mm1.header.side_effect = ["foosubject", "foo bar <foo@bar.com>"]
+    mm2 = lambda: None
+    mm2.date = 1
+    mm2.tags = ["grp:0", "bartag"]
+    mm2.threadid = "id2"
+    mm2.header = MagicMock()
+    mm2.header.side_effect = ["foosubject", "bar foo <bar@foo.com>"]
+    mm3 = lambda: None
+    mm3.date = 2
+    mm3.tags = ["foobartag"]
+    mm3.threadid = "id3"
+    mm3.header = MagicMock()
+    mm3.header.side_effect = ["foosubject", "bar\tfoo <bar@foo.com>"]
+
+    db.config = {}
+    db.messages = MagicMock()
+    db.messages.side_effect = [iter([mm1, mm2, mm3]), iter([mm1, mm2])]
+    db.count_messages = MagicMock(return_value=1)
+
+    with app.test_client() as test_client:
+        response = test_client.get('/api/query/foo')
+        assert response.status_code == 200
+        thrds = json.loads(response.data.decode())
+        assert thrds[0][0]["authors"] == ["foo bar <foo@bar.com>"]
+        assert thrds[0][0]["subject"] == "foosubject"
+        thrds[0][0]["tags"].sort()
+        assert thrds[0][0]["tags"] == ["grp:0"]
+        assert thrds[0][0]["thread_id"] == "id1"
+        assert thrds[0][0]["total_messages"] == 1
+
+        assert thrds[0][1]["authors"] == ["bar foo <bar@foo.com>"]
+        assert thrds[0][1]["subject"] == "foosubject"
+        thrds[0][1]["tags"].sort()
+        assert thrds[0][1]["tags"] == ["bartag", "grp:0"]
+        assert thrds[0][1]["thread_id"] == "id2"
+        assert thrds[0][1]["total_messages"] == 1
+
+        assert thrds[1]["authors"] == ["bar foo <bar@foo.com>"]
+        assert thrds[1]["subject"] == "foosubject"
+        thrds[1]["tags"].sort()
+        assert thrds[1]["tags"] == ["foobartag"]
+        assert thrds[1]["thread_id"] == "id3"
+        assert thrds[1]["total_messages"] == 1
+
+    assert db.messages.mock_calls == [
+        call('thread:"{foo}"', exclude_tags=[], sort=notmuch2.Database.SORT.NEWEST_FIRST),
+        call('thread:"{tag:grp:0}"', exclude_tags=[], sort=notmuch2.Database.SORT.NEWEST_FIRST)
+    ]
+    assert db.count_messages.mock_calls == [
+        call('thread:id1'),
+        call('thread:id2'),
+        call('thread:id3')
+    ]
+
+    mm1.header.assert_has_calls([call("subject"), call("from")])
+    mm2.header.assert_has_calls([call("subject"), call("from")])
+    mm3.header.assert_has_calls([call("subject"), call("from")])
+
+
+def test_query_group_multiple_in_thread(setup):
+    app, db = setup
+
+    mm0 = lambda: None
+    mm0.tags = ["bartag"]
+    mm0.date = 0
+    mm0.threadid = "id1"
+    mm0.header = MagicMock()
+    mm0.header.side_effect = ["foosubject", "foo bar <foo@bar.com>",
+                              "foosubject", "foo bar <foo@bar.com>"]
+    mm1 = lambda: None
+    mm1.tags = ["grp:0"]
+    mm1.date = 0
+    mm1.threadid = "id1"
+    mm1.header = MagicMock()
+    mm1.header.side_effect = ["bar foo <bar@foo.com>"]
+    mm2 = lambda: None
+    mm2.date = 1
+    mm2.tags = ["grp:0", "bartag"]
+    mm2.threadid = "id2"
+    mm2.header = MagicMock()
+    mm2.header.side_effect = ["foosubject", "bar foo <bar@foo.com>"]
+    mm3 = lambda: None
+    mm3.date = 2
+    mm3.tags = ["foobartag"]
+    mm3.threadid = "id3"
+    mm3.header = MagicMock()
+    mm3.header.side_effect = ["foosubject", "bar\tfoo <bar@foo.com>"]
+
+    db.config = {}
+    db.messages = MagicMock()
+    db.messages.side_effect = [iter([mm0, mm1, mm2, mm3]), iter([mm0, mm1, mm2])]
+    db.count_messages = MagicMock(return_value=1)
+
+    with app.test_client() as test_client:
+        response = test_client.get('/api/query/foo')
+        assert response.status_code == 200
+        thrds = json.loads(response.data.decode())
+        assert len(thrds) == 2
+        assert len(thrds[0]) == 2
+
+        assert thrds[0][0]["authors"] == ["bar foo <bar@foo.com>", "foo bar <foo@bar.com>"]
+        assert thrds[0][0]["subject"] == "foosubject"
+        thrds[0][0]["tags"].sort()
+        assert thrds[0][0]["tags"] == ["bartag", "grp:0"]
+        assert thrds[0][0]["thread_id"] == "id1"
+        assert thrds[0][0]["total_messages"] == 1
+
+        assert thrds[0][1]["authors"] == ["bar foo <bar@foo.com>"]
+        assert thrds[0][1]["subject"] == "foosubject"
+        thrds[0][1]["tags"].sort()
+        assert thrds[0][1]["tags"] == ["bartag", "grp:0"]
+        assert thrds[0][1]["thread_id"] == "id2"
+        assert thrds[0][1]["total_messages"] == 1
+
+        assert thrds[1]["authors"] == ["bar foo <bar@foo.com>"]
+        assert thrds[1]["subject"] == "foosubject"
+        thrds[1]["tags"].sort()
+        assert thrds[1]["tags"] == ["foobartag"]
+        assert thrds[1]["thread_id"] == "id3"
+        assert thrds[1]["total_messages"] == 1
+
+    assert db.messages.mock_calls == [
+        call('thread:"{foo}"', exclude_tags=[], sort=notmuch2.Database.SORT.NEWEST_FIRST),
+        call('thread:"{tag:grp:0}"', exclude_tags=[], sort=notmuch2.Database.SORT.NEWEST_FIRST)
+    ]
+    assert db.count_messages.mock_calls == [
+        call('thread:id1'),
+        call('thread:id2'),
+        call('thread:id3')
+    ]
+
+    mm0.header.assert_has_calls([call("subject"), call("from")])
+    mm1.header.assert_has_calls([call("from")])
+    mm2.header.assert_has_calls([call("subject"), call("from")])
+    mm3.header.assert_has_calls([call("subject"), call("from")])
+
+
+def test_complete_address(setup):
     app, db = setup
 
     mf = lambda: None
@@ -210,6 +355,106 @@ def test_address(setup):
 
     mf.header.assert_has_calls([call("from"), call("to"), call("cc"), call("bcc")])
     db.messages.assert_called_once_with("from:foo or to:foo", exclude_tags=[],
+                                       sort=notmuch2.Database.SORT.NEWEST_FIRST)
+
+
+def test_complete_email(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.header = MagicMock()
+    mf.header.side_effect = ["foo@bar.com", "\"bar foo\" bar@foo.com", "bar@foo.com", None]
+    mf.tags = ["foo", "bar"]
+
+    db.config = {}
+    db.messages = MagicMock(return_value=iter([mf]))
+
+    with app.test_client() as test_client:
+        response = test_client.get('/api/email/foo')
+        assert response.status_code == 200
+        addrs = json.loads(response.data.decode())
+        assert len(addrs) == 2
+        assert addrs[0] == "foo@bar.com"
+        assert addrs[1] == "bar@foo.com"
+
+    mf.header.assert_has_calls([call("from"), call("to"), call("cc"), call("bcc")])
+    db.messages.assert_called_once_with("from:foo or to:foo", exclude_tags=[],
+                                       sort=notmuch2.Database.SORT.NEWEST_FIRST)
+
+
+def test_complete_groups(setup):
+    app, db = setup
+
+    mf1 = lambda: None
+    mf1.header = MagicMock()
+    mf1.header.side_effect = ["subj1"]
+    mf1.tags = ["grp:0", "bar"]
+
+    mf2 = lambda: None
+    mf2.header = MagicMock()
+    mf2.header.side_effect = ["subj2"]
+    mf2.tags = ["grp:0", "bar"]
+
+    mf3 = lambda: None
+    mf3.header = MagicMock()
+    mf3.header.side_effect = ["subj3"]
+    mf3.tags = ["grp:1", "bar"]
+
+    db.config = {}
+    db.messages = MagicMock(return_value=iter([mf1, mf2, mf3]))
+
+    with app.test_client() as test_client:
+        response = test_client.get('/api/group_complete/')
+        assert response.status_code == 200
+        grps = json.loads(response.data.decode())
+        assert len(grps) == 2
+        assert "subj1" in grps
+        assert "subj3" in grps
+        assert grps["subj1"] == "grp:0"
+        assert grps["subj3"] == "grp:1"
+
+    mf1.header.assert_called_once_with("subject")
+    mf2.header.assert_called_once_with("subject")
+    mf3.header.assert_called_once_with("subject")
+    db.messages.assert_called_once_with("tag:/grp:.*/", exclude_tags=[],
+                                       sort=notmuch2.Database.SORT.NEWEST_FIRST)
+
+
+def test_complete_groups_subject(setup):
+    app, db = setup
+
+    mf1 = lambda: None
+    mf1.header = MagicMock()
+    mf1.header.side_effect = ["subj1"]
+    mf1.tags = ["grp:0", "bar"]
+
+    mf2 = lambda: None
+    mf2.header = MagicMock()
+    mf2.header.side_effect = ["subj2"]
+    mf2.tags = ["grp:0", "bar"]
+
+    mf3 = lambda: None
+    mf3.header = MagicMock()
+    mf3.header.side_effect = ["subj3"]
+    mf3.tags = ["grp:1", "bar"]
+
+    db.config = {}
+    db.messages = MagicMock(return_value=iter([mf1, mf2, mf3]))
+
+    with app.test_client() as test_client:
+        response = test_client.get('/api/group_complete/subj')
+        assert response.status_code == 200
+        grps = json.loads(response.data.decode())
+        assert len(grps) == 2
+        assert "subj1" in grps
+        assert "subj3" in grps
+        assert grps["subj1"] == "grp:0"
+        assert grps["subj3"] == "grp:1"
+
+    mf1.header.assert_called_once_with("subject")
+    mf2.header.assert_called_once_with("subject")
+    mf3.header.assert_called_once_with("subject")
+    db.messages.assert_called_once_with('tag:/grp:.*/ and subject:"subj"', exclude_tags=[],
                                        sort=notmuch2.Database.SORT.NEWEST_FIRST)
 
 
@@ -432,6 +677,141 @@ def test_tags_add_thread_batch(setup):
         call('bar2')
     ]
     assert mf.frozen.call_count == 4
+
+
+def test_group_new_initial(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.frozen = MagicMock()
+    mf.tags = MagicMock()
+    mf.tags.add = MagicMock()
+
+    mt = lambda: None
+    mt.tags = MagicMock()
+    mt.toplevel = MagicMock(return_value=iter([mf]))
+
+    db.threads = MagicMock(return_value=iter([mt]))
+    db.tags = ['foo', 'bar']
+
+    dbw = lambda: None
+    dbw.close = MagicMock()
+    dbw.threads = MagicMock(return_value=iter([mt]))
+
+    with patch("notmuch2.Database", return_value=dbw) as nmdb:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/group/foo1')
+            assert response.status_code == 200
+            assert b'grp:0' == response.data
+        assert nmdb.call_count == 1
+
+    assert db.threads.mock_calls == [
+        call('thread:foo1')
+    ]
+    assert dbw.threads.mock_calls == [
+        call('thread:foo1')
+    ]
+    assert dbw.close.call_count == 1
+
+    mt.toplevel.assert_called_once()
+
+    assert mf.tags.add.mock_calls == [
+        call('grp:0')
+    ]
+    assert mf.frozen.call_count == 1
+
+
+def test_group_new_subsequent(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.frozen = MagicMock()
+    mf.tags = MagicMock()
+    mf.tags.add = MagicMock()
+
+    mt = lambda: None
+    mt.tags = MagicMock()
+    mt.toplevel = MagicMock(return_value=iter([mf]))
+
+    db.threads = MagicMock(return_value=iter([mt]))
+    db.tags = ['foo', 'bar', 'grp:ae']
+
+    dbw = lambda: None
+    dbw.close = MagicMock()
+    dbw.threads = MagicMock(return_value=iter([mt]))
+
+    with patch("notmuch2.Database", return_value=dbw) as nmdb:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/group/foo1')
+            assert response.status_code == 200
+            assert b'grp:af' == response.data
+        assert nmdb.call_count == 1
+
+    assert db.threads.mock_calls == [
+        call('thread:foo1')
+    ]
+    assert dbw.threads.mock_calls == [
+        call('thread:foo1')
+    ]
+    assert dbw.close.call_count == 1
+
+    mt.toplevel.assert_called_once()
+
+    assert mf.tags.add.mock_calls == [
+        call('grp:af')
+    ]
+    assert mf.frozen.call_count == 1
+
+
+def test_group_existing(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.frozen = MagicMock()
+    mf.tags = MagicMock(spec=list)
+    mf.tags.__iter__.return_value = iter(['grp:ae'])
+    mf.tags.add = MagicMock()
+
+    mf1 = lambda: None
+    mf1.frozen = MagicMock()
+    mf1.tags = MagicMock()
+    mf1.tags.add = MagicMock()
+
+    mt = lambda: None
+    mt.tags = ['grp:ae']
+    mt.toplevel = MagicMock(return_value=iter([mf, mf1]))
+
+    db.threads = MagicMock(return_value=iter([mt]))
+
+    dbw = lambda: None
+    dbw.close = MagicMock()
+    dbw.threads = MagicMock(return_value=iter([mt]))
+
+    with patch("notmuch2.Database", return_value=dbw) as nmdb:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/group/foo1')
+            assert response.status_code == 200
+            assert b'grp:ae' == response.data
+        assert nmdb.call_count == 1
+
+    assert db.threads.mock_calls == [
+        call('thread:foo1')
+    ]
+    assert dbw.threads.mock_calls == [
+        call('thread:foo1')
+    ]
+    assert dbw.close.call_count == 1
+
+    mt.toplevel.assert_called_once()
+
+    assert mf.tags.add.mock_calls == [
+        call('grp:ae')
+    ]
+    assert mf.frozen.call_count == 1
+    assert mf1.tags.add.mock_calls == [
+        call('grp:ae')
+    ]
+    assert mf1.frozen.call_count == 1
 
 
 def test_attachment_no_attachment(setup):

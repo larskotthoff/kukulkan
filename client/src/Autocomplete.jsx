@@ -4,11 +4,14 @@ import * as chrono from 'chrono-node';
 
 import { ColorChip } from "./ColorChip.jsx";
 
+import { apiURL, delayedDebouncedFetch } from "./utils.js";
+
 export function Autocomplete(props) {
   const [showPopover, setShowPopover] = createSignal(false),
         [selected, setSelected] = createSignal(0),
         [inputRef, setInputRef] = createSignal(),
         [sortedOptions, setSortedOptions] = createSignal([]),
+        optionsMap = new Map(),
         // eslint-disable-next-line solid/reactivity
         {text, setText, getOptions, handleKey, children, onBlur, onFocus, onInput, sort, ...spreadProps} = props;
 
@@ -41,8 +44,18 @@ export function Autocomplete(props) {
     return posa;
   }
 
-  async function getSortedOptions() {
-    const options = await getOptions(text());
+  async function updateOptions() {
+    let options = await getOptions(text());
+    if(options.length === undefined) {
+      // group completion where shown text and actual completion are not the
+      // same
+      options = Object.keys(options).map(k => {
+        optionsMap.set(k, options[k]);
+        return k;
+      });
+    } else {
+      optionsMap.clear();
+    }
     if(sort === false) {
       setSortedOptions(options);
     } else {
@@ -86,7 +99,9 @@ export function Autocomplete(props) {
   function select(i) {
     if(isVisible()) {
       if(i) setSelected(i);
-      setText(sortedOptions()[selected()]);
+      let sel = sortedOptions()[selected()];
+      if(optionsMap.size > 0) sel = optionsMap.get(sel);
+      setText(sel);
       setShowPopover(false);
       inputRef().focus();
       inputRef().setSelectionRange(text().length, text().length);
@@ -121,7 +136,7 @@ export function Autocomplete(props) {
         onFocus={onFocus}
         onInput={(ev) => {
           setText(ev.target.value);
-          getSortedOptions();
+          updateOptions();
           if(typeof onInput === 'function') onInput(ev);
         }}
         onKeyDown={handleKeydown}
@@ -194,11 +209,16 @@ export function TagComplete(props) {
       chips={props.tags}
       addChip={props.addTag}
       removeChip={props.removeTag}
-      getOptions={(text) => {
-        const opts = data.allTags.filter((t) => t.includes(text));
+      // eslint-disable-next-line solid/reactivity
+      getOptions={async (text) => {
+        let opts = data.allTags.filter((t) => t.includes(text));
         if(text.startsWith("due:")) {
           const parsed = chrono.parseDate(text.split(':')[1])?.toISOString().split('T')[0];
           if(parsed) opts.unshift(`due:${parsed}`);
+        } else if(text.startsWith("grp:")) {
+          opts = await
+            delayedDebouncedFetch(apiURL(`api/group_complete/${encodeURIComponent(text.split(':')[1])}`),
+              200, props.sp);
         }
         return opts;
       }}

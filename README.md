@@ -25,6 +25,10 @@ Email Client for Notmuch
 - external editor support
 - TODO view -- lists emails tagged "todo", sorted by due date (specified in
   another tag), shows calendar overview and time until due
+- thread groups -- "ad-hoc tags" for threads that belong together, but you don't
+  want to create a new tag (e.g. single threads that are broken into multiple
+  because of broken email clients, or an order confirmation and the
+  corresponding cancellation)
 - keyboard shortcuts available for all actions
 - lots of tests for backend and frontend
 
@@ -200,15 +204,21 @@ Shortcuts:
 - Home: go to top of thread list
 - End/0: to to end of thread list
 - k/up: go up one
-- K: go up ten
 - j/down: go down one
-- J: go down ten
 - c: open compose view with new email
 - s: go to settings
 - /: focus search box and select all text
 - Space: mark currently active thread
 - t/swipe right until # appears: open tagging box for active/marked threads
 - Delete/swipe left until trash appears: tag active/marked threads with "deleted"; remove "unread" tag
+- g: group active/marked threads as follows:
+    - no threads have any group tags: create a new group
+    - some threads have all the same group tag, others do not have any group
+      tags: add the ungrouped threads to the group
+    - all threads have the same group tag: ungroup (remove group tag)
+    - threads have different group tags: remove all group tags and create a new
+      group
+- h/l: collapse/expand thread group
 
 In the tagging box, enter the list of tags to apply and remove (prefix with
 "-"), then press Enter to apply changes. Press Escape to close without making
@@ -236,9 +246,7 @@ Shortcuts:
 - Home: go to top of thread list
 - End/0: to to end of thread list
 - k/up: go up one
-- K: go up ten
 - j/down: go down one
-- J: go down ten
 - c: open compose view with new email
 - s: go to settings
 - /: focus search box and select all text
@@ -246,6 +254,14 @@ Shortcuts:
 - t/swipe right until # appears: open tagging box for active/marked threads
 - Delete: tag active/marked threads with "deleted"; remove "unread" tag
 - d/swipe left until check mark appears: mark thread done -- remove "todo" and any "due:*" tags
+- g: group active/marked threads as follows:
+    - no threads have any group tags: create a new group
+    - some threads have all the same group tag, others do not have any group
+      tags: add the ungrouped threads to the group
+    - all threads have the same group tag: ungroup (remove group tag)
+    - threads have different group tags: remove all group tags and create a new
+      group
+- h/l: collapse/expand thread group
 
 Available at `/todo`
 ([https://kukulkan-840786380000.us-west1.run.app/todo](https://kukulkan-840786380000.us-west1.run.app/todo)).

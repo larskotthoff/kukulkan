@@ -1,6 +1,7 @@
-import { createEffect, createSignal, For, on, Show } from 'solid-js';
+import { createEffect, createSignal, For, on, onMount, Show } from 'solid-js';
 
 import { ColorChip } from "./ColorChip.jsx";
+import { ThreadGroup } from "./Threads.jsx";
 
 import { formatDuration, splitAddressHeader } from "./utils.js";
 import { handleSwipe, Tag, TaskAlt, wideNarrowObserver } from "./UiUtils.jsx";
@@ -13,9 +14,23 @@ function dateFromDue(due) {
   return new Date(year, month, day);
 }
 
+function findEarliestDue(threadGroup) {
+  let dues = [];
+  if(threadGroup.length !== undefined) {
+    dues = threadGroup.map(findEarliestDue);
+  } else {
+    dues = threadGroup.tags.filter((tag) => tag.startsWith("due:"));
+  }
+  if(dues.length > 0) {
+    return dues.sort()[0];
+  } else {
+    return undefined;
+  }
+}
+
 export function sortThreadsByDueDate(a, b) {
-  const dueA = a.tags.find((tag) => tag.startsWith("due:")),
-        dueB = b.tags.find((tag) => tag.startsWith("due:"));
+  const dueA = findEarliestDue(a),
+        dueB = findEarliestDue(b);
 
   if(dueA === undefined && dueB === undefined) return 0;
   if(dueA === undefined && dueB !== undefined) return 1;
@@ -28,10 +43,9 @@ export function sortThreadsByDueDate(a, b) {
 }
 
 export function TodoThreads(props) {
-  const [dues, setDues] = createSignal(),
-        [dueDates, setDueDates] = createSignal(),
-        [latest, setLatest] = createSignal(),
-        [years, setYears] = createSignal();
+  const [years, setYears] = createSignal([]),
+        [latest, setLatest] = createSignal(null),
+        dueMap = new Map();
 
   // eslint-disable-next-line solid/reactivity
   props.setQuery("tag:todo");
@@ -40,28 +54,6 @@ export function TodoThreads(props) {
   today.setHours(0, 0, 0, 0);
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
-
-  let dueMap = {};
-
-  function processDueDate(thread, index) {
-    const due = thread.tags.find((tag) => tag.startsWith("due:"));
-    if(due) {
-      const dueDate = dateFromDue(due);
-      if(dueMap[dueDate] === undefined) {
-        dueMap[dueDate] = [index];
-      } else {
-        dueMap[dueDate].push(index);
-      }
-
-      if(dueDate < today) return [ dueDate, "overdue!" ];
-      else if(dueDate.getTime() === today.getTime()) return [ dueDate, "今日" ];
-      else if(dueDate.getTime() === tomorrow.getTime()) return [ dueDate, "明日" ];
-      else if(dueDate - today < 1000 * 60 * 60 * 24 * 7) return [ dueDate, dueDate.toLocaleDateString([], { weekday: 'short' }) ];
-      else return [ dueDate, formatDuration(today, dueDate) ];
-    } else {
-      return [ null, "" ];
-    }
-  }
 
   // claude helped with this
   function getIntervalBetweenDates(startDate, endDate, interval) {
@@ -102,25 +94,46 @@ export function TodoThreads(props) {
     return retval;
   }
 
-  function updateDuesEtc() {
-    dueMap = {};
-    setDues(props.threads().sort(sortThreadsByDueDate).map(processDueDate));
-    setDueDates(dues().map(d => d[0]).filter(x => x));
-    let earliest = new Date(Math.min(...(dueDates().concat(today))));
-    setLatest(new Date(Math.max(...dueDates())));
-    setYears(getIntervalBetweenDates(earliest, endOfYear(latest()), "FullYear"));
+  onMount(() => {
+    const ts = props.threads().sort(sortThreadsByDueDate).flat();
+    if(ts.length > 0) props.setActiveThread(ts[0].thread_id);
+  });
+
+  function processDueDate(thread) {
+    if(thread.length !== undefined) {
+      thread.forEach(processDueDate);
+    } else {
+      const due = findEarliestDue(thread);
+      if(due !== undefined) {
+        const dueDate = dateFromDue(due).toString();
+        if(dueMap.has(dueDate)) {
+          dueMap.get(dueDate).push(thread.thread_id);
+        } else {
+          dueMap.set(dueDate, [thread.thread_id]);
+        }
+      }
+    }
   }
 
   // eslint-disable-next-line solid/reactivity
-  updateDuesEtc();
-  // eslint-disable-next-line solid/reactivity
-  createEffect(on(props.threads, updateDuesEtc));
+  createEffect(on(props.threads, () => {
+    dueMap.clear();
+    props.threads().forEach(processDueDate);
+    if(dueMap.size > 0) {
+      const dues = Array.from(dueMap.keys()).map(d => new Date(d)),
+            earliest = new Date(Math.min(...dues, today));
+      setLatest(new Date(Math.max(...dues)));
+      setYears(getIntervalBetweenDates(earliest, endOfYear(latest()), "FullYear"));
+    } else {
+      setYears([]);
+    }
+  }));
 
   let prevScrollPos = undefined;
 
   function Calendar() {
     return (
-      <Show when={dueDates().length > 0}>
+      <Show when={years().length > 0}>
         <div class="calendar">
           <For each={years()}>
             {(year, yi) =>
@@ -142,9 +155,17 @@ export function TodoThreads(props) {
                                   {day.getDate().toString().padStart(2, '0')}
                                 </div>
                                 <div data-testid={`${day.toDateString()}-boxes`} class="boxes">
-                                  <For each={dueMap[day]}>
-                                    {dueindex =>
-                                      <div class="calendar-box" onMouseOver={() => props.setActiveThread(dueindex)}/>
+                                  <For each={dueMap.get(day.toString())}>
+                                    {id =>
+                                      <div class="calendar-box"
+                                        data-id={id}
+                                        onMouseOver={() => {
+                                          props.setActiveThread(id);
+                                          let el = document.querySelector(".thread.active");
+                                          if(el.parentElement.classList.contains("thread-group") && el.parentElement.classList.contains("collapsed")) {
+                                            el.parentElement.dispatchEvent(new CustomEvent("toggle"));
+                                          }
+                                        }}/>
                                     }
                                   </For>
                                 </div>
@@ -178,65 +199,83 @@ export function TodoThreads(props) {
   document.addEventListener('visibilitychange', checkDate);
   setTimeout(checkDate, (new Date().setHours(24, 0, 0, 0) - loadDate));
 
+  function threadListElem(tprops) {
+    // eslint-disable-next-line solid/reactivity
+    const authors = tprops.thread.authors.map(splitAddressHeader),
+          // eslint-disable-next-line solid/reactivity
+          due = findEarliestDue(tprops.thread),
+          dueDate = due !== undefined ? dateFromDue(due) : null;
+
+    let dur = "";
+    if(due !== undefined) {
+      dur = formatDuration(today, dueDate);
+      if(dueDate < today) dur = "overdue!";
+      else if(dueDate.getTime() === today.getTime()) dur = "今日";
+      else if(dueDate.getTime() === tomorrow.getTime()) dur = "明日";
+      else if(dueDate - today < 1000 * 60 * 60 * 24 * 7) dur = dueDate.toLocaleDateString([], { weekday: 'short' });
+    }
+
+    return (
+      <div classList={{
+          'thread': true,
+          'todo': true,
+          'active': tprops.thread.thread_id === props.activeThread(),
+          'selected': props.selectedThreads().indexOf(tprops.thread.thread_id) !== -1,
+          'due': dueDate !== null ? dueDate < tomorrow : false
+        }}
+        data-id={tprops.thread.thread_id}
+        onClick={() => {
+          props.setActiveThread(tprops.thread.thread_id);
+          props.openActive();
+        }}
+        onTouchStart={() => {
+          props.setActiveThread(tprops.thread.thread_id);
+        }}
+        onMouseEnter={() => {
+          const calElem = document.getElementsByClassName("calendar")[0],
+                boxElem = document.querySelector(`.calendar-box[data-id='${tprops.thread.thread_id}']`);
+          prevScrollPos = { left: calElem?.scrollLeft, top: calElem?.scrollTop };
+          boxElem?.classList.add("highlight");
+          boxElem?.scrollIntoView({block: "nearest"});
+        }}
+        onMouseLeave={() => {
+          if(prevScrollPos) document.getElementsByClassName("calendar")[0].scrollTo(prevScrollPos);
+          document.querySelector(`.calendar-box[data-id='${tprops.thread.thread_id}']`)?.classList.remove("highlight");
+        }}
+      >
+        <div>
+          {dur}
+        </div>
+        <div class="grid-authors" ref={e => wideNarrowObserver?.observe(e)}>
+          <div class="narrow">
+            <For each={authors}>
+              {(author) => <ColorChip key={author[0]} value={author[2]}/>}
+            </For>
+          </div>
+          <div class="wide">
+            <For each={authors}>
+              {(author) => <ColorChip key={author[0]} value={author[1]}/>}
+            </For>
+          </div>
+        </div>
+        <div class="grid-subject">
+          {tprops.thread.subject}
+        </div>
+        <div>
+          <For each={tprops.thread.tags.sort()}>
+            {(tag) => <ColorChip class={tag === "todo" || tag.startsWith("due:") || tag.startsWith("grp:") ? "hide-if-narrow" : ""} value={tag}/>}
+          </For>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div class="centered horizontal-stack">
       <Calendar/>
       <div class="vertical-stack clipped todo-threads">
         <For each={props.threads().sort(sortThreadsByDueDate)}>
-          {(thread, index) => {
-            const authors = thread.authors.map(splitAddressHeader);
-            return (
-              <div classList={{
-                  'thread': true,
-                  'todo': true,
-                  'active': index() === props.activeThread(),
-                  'selected': props.selectedThreads().indexOf(index()) !== -1,
-                  'due': dues()[index()][0] ? dues()[index()][0] < tomorrow : false
-                }}
-                onClick={() => {
-                  props.setActiveThread(index());
-                  props.openActive();
-                }}
-                onTouchStart={() => {
-                  props.setActiveThread(index());
-                }}
-                onMouseEnter={() => {
-                  const calElem = document.getElementsByClassName("calendar")[0];
-                  prevScrollPos = { left: calElem?.scrollLeft, top: calElem?.scrollTop };
-                  document.getElementsByClassName("calendar-box")[index()]?.classList.add("highlight");
-                  document.getElementsByClassName("calendar-box")[index()]?.scrollIntoView({block: "nearest"});
-                }}
-                onMouseLeave={() => {
-                  if(prevScrollPos) document.getElementsByClassName("calendar")[0].scrollTo(prevScrollPos);
-                  document.getElementsByClassName("calendar-box")[index()]?.classList.remove("highlight");
-                }}
-              >
-                <div>
-                  {dues()[index()][1]}
-                </div>
-                <div class="grid-authors" ref={e => wideNarrowObserver?.observe(e)}>
-                  <div class="narrow">
-                    <For each={authors}>
-                      {(author) => <ColorChip key={author[0]} value={author[2]}/>}
-                    </For>
-                  </div>
-                  <div class="wide">
-                    <For each={authors}>
-                      {(author) => <ColorChip key={author[0]} value={author[1]}/>}
-                    </For>
-                  </div>
-                </div>
-                <div class="grid-subject">
-                  {thread.subject}
-                </div>
-                <div>
-                  <For each={thread.tags.sort()}>
-                    {(tag) => <ColorChip class={tag === "todo" || tag.startsWith("due:") ? "hide-if-narrow" : ""} value={tag}/>}
-                  </For>
-                </div>
-              </div>
-            );
-          }}
+          {(thread) => <ThreadGroup thread={thread} threadListElem={threadListElem} setActiveThread={props.setActiveThread}/>}
         </For>
       </div>
     </div>

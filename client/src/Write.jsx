@@ -7,7 +7,6 @@ import { ColorChip } from "./ColorChip.jsx";
 
 import { getSetting } from "./Settings.jsx";
 
-import "./Kukulkan.css";
 import { separateQuotedNonQuoted } from "./Message.jsx";
 import { apiURL, delayedDebouncedFetch, filterAdminTags, formatFSz, splitAddressHeader } from "./utils.js";
 import { mkShortcut, Icon, AttachFile, Send } from "./UiUtils.jsx";
@@ -400,6 +399,7 @@ export function Write(props) {
           Tags:
           <TagComplete
             tags={message.tags}
+            sp={props.sp}
             addTag={(tagToAdd) => {
               setMessage("tags", message.tags.length, tagToAdd);
               localStorage.setItem(`draft-${draftKey}-tags`, message.tags.join("\n"));
