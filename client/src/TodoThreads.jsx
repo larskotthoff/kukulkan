@@ -15,7 +15,7 @@ function dateFromDue(due) {
 
 function findEarliestDue(threadGroup) {
   let dues = [];
-  if(Object.prototype.toString.call(threadGroup) === '[object Array]') {
+  if(threadGroup.length !== undefined) {
     dues = threadGroup.map(findEarliestDue);
   } else {
     dues = threadGroup.tags.filter((tag) => tag.startsWith("due:"));
@@ -99,7 +99,7 @@ export function TodoThreads(props) {
   });
 
   function processDueDate(thread) {
-    if(Object.prototype.toString.call(thread) === '[object Array]') {
+    if(thread.length !== undefined) {
       thread.forEach(processDueDate);
     } else {
       const due = findEarliestDue(thread);
@@ -199,7 +199,9 @@ export function TodoThreads(props) {
   setTimeout(checkDate, (new Date().setHours(24, 0, 0, 0) - loadDate));
 
   function threadListElem(tprops) {
+    // eslint-disable-next-line solid/reactivity
     const authors = tprops.thread.authors.map(splitAddressHeader),
+          // eslint-disable-next-line solid/reactivity
           due = findEarliestDue(tprops.thread),
           dueDate = due !== undefined ? dateFromDue(due) : null;
 

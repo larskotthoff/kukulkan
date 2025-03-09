@@ -1,4 +1,4 @@
-import { createEffect, createSignal, on, Show } from "solid-js";
+import { createEffect, createSignal, For, on, Show } from "solid-js";
 import * as chrono from 'chrono-node';
 
 import { Autocomplete } from "./Autocomplete.jsx";
@@ -9,8 +9,11 @@ import { apiURL } from "./utils.js";
 import { mkShortcut } from "./UiUtils.jsx";
 
 export function ThreadGroup(tprops) {
-  if(Object.prototype.toString.call(tprops.thread) === '[object Array]') {
+  // eslint-disable-next-line solid/reactivity
+  if(tprops.thread.length !== undefined) {
+    // eslint-disable-next-line solid/reactivity
     if(tprops.thread[0].collapsed === undefined) tprops.thread[0].collapsed = true;
+    // eslint-disable-next-line solid/reactivity
     let [collapsed, setCollapsed] = createSignal(tprops.thread[0].collapsed);
 
     createEffect(on(collapsed, () => {
@@ -24,6 +27,7 @@ export function ThreadGroup(tprops) {
       }
     }
 
+    // eslint-disable-next-line solid/components-return-once
     return (
       <div classList={{
           'thread-group': true,
@@ -41,6 +45,7 @@ export function ThreadGroup(tprops) {
     );
   }
 
+  // eslint-disable-next-line solid/reactivity
   return tprops.threadListElem(tprops);
 }
 
@@ -50,6 +55,7 @@ export function Threads(props) {
         [editingTags, setEditingTags] = createSignal(null),
         [showEditingTagModal, setShowEditingTagModal] = createSignal(false),
         [threads, setThreads] = createSignal(data.threads || []),
+        // eslint-disable-next-line solid/reactivity
         [activeThread, setActiveThread] = createSignal(threads().length > 0 ? threads().flat()[0].thread_id : null);
 
   function getAffectedThreads() {
@@ -77,6 +83,7 @@ export function Threads(props) {
     const url = apiURL(`api/tag_batch/thread/${encodeURIComponent(affectedThreads.join(' '))}/${encodeURIComponent(editingTags())}`);
     props.sp?.(0);
 
+    // eslint-disable-next-line solid/reactivity
     fetch(url).then((response) => {
       if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
       affectedThreads.forEach(affectedThread => {
@@ -105,9 +112,11 @@ export function Threads(props) {
   }));
 
   mkShortcut([["Home"]],
+    // eslint-disable-next-line solid/reactivity
     () => threads().length > 0 && setActiveThread(threads().flat()[0].thread_id)
   );
   mkShortcut([["k"], ["ArrowUp"]],
+    // eslint-disable-next-line solid/reactivity
     () => {
       if(threads().length > 0) {
         let prev = document.querySelector(".thread.active").previousElementSibling;
@@ -128,6 +137,7 @@ export function Threads(props) {
     }
   );
   mkShortcut([["j"], ["ArrowDown"]],
+    // eslint-disable-next-line solid/reactivity
     () => {
       if(threads().length > 0) {
         let next = document.querySelector(".thread.active").nextElementSibling;
@@ -159,6 +169,7 @@ export function Threads(props) {
   );
 
   mkShortcut([["h"], ["ArrowLeft"], ["l"], ["ArrowRight"]],
+    // eslint-disable-next-line solid/reactivity
     () => {
       if(threads().length > 0) {
         let parent = document.querySelector(".thread.active").parentElement;
@@ -268,6 +279,7 @@ export function Threads(props) {
       // more than one group selected, assume that we want to create a new group
       // from all threads after removing all exising groups
       if(groupMap.size > 1) {
+        // eslint-disable-next-line solid/reactivity
         groupMap.keys().forEach(async (gt) => {
           const url = apiURL(`api/tag_batch/thread/${encodeURIComponent(groupMap.get(gt).join(' '))}/-${encodeURIComponent(gt)}`),
                 response = await fetch(url);

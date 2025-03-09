@@ -1,4 +1,4 @@
-import { createEffect, createSignal, For, on } from 'solid-js';
+import { createSignal, For } from 'solid-js';
 
 import { ColorChip } from "./ColorChip.jsx";
 import { Autocomplete } from "./Autocomplete.jsx";
@@ -75,7 +75,9 @@ export function SearchThreads(props) {
   handleSwipe(document.body, (el) => el.closest(".thread"), props.deleteActive, Trash, props.tagActive, Tag);
 
   function threadListElem(tprops) {
+    // eslint-disable-next-line solid/reactivity
     const authors = tprops.thread.authors.map(splitAddressHeader),
+          // eslint-disable-next-line solid/reactivity
           dateNum = renderDateNumThread(tprops.thread);
     return (
       <div classList={{
