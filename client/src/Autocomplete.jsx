@@ -215,9 +215,9 @@ export function TagComplete(props) {
         if(text.startsWith("due:")) {
           const parsed = chrono.parseDate(text.split(':')[1])?.toISOString().split('T')[0];
           if(parsed) opts.unshift(`due:${parsed}`);
-        } else if(text === "grp:") {
+        } else if(text.startsWith("grp:")) {
           props.sp?.(0);
-          const response = await fetch(apiURL("api/group_complete"));
+          const response = await fetch(apiURL(`api/group_complete/${encodeURIComponent(text.split(':')[1])}`));
           if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
           opts = await response.json();
           props.sp?.(1);

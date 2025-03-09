@@ -336,10 +336,14 @@ def create_app() -> Flask:
     def complete_email(query_string: str) -> List[str]:
         return list(email_address_complete(query_string).keys())
 
-    @app.route("/api/group_complete")
-    def complete_group() -> Dict[Any, str | None]:
+    @app.route("/api/group_complete/")
+    @app.route("/api/group_complete/<string:sq>")
+    def complete_group(sq: str = "") -> Dict[Any, str | None]:
         grps = {}
-        msgs = get_query("tag:/grp:.*/")
+        if len(sq) == 0:
+            msgs = get_query("tag:/grp:.*/")
+        else:
+            msgs = get_query(f"tag:/grp:.*/ and subject:{sq}")
         for msg in msgs:
             subject = get_header(msg, "subject")
             grp = [tag for tag in msg.tags if tag.startswith("grp:")][0]

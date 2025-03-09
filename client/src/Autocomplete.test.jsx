@@ -276,8 +276,34 @@ test("TagComplete completes group tags", async () => {
   const input = container.querySelector("input");
   await userEvent.type(input, "grp:");
   expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/group_complete");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/group_complete/");
   expect(input.value).toEqual("grp:");
+  let completions = document.querySelector(".autocomplete-popup").children;
+  expect(completions.length).toBe(2);
+  expect(completions[0]).toHaveTextContent("foo bar");
+  expect(completions[1]).toHaveTextContent("bar foo");
+
+  expect(tag).toBe("");
+  await userEvent.type(input, "{enter}{enter}");
+  expect(tag).toBe("grp:0");
+});
+
+test("TagComplete completes group tags with subject", async () => {
+  global.fetch = vi.fn();
+  let tag = "",
+      compl = {"foo bar": "grp:0", "bar foo": "grp:1"};
+  global.fetch.mockResolvedValue({ ok: true, json: () => compl });
+  vi.stubGlobal("data", { "allTags": [] });
+  const { container } = render(() =>
+    <TagComplete tags={[]} addTag={(t) => tag = t}
+      removeTag={() => null}/>);
+
+  const input = container.querySelector("input");
+  await userEvent.type(input, "grp:a");
+  expect(global.fetch).toHaveBeenCalledTimes(2);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/group_complete/");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/group_complete/a");
+  expect(input.value).toEqual("grp:a");
   let completions = document.querySelector(".autocomplete-popup").children;
   expect(completions.length).toBe(2);
   expect(completions[0]).toHaveTextContent("foo bar");

@@ -404,7 +404,7 @@ def test_complete_groups(setup):
     db.messages = MagicMock(return_value=iter([mf1, mf2, mf3]))
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/group_complete')
+        response = test_client.get('/api/group_complete/')
         assert response.status_code == 200
         grps = json.loads(response.data.decode())
         assert len(grps) == 2
@@ -417,6 +417,44 @@ def test_complete_groups(setup):
     mf2.header.assert_called_once_with("subject")
     mf3.header.assert_called_once_with("subject")
     db.messages.assert_called_once_with("tag:/grp:.*/", exclude_tags=[],
+                                       sort=notmuch2.Database.SORT.NEWEST_FIRST)
+
+
+def test_complete_groups_subject(setup):
+    app, db = setup
+
+    mf1 = lambda: None
+    mf1.header = MagicMock()
+    mf1.header.side_effect = ["subj1"]
+    mf1.tags = ["grp:0", "bar"]
+
+    mf2 = lambda: None
+    mf2.header = MagicMock()
+    mf2.header.side_effect = ["subj2"]
+    mf2.tags = ["grp:0", "bar"]
+
+    mf3 = lambda: None
+    mf3.header = MagicMock()
+    mf3.header.side_effect = ["subj3"]
+    mf3.tags = ["grp:1", "bar"]
+
+    db.config = {}
+    db.messages = MagicMock(return_value=iter([mf1, mf2, mf3]))
+
+    with app.test_client() as test_client:
+        response = test_client.get('/api/group_complete/subj')
+        assert response.status_code == 200
+        grps = json.loads(response.data.decode())
+        assert len(grps) == 2
+        assert "subj1" in grps
+        assert "subj3" in grps
+        assert grps["subj1"] == "grp:0"
+        assert grps["subj3"] == "grp:1"
+
+    mf1.header.assert_called_once_with("subject")
+    mf2.header.assert_called_once_with("subject")
+    mf3.header.assert_called_once_with("subject")
+    db.messages.assert_called_once_with("tag:/grp:.*/ and subject:subj", exclude_tags=[],
                                        sort=notmuch2.Database.SORT.NEWEST_FIRST)
 
 
