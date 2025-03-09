@@ -160,7 +160,8 @@ def get_globals() -> Dict[str, Any]:
         accts = current_app.config.custom["accounts"] # type: ignore[attr-defined]
     except KeyError:
         accts = []
-    tags = [tag for tag in get_db().tags if tag != "(null)" and not tag.startswith("due:")]
+    tags = [tag for tag in get_db().tags if tag != "(null)" and not
+            tag.startswith("due:") and not tag.startswith("grp:")]
     try:
         cmp = current_app.config.custom["compose"] # type: ignore[attr-defined]
     except KeyError:
@@ -334,6 +335,19 @@ def create_app() -> Flask:
     @app.route("/api/email/<string:query_string>")
     def complete_email(query_string: str) -> List[str]:
         return list(email_address_complete(query_string).keys())
+
+    @app.route("/api/group_complete")
+    def complete_group() -> Dict[Any, str | None]:
+        grps = {}
+        msgs = get_query("tag:/grp:.*/")
+        for msg in msgs:
+            subject = get_header(msg, "subject")
+            grp = [tag for tag in msg.tags if tag.startswith("grp:")][0]
+            if not grp in grps:
+                grps[grp] = subject
+            if len(grps) > 9:
+                break
+        return dict((v, k) for k, v in grps.items())
 
     @app.route("/api/thread/<string:thread_id>")
     def thread(thread_id: str) -> Any:

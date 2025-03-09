@@ -399,6 +399,7 @@ export function Write(props) {
           Tags:
           <TagComplete
             tags={message.tags}
+            sp={props.sp}
             addTag={(tagToAdd) => {
               setMessage("tags", message.tags.length, tagToAdd);
               localStorage.setItem(`draft-${draftKey}-tags`, message.tags.join("\n"));

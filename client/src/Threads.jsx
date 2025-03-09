@@ -53,7 +53,7 @@ export function Threads(props) {
   const [query, setQuery] = createSignal(),
         [selectedThreads, setSelectedThreads] = createSignal([]),
         [editingTags, setEditingTags] = createSignal(null),
-        [showEditingTagModal, setShowEditingTagModal] = createSignal(false),
+        [showTagEditingBar, setShowTagEditingBar] = createSignal(false),
         [threads, setThreads] = createSignal(data.threads || []),
         // eslint-disable-next-line solid/reactivity
         [activeThread, setActiveThread] = createSignal(threads().length > 0 ? threads().flat()[0].thread_id : null);
@@ -217,7 +217,7 @@ export function Threads(props) {
   );
 
   function tagActive() {
-    setShowEditingTagModal(threads().length > 0 && !showEditingTagModal());
+    setShowTagEditingBar(threads().length > 0 && !showTagEditingBar());
   }
 
   // eslint-disable-next-line solid/reactivity
@@ -323,13 +323,13 @@ export function Threads(props) {
   // eslint-disable-next-line solid/reactivity
   mkShortcut([["g"]], groupActive, true);
 
-  createEffect(on(showEditingTagModal, () => {
-    if(showEditingTagModal()) document.querySelector("#edit-tag-box > input").focus();
+  createEffect(on(showTagEditingBar, () => {
+    if(showTagEditingBar()) document.querySelector("#edit-tag-box > input").focus();
   }));
 
   function TagEditingModal() {
     return (
-      <Show when={showEditingTagModal()}>
+      <Show when={showTagEditingBar()}>
         <Autocomplete
           id="edit-tag-box"
           name="editTags"
@@ -337,7 +337,7 @@ export function Threads(props) {
           text={editingTags}
           setText={setEditingTags}
           onBlur={() => {
-            setShowEditingTagModal(false);
+            setShowTagEditingBar(false);
             setEditingTags("");
           }}
           getOptions={(text) => {
@@ -357,7 +357,7 @@ export function Threads(props) {
           }}
           handleKey={(ev) => {
             if(ev.code === 'Enter' || ev.key === 'Enter') {
-              setShowEditingTagModal(false);
+              setShowTagEditingBar(false);
               // sad, but true
               makeTagEdits();
               ev.stopPropagation();

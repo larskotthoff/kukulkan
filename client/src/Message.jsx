@@ -327,6 +327,7 @@ export function Message(props) {
             <TagComplete
               id="editTags"
               tags={tags()}
+              sp={props.sp}
               addTag={(tagToAdd) => {
                 changeTags(tagToAdd);
               }}

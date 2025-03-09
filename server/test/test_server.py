@@ -46,7 +46,7 @@ def setup():
 def test_globals(setup):
     app, db = setup
 
-    db.tags = ['foo', 'bar', '(null)', 'due:2222-22-22']
+    db.tags = ['foo', 'bar', '(null)', 'due:2222-22-22', 'grp:0']
 
     app.config.custom["accounts"] = "foo"
     app.config.custom["compose"] = {}
@@ -334,7 +334,7 @@ def test_query_group_multiple_in_thread(setup):
     mm3.header.assert_has_calls([call("subject"), call("from")])
 
 
-def test_address(setup):
+def test_complete_address(setup):
     app, db = setup
 
     mf = lambda: None
@@ -355,6 +355,68 @@ def test_address(setup):
 
     mf.header.assert_has_calls([call("from"), call("to"), call("cc"), call("bcc")])
     db.messages.assert_called_once_with("from:foo or to:foo", exclude_tags=[],
+                                       sort=notmuch2.Database.SORT.NEWEST_FIRST)
+
+
+def test_complete_email(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.header = MagicMock()
+    mf.header.side_effect = ["foo@bar.com", "\"bar foo\" bar@foo.com", "bar@foo.com", None]
+    mf.tags = ["foo", "bar"]
+
+    db.config = {}
+    db.messages = MagicMock(return_value=iter([mf]))
+
+    with app.test_client() as test_client:
+        response = test_client.get('/api/email/foo')
+        assert response.status_code == 200
+        addrs = json.loads(response.data.decode())
+        assert len(addrs) == 2
+        assert addrs[0] == "foo@bar.com"
+        assert addrs[1] == "bar@foo.com"
+
+    mf.header.assert_has_calls([call("from"), call("to"), call("cc"), call("bcc")])
+    db.messages.assert_called_once_with("from:foo or to:foo", exclude_tags=[],
+                                       sort=notmuch2.Database.SORT.NEWEST_FIRST)
+
+
+def test_complete_groups(setup):
+    app, db = setup
+
+    mf1 = lambda: None
+    mf1.header = MagicMock()
+    mf1.header.side_effect = ["subj1"]
+    mf1.tags = ["grp:0", "bar"]
+
+    mf2 = lambda: None
+    mf2.header = MagicMock()
+    mf2.header.side_effect = ["subj2"]
+    mf2.tags = ["grp:0", "bar"]
+
+    mf3 = lambda: None
+    mf3.header = MagicMock()
+    mf3.header.side_effect = ["subj3"]
+    mf3.tags = ["grp:1", "bar"]
+
+    db.config = {}
+    db.messages = MagicMock(return_value=iter([mf1, mf2, mf3]))
+
+    with app.test_client() as test_client:
+        response = test_client.get('/api/group_complete')
+        assert response.status_code == 200
+        grps = json.loads(response.data.decode())
+        assert len(grps) == 2
+        assert "subj1" in grps
+        assert "subj3" in grps
+        assert grps["subj1"] == "grp:0"
+        assert grps["subj3"] == "grp:1"
+
+    mf1.header.assert_called_once_with("subject")
+    mf2.header.assert_called_once_with("subject")
+    mf3.header.assert_called_once_with("subject")
+    db.messages.assert_called_once_with("tag:/grp:.*/", exclude_tags=[],
                                        sort=notmuch2.Database.SORT.NEWEST_FIRST)
 
 
