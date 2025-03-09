@@ -188,7 +188,7 @@ export function ChipComplete(props) {
         // chrome on android doesn't set key codes in events, so we have to
         // handle the double space to complete this way
         if(ev.target.value.endsWith("  ")) {
-          props.addChip(toAdd());
+          props.addChip(toAdd().trim());
           setToAdd(null);
         }
       }}
