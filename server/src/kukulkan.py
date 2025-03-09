@@ -300,7 +300,7 @@ def create_app() -> Flask:
                         subject = get_header(msg, "subject")
                         threads[msg.threadid] = {
                             "authors": {},
-                            "newest_date": datetime.datetime.fromtimestamp(msg.date).strftime("%c"),
+                            "newest_date": msg.date,
                             "subject": subject if subject else "(no subject)",
                             "tags": {}
                         }
@@ -319,7 +319,7 @@ def create_app() -> Flask:
                      if "authors" not in threads[t].keys()
                      else {"authors": list(threads[t]["authors"].keys())[::-1],
                            "newest_date": threads[t]["newest_date"],
-                           "oldest_date": datetime.datetime.fromtimestamp(threads[t]["oldest_date"]).strftime("%c"),
+                           "oldest_date": threads[t]["oldest_date"],
                            "subject": threads[t]["subject"],
                            "tags": list(threads[t]["tags"].keys()),
                            "thread_id": t,
@@ -876,15 +876,15 @@ def get_attachments(email_msg: email.message.Message, content: bool = False) -> 
                             pass
 
                         try:
-                            dtstart = component.get("dtstart").dt.astimezone(tz.tzlocal()).strftime("%c")
-                            dtend = component.get("dtend").dt.astimezone(tz.tzlocal()).strftime("%c")
+                            dtstart = component.get("dtstart").dt.astimezone(tz.tzlocal()).strftime("%s")
+                            dtend = component.get("dtend").dt.astimezone(tz.tzlocal()).strftime("%s")
 
                             # this assumes that start and end are the same timezone
                             timezone = str(component.get("dtstart").dt.tzinfo)
                         except AttributeError:  # only date, no time
                             try:
-                                dtstart = component.get("dtstart").dt.strftime("%c")
-                                dtend = component.get("dtend").dt.strftime("%c")
+                                dtstart = component.get("dtstart").dt.strftime("%s")
+                                dtend = component.get("dtend").dt.strftime("%s")
                             except AttributeError:  # nothing?
                                 pass
                         try:

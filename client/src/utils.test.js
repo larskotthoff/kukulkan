@@ -77,17 +77,28 @@ test("formatDuration", () => {
 });
 
 test("renderDateNumThread", () => {
-  const now = new Date(),
+  const now = +(new Date()),
         thread = { total_messages: 1, newest_date: now,
-          oldest_date: new Date(now - (24 * 60 * 60 * 1000)) };
+          oldest_date: now - (24 * 60 * 60) };
 
-  expect(utils.renderDateNumThread(thread).join(" ")).toMatch(/[0-9]{2}:[0-9]{2}/);
+  expect(utils.renderDateNumThread(thread).join(" ")).toMatch(/[0-9]{1}:[0-9]{2}/);
 
   thread.total_messages = 2;
   expect(utils.renderDateNumThread(thread).join(" ")).toMatch(/[0-9]{2}:[0-9]{2} \(2\/24時\)/);
 
   expect(utils.renderDateNumThread(thread)[0]).not.toMatch(/[0-9]{2}:[0-9]{2} \(2\/24時\)/);
   expect(utils.renderDateNumThread(thread)[0]).toMatch(/[0-9]{2}:[0-9]{2}/);
+});
+
+test("renderDateNumThread different timezones", () => {
+  const thread = { total_messages: 1, newest_date: 1000000000,
+          oldest_date: 1000000000 };
+
+  vi.stubEnv('TZ', 'America/Denver')
+  expect(utils.renderDateNumThread(thread)[0]).toBe("8/9/2001 19:46");
+  vi.stubEnv('TZ', 'America/New_York')
+  expect(utils.renderDateNumThread(thread)[0]).toBe("8/9/2001 21:46");
+  vi.unstubAllEnvs();
 });
 
 test("apiURL", () => {

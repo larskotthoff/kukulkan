@@ -64,7 +64,7 @@ def test_query(setup):
 
     mm1 = lambda: None
     mm1.tags = ["footag"]
-    mm1.date = 0
+    mm1.date = 2
     mm1.threadid = "id"
     mm1.header = MagicMock()
     mm1.header.side_effect = ["foosubject", "foo bar <foo@bar.com>"]
@@ -75,7 +75,7 @@ def test_query(setup):
     mm2.header = MagicMock()
     mm2.header.side_effect = ["bar foo <bar@foo.com>"]
     mm3 = lambda: None
-    mm3.date = 2
+    mm3.date = 0
     mm3.tags = ["foobartag"]
     mm3.threadid = "id"
     mm3.header = MagicMock()
@@ -91,8 +91,8 @@ def test_query(setup):
         assert response.status_code == 200
         thrds = json.loads(response.data.decode())
         assert thrds[0]["authors"] == ["bar foo <bar@foo.com>", "foo bar <foo@bar.com>"]
-        #assert thrds[0]["newest_date"] == "Wed Dec 31 17:00:02 1969"
-        #assert thrds[0]["oldest_date"] == "Wed Dec 31 17:00:00 1969"
+        assert thrds[0]["newest_date"] == 2
+        assert thrds[0]["oldest_date"] == 0
         assert thrds[0]["subject"] == "foosubject"
         thrds[0]["tags"].sort()
         assert thrds[0]["tags"] == ["bartag", "foobartag", "footag"]
@@ -129,8 +129,8 @@ def test_query_empty(setup):
         assert response.status_code == 200
         thrds = json.loads(response.data.decode())
         assert thrds[0]["authors"] == [None]
-        #assert thrds[0]["newest_date"] == "Wed Dec 31 17:00:00 1969"
-        #assert thrds[0]["oldest_date"] == "Wed Dec 31 17:00:00 1969"
+        assert thrds[0]["newest_date"] == 0
+        assert thrds[0]["oldest_date"] == 0
         assert thrds[0]["subject"] == "(no subject)"
         assert thrds[0]["tags"] == ["footag"]
         assert thrds[0]["thread_id"] == "id"
@@ -1110,10 +1110,8 @@ def test_message_attachment_calendar_preview(setup):
         assert msg["attachments"][0]['preview']['tz'] == "Europe/Berlin"
         assert msg["attachments"][0]['preview']['dtstart'] == "20111101T090000"
         assert msg["attachments"][0]['preview']['dtend'] == "20111101T100000"
-        assert "Tue Nov  1 " in msg["attachments"][0]['preview']['start']
-        assert "2011" in msg["attachments"][0]['preview']['start']
-        assert "Tue Nov  1 " in msg["attachments"][0]['preview']['end']
-        assert "2011" in msg["attachments"][0]['preview']['end']
+        assert msg["attachments"][0]['preview']['start'] == "1320134400"
+        assert msg["attachments"][0]['preview']['end'] == "1320138000"
         assert msg["attachments"][0]['preview']['recur'] == ""
         assert msg["attachments"][0]['preview']['attendees'] == "unittest, TRUE, someone"
 
@@ -1148,10 +1146,8 @@ def test_message_attachment_calendar_preview_broken(setup):
         assert msg["attachments"][0]['preview']['tz'] == "Europe/Berlin"
         assert msg["attachments"][0]['preview']['dtstart'] == "20111101T090000"
         assert msg["attachments"][0]['preview']['dtend'] == "20111101T100000"
-        assert "Tue Nov  1 " in msg["attachments"][0]['preview']['start']
-        assert "2011" in msg["attachments"][0]['preview']['start']
-        assert "Tue Nov  1 " in msg["attachments"][0]['preview']['end']
-        assert "2011" in msg["attachments"][0]['preview']['end']
+        assert msg["attachments"][0]['preview']['start'] == "1320134400"
+        assert msg["attachments"][0]['preview']['end'] == "1320138000"
         assert msg["attachments"][0]['preview']['recur'] == ""
         assert msg["attachments"][0]['preview']['attendees'] == "unittest, TRUE"
 
@@ -1186,10 +1182,8 @@ def test_message_attachment_calendar_preview_tz(setup):
         assert msg["attachments"][0]['preview']['tz'] == "America/New_York"
         assert msg["attachments"][0]['preview']['dtstart'] == "20111101T090000"
         assert msg["attachments"][0]['preview']['dtend'] == "20111101T100000"
-        assert "Tue Nov  1 " in msg["attachments"][0]['preview']['start']
-        assert "2011" in msg["attachments"][0]['preview']['start']
-        assert "Tue Nov  1 " in msg["attachments"][0]['preview']['end']
-        assert "2011" in msg["attachments"][0]['preview']['end']
+        assert msg["attachments"][0]['preview']['start'] == "1320152400"
+        assert msg["attachments"][0]['preview']['end'] == "1320156000"
         assert msg["attachments"][0]['preview']['recur'] == ""
         assert msg["attachments"][0]['preview']['attendees'] == "unittest, TRUE"
 
@@ -1224,10 +1218,8 @@ def test_message_attachment_calendar_preview_no_attendees(setup):
         assert msg["attachments"][0]['preview']['tz'] == "Europe/Berlin"
         assert msg["attachments"][0]['preview']['dtstart'] == "20111101T090000"
         assert msg["attachments"][0]['preview']['dtend'] == "20111101T100000"
-        assert "Tue Nov  1 " in msg["attachments"][0]['preview']['start']
-        assert "2011" in msg["attachments"][0]['preview']['start']
-        assert "Tue Nov  1 " in msg["attachments"][0]['preview']['end']
-        assert "2011" in msg["attachments"][0]['preview']['end']
+        assert msg["attachments"][0]['preview']['start'] == "1320134400"
+        assert msg["attachments"][0]['preview']['end'] == "1320138000"
         assert msg["attachments"][0]['preview']['recur'] == ""
         assert msg["attachments"][0]['preview']['attendees'] == "unittest"
 
@@ -1262,10 +1254,8 @@ def test_message_attachment_calendar_preview_no_people(setup):
         assert msg["attachments"][0]['preview']['tz'] == "Europe/Berlin"
         assert msg["attachments"][0]['preview']['dtstart'] == "20111101T090000"
         assert msg["attachments"][0]['preview']['dtend'] == "20111101T100000"
-        assert "Tue Nov  1 " in msg["attachments"][0]['preview']['start']
-        assert "2011" in msg["attachments"][0]['preview']['start']
-        assert "Tue Nov  1 " in msg["attachments"][0]['preview']['end']
-        assert "2011" in msg["attachments"][0]['preview']['end']
+        assert msg["attachments"][0]['preview']['start'] == "1320134400"
+        assert msg["attachments"][0]['preview']['end'] == "1320138000"
         assert msg["attachments"][0]['preview']['recur'] == ""
         assert msg["attachments"][0]['preview']['attendees'] == ""
 
@@ -1299,10 +1289,8 @@ def test_message_attachment_calendar_preview_no_time(setup):
         assert msg["attachments"][0]['preview']['location'] == "kskdcsd"
         assert msg["attachments"][0]['preview']['dtstart'] == "19700329"
         assert msg["attachments"][0]['preview']['dtend'] == "19700330"
-        assert "Sun Mar 29 " in msg["attachments"][0]['preview']['start']
-        assert "1970" in msg["attachments"][0]['preview']['start']
-        assert "Mon Mar 30 " in msg["attachments"][0]['preview']['end']
-        assert "1970" in msg["attachments"][0]['preview']['end']
+        assert msg["attachments"][0]['preview']['start'] == "7542000"
+        assert msg["attachments"][0]['preview']['end'] == "7628400"
 
     assert mf.header.call_count == 11
     db.find.assert_called_once_with("foo")
@@ -1335,10 +1323,8 @@ def test_message_attachment_calendar_preview_recur(setup):
         assert msg["attachments"][0]['preview']['tz'] == "Europe/Berlin"
         assert msg["attachments"][0]['preview']['dtstart'] == "20111101T090000"
         assert msg["attachments"][0]['preview']['dtend'] == "20111101T100000"
-        assert "Tue Nov  1 " in msg["attachments"][0]['preview']['start']
-        assert "2011" in msg["attachments"][0]['preview']['start']
-        assert "Tue Nov  1 " in msg["attachments"][0]['preview']['end']
-        assert "2011" in msg["attachments"][0]['preview']['end']
+        assert msg["attachments"][0]['preview']['start'] == "1320134400"
+        assert msg["attachments"][0]['preview']['end'] == "1320138000"
         assert msg["attachments"][0]['preview']['recur'] == "every last Sun in Oct"
         assert msg["attachments"][0]['preview']['attendees'] == "unittest, TRUE"
 
@@ -1373,10 +1359,8 @@ def test_message_attachment_calendar_preview_request_accepted(setup):
         assert msg["attachments"][0]['preview']['tz'] == "Europe/Berlin"
         assert msg["attachments"][0]['preview']['dtstart'] == "20111101T090000"
         assert msg["attachments"][0]['preview']['dtend'] == "20111101T100000"
-        assert "Tue Nov  1 " in msg["attachments"][0]['preview']['start']
-        assert "2011" in msg["attachments"][0]['preview']['start']
-        assert "Tue Nov  1 " in msg["attachments"][0]['preview']['end']
-        assert "2011" in msg["attachments"][0]['preview']['end']
+        assert msg["attachments"][0]['preview']['start'] == "1320134400"
+        assert msg["attachments"][0]['preview']['end'] == "1320138000"
         assert msg["attachments"][0]['preview']['recur'] == ""
         assert msg["attachments"][0]['preview']['attendees'] == "unittest, TRUE"
 
@@ -1411,10 +1395,8 @@ def test_message_attachment_calendar_preview_reply_accepted(setup):
         assert msg["attachments"][0]['preview']['tz'] == "Europe/Berlin"
         assert msg["attachments"][0]['preview']['dtstart'] == "20111101T090000"
         assert msg["attachments"][0]['preview']['dtend'] == "20111101T100000"
-        assert "Tue Nov  1 " in msg["attachments"][0]['preview']['start']
-        assert "2011" in msg["attachments"][0]['preview']['start']
-        assert "Tue Nov  1 " in msg["attachments"][0]['preview']['end']
-        assert "2011" in msg["attachments"][0]['preview']['end']
+        assert msg["attachments"][0]['preview']['start'] == "1320134400"
+        assert msg["attachments"][0]['preview']['end'] == "1320138000"
         assert msg["attachments"][0]['preview']['recur'] == ""
         assert msg["attachments"][0]['preview']['attendees'] == "unittest, TRUE"
 

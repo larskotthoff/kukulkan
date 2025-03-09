@@ -75,9 +75,9 @@ export function formatDuration(from, to) {
 }
 
 export function renderDateNumThread(thread) {
-  let res = [formatDate(new Date(thread.newest_date))];
+  let res = [formatDate(new Date(thread.newest_date * 1000))];
   if(thread.total_messages > 1) {
-    res.push(`(${thread.total_messages}/${formatDuration(new Date(thread.oldest_date), new Date(thread.newest_date))})`);
+    res.push(`(${thread.total_messages}/${formatDuration(new Date(thread.oldest_date * 1000), new Date(thread.newest_date * 1000))})`);
   }
   return res;
 }

@@ -64,14 +64,14 @@ def test_query(setup):
         thrds = json.loads(response.data.decode())
         assert len(thrds) == 2
         assert thrds[0]["authors"] == ["Antoine Beaupré <anarcat@orangeseeds.org>"]
-        #assert thrds[0]["newest_date"] == "Mon Mar 19 11:56:54 2018"
-        #assert thrds[0]["oldest_date"] == "Mon Mar 19 11:56:54 2018"
+        assert thrds[0]["newest_date"] == 1521482214
+        assert thrds[0]["oldest_date"] == 1521482214
         assert thrds[0]["subject"] == 'Re: bug: "no top level messages" crash on Zen email loops'
         assert thrds[0]["tags"] == ["attachment", "inbox", "unread"]
         assert thrds[0]["total_messages"] == 1
         assert thrds[1]["authors"] == ["Stefan Schmidt <stefan@datenfreihafen.org>"]
-        #assert thrds[1]["newest_date"] == "Sat Nov 21 17:11:01 2009"
-        #assert thrds[1]["oldest_date"] == "Sat Nov 21 17:11:01 2009"
+        assert thrds[1]["newest_date"] == 1258848661
+        assert thrds[1]["oldest_date"] == 1258848661
         assert thrds[1]["subject"] == "[notmuch] [PATCH 2/2] notmuch-new: Tag mails not as unread when the seen flag in the maildir is set."
         assert thrds[1]["tags"] == ["inbox", "unread"]
         assert thrds[1]["total_messages"] == 1
@@ -86,8 +86,8 @@ def test_query_deleted(setup_deleted):
         thrds = json.loads(response.data.decode())
         assert len(thrds) == 1
         assert thrds[0]["authors"] == ["Stefan Schmidt <stefan@datenfreihafen.org>"]
-        #assert thrds[0]["newest_date"] == "Sat Nov 21 17:11:01 2009"
-        #assert thrds[0]["oldest_date"] == "Sat Nov 21 17:11:01 2009"
+        assert thrds[0]["newest_date"] == 1258848661
+        assert thrds[0]["oldest_date"] == 1258848661
         assert thrds[0]["subject"] == "[notmuch] [PATCH 2/2] notmuch-new: Tag mails not as unread when the seen flag in the maildir is set."
         assert thrds[0]["tags"] == ["inbox", "unread"]
         assert thrds[0]["total_messages"] == 1
@@ -97,8 +97,8 @@ def test_query_deleted(setup_deleted):
         thrds = json.loads(response.data.decode())
         assert len(thrds) == 1
         assert thrds[0]["authors"] == ["Antoine Beaupré <anarcat@orangeseeds.org>"]
-        #assert thrds[0]["newest_date"] == "Mon Mar 19 11:56:54 2018"
-        #assert thrds[0]["oldest_date"] == "Mon Mar 19 11:56:54 2018"
+        assert thrds[0]["newest_date"] == 1521482214
+        assert thrds[0]["oldest_date"] == 1521482214
         assert thrds[0]["subject"] == 'Re: bug: "no top level messages" crash on Zen email loops'
         assert thrds[0]["tags"] == ["attachment", "deleted", "inbox", "unread"]
         assert thrds[0]["total_messages"] == 1

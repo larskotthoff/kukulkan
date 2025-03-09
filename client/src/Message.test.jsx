@@ -169,12 +169,25 @@ test("renders message attachments", () => {
 
   // calendar
   msg.attachments = [ { content_type: "calendar", content_size: 100, filename: "foo.txt",
-    preview: { summary: "foo", location: "bar", start: "start", end: "end", attendees: "attend", recur: "recur" }} ];
+    preview: { summary: "foo", location: "bar", start: "1000000000", end:
+      "1000000100", attendees: "attend", recur: "recur" }} ];
+  vi.stubEnv('TZ', 'America/Denver')
   container = render(() => <Message msg={msg} active={true}/>).container;
   expect(container.querySelector("a[href='http://localhost:5000/api/attachment/fo%40o/0']")).not.toBe(null);
   expect(container.querySelector("a[href='https://www.google.com/calendar/render?action=TEMPLATE&text=foo&dates=undefined/undefined&location=bar&ctz=undefined&recur=RRULE:undefined&sf=true&output=xml']")).not.toBe(null);
   expect(screen.getByText("foo.txt (100 Bi, calendar)")).toBeInTheDocument();
-  expect(screen.getByText("foo (bar) start — end attend recur")).toBeInTheDocument();
+  expect(screen.getByText("foo (bar) Sat Sep 08 2001 19:46:40 GMT-0600 (Mountain Daylight Time) — Sat Sep 08 2001 19:48:20 GMT-0600 (Mountain Daylight Time) attend recur")).toBeInTheDocument();
+  vi.unstubAllEnvs();
+  cleanup();
+
+  // calendar -- different timezone
+  vi.stubEnv('TZ', 'America/New_York')
+  container = render(() => <Message msg={msg} active={true}/>).container;
+  expect(container.querySelector("a[href='http://localhost:5000/api/attachment/fo%40o/0']")).not.toBe(null);
+  expect(container.querySelector("a[href='https://www.google.com/calendar/render?action=TEMPLATE&text=foo&dates=undefined/undefined&location=bar&ctz=undefined&recur=RRULE:undefined&sf=true&output=xml']")).not.toBe(null);
+  expect(screen.getByText("foo.txt (100 Bi, calendar)")).toBeInTheDocument();
+  expect(screen.getByText("foo (bar) Sat Sep 08 2001 21:46:40 GMT-0400 (Eastern Daylight Time) — Sat Sep 08 2001 21:48:20 GMT-0400 (Eastern Daylight Time) attend recur")).toBeInTheDocument();
+  vi.unstubAllEnvs();
   cleanup();
 
   // nested message
