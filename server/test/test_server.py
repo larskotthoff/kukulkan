@@ -3,6 +3,7 @@ import json
 import io
 import os
 import email
+import time
 from unittest.mock import MagicMock, mock_open, patch, call, ANY
 
 import notmuch2
@@ -1110,8 +1111,8 @@ def test_message_attachment_calendar_preview(setup):
         assert msg["attachments"][0]['preview']['tz'] == "Europe/Berlin"
         assert msg["attachments"][0]['preview']['dtstart'] == "20111101T090000"
         assert msg["attachments"][0]['preview']['dtend'] == "20111101T100000"
-        assert msg["attachments"][0]['preview']['start'] == "1320134400"
-        assert msg["attachments"][0]['preview']['end'] == "1320138000"
+        assert msg["attachments"][0]['preview']['start'] == 1320134400
+        assert msg["attachments"][0]['preview']['end'] == 1320138000
         assert msg["attachments"][0]['preview']['recur'] == ""
         assert msg["attachments"][0]['preview']['attendees'] == "unittest, TRUE, someone"
 
@@ -1146,8 +1147,8 @@ def test_message_attachment_calendar_preview_broken(setup):
         assert msg["attachments"][0]['preview']['tz'] == "Europe/Berlin"
         assert msg["attachments"][0]['preview']['dtstart'] == "20111101T090000"
         assert msg["attachments"][0]['preview']['dtend'] == "20111101T100000"
-        assert msg["attachments"][0]['preview']['start'] == "1320134400"
-        assert msg["attachments"][0]['preview']['end'] == "1320138000"
+        assert msg["attachments"][0]['preview']['start'] == 1320134400
+        assert msg["attachments"][0]['preview']['end'] == 1320138000
         assert msg["attachments"][0]['preview']['recur'] == ""
         assert msg["attachments"][0]['preview']['attendees'] == "unittest, TRUE"
 
@@ -1182,8 +1183,8 @@ def test_message_attachment_calendar_preview_tz(setup):
         assert msg["attachments"][0]['preview']['tz'] == "America/New_York"
         assert msg["attachments"][0]['preview']['dtstart'] == "20111101T090000"
         assert msg["attachments"][0]['preview']['dtend'] == "20111101T100000"
-        assert msg["attachments"][0]['preview']['start'] == "1320152400"
-        assert msg["attachments"][0]['preview']['end'] == "1320156000"
+        assert msg["attachments"][0]['preview']['start'] == 1320152400
+        assert msg["attachments"][0]['preview']['end'] == 1320156000
         assert msg["attachments"][0]['preview']['recur'] == ""
         assert msg["attachments"][0]['preview']['attendees'] == "unittest, TRUE"
 
@@ -1218,8 +1219,8 @@ def test_message_attachment_calendar_preview_no_attendees(setup):
         assert msg["attachments"][0]['preview']['tz'] == "Europe/Berlin"
         assert msg["attachments"][0]['preview']['dtstart'] == "20111101T090000"
         assert msg["attachments"][0]['preview']['dtend'] == "20111101T100000"
-        assert msg["attachments"][0]['preview']['start'] == "1320134400"
-        assert msg["attachments"][0]['preview']['end'] == "1320138000"
+        assert msg["attachments"][0]['preview']['start'] == 1320134400
+        assert msg["attachments"][0]['preview']['end'] == 1320138000
         assert msg["attachments"][0]['preview']['recur'] == ""
         assert msg["attachments"][0]['preview']['attendees'] == "unittest"
 
@@ -1254,8 +1255,8 @@ def test_message_attachment_calendar_preview_no_people(setup):
         assert msg["attachments"][0]['preview']['tz'] == "Europe/Berlin"
         assert msg["attachments"][0]['preview']['dtstart'] == "20111101T090000"
         assert msg["attachments"][0]['preview']['dtend'] == "20111101T100000"
-        assert msg["attachments"][0]['preview']['start'] == "1320134400"
-        assert msg["attachments"][0]['preview']['end'] == "1320138000"
+        assert msg["attachments"][0]['preview']['start'] == 1320134400
+        assert msg["attachments"][0]['preview']['end'] == 1320138000
         assert msg["attachments"][0]['preview']['recur'] == ""
         assert msg["attachments"][0]['preview']['attendees'] == ""
 
@@ -1289,9 +1290,8 @@ def test_message_attachment_calendar_preview_no_time(setup):
         assert msg["attachments"][0]['preview']['location'] == "kskdcsd"
         assert msg["attachments"][0]['preview']['dtstart'] == "19700329"
         assert msg["attachments"][0]['preview']['dtend'] == "19700330"
-        # this will be different depending on the timezone the code is run in
-        #assert msg["attachments"][0]['preview']['start'] == "7542000"
-        #assert msg["attachments"][0]['preview']['end'] == "7628400"
+        assert msg["attachments"][0]['preview']['start'] == time.mktime(time.strptime('19700329', '%Y%m%d'))
+        assert msg["attachments"][0]['preview']['end'] == time.mktime(time.strptime('19700330', '%Y%m%d'))
 
     assert mf.header.call_count == 11
     db.find.assert_called_once_with("foo")
@@ -1324,8 +1324,8 @@ def test_message_attachment_calendar_preview_recur(setup):
         assert msg["attachments"][0]['preview']['tz'] == "Europe/Berlin"
         assert msg["attachments"][0]['preview']['dtstart'] == "20111101T090000"
         assert msg["attachments"][0]['preview']['dtend'] == "20111101T100000"
-        assert msg["attachments"][0]['preview']['start'] == "1320134400"
-        assert msg["attachments"][0]['preview']['end'] == "1320138000"
+        assert msg["attachments"][0]['preview']['start'] == 1320134400
+        assert msg["attachments"][0]['preview']['end'] == 1320138000
         assert msg["attachments"][0]['preview']['recur'] == "every last Sun in Oct"
         assert msg["attachments"][0]['preview']['attendees'] == "unittest, TRUE"
 
@@ -1360,8 +1360,8 @@ def test_message_attachment_calendar_preview_request_accepted(setup):
         assert msg["attachments"][0]['preview']['tz'] == "Europe/Berlin"
         assert msg["attachments"][0]['preview']['dtstart'] == "20111101T090000"
         assert msg["attachments"][0]['preview']['dtend'] == "20111101T100000"
-        assert msg["attachments"][0]['preview']['start'] == "1320134400"
-        assert msg["attachments"][0]['preview']['end'] == "1320138000"
+        assert msg["attachments"][0]['preview']['start'] == 1320134400
+        assert msg["attachments"][0]['preview']['end'] == 1320138000
         assert msg["attachments"][0]['preview']['recur'] == ""
         assert msg["attachments"][0]['preview']['attendees'] == "unittest, TRUE"
 
@@ -1396,8 +1396,8 @@ def test_message_attachment_calendar_preview_reply_accepted(setup):
         assert msg["attachments"][0]['preview']['tz'] == "Europe/Berlin"
         assert msg["attachments"][0]['preview']['dtstart'] == "20111101T090000"
         assert msg["attachments"][0]['preview']['dtend'] == "20111101T100000"
-        assert msg["attachments"][0]['preview']['start'] == "1320134400"
-        assert msg["attachments"][0]['preview']['end'] == "1320138000"
+        assert msg["attachments"][0]['preview']['start'] == 1320134400
+        assert msg["attachments"][0]['preview']['end'] == 1320138000
         assert msg["attachments"][0]['preview']['recur'] == ""
         assert msg["attachments"][0]['preview']['attendees'] == "unittest, TRUE"
 

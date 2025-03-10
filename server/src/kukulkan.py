@@ -877,10 +877,10 @@ def get_attachments(email_msg: email.message.Message, content: bool = False) -> 
                         try:
                             def get_timestamp(dt):
                                 if isinstance(dt, datetime.datetime):
-                                    return str(int(dt.timestamp()))
+                                    return int(dt.timestamp())
                                 # Convert date to datetime at midnight
                                 dt_with_time = datetime.datetime.combine(dt, datetime.datetime.min.time())
-                                return str(int(dt_with_time.timestamp()))
+                                return int(dt_with_time.timestamp())
 
                             dtstart = get_timestamp(component.get("dtstart").dt)
                             dtend = get_timestamp(component.get("dtend").dt)
