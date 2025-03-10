@@ -30,7 +30,6 @@ from markupsafe import escape
 from werkzeug.utils import safe_join
 
 import icalendar
-from dateutil import tz
 from dateutil.rrule import rrulestr
 from recurrent.event_parser import RecurringEvent
 
@@ -879,10 +878,9 @@ def get_attachments(email_msg: email.message.Message, content: bool = False) -> 
                             def get_timestamp(dt):
                                 if isinstance(dt, datetime.datetime):
                                     return str(int(dt.timestamp()))
-                                else:
-                                    # Convert date to datetime at midnight
-                                    dt_with_time = datetime.datetime.combine(dt, datetime.datetime.min.time())
-                                    return str(int(dt_with_time.timestamp()))
+                                # Convert date to datetime at midnight
+                                dt_with_time = datetime.datetime.combine(dt, datetime.datetime.min.time())
+                                return str(int(dt_with_time.timestamp()))
 
                             dtstart = get_timestamp(component.get("dtstart").dt)
                             dtend = get_timestamp(component.get("dtend").dt)

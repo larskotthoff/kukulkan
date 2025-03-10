@@ -169,14 +169,14 @@ test("renders message attachments", () => {
 
   // calendar
   msg.attachments = [ { content_type: "calendar", content_size: 100, filename: "foo.txt",
-    preview: { summary: "foo", location: "bar", start: "1000000000", end:
-      "1000000100", attendees: "attend", recur: "recur" }} ];
+    preview: { summary: "foo", location: "bar", start: "1000086400", end:
+      "1000086500", attendees: "attend", recur: "recur" }} ];
   vi.stubEnv('TZ', 'America/Denver')
   container = render(() => <Message msg={msg} active={true}/>).container;
   expect(container.querySelector("a[href='http://localhost:5000/api/attachment/fo%40o/0']")).not.toBe(null);
   expect(container.querySelector("a[href='https://www.google.com/calendar/render?action=TEMPLATE&text=foo&dates=undefined/undefined&location=bar&ctz=undefined&recur=RRULE:undefined&sf=true&output=xml']")).not.toBe(null);
   expect(screen.getByText("foo.txt (100 Bi, calendar)")).toBeInTheDocument();
-  expect(screen.getByText("foo (bar) 8/9/2001 19:46 — 8/9/2001 19:48 attend recur")).toBeInTheDocument();
+  expect(screen.getByText("foo (bar) 9/9/2001 19:46 — 9/9/2001 19:48 attend recur")).toBeInTheDocument();
   vi.unstubAllEnvs();
   cleanup();
 
@@ -186,7 +186,7 @@ test("renders message attachments", () => {
   expect(container.querySelector("a[href='http://localhost:5000/api/attachment/fo%40o/0']")).not.toBe(null);
   expect(container.querySelector("a[href='https://www.google.com/calendar/render?action=TEMPLATE&text=foo&dates=undefined/undefined&location=bar&ctz=undefined&recur=RRULE:undefined&sf=true&output=xml']")).not.toBe(null);
   expect(screen.getByText("foo.txt (100 Bi, calendar)")).toBeInTheDocument();
-  expect(screen.getByText("foo (bar) 8/9/2001 21:46 — 8/9/2001 21:48 attend recur")).toBeInTheDocument();
+  expect(screen.getByText("foo (bar) 9/9/2001 21:46 — 9/9/2001 21:48 attend recur")).toBeInTheDocument();
   vi.unstubAllEnvs();
   cleanup();
 
