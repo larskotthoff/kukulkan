@@ -47,7 +47,7 @@ export function formatDate(date) {
       time = `${padZ(date.getHours())}:${padZ(date.getMinutes())}`;
   if(date.setHours(0, 0, 0, 0) === now.setHours(0, 0, 0, 0)) { // today
     return time;
-  } else if((now - date) / (7 * 24 * 60 * 60 * 1000) < 1) { // less than one week ago
+  } else if(Math.abs(now - date) / (7 * 24 * 60 * 60 * 1000) < 1) { // less than one week diff
     return date.toLocaleDateString([], { weekday: 'short' }) + " " + time;
   } else if(date.getFullYear() === now.getFullYear()) { // this year
     return `${padZ(date.getDate())}/${padZ(date.getMonth() + 1)} ${time}`;

@@ -176,7 +176,7 @@ test("renders message attachments", () => {
   expect(container.querySelector("a[href='http://localhost:5000/api/attachment/fo%40o/0']")).not.toBe(null);
   expect(container.querySelector("a[href='https://www.google.com/calendar/render?action=TEMPLATE&text=foo&dates=undefined/undefined&location=bar&ctz=undefined&recur=RRULE:undefined&sf=true&output=xml']")).not.toBe(null);
   expect(screen.getByText("foo.txt (100 Bi, calendar)")).toBeInTheDocument();
-  expect(screen.getByText("foo (bar) Sat Sep 08 2001 19:46:40 GMT-0600 (Mountain Daylight Time) — Sat Sep 08 2001 19:48:20 GMT-0600 (Mountain Daylight Time) attend recur")).toBeInTheDocument();
+  expect(screen.getByText("foo (bar) 8/9/2001 19:46 — 8/9/2001 19:48 attend recur")).toBeInTheDocument();
   vi.unstubAllEnvs();
   cleanup();
 
@@ -186,7 +186,7 @@ test("renders message attachments", () => {
   expect(container.querySelector("a[href='http://localhost:5000/api/attachment/fo%40o/0']")).not.toBe(null);
   expect(container.querySelector("a[href='https://www.google.com/calendar/render?action=TEMPLATE&text=foo&dates=undefined/undefined&location=bar&ctz=undefined&recur=RRULE:undefined&sf=true&output=xml']")).not.toBe(null);
   expect(screen.getByText("foo.txt (100 Bi, calendar)")).toBeInTheDocument();
-  expect(screen.getByText("foo (bar) Sat Sep 08 2001 21:46:40 GMT-0400 (Eastern Daylight Time) — Sat Sep 08 2001 21:48:20 GMT-0400 (Eastern Daylight Time) attend recur")).toBeInTheDocument();
+  expect(screen.getByText("foo (bar) 8/9/2001 21:46 — 8/9/2001 21:48 attend recur")).toBeInTheDocument();
   vi.unstubAllEnvs();
   cleanup();
 

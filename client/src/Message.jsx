@@ -142,8 +142,8 @@ function handleAttachment(msg, attachment, index, summary) {
           "&sf=true&output=xml"}>
         <div class="cal-preview paper">
           { attachment.preview.summary + " (" + attachment.preview.location + ")\n" +
-            (new Date(attachment.preview.start * 1000)) + " — " +
-            (new Date(attachment.preview.end * 1000)) + "\n" +
+            formatDate(new Date(attachment.preview.start * 1000)) + " — " +
+            formatDate(new Date(attachment.preview.end * 1000)) + "\n" +
             attachment.preview.attendees + "\n" + attachment.preview.recur }
         </div>
       </a>

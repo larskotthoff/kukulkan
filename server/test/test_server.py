@@ -12,7 +12,6 @@ from PIL import Image
 import src.kukulkan as k
 
 IN_GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"
-os.environ["TZ"] = "America/Denver"
 
 def test_split_email_addresses():
     assert ["foo@bar.com"] == k.split_email_addresses("foo@bar.com")

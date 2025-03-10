@@ -876,17 +876,21 @@ def get_attachments(email_msg: email.message.Message, content: bool = False) -> 
                             pass
 
                         try:
-                            dtstart = component.get("dtstart").dt.astimezone(tz.tzlocal()).strftime("%s")
-                            dtend = component.get("dtend").dt.astimezone(tz.tzlocal()).strftime("%s")
+                            def get_timestamp(dt):
+                                if isinstance(dt, datetime.datetime):
+                                    return str(int(dt.timestamp()))
+                                else:
+                                    # Convert date to datetime at midnight
+                                    dt_with_time = datetime.datetime.combine(dt, datetime.datetime.min.time())
+                                    return str(int(dt_with_time.timestamp()))
+
+                            dtstart = get_timestamp(component.get("dtstart").dt)
+                            dtend = get_timestamp(component.get("dtend").dt)
 
                             # this assumes that start and end are the same timezone
                             timezone = str(component.get("dtstart").dt.tzinfo)
                         except AttributeError:  # only date, no time
-                            try:
-                                dtstart = component.get("dtstart").dt.strftime("%s")
-                                dtend = component.get("dtend").dt.strftime("%s")
-                            except AttributeError:  # nothing?
-                                pass
+                            pass
                         try:
                             rrule = component.get("rrule").to_ical().decode("utf8")
                             recur = RecurringEvent().format(rrulestr(component.get("rrule").to_ical().decode("utf8")))
