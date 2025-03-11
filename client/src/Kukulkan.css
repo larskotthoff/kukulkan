@@ -285,6 +285,9 @@ button > span {
     background-size: contain;
     background-repeat: no-repeat;
     position: absolute;
+    @media (max-width: 899px) {
+        margin-top: .25lh;
+    }
 }
 
 .thread-group::before {
@@ -296,10 +299,19 @@ button > span {
     background-size: contain;
     background-repeat: no-repeat;
     position: absolute;
+    @media (max-width: 899px) {
+        margin-top: .25lh;
+    }
 }
 
 .thread-group > .thread > *:first-child {
     margin-left: 1.5em;
+}
+
+.thread-group > .thread > *:nth-child(3) {
+    @media (max-width: 899px) {
+        margin-left: 1.5em;
+    }
 }
 
 .thread-group.collapsed > .thread:not(:first-child) {
