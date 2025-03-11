@@ -6,7 +6,7 @@ import { Autocomplete } from "./Autocomplete.jsx";
 import { getSetting } from "./Settings.jsx";
 
 import { apiURL } from "./utils.js";
-import { Collapse, Expand, Icon, mkShortcut } from "./UiUtils.jsx";
+import { mkShortcut } from "./UiUtils.jsx";
 
 export function ThreadGroup(props) {
   // eslint-disable-next-line solid/reactivity
@@ -34,13 +34,10 @@ export function ThreadGroup(props) {
           'width-100': true,
           'collapsed': collapsed()
         }}
-        onToggle={toggle}>
+        onClick={toggle}>
         <For each={props.thread}>
           {(t) => <ThreadGroup thread={t} threadListElem={props.threadListElem} setActiveThread={props.setActiveThread}/>}
         </For>
-        <div class="thread-group-expander" onClick={toggle}>
-          {collapsed() ? <Icon icon={Expand}/> : <Icon icon={Collapse}/>}
-        </div>
       </div>
     );
   }
@@ -127,7 +124,7 @@ export function Threads(props) {
           if(prev.classList.contains("collapsed")) {
             prev = prev.firstElementChild;
           } else {
-            prev = prev.lastElementChild.previousElementSibling;
+            prev = prev.lastElementChild;
           }
         }
         if(prev.classList.contains("thread")) {
@@ -141,7 +138,7 @@ export function Threads(props) {
     () => {
       if(threads().length > 0) {
         let next = document.querySelector(".thread.active").nextElementSibling;
-        if(next === null || next.classList.contains("thread-group-expander") || next.parentElement.classList.contains("collapsed")) {
+        if(next === null || next.parentElement.classList.contains("collapsed")) {
           next = document.querySelector(".thread.active").parentElement.nextElementSibling;
         }
         if(next === null) return;
@@ -174,7 +171,7 @@ export function Threads(props) {
       if(threads().length > 0) {
         let parent = document.querySelector(".thread.active").parentElement;
         if(parent.classList.contains("thread-group")) {
-          parent.dispatchEvent(new CustomEvent("toggle"));
+          parent.click();
         }
       }
     }

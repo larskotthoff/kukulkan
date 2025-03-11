@@ -131,8 +131,6 @@ export const Tag = `<svg class="icon" focusable="false" aria-hidden="true" viewB
 export const TaskAlt = `<svg class="icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24" data-testid="TaskAltIcon"><path d="M22 5.18 10.59 16.6l-4.24-4.24 1.41-1.41 2.83 2.83 10-10zm-2.21 5.04c.13.57.21 1.17.21 1.78 0 4.42-3.58 8-8 8s-8-3.58-8-8 3.58-8 8-8c1.58 0 3.04.46 4.28 1.25l1.44-1.44C16.1 2.67 14.13 2 12 2 6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10c0-1.19-.22-2.33-.6-3.39z"></path></svg>`;
 export const Trash = `<svg class="icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24" data-testid="DeleteIcon"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6zM19 4h-3.5l-1-1h-5l-1 1H5v2h14z"></path></svg>`;
 export const WarningAmber = `<svg class="icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24" data-testid="WarningAmberIcon"><path d="M12 5.99 19.53 19H4.47zM12 2 1 21h22z"></path><path d="M13 16h-2v2h2zm0-6h-2v5h2z"></path></svg>`;
-export const Expand = `<svg class="icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24" data-testid="ExpandMoreIcon"><path d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z"></path></svg>`;
-export const Collapse = `<svg class="icon" focusable="false" aria-hidden="true" viewBox="0 0 24 24" data-testid="ExpandLessIcon"><path d="m12 8-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14z"></path></svg>`;
 
 export function Icon(props) {
   // eslint-disable-next-line solid/no-innerhtml

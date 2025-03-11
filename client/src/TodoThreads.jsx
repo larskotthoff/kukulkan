@@ -163,7 +163,7 @@ export function TodoThreads(props) {
                                           props.setActiveThread(id);
                                           let el = document.querySelector(".thread.active");
                                           if(el.parentElement.classList.contains("thread-group") && el.parentElement.classList.contains("collapsed")) {
-                                            el.parentElement.dispatchEvent(new CustomEvent("toggle"));
+                                            el.parentElement.click();
                                           }
                                         }}/>
                                     }

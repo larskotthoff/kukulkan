@@ -313,11 +313,11 @@ test("thread groups can be expanded and collapsed", async () => {
   await userEvent.type(document.body, "j");
   expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@1");
 
-  await userEvent.click(container.querySelector(".thread-group-expander"));
+  await userEvent.click(container.querySelector(".thread-group"));
   expect(container.querySelectorAll(".thread-group.collapsed").length).toBe(0);
   await userEvent.type(document.body, "j");
   expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@2");
-  await userEvent.click(container.querySelector(".thread-group-expander"));
+  await userEvent.click(container.querySelector(".thread-group"));
   expect(container.querySelectorAll(".thread-group.collapsed").length).toBe(1);
   expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@1");
   await userEvent.type(document.body, "j");

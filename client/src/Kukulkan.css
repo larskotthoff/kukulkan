@@ -276,13 +276,30 @@ button > span {
     overflow: clip;
 }
 
-.thread-group {
-    border-left: 3px solid var(--primary-foreground);
+.thread-group.collapsed::before {
+    content: "";
+    display: inline-block;
+    width: 2em;
+    height: 1.2lh;
+    background-image: url('data:image/svg+xml;utf8,<svg class="icon" focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>');
+    background-size: contain;
+    background-repeat: no-repeat;
+    position: absolute;
 }
 
-.thread-group-expander {
-    margin-left: 1em;
-    cursor: pointer;
+.thread-group::before {
+    content: "";
+    display: inline-block;
+    width: 2em;
+    height: 1.2lh;
+    background-image: url('data:image/svg+xml;utf8,<svg class="icon" focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z"/></svg>');
+    background-size: contain;
+    background-repeat: no-repeat;
+    position: absolute;
+}
+
+.thread-group > .thread > *:first-child {
+    margin-left: 1.5em;
 }
 
 .thread-group.collapsed > .thread:not(:first-child) {
