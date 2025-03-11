@@ -88,9 +88,10 @@ export function SearchThreads(props) {
           'selected': props.selectedThreads().indexOf(tprops.thread.thread_id) !== -1
         }}
         data-id={tprops.thread.thread_id}
-        onClick={() => {
+        onClick={(ev) => {
           props.setActiveThread(tprops.thread.thread_id);
           props.openActive();
+          ev.stopPropagation();
         }}
         onTouchStart={() => {
           props.setActiveThread(tprops.thread.thread_id);

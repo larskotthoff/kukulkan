@@ -224,9 +224,10 @@ export function TodoThreads(props) {
           'due': dueDate !== null ? dueDate < tomorrow : false
         }}
         data-id={tprops.thread.thread_id}
-        onClick={() => {
+        onClick={(ev) => {
           props.setActiveThread(tprops.thread.thread_id);
           props.openActive();
+          ev.stopPropagation();
         }}
         onTouchStart={() => {
           props.setActiveThread(tprops.thread.thread_id);
