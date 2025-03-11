@@ -875,7 +875,7 @@ def get_attachments(email_msg: email.message.Message, content: bool = False) -> 
                             pass
 
                         try:
-                            def get_timestamp(dt):
+                            def get_timestamp(dt: datetime.date) -> int:
                                 if isinstance(dt, datetime.datetime):
                                     return int(dt.timestamp())
                                 # Convert date to datetime at midnight
