@@ -281,39 +281,41 @@ def create_app() -> Flask:
 
     @app.route("/api/query/<string:query_string>")
     def query(query_string: str) -> List[Dict[str, Any]]:
-        def get_threads(q, in_group=False):
+        def get_threads(q: str) -> Dict[str, Any]:
             msgs = get_query('thread:"{' + q.replace('"', '""') + '}"')
             # using dicts here to get everything in the order in which it occured
             threads = {}
-            seen_groups = []
             for msg in msgs:
-                grps = [ t for t in msg.tags if t.startswith('grp:') ]
-                # we might have seen the thread before, but without the group tag
-                if (msg.threadid not in threads) or (len(grps) > 0 and "authors" in threads[msg.threadid] and not in_group):
-                    if len(grps) > 0 and not in_group:
-                        if grps[0] in seen_groups:
-                            continue
-                        seen_groups.append(grps[0])
-                        threads[msg.threadid] = get_threads(f'tag:{grps[0]}', in_group=True)
-                    else:
-                        subject = get_header(msg, "subject")
-                        threads[msg.threadid] = {
-                            "authors": {},
-                            "newest_date": msg.date,
-                            "subject": subject if subject else "(no subject)",
-                            "tags": {}
-                        }
-                if "authors" in threads[msg.threadid]: # if it's not a thread group
-                    threads[msg.threadid]["authors"][get_header(msg, "from")] = 1
-                    threads[msg.threadid]["oldest_date"] = msg.date
-                    for tag in msg.tags:
-                        threads[msg.threadid]["tags"][tag] = 1
+                if msg.threadid not in threads:
+                    subject = get_header(msg, "subject")
+                    threads[msg.threadid] = {
+                        "authors": {},
+                        "newest_date": msg.date,
+                        "subject": subject if subject else "(no subject)",
+                        "tags": {}
+                    }
+                threads[msg.threadid]["authors"][get_header(msg, "from")] = 1
+                threads[msg.threadid]["oldest_date"] = msg.date
+                for tag in msg.tags:
+                    threads[msg.threadid]["tags"][tag] = 1
             return threads
 
         threads = get_threads(query_string)
+        # second pass to create nested group structure
+        nested_threads = {}
+        seen_groups = []
+        for t in threads:
+            grps = [ tg for tg in threads[t]["tags"].keys() if tg.startswith('grp:') ]
+            if len(grps) > 0:
+                if grps[0] in seen_groups:
+                    continue
+                seen_groups.append(grps[0])
+                nested_threads[t] = get_threads(f'tag:{grps[0]}')
+            else:
+                nested_threads[t] = threads[t]
 
         db = get_db()
-        def get_threads_ret(threads):
+        def get_threads_ret(threads: Dict[str, Any]):
             return [ get_threads_ret(threads[t])
                      if "authors" not in threads[t].keys()
                      else {"authors": list(threads[t]["authors"].keys())[::-1],
@@ -322,9 +324,10 @@ def create_app() -> Flask:
                            "subject": threads[t]["subject"],
                            "tags": list(threads[t]["tags"].keys()),
                            "thread_id": t,
+                           # count all messages, including excluded ones
                            "total_messages": db.count_messages(f'thread:{t}')}
-                     for t in list(threads.keys()) ]
-        return get_threads_ret(threads)
+                     for t in threads.keys() ]
+        return get_threads_ret(nested_threads)
 
 
     @app.route("/api/address/<string:query_string>")

@@ -198,19 +198,22 @@ def test_query_group(setup):
     mm1.date = 0
     mm1.threadid = "id1"
     mm1.header = MagicMock()
-    mm1.header.side_effect = ["foosubject", "foo bar <foo@bar.com>"]
+    mm1.header.side_effect = ["foosubject", "foo bar <foo@bar.com>",
+                              "foosubject", "foo bar <foo@bar.com>"]
     mm2 = lambda: None
     mm2.date = 1
     mm2.tags = ["grp:0", "bartag"]
     mm2.threadid = "id2"
     mm2.header = MagicMock()
-    mm2.header.side_effect = ["foosubject", "bar foo <bar@foo.com>"]
+    mm2.header.side_effect = ["foosubject", "bar foo <bar@foo.com>",
+                              "foosubject", "bar foo <bar@foo.com>"]
     mm3 = lambda: None
     mm3.date = 2
     mm3.tags = ["foobartag"]
     mm3.threadid = "id3"
     mm3.header = MagicMock()
-    mm3.header.side_effect = ["foosubject", "bar\tfoo <bar@foo.com>"]
+    mm3.header.side_effect = ["foosubject", "bar\tfoo <bar@foo.com>",
+                              "foosubject", "bar\tfoo <bar@foo.com>"]
 
     db.config = {}
     db.messages = MagicMock()
@@ -221,6 +224,9 @@ def test_query_group(setup):
         response = test_client.get('/api/query/foo')
         assert response.status_code == 200
         thrds = json.loads(response.data.decode())
+        assert len(thrds) == 2
+        assert len(thrds[0]) == 2
+
         assert thrds[0][0]["authors"] == ["foo bar <foo@bar.com>"]
         assert thrds[0][0]["subject"] == "foosubject"
         thrds[0][0]["tags"].sort()
@@ -252,8 +258,10 @@ def test_query_group(setup):
         call('thread:id3')
     ]
 
-    mm1.header.assert_has_calls([call("subject"), call("from")])
-    mm2.header.assert_has_calls([call("subject"), call("from")])
+    mm1.header.assert_has_calls([call("subject"), call("from"), call("subject"),
+                                 call("from")])
+    mm2.header.assert_has_calls([call("subject"), call("from"), call("subject"),
+                                 call("from")])
     mm3.header.assert_has_calls([call("subject"), call("from")])
 
 
@@ -272,13 +280,16 @@ def test_query_group_multiple_in_thread(setup):
     mm1.date = 0
     mm1.threadid = "id1"
     mm1.header = MagicMock()
-    mm1.header.side_effect = ["bar foo <bar@foo.com>"]
+    mm1.header.side_effect = ["bar foo <bar@foo.com>", "bar foo <bar@foo.com>"]
+
     mm2 = lambda: None
     mm2.date = 1
     mm2.tags = ["grp:0", "bartag"]
     mm2.threadid = "id2"
     mm2.header = MagicMock()
-    mm2.header.side_effect = ["foosubject", "bar foo <bar@foo.com>"]
+    mm2.header.side_effect = ["foosubject", "bar foo <bar@foo.com>",
+                              "foosubject", "bar foo <bar@foo.com>"]
+
     mm3 = lambda: None
     mm3.date = 2
     mm3.tags = ["foobartag"]
@@ -329,10 +340,81 @@ def test_query_group_multiple_in_thread(setup):
         call('thread:id3')
     ]
 
-    mm0.header.assert_has_calls([call("subject"), call("from")])
-    mm1.header.assert_has_calls([call("from")])
-    mm2.header.assert_has_calls([call("subject"), call("from")])
+    mm0.header.assert_has_calls([call("subject"), call("from"), call("subject"),
+                                 call("from")])
+    mm1.header.assert_has_calls([call("from"), call("from")])
+    mm2.header.assert_has_calls([call("subject"), call("from"), call("subject"),
+                                 call("from")])
     mm3.header.assert_has_calls([call("subject"), call("from")])
+
+
+def test_query_group_multiple_threads(setup):
+    app, db = setup
+
+    mm1 = lambda: None
+    mm1.tags = ["foobartag"]
+    mm1.date = 0
+    mm1.threadid = "id1"
+    mm1.header = MagicMock()
+    mm1.header.side_effect = ["foosubject", "bar foo <bar@foo.com>",
+                              "foosubject", "bar foo <bar@foo.com>"]
+
+    mm2 = lambda: None
+    mm2.date = 1
+    mm2.tags = ["grp:0", "bartag"]
+    mm2.threadid = "id2"
+    mm2.header = MagicMock()
+    mm2.header.side_effect = ["barsubject", "foo bar <bar@foo.com>",
+                              "barsubject", "foo bar <bar@foo.com>"]
+
+    mm3 = lambda: None
+    mm3.date = 2
+    mm3.tags = ["foobartag", "grp:0"]
+    mm3.threadid = "id1"
+    mm3.header = MagicMock()
+    mm3.header.side_effect = ["bar2 foo <bar@foo.com>", "bar2 foo <bar@foo.com>"]
+
+    db.config = {}
+    db.messages = MagicMock()
+    db.messages.side_effect = [iter([mm1, mm2, mm3]), iter([mm1, mm2, mm3])]
+    db.count_messages = MagicMock(return_value=1)
+
+    with app.test_client() as test_client:
+        response = test_client.get('/api/query/foo')
+        assert response.status_code == 200
+        thrds = json.loads(response.data.decode())
+        assert len(thrds) == 1
+        assert len(thrds[0]) == 2
+
+        assert thrds[0][0]["authors"] == ["bar2 foo <bar@foo.com>", "bar foo <bar@foo.com>"]
+        assert thrds[0][0]["subject"] == "foosubject"
+        thrds[0][0]["tags"].sort()
+        assert thrds[0][0]["tags"] == ["foobartag", "grp:0"]
+        assert thrds[0][0]["thread_id"] == "id1"
+        # mock always returns 1
+        assert thrds[0][0]["total_messages"] == 1
+
+        assert thrds[0][1]["authors"] == ["foo bar <bar@foo.com>"]
+        assert thrds[0][1]["subject"] == "barsubject"
+        thrds[0][1]["tags"].sort()
+        assert thrds[0][1]["tags"] == ["bartag", "grp:0"]
+        assert thrds[0][1]["thread_id"] == "id2"
+        assert thrds[0][1]["total_messages"] == 1
+
+    assert db.messages.mock_calls == [
+        call('thread:"{foo}"', exclude_tags=[], sort=notmuch2.Database.SORT.NEWEST_FIRST),
+        call('thread:"{tag:grp:0}"', exclude_tags=[], sort=notmuch2.Database.SORT.NEWEST_FIRST)
+    ]
+    assert db.count_messages.mock_calls == [
+        call('thread:id1'),
+        call('thread:id2')
+    ]
+
+    mm1.header.assert_has_calls([call("subject"), call("from"), call("subject"),
+                                 call("from")])
+    mm2.header.assert_has_calls([call("subject"), call("from"), call("subject"),
+                                 call("from")])
+    mm3.header.assert_has_calls([call("from"), call("from")])
 
 
 def test_complete_address(setup):
