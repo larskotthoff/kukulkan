@@ -74,30 +74,28 @@ export function Threads(props) {
     }
   }
 
-  function makeTagEdits() {
+  async function makeTagEdits(edits) {
     let affectedThreads = getAffectedThreads();
     if(affectedThreads.length === 0) return;
-    const url = apiURL(`api/tag_batch/thread/${encodeURIComponent(affectedThreads.join(' '))}/${encodeURIComponent(editingTags())}`);
-    props.sp?.(0);
+    const url = apiURL(`api/tag_batch/thread/${encodeURIComponent(affectedThreads.join(' '))}/${encodeURIComponent(edits)}`);
 
-    // eslint-disable-next-line solid/reactivity
-    fetch(url).then((response) => {
-      if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
-      affectedThreads.forEach(affectedThread => {
-        const thread = threads().flat().find(t => t.thread_id === affectedThread);
-        editingTags().split(' ').map((edit) => {
-          if(edit[0] === '-') {
-            thread.tags = thread.tags.filter(t => t !== edit.substring(1));
-          } else {
-            if(thread.tags.indexOf(edit) === -1) thread.tags.push(edit);
-          }
-        });
+    props.sp?.(0);
+    const response = await fetch(url);
+    props.sp?.(1);
+    if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
+    affectedThreads.forEach(affectedThread => {
+      const thread = threads().flat().find(t => t.thread_id === affectedThread);
+      edits.split(' ').map((edit) => {
+        if(edit[0] === '-') {
+          thread.tags = thread.tags.filter(t => t !== edit.substring(1));
+        } else {
+          if(thread.tags.indexOf(edit) === -1) thread.tags.push(edit);
+        }
       });
-      setThreads(JSON.parse(JSON.stringify(threads())));
-      setEditingTags("");
-      setSelectedThreads([]);
-    // eslint-disable-next-line solid/reactivity
-    }).finally(() => props.sp?.(1));
+    });
+    setThreads(JSON.parse(JSON.stringify(threads())));
+    setEditingTags("");
+    setSelectedThreads([]);
   }
 
   createEffect(on(activeThread, () => {
@@ -233,8 +231,7 @@ export function Threads(props) {
 
   function deleteActive() {
     if(threads().length > 0) {
-      setEditingTags("deleted -unread");
-      makeTagEdits();
+      makeTagEdits("deleted -unread");
     }
   }
 
@@ -249,8 +246,7 @@ export function Threads(props) {
       let due = threads().find(t => t.thread_id === affectedThread)?.tags.find((tag) => tag.startsWith("due:"));
       if(due) edits += " -" + due;
     });
-    setEditingTags(edits);
-    makeTagEdits();
+    makeTagEdits(edits);
   }
 
   // eslint-disable-next-line solid/reactivity
@@ -366,8 +362,7 @@ export function Threads(props) {
           handleKey={(ev) => {
             if(ev.code === 'Enter' || ev.key === 'Enter') {
               setShowTagEditingBar(false);
-              // sad, but true
-              makeTagEdits();
+              makeTagEdits(editingTags());
               ev.stopPropagation();
             }
           }}

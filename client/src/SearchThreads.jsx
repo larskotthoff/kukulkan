@@ -26,10 +26,8 @@ export function SearchThreads(props) {
     qs = [];
   }
 
-  // eslint-disable-next-line solid/reactivity
-  if(searchText()) {
-    // eslint-disable-next-line solid/reactivity
-    qs.unshift(searchText());
+  if(query) {
+    qs.unshift(query);
     qs = [...new Set(qs)];
     localStorage.setItem("queries", JSON.stringify(qs.slice(0, getSetting("numQueries"))));
   }
