@@ -220,6 +220,8 @@ Shortcuts:
       group
 - h/l: collapse/expand thread group
 
+Scrolling with Shift held down will change the active thread.
+
 In the tagging box, enter the list of tags to apply and remove (prefix with
 "-"), then press Enter to apply changes. Press Escape to close without making
 changes.
@@ -262,6 +264,8 @@ Shortcuts:
     - threads have different group tags: remove all group tags and create a new
       group
 - h/l: collapse/expand thread group
+
+Scrolling with Shift held down will change the active thread.
 
 Available at `/todo`
 ([https://kukulkan-840786380000.us-west1.run.app/todo](https://kukulkan-840786380000.us-west1.run.app/todo)).
