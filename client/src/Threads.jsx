@@ -112,45 +112,56 @@ export function Threads(props) {
     // eslint-disable-next-line solid/reactivity
     () => threads().length > 0 && setActiveThread(threads().flat()[0].thread_id)
   );
-  mkShortcut([["k"], ["ArrowUp"]],
-    // eslint-disable-next-line solid/reactivity
-    () => {
-      if(threads().length > 0) {
-        let prev = document.querySelector(".thread.active").previousElementSibling;
-        if(prev === null) {
-          prev = document.querySelector(".thread.active").parentElement.previousElementSibling;
-        }
-        if(prev.classList.contains("thread-group")) {
-          if(prev.classList.contains("collapsed")) {
-            prev = prev.firstElementChild;
-          } else {
-            prev = prev.lastElementChild;
-          }
-        }
-        if(prev.classList.contains("thread")) {
-          setActiveThread(prev.dataset.id);
+
+  function threadUp() {
+    if(threads().length > 0) {
+      let prev = document.querySelector(".thread.active").previousElementSibling;
+      if(prev === null) {
+        prev = document.querySelector(".thread.active").parentElement.previousElementSibling;
+      }
+      if(prev.classList.contains("thread-group")) {
+        if(prev.classList.contains("collapsed")) {
+          prev = prev.firstElementChild;
+        } else {
+          prev = prev.lastElementChild;
         }
       }
-    }
-  );
-  mkShortcut([["j"], ["ArrowDown"]],
-    // eslint-disable-next-line solid/reactivity
-    () => {
-      if(threads().length > 0) {
-        let next = document.querySelector(".thread.active").nextElementSibling;
-        if(next === null || next.parentElement.classList.contains("collapsed")) {
-          next = document.querySelector(".thread.active").parentElement.nextElementSibling;
-        }
-        if(next === null) return;
-        if(next.classList.contains("thread-group")) {
-          next = next.firstElementChild;
-        }
-        if(next.classList.contains("thread")) {
-          setActiveThread(next.dataset.id);
-        }
+      if(prev.classList.contains("thread")) {
+        setActiveThread(prev.dataset.id);
       }
     }
-  );
+  }
+  // eslint-disable-next-line solid/reactivity
+  mkShortcut([["k"], ["ArrowUp"]], threadUp);
+
+  function threadDown() {
+    if(threads().length > 0) {
+      let next = document.querySelector(".thread.active").nextElementSibling;
+      if(next === null || next.parentElement.classList.contains("collapsed")) {
+        next = document.querySelector(".thread.active").parentElement.nextElementSibling;
+      }
+      if(next === null) return;
+      if(next.classList.contains("thread-group")) {
+        next = next.firstElementChild;
+      }
+      if(next.classList.contains("thread")) {
+        setActiveThread(next.dataset.id);
+      }
+    }
+  }
+  // eslint-disable-next-line solid/reactivity
+  mkShortcut([["j"], ["ArrowDown"]], threadDown);
+
+  document.addEventListener('wheel', ev => {
+    if(ev.shiftKey) {
+      if(ev.deltaY < 0) {
+        threadDown();
+      } else {
+        threadUp();
+      }
+    }
+  });
+
   mkShortcut([["End"], ["0"]],
     // eslint-disable-next-line solid/reactivity
     () => {
@@ -184,9 +195,9 @@ export function Threads(props) {
   // eslint-disable-next-line solid/reactivity
   mkShortcut([["Enter"]], openActive);
 
-  document.addEventListener('keydown', function(event) {
-    if(document.activeElement.tagName.toLowerCase() !== 'input' && event.code === 'Space') {
-      event.preventDefault();
+  document.addEventListener('keydown', ev => {
+    if(document.activeElement.tagName.toLowerCase() !== 'input' && ev.code === 'Space') {
+      ev.preventDefault();
 
       let curSelThreads = selectedThreads(),
           idx = curSelThreads.indexOf(activeThread());
