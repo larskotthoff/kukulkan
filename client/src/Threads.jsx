@@ -331,7 +331,7 @@ export function Threads(props) {
     if(showTagEditingBar()) document.querySelector("#edit-tag-box > input").focus();
   }));
 
-  function TagEditingModal() {
+  function TagEditingBar() {
     return (
       <Show when={showTagEditingBar()}>
         <Autocomplete
@@ -373,7 +373,7 @@ export function Threads(props) {
 
   return (
     <>
-      <TagEditingModal/>
+      <TagEditingBar/>
       <props.Threads threads={threads} activeThread={activeThread}
         setActiveThread={setActiveThread} selectedThreads={selectedThreads}
         setQuery={setQuery} sp={props.sp} openActive={openActive}
