@@ -5,12 +5,13 @@ import { userEvent } from "@testing-library/user-event";
 afterEach(cleanup);
 
 import { createResource, createSignal } from "solid-js";
-import { Autocomplete, ChipComplete, TagComplete } from "./Autocomplete.jsx";
+import { Autocomplete, ChipComplete, getTagOptions, TagComplete } from "./Autocomplete.jsx";
 
 test("exports Autocomplete, ChipComplete, TagComplete", () => {
   expect(Autocomplete).not.toBe(undefined);
   expect(ChipComplete).not.toBe(undefined);
   expect(TagComplete).not.toBe(undefined);
+  expect(getTagOptions).not.toBe(undefined);
 });
 
 test("sets text", () => {

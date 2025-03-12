@@ -203,25 +203,24 @@ export function ChipComplete(props) {
   );
 }
 
+export async function getTagOptions(text, sp, returnGrpOpts = true) {
+  let opts = data.allTags.filter((t) => t.includes(text));
+  if(text.startsWith("due:")) {
+    const parsed = chrono.parseDate(text.split(':')[1])?.toISOString().split('T')[0];
+    if(parsed) opts.unshift(`due:${parsed}`);
+  } else if(text.startsWith("grp:") && returnGrpOpts) {
+    opts = await delayedDebouncedFetch(apiURL(`api/group_complete/${encodeURIComponent(text.split(':')[1])}`), 200, sp);
+  }
+  return opts;
+}
+
 export function TagComplete(props) {
   return (
     <ChipComplete
       chips={props.tags}
       addChip={props.addTag}
       removeChip={props.removeTag}
-      // eslint-disable-next-line solid/reactivity
-      getOptions={async (text) => {
-        let opts = data.allTags.filter((t) => t.includes(text));
-        if(text.startsWith("due:")) {
-          const parsed = chrono.parseDate(text.split(':')[1])?.toISOString().split('T')[0];
-          if(parsed) opts.unshift(`due:${parsed}`);
-        } else if(text.startsWith("grp:")) {
-          opts = await
-            delayedDebouncedFetch(apiURL(`api/group_complete/${encodeURIComponent(text.split(':')[1])}`),
-              200, props.sp);
-        }
-        return opts;
-      }}
+      getOptions={text => getTagOptions(text, props.sp)}
       {...props}
     />
   );

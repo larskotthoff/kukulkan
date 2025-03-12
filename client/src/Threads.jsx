@@ -1,7 +1,6 @@
 import { createEffect, createSignal, For, on, Show } from "solid-js";
-import * as chrono from 'chrono-node';
 
-import { Autocomplete } from "./Autocomplete.jsx";
+import { Autocomplete, getTagOptions } from "./Autocomplete.jsx";
 
 import { getSetting } from "./Settings.jsx";
 
@@ -344,16 +343,13 @@ export function Threads(props) {
             setShowTagEditingBar(false);
             setEditingTags("");
           }}
-          getOptions={(text) => {
+          // eslint-disable-next-line solid/reactivity
+          getOptions={async (text) => {
             // claude helped with this
             let pts = text.match(/([^ -]+)|[ -]/g),
                 last = pts?.pop();
             if(last && last.length > 0) {
-              const opts = data.allTags.filter((t) => t.startsWith(last));
-              if(last.startsWith("due:")) {
-                const parsed = chrono.parseDate(text.split(':')[1])?.toISOString().split('T')[0];
-                if(parsed) opts.unshift(`due:${parsed}`);
-              }
+              const opts = await getTagOptions(last, props.sp, false);
               return opts.map((t) => [...pts, t].join(''));
             } else {
               return [];
