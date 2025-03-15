@@ -456,7 +456,7 @@ export function Write(props) {
           </div>
         </Show>
         <div class="horizontal-stack space-between">
-          <button onClick={() => document.getElementById("attach").click()}>
+          <button title="Attach" onClick={() => document.getElementById("attach").click()}>
             <Icon icon={AttachFile}/>
             <span>Attach</span>
             <input type="file" id="attach" multiple hidden onChange={(ev) => {
@@ -465,7 +465,7 @@ export function Write(props) {
               // encode/decode them and contents would become stale
             }}/>
           </button>
-          <button id="send" onClick={sendMsg}><Icon icon={Send}/><span>Send</span></button>
+          <button id="send" title="Send" onClick={sendMsg}><Icon icon={Send}/><span>Send</span></button>
         </div>
       </div>
     </>
