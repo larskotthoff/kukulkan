@@ -4,7 +4,7 @@ import { ColorChip } from "./ColorChip.jsx";
 import { ThreadGroup } from "./Threads.jsx";
 
 import { formatDuration, splitAddressHeader } from "./utils.js";
-import { handleSwipe, Tag, TaskAlt, wideNarrowObserver } from "./UiUtils.jsx";
+import { handleSwipe, Selection, TaskAlt, wideNarrowObserver } from "./UiUtils.jsx";
 
 function dateFromDue(due) {
   const dateComponents = due.split(':')[1].split('-'),
@@ -186,7 +186,7 @@ export function TodoThreads(props) {
   }
 
   // eslint-disable-next-line solid/reactivity
-  handleSwipe(document.body, (el) => el.closest(".thread"), props.doneActive, TaskAlt, props.tagActive, Tag);
+  handleSwipe(document.body, (el) => el.closest(".thread"), props.doneActive, TaskAlt, props.activeSelection, Selection);
 
   // reload at midnight for correct due dates for new date
   const loadDate = new Date();

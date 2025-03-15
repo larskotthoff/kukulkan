@@ -102,13 +102,13 @@ function calUrl(id, action, index) {
 function calendarAction(msg, attachment, index) {
   if(attachment.preview.method === "REQUEST" && attachment.preview.status === "NEEDS-ACTION") {
     return (<div class="horizontal-stack margin">
-      <a href={calUrl(msg.notmuch_id, 'accept', index)} target={getSetting("openInTab")} rel="noreferrer">
+      <a href={calUrl(msg.notmuch_id, 'accept', index)} title="Accept" target={getSetting("openInTab")} rel="noreferrer">
         <Icon icon={CheckCircle}/>
       </a>
-      <a href={calUrl(msg.notmuch_id, 'decline', index)} target={getSetting("openInTab")} rel="noreferrer">
+      <a href={calUrl(msg.notmuch_id, 'decline', index)} title="Decline" target={getSetting("openInTab")} rel="noreferrer">
         <Icon icon={Cancel}/>
       </a>
-      <a href={calUrl(msg.notmuch_id, 'tentative', index)} target={getSetting("openInTab")} rel="noreferrer">
+      <a href={calUrl(msg.notmuch_id, 'tentative', index)} title="Tentative" target={getSetting("openInTab")} rel="noreferrer">
         <Icon icon={Help}/>
       </a>
       </div>);
@@ -341,22 +341,22 @@ export function Message(props) {
               }}
             />
             <div class="message-action-icons">
-              <a id="reply" href={replyUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
+              <a id="reply" title="Reply all" href={replyUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
                 <Icon icon={ReplyAll}/>
               </a>
-              <a id="forward" href={fwdUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
+              <a id="forward" title="Forward" href={fwdUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
                 <Icon icon={Forward}/>
               </a>
-              <a id="print" href={printUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
+              <a id="print" title="Print view" href={printUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
                 <Icon icon={Print}/>
               </a>
-              <a id="security" href={secUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
+              <a id="security" title="Security" href={secUrl(msg.notmuch_id)} target={getSetting("openInTab")} rel="noreferrer">
                 <Icon icon={Security}/>
               </a>
-              <a id="unread" href="#" onClick={() => { if(props.active) { changeTags("unread"); }}}>
+              <a id="unread" title="Mark unread" href="#" onClick={() => { if(props.active) { changeTags("unread"); }}}>
                 <Icon icon={MarkUnread}/>
               </a>
-              <a id="delete" href="#" onClick={() => { if(props.active) { changeTags("-unread deleted"); }}}>
+              <a id="delete" title="Delete" href="#" onClick={() => { if(props.active) { changeTags("-unread deleted"); }}}>
                 <Icon icon={Trash}/>
               </a>
             </div>

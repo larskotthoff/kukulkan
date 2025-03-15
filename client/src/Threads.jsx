@@ -5,7 +5,7 @@ import { Autocomplete, getTagOptions } from "./Autocomplete.jsx";
 import { getSetting } from "./Settings.jsx";
 
 import { apiURL } from "./utils.js";
-import { mkShortcut } from "./UiUtils.jsx";
+import { Group, Icon, mkShortcut, Tag, TaskAlt, Trash } from "./UiUtils.jsx";
 
 export function ThreadGroup(props) {
   // eslint-disable-next-line solid/reactivity
@@ -192,17 +192,19 @@ export function Threads(props) {
   // eslint-disable-next-line solid/reactivity
   mkShortcut([["Enter"]], openActive);
 
+  function activeSelection() {
+    let curSelThreads = selectedThreads(),
+        idx = curSelThreads.indexOf(activeThread());
+    if(idx === -1) {
+      setSelectedThreads([...curSelThreads, activeThread()]);
+    } else {
+      setSelectedThreads(curSelThreads.filter((item) => item !== activeThread()));
+    }
+  }
   document.addEventListener('keydown', ev => {
     if(document.activeElement.tagName.toLowerCase() !== 'input' && ev.code === 'Space') {
       ev.preventDefault();
-
-      let curSelThreads = selectedThreads(),
-          idx = curSelThreads.indexOf(activeThread());
-      if(idx === -1) {
-        setSelectedThreads([...curSelThreads, activeThread()]);
-      } else {
-        setSelectedThreads(curSelThreads.filter((item) => item !== activeThread()));
-      }
+      activeSelection();
     }
   });
 
@@ -373,7 +375,24 @@ export function Threads(props) {
       <props.Threads threads={threads} activeThread={activeThread}
         setActiveThread={setActiveThread} selectedThreads={selectedThreads}
         setQuery={setQuery} sp={props.sp} openActive={openActive}
-        deleteActive={deleteActive} doneActive={doneActive} tagActive={tagActive}/>
+        deleteActive={deleteActive} doneActive={doneActive} activeSelection={activeSelection}/>
+      <div classList={{
+          'threads-action-icons': true,
+          'hidden': selectedThreads().length === 0
+        }}>
+        <a id="tag" title="Tag" href="#" onClick={tagActive}>
+          <Icon icon={Tag}/>
+        </a>
+        <a id="group" title="Group" href="#" onClick={groupActive}>
+          <Icon icon={Group}/>
+        </a>
+        <a id="done" title="Mark done" href="#" onClick={doneActive}>
+          <Icon icon={TaskAlt}/>
+        </a>
+        <a id="delete" title="Delete" href="#" onClick={deleteActive}>
+          <Icon icon={Trash}/>
+        </a>
+      </div>
     </>
   );
 }

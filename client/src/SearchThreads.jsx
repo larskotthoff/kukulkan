@@ -7,7 +7,7 @@ import { ThreadGroup } from "./Threads.jsx";
 import { getSetting } from "./Settings.jsx";
 
 import { apiURL, delayedDebouncedFetch, renderDateNumThread, splitAddressHeader } from "./utils.js";
-import { handleSwipe, Icon, Create, Settings, Tag, Trash, wideNarrowObserver } from "./UiUtils.jsx";
+import { handleSwipe, Icon, Create, Selection, Settings, Trash, wideNarrowObserver } from "./UiUtils.jsx";
 
 export function SearchThreads(props) {
   const searchParams = window.location.search,
@@ -71,7 +71,7 @@ export function SearchThreads(props) {
   }
 
   // eslint-disable-next-line solid/reactivity
-  handleSwipe(document.body, (el) => el.closest(".thread"), props.deleteActive, Trash, props.tagActive, Tag);
+  handleSwipe(document.body, (el) => el.closest(".thread"), props.deleteActive, Trash, props.activeSelection, Selection);
 
   function threadListElem(tprops) {
     // eslint-disable-next-line solid/reactivity
@@ -131,11 +131,11 @@ export function SearchThreads(props) {
     <div class="centered clipped vertical-stack" style={{ 'width': "95%" }}>
       <div class="centered horizontal-stack" style={{ 'width': "80%" }}>
         <QueryBox/>
-        <a href="/write" target={getSetting("openInTab")} rel="noreferrer">
+        <a href="/write" title="Compose" target={getSetting("openInTab")} rel="noreferrer">
           <Icon icon={Create}/>
         </a>
       </div>
-      <a href="/settings" class="top-right" target={getSetting("openInTab")} rel="noreferrer">
+      <a href="/settings" title="Settings" class="top-right" target={getSetting("openInTab")} rel="noreferrer">
         <Icon icon={Settings}/>
       </a>
       <div class="horizontal-stack justify-end width-100">{props.threads().length} thread group{props.threads().length === 1 ? "" : "s"}.</div>
