@@ -270,4 +270,5 @@ test("clicking on todo boxes changes active thread w/ thread group", async () =>
   expect(setActiveThread).toHaveBeenCalledWith(1);
   expect(container.querySelectorAll(".thread-group.collapsed").length).toBe(0);
 });
+
 // vim: tabstop=2 shiftwidth=2 expandtab

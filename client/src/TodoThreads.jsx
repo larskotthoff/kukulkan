@@ -206,13 +206,13 @@ export function TodoThreads(props) {
           due = findEarliestDue(tprops.thread),
           dueDate = due !== undefined ? dateFromDue(due) : null;
 
-    let dur = "";
+    let when = "";
     if(due !== undefined) {
-      dur = formatDuration(today, dueDate);
-      if(dueDate < today) dur = "overdue!";
-      else if(dueDate.getTime() === today.getTime()) dur = "今日";
-      else if(dueDate.getTime() === tomorrow.getTime()) dur = "明日";
-      else if(dueDate - today < 1000 * 60 * 60 * 24 * 7) dur = dueDate.toLocaleDateString([], { weekday: 'short' });
+      when = formatDuration(today, dueDate);
+      if(dueDate < today) when = "overdue!";
+      else if(dueDate.getTime() === today.getTime()) when = "今日";
+      else if(dueDate.getTime() === tomorrow.getTime()) when = "明日";
+      else if(dueDate - today < 1000 * 60 * 60 * 24 * 7) when = dueDate.toLocaleDateString([], { weekday: 'short' });
     }
 
     return (
@@ -245,7 +245,7 @@ export function TodoThreads(props) {
         }}
       >
         <div>
-          {dur}
+          {when}
         </div>
         <div class="grid-authors" ref={e => wideNarrowObserver?.observe(e)}>
           <div class="narrow">
