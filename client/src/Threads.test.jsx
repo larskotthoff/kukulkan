@@ -59,7 +59,7 @@ test("sets query and title based on URL", async () => {
   });
   expect(container.querySelector("input").value).toEqual("foo");
 
-  expect(document.title).toBe("foo");
+  expect(document.title).toBe("foo (0)");
 });
 
 test("sets query on submit", async () => {

@@ -102,7 +102,11 @@ export function Threads(props) {
   }));
 
   createEffect(on(query, () => {
-    document.title = query() || "Kukulkan";
+    if(query()) {
+      document.title = `${query()} (${threads().length})`;
+    } else {
+      document.title = "Kukulkan";
+    }
   }));
 
   mkShortcut([["Home"]],
