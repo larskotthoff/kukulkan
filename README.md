@@ -208,8 +208,9 @@ Shortcuts:
 - c: open compose view with new email
 - s: go to settings
 - /: focus search box and select all text
-- Space: mark currently active thread
-- t/swipe right until # appears: open tagging box for active/marked threads
+- Space/swipe right until list appears: mark currently active thread; icons will
+  appear to tag/group/mark done/delete the marked threads
+- t: open tagging box for active/marked threads
 - Delete/swipe left until trash appears: tag active/marked threads with "deleted"; remove "unread" tag
 - g: group active/marked threads as follows:
     - no threads have any group tags: create a new group
@@ -252,8 +253,9 @@ Shortcuts:
 - c: open compose view with new email
 - s: go to settings
 - /: focus search box and select all text
-- Space: mark currently active thread
-- t/swipe right until # appears: open tagging box for active/marked threads
+- Space/swipe right until list appears: mark currently active thread; icons will
+  appear to tag/group/mark done/delete the marked threads
+- t: open tagging box for active/marked threads
 - Delete: tag active/marked threads with "deleted"; remove "unread" tag
 - d/swipe left until check mark appears: mark thread done -- remove "todo" and any "due:*" tags
 - g: group active/marked threads as follows:
