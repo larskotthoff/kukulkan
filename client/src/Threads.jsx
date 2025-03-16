@@ -156,8 +156,9 @@ export function Threads(props) {
       } else {
         threadUp();
       }
+      ev.preventDefault();
     }
-  });
+  }, {passive: false});
 
   mkShortcut([["End"], ["0"]],
     // eslint-disable-next-line solid/reactivity
