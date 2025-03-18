@@ -1,5 +1,5 @@
 // based on https://stackoverflow.com/questions/75751029/how-to-create-an-autocomplete-element
-import { createEffect, createSignal, For, Index, on, Show } from 'solid-js';
+import { createEffect, createSignal, For, on, Show } from 'solid-js';
 import * as chrono from 'chrono-node';
 
 import { ColorChip } from "./ColorChip.jsx";
@@ -148,17 +148,17 @@ export function Autocomplete(props) {
           'left': `${inputRef().getBoundingClientRect().left}px`,
           'top': `${inputRef().getBoundingClientRect().bottom}px`
         }}>
-          <Index each={sortedOptions()}>
+          <For each={sortedOptions()}>
             {(item, i) =>
               <div classList={{
                   'autocomplete-option': true,
-                  'selected': selected() === i
+                  'selected': selected() === i()
                 }}
-                onClick={() => select(i)}>
-                {item()}
+                onClick={() => select(i())}>
+                {item}
               </div>
             }
-          </Index>
+          </For>
         </div>
       </Show>
     </div>
