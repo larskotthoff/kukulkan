@@ -2,9 +2,6 @@ import { createEffect, createSignal, For, on, onMount, Show } from "solid-js";
 
 import { getSetting } from "./Settings.jsx";
 
-import { linkifyUrlsToHtml } from "linkify-urls";
-const linkifyOpts = { attributes: { target: getSetting("openInTab"), rel: "nofollow" } };
-
 import { Alert } from "./Alert.jsx";
 import { ColorChip } from "./ColorChip.jsx";
 import { TagComplete } from "./Autocomplete.jsx";
@@ -58,6 +55,19 @@ export function separateQuotedNonQuoted(text) {
   return {mainPart, quotedPart};
 }
 
+function linkify(text) {
+  const regex = /(https?:\/\/[^\s<>,()\[\]{}|]+)|(<)|(>)/g;
+  return text.replace(regex, function(tmp) {
+    if(tmp === '<') {
+      return '&lt;';
+    } else if(tmp === '>') {
+      return '&gt;';
+    } else {
+      return `<a href="${tmp}" target=${getSetting("openInTab")} rel="noreferrer">${tmp}</a>`;
+    }
+  });
+}
+
 function formatDateTZ(date) {
   let ret = date;
   if((new Date()).getTimezoneOffset() !== (date.substring(date.length - 5, date.length - 4) === "+" ? -1 : 1) * (parseInt(date.substring(date.length - 4, date.length - 2), 10) * 60 + parseInt(date.substring(date.length - 2), 10)))
@@ -73,10 +83,6 @@ function formatAddrs(addrs) {
     let pts = splitAddressHeader(addr);
     return (<ColorChip key={pts[0]} value={addr}/>);
   });
-}
-
-function angles(text) {
-  return text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 function printUrl(id) {
@@ -404,7 +410,7 @@ export function Message(props) {
         <Show when={!html()}>
           <div class="message-text"
             // eslint-disable-next-line solid/no-innerhtml
-            innerHTML={linkifyUrlsToHtml(angles(mainPart), linkifyOpts)}/>
+            innerHTML={linkify(mainPart)}/>
           <Show when={quotedPart}>
             <div classList={{
                 'message-text': true,
@@ -419,7 +425,7 @@ export function Message(props) {
                 }
               }}
               // eslint-disable-next-line solid/no-innerhtml
-              innerHTML={linkifyUrlsToHtml(angles(quotedPart), linkifyOpts)}/>
+              innerHTML={linkify(quotedPart)}/>
           </Show>
         </Show>
       </Show>
@@ -446,7 +452,7 @@ export function Message(props) {
               'text-preview': true
             }}
             // eslint-disable-next-line solid/no-innerhtml
-            innerHTML={linkifyUrlsToHtml(angles(mainPart), linkifyOpts)}/>
+            innerHTML={linkify(mainPart)}/>
         </div>
       </Show>
     </div>

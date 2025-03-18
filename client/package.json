@@ -30,7 +30,6 @@
     "@testing-library/user-event": "^14.5.2",
     "chrono-node": "^2.7.7",
     "jsdom": "^25.0.1",
-    "linkify-urls": "^5.0.0",
     "solid-js": "^1.9.3",
     "vitest": "^3.0.7"
   },
