@@ -193,7 +193,7 @@ function HeaderLine(props) {
 
 export function Message(props) {
   const [showQuoted, setShowQuoted] = createSignal(false),
-        [html, setHtml] = createSignal(false),
+        [showHtml, setShowHtml] = createSignal(false),
         [htmlContent, setHtmlContent] = createSignal(undefined),
         // eslint-disable-next-line solid/reactivity
         msg = props.msg,
@@ -387,10 +387,10 @@ export function Message(props) {
 
         <div class="horizontal-stack margin justify-end">
           <Show when={msg.body["text/html"] === true}>
-            <button class="toggle-content" data-testid={html() ? "Text" : "HTML"} onClick={async (e) => {
-                setHtml(!html());
+            <button class="toggle-content" data-testid={showHtml() ? "Text" : "HTML"} onClick={async (e) => {
+                setShowHtml(!showHtml());
                 e.stopPropagation();
-                if(html() && htmlContent() === undefined) {
+                if(showHtml() && htmlContent() === undefined) {
                   setHtmlContent("loading...");
                   props.sp?.(0);
                   const response = await fetch(apiURL(`api/message_html/${encodeURIComponent(msg.notmuch_id)}`));
@@ -401,13 +401,13 @@ export function Message(props) {
                     setHtmlContent(await response.text());
                   }
                 }
-              }}>{html() ? "Text" : "HTML"}</button>
+              }}>{showHtml() ? "Text" : "HTML"}</button>
           </Show>
         </div>
-        <Show when={html()}>
+        <Show when={showHtml()}>
           <ShadowRoot html={htmlContent()}/>
         </Show>
-        <Show when={!html()}>
+        <Show when={!showHtml()}>
           <div class="message-text"
             // eslint-disable-next-line solid/no-innerhtml
             innerHTML={linkify(mainPart)}/>
