@@ -345,6 +345,10 @@ test("navigation shortcuts work with thread groups", async () => {
   // threads collapsed
   expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@1");
 
+  await userEvent.type(document.body, "k");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@1");
+  await userEvent.type(document.body, "j");
+  expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@3");
   await userEvent.type(document.body, "j");
   expect(container.querySelector(".thread.active").querySelector(".chip").textContent).toBe("test@3");
   await userEvent.type(document.body, "k");

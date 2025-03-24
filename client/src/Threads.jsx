@@ -120,6 +120,7 @@ export function Threads(props) {
       if(prev === null) {
         prev = document.querySelector(".thread.active").parentElement.previousElementSibling;
       }
+      if(prev === null) return;
       if(prev.classList.contains("thread-group")) {
         if(prev.classList.contains("collapsed")) {
           prev = prev.firstElementChild;
