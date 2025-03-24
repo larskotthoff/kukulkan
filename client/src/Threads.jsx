@@ -250,7 +250,7 @@ export function Threads(props) {
         affectedThreads = getAffectedThreads();
     if(affectedThreads.length === 0) return;
     affectedThreads.forEach(affectedThread => {
-      let due = threads().find(t => t.thread_id === affectedThread)?.tags.find((tag) => tag.startsWith("due:"));
+      let due = threads().flat().find(t => t.thread_id === affectedThread)?.tags.find((tag) => tag.startsWith("due:"));
       if(due) edits += " -" + due;
     });
     makeTagEdits(edits);

@@ -475,6 +475,31 @@ test("mark thread done works", async () => {
   expect(screen.queryByText("due:1970-01-01")).not.toBeInTheDocument();
 });
 
+test("mark thread group done works", async () => {
+  vi.stubGlobal('location', {
+    ...window.location,
+    search: '?query=foo'
+  });
+  global.fetch.mockResolvedValue({ ok: true, json: () => [] });
+  vi.stubGlobal("data", {"allTags": tags, "threads": [
+    [{thread_id: "foo", authors: ["te@t"], subject: "foobar", tags: ["grp:0", "todo", "due:1970-01-01"], total_messages: 1, newest_date: 1000, oldest_date: 100},
+    {thread_id: "bar", authors: ["te@t"], subject: "foobar", tags: ["grp:0"], total_messages: 1, newest_date: 1000, oldest_date: 100}]
+  ]});
+  render(() => <Threads Threads={SearchThreads}/>);
+  await vi.waitFor(() => {
+    expect(screen.getByText("1 thread group.")).toBeInTheDocument();
+  });
+
+  expect(screen.getByText("todo")).toBeInTheDocument();
+  expect(screen.getByText("due:1970-01-01")).toBeInTheDocument();
+
+  await userEvent.type(document.body, "d");
+  expect(global.fetch).toHaveBeenCalledTimes(1);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/thread/foo%20bar/-todo%20-due%3A1970-01-01");
+  expect(screen.queryByText("todo")).not.toBeInTheDocument();
+  expect(screen.queryByText("due:1970-01-01")).not.toBeInTheDocument();
+});
+
 test("tag edits work", async () => {
   vi.stubGlobal('location', {
     ...window.location,
