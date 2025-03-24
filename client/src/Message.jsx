@@ -56,7 +56,7 @@ export function separateQuotedNonQuoted(text) {
 }
 
 function linkify(text) {
-  const regex = /(https?:\/\/[^\s<>,()\[\]{}|]+)|(<)|(>)/g;
+  const regex = /(https?:\/\/[^\s<>,()\[\]{}|]+[^.,\s<>()\[\]{}])|(<)|(>)/g;
   return text.replace(regex, function(tmp) {
     if(tmp === '<') {
       return '&lt;';

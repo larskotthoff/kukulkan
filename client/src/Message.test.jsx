@@ -238,7 +238,7 @@ test("links are linkified in text", () => {
   const msg1 = JSON.parse(JSON.stringify(msg));
   msg1.body = {
     "text/html": false,
-    "text/plain": "http://www.foobar.com"
+    "text/plain": "http://www.foobar.com."
   };
 
   const { container } = render(() => <Message msg={msg1} active={true}/>);
