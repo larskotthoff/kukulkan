@@ -817,7 +817,7 @@ def test_group_new_subsequent(setup):
     mt.toplevel = MagicMock(return_value=iter([mf]))
 
     db.threads = MagicMock(return_value=iter([mt]))
-    db.tags = ['foo', 'bar', 'grp:ae']
+    db.tags = ['foo', 'bar', 'grp:10', 'grp:f']
 
     dbw = lambda: None
     dbw.close = MagicMock()
@@ -827,7 +827,7 @@ def test_group_new_subsequent(setup):
         with app.test_client() as test_client:
             response = test_client.get('/api/group/foo1')
             assert response.status_code == 200
-            assert b'grp:af' == response.data
+            assert b'grp:11' == response.data
         assert nmdb.call_count == 1
 
     assert db.threads.mock_calls == [
@@ -841,7 +841,7 @@ def test_group_new_subsequent(setup):
     mt.toplevel.assert_called_once()
 
     assert mf.tags.add.mock_calls == [
-        call('grp:af')
+        call('grp:11')
     ]
     assert mf.frozen.call_count == 1
 

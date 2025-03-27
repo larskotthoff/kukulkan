@@ -438,8 +438,7 @@ def create_app() -> Flask:
             if len(tags) == 0:
                 gtag = "grp:0" # OG group
             else:
-                tags.sort(reverse=True)
-                ltag_num = int(tags[0].split(':')[1], base=16)
+                ltag_num = max(int(tag.split(':')[1], base=16) for tag in tags)
                 gtag = f"grp:{(ltag_num + 1):x}"
 
         dbw = notmuch2.Database(mode=notmuch2.Database.MODE.READ_WRITE)
