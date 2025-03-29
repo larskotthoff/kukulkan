@@ -516,12 +516,12 @@ label {
     border-color: var(--primary-foreground);
 }
 
-.today {
-    background-color: rgba(255, 128, 0, 0.4);
-}
-
 .weekend {
     background-color: rgb(from var(--primary-foreground) r g b / 40%);
+}
+
+.today {
+    background-color: rgba(255, 128, 0, 0.4);
 }
 
 .sticky {
