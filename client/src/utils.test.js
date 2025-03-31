@@ -14,6 +14,8 @@ afterEach(() => {
 test("getColor", () => {
   expect(utils.getColor("foo")).toBe("#c70579");
   expect(utils.getColor("bar")).toBe("#c705aa");
+  expect(utils.getColor(undefined)).toBe("#c70505");
+  expect(utils.getColor(null)).toBe("#c70505");
 });
 
 test("strip", () => {
@@ -44,6 +46,7 @@ test("filterSubjectColor", () => {
   expect(utils.filterSubjectColor("Aw:Foo Bar")).toBe("Foo Bar");
   expect(utils.filterSubjectColor("Fwd: Foo Bar")).toBe("Foo Bar");
   expect(utils.filterSubjectColor("Fwd Foo Bar")).toBe("Fwd Foo Bar");
+  expect(utils.filterSubjectColor(null)).toBe(undefined);
 });
 
 test("formatDate", () => {

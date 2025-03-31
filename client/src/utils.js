@@ -12,7 +12,7 @@ function hslToHex(h, s, l) {
 
 // https://stackoverflow.com/questions/3426404/create-a-hexadecimal-colour-based-on-a-string-with-javascript
 export function getColor(stringInput) {
-  let stringUniqueHash = [...stringInput].reduce((acc, char) => {
+  let stringUniqueHash = [...(stringInput || "")].reduce((acc, char) => {
     return char.charCodeAt(0) + acc;
   }, 0);
   return hslToHex(stringUniqueHash % 360, 95, 40);
@@ -35,7 +35,7 @@ export function filterAdminTags(tags) {
 }
 
 export function filterSubjectColor(subject) {
-  return subject.replace(new RegExp('^( *(RE|FWD|FW|AW) *: *)+', "igm"), "");
+  return subject?.replace(new RegExp('^( *(RE|FWD|FW|AW) *: *)+', "igm"), "");
 }
 
 function padZ(number) {
