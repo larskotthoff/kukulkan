@@ -204,7 +204,7 @@ export function ChipComplete(props) {
 }
 
 export async function getTagOptions(text, sp, returnGrpOpts = true) {
-  let opts = data.allTags.filter((t) => t.includes(text));
+  let opts = data.allTags.filter((t) => t.toLowerCase().includes(text.toLowerCase()));
   if(text.startsWith("due:")) {
     const parsed = chrono.parseDate(text.split(':')[1])?.toISOString().split('T')[0];
     if(parsed) opts.unshift(`due:${parsed}`);

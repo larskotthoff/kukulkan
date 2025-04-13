@@ -236,6 +236,45 @@ test("TagComplete works", async () => {
   expect(add).toBe("foobar");
 });
 
+test("TagComplete works case insensitive", async () => {
+  let tags = ["Foo", "test"],
+      add = "", remove = "";
+  vi.stubGlobal("data", { "allTags": tags.concat("foobar") });
+  const { container } = render(() =>
+    <TagComplete tags={tags} addTag={(t) => add = t}
+      removeTag={(t) => remove = t}/>);
+
+  expect(screen.getByText("Foo")).toBeInTheDocument();
+  expect(screen.getByText("test")).toBeInTheDocument();
+
+  expect(remove).toBe("");
+  await userEvent.click(screen.getByText("Foo"));
+  expect(remove).toBe("Foo");
+
+  const input = container.querySelector("input");
+  await userEvent.type(input, "f");
+  expect(input.value).toEqual("f");
+  let completions = document.querySelector(".autocomplete-popup").children;
+  expect(completions.length).toBe(2);
+  expect(completions[0]).toHaveTextContent('Foo');
+  expect(completions[1]).toHaveTextContent('foobar');
+
+  expect(add).toBe("");
+  await userEvent.type(input, "{arrowdown}");
+  await userEvent.type(input, "{enter}{enter}");
+  expect(add).toBe("foobar");
+
+  await userEvent.type(input, "b");
+  expect(input.value).toEqual("b");
+  completions = document.querySelector(".autocomplete-popup").children;
+  expect(completions.length).toBe(1);
+  expect(completions[0]).toHaveTextContent('foobar');
+
+  add = "";
+  await userEvent.type(input, "{enter}{enter}");
+  expect(add).toBe("foobar");
+});
+
 test("TagComplete completes due dates", async () => {
   let tags = ["foo", "test"],
       add = "";
