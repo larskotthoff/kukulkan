@@ -49,7 +49,7 @@ export function SearchThreads(props) {
               last = pts.pop();
           if(pts.length > 0 && pts[pts.length - 1].endsWith("tag") && last.length > 0) {
             // autocomplete possible tag
-            return data.allTags.filter((t) => t.startsWith(last)).map((t) => [...pts, t].join(':'));
+            return data.allTags.values().filter((t) => t.startsWith(last)).map((t) => [...pts, t].join(':')).toArray();
           } else if(pts.length > 0 &&
                       (pts[pts.length - 1].endsWith("from") || pts[pts.length - 1].endsWith("to")) &&
                       last.length > 2) {
