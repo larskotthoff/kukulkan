@@ -64,8 +64,8 @@ test("shows due dates correctly", () => {
   vi.setSystemTime(new Date(2024, 6, 1));
 
   const now = new Date(),
-        t = JSON.parse(JSON.stringify(threads)),
-        tags = JSON.parse(JSON.stringify(threads[0].tags));
+        t = structuredClone(threads),
+        tags = structuredClone(threads[0].tags);
 
   t[0].tags = tags.concat("due:" + (new Date(now.getTime() - 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
   render(() => <TodoThreads ThreadGroup={ThreadGroup} threads={() => t} activeThread={() => 1} selectedThreads={() => []}
@@ -124,9 +124,9 @@ test("shows due dates correctly", () => {
 });
 
 test("sorts threads by due date", () => {
-  const t1 = JSON.parse(JSON.stringify(threads[0])),
-        t2 = JSON.parse(JSON.stringify(threads[0])),
-        t3 = JSON.parse(JSON.stringify(threads[0]));
+  const t1 = structuredClone(threads[0]),
+        t2 = structuredClone(threads[0]),
+        t3 = structuredClone(threads[0]);
   t3.tags.push("due:1970-01-01");
   t1.tags.push("due:1971-01-01");
 
@@ -139,8 +139,8 @@ test("shows calendar when there are due dates, but not otherwise", () => {
   expect(container.querySelector(".calendar")).toBe(null);
   cleanup();
 
-  const t = JSON.parse(JSON.stringify(threads)),
-        tags = JSON.parse(JSON.stringify(threads[0].tags));
+  const t = structuredClone(threads),
+        tags = structuredClone(threads[0].tags);
   t[0].tags = tags.concat("due:1970-01-01");
 
   container = (render(() => <TodoThreads ThreadGroup={ThreadGroup} threads={() => t} activeThread={() => 1}
@@ -153,8 +153,8 @@ test("first calendar date is today or earliest overdue", () => {
   vi.setSystemTime(new Date(2024, 6, 1));
 
   const now = new Date(),
-        t = JSON.parse(JSON.stringify(threads)),
-        tags = JSON.parse(JSON.stringify(threads[0].tags));
+        t = structuredClone(threads),
+        tags = structuredClone(threads[0].tags);
 
   t[0].tags = tags.concat("due:" + (new Date(now.getTime() + 10 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
   render(() => <TodoThreads ThreadGroup={ThreadGroup} threads={() => t} activeThread={() => 1} selectedThreads={() => []}
@@ -176,9 +176,9 @@ test("last calendar date is last due", () => {
   vi.setSystemTime(new Date(2024, 6, 1));
 
   const now = new Date(),
-        thr1 = JSON.parse(JSON.stringify(threads[0])),
-        thr2 = JSON.parse(JSON.stringify(threads[0])),
-        tags = JSON.parse(JSON.stringify(threads[0].tags));
+        thr1 = structuredClone(threads[0]),
+        thr2 = structuredClone(threads[0]),
+        tags = structuredClone(threads[0].tags);
 
   thr1.tags = tags.concat("due:" + (new Date(now.getTime() + 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
   thr2.tags = tags.concat("due:" + (new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
@@ -197,11 +197,11 @@ test("todo boxes shown next to calendar dates for emails with due dates", () => 
   vi.setSystemTime(new Date(2024, 6, 1));
 
   const now = new Date(),
-        thr1 = JSON.parse(JSON.stringify(threads[0])),
-        thr2 = JSON.parse(JSON.stringify(threads[0])),
-        thr3 = JSON.parse(JSON.stringify(threads[0])),
-        thr4 = JSON.parse(JSON.stringify(threads[0])),
-        tags = JSON.parse(JSON.stringify(threads[0].tags));
+        thr1 = structuredClone(threads[0]),
+        thr2 = structuredClone(threads[0]),
+        thr3 = structuredClone(threads[0]),
+        thr4 = structuredClone(threads[0]),
+        tags = structuredClone(threads[0].tags);
 
   thr1.tags = tags.concat("due:" + (new Date(now.getTime() + 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
   thr2.tags = tags.concat("due:" + (new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
@@ -219,10 +219,10 @@ test("todo boxes shown next to calendar dates for emails with due dates", () => 
 });
 
 test("clicking on todo boxes changes active thread", async () => {
-  const thr1 = JSON.parse(JSON.stringify(threads[0])),
-        thr2 = JSON.parse(JSON.stringify(threads[0])),
-        thr3 = JSON.parse(JSON.stringify(threads[0])),
-        tags = JSON.parse(JSON.stringify(threads[0].tags)),
+  const thr1 = structuredClone(threads[0]),
+        thr2 = structuredClone(threads[0]),
+        thr3 = structuredClone(threads[0]),
+        tags = structuredClone(threads[0].tags),
         setActiveThread = vi.fn();
 
   thr1.tags = tags.concat("due:1970-01-01");
@@ -250,9 +250,9 @@ test("clicking on todo boxes changes active thread", async () => {
 });
 
 test("clicking on todo boxes changes active thread w/ thread group", async () => {
-  const thr1 = JSON.parse(JSON.stringify(threads[0])),
-        thr2 = JSON.parse(JSON.stringify(threads[0])),
-        tags = JSON.parse(JSON.stringify(threads[0].tags)),
+  const thr1 = structuredClone(threads[0]),
+        thr2 = structuredClone(threads[0]),
+        tags = structuredClone(threads[0].tags),
         setActiveThread = vi.fn();
 
   thr1.tags = tags.concat("due:1970-01-01");

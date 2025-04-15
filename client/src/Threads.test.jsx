@@ -766,8 +766,8 @@ test("shows todo due dates correctly after marking done", async () => {
   const now = new Date(),
         thr1 = {thread_id: "foo", authors: ["foo@Author", "bar@Author"], subject: "test1", tags:
           ["todo"], total_messages: 2, newest_date: 1000, oldest_date: 100},
-        thr2 = JSON.parse(JSON.stringify(thr1)),
-        thr3 = JSON.parse(JSON.stringify(thr1));
+        thr2 = structuredClone(thr1),
+        thr3 = structuredClone(thr1);
   thr1.tags = thr1.tags.concat("due:" + (new Date(now.getTime() + 1000 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
   thr2.subject = "test2";
   thr2.tags = thr2.tags.concat("due:" + (new Date(now.getTime() + 1500 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);

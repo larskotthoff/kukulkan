@@ -92,7 +92,7 @@ export function Threads(props) {
         }
       });
     });
-    setThreads(JSON.parse(JSON.stringify(threads())));
+    setThreads(structuredClone(threads()));
     setEditingTags("");
     setSelectedThreads([]);
   }
@@ -313,7 +313,7 @@ export function Threads(props) {
     props.sp?.(1);
 
     // create new hierarchical thread structure
-    let old = JSON.parse(JSON.stringify(threads().flat())),
+    let old = structuredClone(threads().flat()),
         newThreads = [];
     while(old.length > 0) {
       const next = old.shift(),

@@ -117,7 +117,7 @@ test("base message reply all duplicate addresses", async () => {
     ...window.location,
     search: '?id=foo&action=reply&mode=all'
   });
-  const msg1 = JSON.parse(JSON.stringify(msg));
+  const msg1 = structuredClone(msg);
   msg1.to = ["bar foo <bar@foo.com>"];
   vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": [], "baseMessage": msg1});
   const { getByTestId } = render(() => <Write/>);
@@ -135,7 +135,7 @@ test("base message reply empty subject", async () => {
     ...window.location,
     search: '?id=foo&action=reply&mode=all'
   });
-  const msg1 = JSON.parse(JSON.stringify(msg));
+  const msg1 = structuredClone(msg);
   msg1.subject = "";
   vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": [], "baseMessage": msg1});
   const { getByTestId } = render(() => <Write/>);
@@ -174,7 +174,7 @@ test("base message from default if unclear", async () => {
     ...window.location,
     search: '?id=foo&action=reply&mode=all'
   });
-  const msg1 = JSON.parse(JSON.stringify(msg));
+  const msg1 = structuredClone(msg);
   msg1.to = ["something@test.com"];
   vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": [], "baseMessage": msg1});
   const { getByTestId } = render(() => <Write/>);
@@ -190,7 +190,7 @@ test("reply includes only main part of base message quoted", async () => {
     ...window.location,
     search: '?id=foo&action=reply&mode=all'
   });
-  const msg1 = JSON.parse(JSON.stringify(msg));
+  const msg1 = structuredClone(msg);
   msg1.body["text/plain"] = "Thanks.\n\nOn bla, blurg wrote:\n> foo\n> bar.";
   vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": [], "baseMessage": msg1});
   const { getByTestId } = render(() => <Write/>);
@@ -206,7 +206,7 @@ test("reply includes entire base message quoted when setting changed", async () 
     ...window.location,
     search: '?id=foo&action=reply&mode=all'
   });
-  const msg1 = JSON.parse(JSON.stringify(msg));
+  const msg1 = structuredClone(msg);
   msg1.body["text/plain"] = "Thanks.\n\nOn bla, blurg wrote:\n> foo\n> bar.";
   vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": [], "baseMessage": msg1});
   localStorage.setItem("settings-abbreviateQuoted", false);
@@ -246,7 +246,7 @@ test("forward includes entire message even if abbreviated reply", async () => {
     ...window.location,
     search: '?id=foo&action=forward'
   });
-  const msg1 = JSON.parse(JSON.stringify(msg));
+  const msg1 = structuredClone(msg);
   msg1.body["text/plain"] = "Thanks.\n\nOn bla, blurg wrote:\n> foo\n> bar.";
   vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": [], "baseMessage": msg1});
   localStorage.setItem("settings-abbreviateQuoted", true);
@@ -263,7 +263,7 @@ test("base message reply filters admin tags", async () => {
     ...window.location,
     search: '?id=foo&action=reply&mode=all'
   });
-  const msg1 = JSON.parse(JSON.stringify(msg));
+  const msg1 = structuredClone(msg);
   msg1.tags.push("signed");
   vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": [], "baseMessage": msg1});
   render(() => <Write/>);
@@ -506,7 +506,7 @@ test("files attachable and editable", async () => {
     ...window.location,
     search: '?id=foo&action=forward'
   });
-  const msg1 = JSON.parse(JSON.stringify(msg));
+  const msg1 = structuredClone(msg);
   msg1.attachments = [{"filename": "foofile"}, {"filename": "barfile"}];
   vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": [], "baseMessage": msg1});
   const { container } = render(() => <Write/>);

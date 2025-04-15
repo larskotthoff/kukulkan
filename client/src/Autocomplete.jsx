@@ -179,7 +179,7 @@ export function ChipComplete(props) {
           props.addChip(toAdd());
           setToAdd(null);
         } else if((ev.code === 'Backspace' || ev.key === 'Backspace') && !toAdd()) {
-          const tmp = JSON.parse(JSON.stringify(props.chips)),
+          const tmp = props.chips.slice(),
                 chip = tmp.pop();
           props.removeChip(chip);
         }

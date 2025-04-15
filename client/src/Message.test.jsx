@@ -121,7 +121,7 @@ test("renders message components", () => {
 });
 
 test("renders additional message components", () => {
-  const msg1 = JSON.parse(JSON.stringify(msg));
+  const msg1 = structuredClone(msg);
   msg1.reply_to = "Reply@to";
   msg1.forwarded_to = "Forwarded@to";
   msg1.bcc = ["BCC@BCC"];
@@ -133,7 +133,7 @@ test("renders additional message components", () => {
 });
 
 test("renders message text with <>", () => {
-  const msg1 = JSON.parse(JSON.stringify(msg));
+  const msg1 = structuredClone(msg);
   msg1.body["text/plain"] = "Test <test>";
 
   render(() => <Message msg={msg1} active={true}/>);
@@ -235,7 +235,7 @@ test("smime attachment hidden when collapsed", () => {
 });
 
 test("links are linkified in text", () => {
-  const msg1 = JSON.parse(JSON.stringify(msg));
+  const msg1 = structuredClone(msg);
   msg1.body = {
     "text/html": false,
     "text/plain": "http://www.foobar.com."
