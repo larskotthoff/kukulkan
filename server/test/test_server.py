@@ -623,6 +623,7 @@ def test_tag_add_thread(setup):
     dbw.messages.assert_called_once_with("thread:foo and not tag:bar", exclude_tags=[], sort=ANY)
 
     mf.tags.add.assert_called_once_with("bar")
+    mf.tags.to_maildir_flags.assert_called_once()
     mf.frozen.assert_called_once()
 
     dbw.close.assert_called_once()
@@ -651,6 +652,7 @@ def test_tag_remove_message(setup):
     dbw.messages.assert_called_once_with("id:foo and tag:bar", exclude_tags=[], sort=ANY)
 
     mf.tags.discard.assert_called_once_with("bar")
+    mf.tags.to_maildir_flags.assert_called_once()
     mf.frozen.assert_called_once()
 
     dbw.close.assert_called_once()
@@ -679,6 +681,7 @@ def test_tag_remove_thread(setup):
     dbw.messages.assert_called_once_with("thread:foo and tag:bar", exclude_tags=[], sort=ANY)
 
     mf.tags.discard.assert_called_once_with("bar")
+    mf.tags.to_maildir_flags.assert_called_once()
     mf.frozen.assert_called_once()
 
     dbw.close.assert_called_once()
@@ -723,6 +726,7 @@ def test_tags_change_message_batch(setup):
         call('bar2'),
         call('bar2')
     ]
+    assert mf.tags.to_maildir_flags.call_count == 4
     assert mf.frozen.call_count == 4
 
 
@@ -765,6 +769,7 @@ def test_tags_add_thread_batch(setup):
         call('bar2'),
         call('bar2')
     ]
+    assert mf.tags.to_maildir_flags.call_count == 4
     assert mf.frozen.call_count == 4
 
 
