@@ -494,6 +494,7 @@ def create_app() -> Flask:
                         msg.tags.add(tag) # type: ignore[union-attr]
                     elif op == "remove":
                         msg.tags.discard(tag) # type: ignore[union-attr]
+                    msg.tags.to_maildir_flags()
 
         finally:
             if should_close:

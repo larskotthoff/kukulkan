@@ -579,6 +579,7 @@ def test_tag_add_message(setup):
     mf.frozen = MagicMock()
     mf.tags = lambda: None
     mf.tags.add = MagicMock()
+    mf.tags.to_maildir_flags = MagicMock()
 
     dbw = lambda: None
     dbw.close = MagicMock()
@@ -606,6 +607,7 @@ def test_tag_add_thread(setup):
     mf.frozen = MagicMock()
     mf.tags = lambda: None
     mf.tags.add = MagicMock()
+    mf.tags.to_maildir_flags = MagicMock()
 
     dbw = lambda: None
     dbw.close = MagicMock()
@@ -633,6 +635,7 @@ def test_tag_remove_message(setup):
     mf.frozen = MagicMock()
     mf.tags = lambda: None
     mf.tags.discard = MagicMock()
+    mf.tags.to_maildir_flags = MagicMock()
 
     dbw = lambda: None
     dbw.close = MagicMock()
@@ -660,6 +663,7 @@ def test_tag_remove_thread(setup):
     mf.frozen = MagicMock()
     mf.tags = lambda: None
     mf.tags.discard = MagicMock()
+    mf.tags.to_maildir_flags = MagicMock()
 
     dbw = lambda: None
     dbw.close = MagicMock()
@@ -688,6 +692,7 @@ def test_tags_change_message_batch(setup):
     mf.tags = lambda: None
     mf.tags.add = MagicMock()
     mf.tags.discard = MagicMock()
+    mf.tags.to_maildir_flags = MagicMock()
 
     dbw = lambda: None
     dbw.close = MagicMock()
@@ -729,6 +734,7 @@ def test_tags_add_thread_batch(setup):
     mf.tags = lambda: None
     mf.tags.add = MagicMock()
     mf.tags.discard = MagicMock()
+    mf.tags.to_maildir_flags = MagicMock()
 
     dbw = lambda: None
     dbw.close = MagicMock()
