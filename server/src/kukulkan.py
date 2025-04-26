@@ -687,7 +687,7 @@ def create_app() -> Flask:
                             pass
                         finally:
                             db.close()
-                    fname = os.path.join(prefix, f"{msg_id[1:-1]}:2,S")
+                    fname = os.path.join(prefix, f"{msg_id[1:-1]}:2,")
                     with open(fname, "w", encoding="utf8") as f:
                         f.write(msg.as_string(policy=policy))
 

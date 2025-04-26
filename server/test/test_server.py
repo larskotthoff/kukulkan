@@ -1971,7 +1971,7 @@ def test_send(setup):
             args = o.call_args.args
             assert "kukulkan" in args[0]
             assert "folder/" in args[0]
-            assert ":2,S" in args[0]
+            assert ":2," in args[0]
             assert args[1] == "w"
             hdl = o()
             hdl.write.assert_called_once()
@@ -1991,7 +1991,7 @@ def test_send(setup):
     args = dbw.add.call_args.args
     assert "kukulkan" in args[0]
     assert "folder/" in args[0]
-    assert ":2,S" in args[0]
+    assert ":2," in args[0]
     dbw.atomic.assert_called_once()
     dbw.close.assert_called_once()
 
@@ -2047,7 +2047,7 @@ def test_send_no_save_sent_to(setup):
             args = o.call_args.args
             assert "kukulkan" in args[0]
             assert "dbpath/" in args[0]
-            assert ":2,S" in args[0]
+            assert ":2," in args[0]
             assert args[1] == "w"
 
     assert nmdb.call_count == 2
@@ -2056,7 +2056,7 @@ def test_send_no_save_sent_to(setup):
     args = dbw.add.call_args.args
     assert "kukulkan" in args[0]
     assert "dbpath/" in args[0]
-    assert ":2,S" in args[0]
+    assert ":2," in args[0]
     dbw.atomic.assert_called_once()
     assert dbw.close.call_count == 2
 
@@ -2112,7 +2112,7 @@ def test_send_no_save_sent_to_no_db_path(setup):
             args = o.call_args.args
             assert "kukulkan" in args[0]
             assert "/" not in args[0]
-            assert ":2,S" in args[0]
+            assert ":2," in args[0]
             assert args[1] == "w"
 
     assert nmdb.call_count == 2
@@ -2121,7 +2121,7 @@ def test_send_no_save_sent_to_no_db_path(setup):
     args = dbw.add.call_args.args
     assert "kukulkan" in args[0]
     assert "/" not in args[0]
-    assert ":2,S" in args[0]
+    assert ":2," in args[0]
     dbw.atomic.assert_called_once()
     assert dbw.close.call_count == 2
 
@@ -2204,7 +2204,7 @@ def test_send_base64_transfer(setup):
             args = o.call_args.args
             assert "kukulkan" in args[0]
             assert "folder/" in args[0]
-            assert ":2,S" in args[0]
+            assert ":2," in args[0]
             assert args[1] == "w"
             hdl = o()
             hdl.write.assert_called_once()
@@ -2224,7 +2224,7 @@ def test_send_base64_transfer(setup):
     args = dbw.add.call_args.args
     assert "kukulkan" in args[0]
     assert "folder/" in args[0]
-    assert ":2,S" in args[0]
+    assert ":2," in args[0]
     dbw.atomic.assert_called_once()
     dbw.close.assert_called_once()
 
@@ -2293,7 +2293,7 @@ def test_send_addresses(setup):
             args = o.call_args.args
             assert "kukulkan" in args[0]
             assert "folder/" in args[0]
-            assert ":2,S" in args[0]
+            assert ":2," in args[0]
             assert args[1] == "w"
             hdl = o()
             hdl.write.assert_called_once()
@@ -2313,7 +2313,7 @@ def test_send_addresses(setup):
     args = dbw.add.call_args.args
     assert "kukulkan" in args[0]
     assert "folder/" in args[0]
-    assert ":2,S" in args[0]
+    assert ":2," in args[0]
     dbw.atomic.assert_called_once()
     dbw.close.assert_called_once()
 
@@ -2422,7 +2422,7 @@ def test_send_attachment(setup):
             args = o.call_args.args
             assert "kukulkan" in args[0]
             assert "folder/" in args[0]
-            assert ":2,S" in args[0]
+            assert ":2," in args[0]
             assert args[1] == "w"
             hdl = o()
             hdl.write.assert_called_once()
@@ -2442,7 +2442,7 @@ def test_send_attachment(setup):
     args = dbw.add.call_args.args
     assert "kukulkan" in args[0]
     assert "folder/" in args[0]
-    assert ":2,S" in args[0]
+    assert ":2," in args[0]
     dbw.atomic.assert_called_once()
     dbw.close.assert_called_once()
 
@@ -2522,7 +2522,7 @@ def test_send_reply(setup):
             args = o.call_args.args
             assert "kukulkan" in args[0]
             assert "folder/" in args[0]
-            assert ":2,S" in args[0]
+            assert ":2," in args[0]
             assert args[1] == "w"
             hdl = o()
             hdl.write.assert_called_once()
@@ -2549,7 +2549,7 @@ def test_send_reply(setup):
     args = dbw.add.call_args.args
     assert "kukulkan" in args[0]
     assert "folder/" in args[0]
-    assert ":2,S" in args[0]
+    assert ":2," in args[0]
     dbw.messages.assert_called_once_with("id:oldFoo", exclude_tags=[], sort=ANY)
     dbw.atomic.assert_called_once()
     dbw.close.assert_called_once()
@@ -2630,7 +2630,7 @@ def test_send_reply_more_refs(setup):
             args = o.call_args.args
             assert "kukulkan" in args[0]
             assert "folder/" in args[0]
-            assert ":2,S" in args[0]
+            assert ":2," in args[0]
             assert args[1] == "w"
             hdl = o()
             hdl.write.assert_called_once()
@@ -2657,7 +2657,7 @@ def test_send_reply_more_refs(setup):
     args = dbw.add.call_args.args
     assert "kukulkan" in args[0]
     assert "folder/" in args[0]
-    assert ":2,S" in args[0]
+    assert ":2," in args[0]
     dbw.messages.assert_called_once_with("id:oldFoo", exclude_tags=[], sort=ANY)
     dbw.atomic.assert_called_once()
     dbw.close.assert_called_once()
@@ -2762,7 +2762,7 @@ def test_send_reply_cal(setup):
                 args = o.call_args.args
                 assert "kukulkan" in args[0]
                 assert "folder/" in args[0]
-                assert ":2,S" in args[0]
+                assert ":2," in args[0]
                 assert args[1] == "w"
                 hdl = o()
                 hdl.write.assert_called_once()
@@ -2794,7 +2794,7 @@ def test_send_reply_cal(setup):
     args = dbw.add.call_args.args
     assert "kukulkan" in args[0]
     assert "folder/" in args[0]
-    assert ":2,S" in args[0]
+    assert ":2," in args[0]
     dbw.messages.assert_called_once_with("id:oldFoo", exclude_tags=[], sort=ANY)
     dbw.atomic.assert_called_once()
     dbw.close.assert_called_once()
@@ -2876,7 +2876,7 @@ def test_send_forward(setup):
                 args = o.call_args.args
                 assert "kukulkan" in args[0]
                 assert "folder/" in args[0]
-                assert ":2,S" in args[0]
+                assert ":2," in args[0]
                 assert args[1] == "w"
                 hdl = o()
                 hdl.write.assert_called_once()
@@ -2901,7 +2901,7 @@ def test_send_forward(setup):
     args = dbw.add.call_args.args
     assert "kukulkan" in args[0]
     assert "folder/" in args[0]
-    assert ":2,S" in args[0]
+    assert ":2," in args[0]
     dbw.messages.assert_called_once_with("id:oldFoo", exclude_tags=[], sort=ANY)
     dbw.atomic.assert_called_once()
     dbw.close.assert_called_once()
@@ -2985,7 +2985,7 @@ def test_send_forward_text_attachment(setup):
                 args = o.call_args.args
                 assert "kukulkan" in args[0]
                 assert "folder/" in args[0]
-                assert ":2,S" in args[0]
+                assert ":2," in args[0]
                 assert args[1] == "w"
                 hdl = o()
                 hdl.write.assert_called_once()
@@ -3010,7 +3010,7 @@ def test_send_forward_text_attachment(setup):
     args = dbw.add.call_args.args
     assert "kukulkan" in args[0]
     assert "folder/" in args[0]
-    assert ":2,S" in args[0]
+    assert ":2," in args[0]
     dbw.messages.assert_called_once_with("id:oldFoo", exclude_tags=[], sort=ANY)
     dbw.atomic.assert_called_once()
     dbw.close.assert_called_once()
@@ -3098,7 +3098,7 @@ def test_send_forward_original_html(setup):
                 args = o.call_args.args
                 assert "kukulkan" in args[0]
                 assert "folder/" in args[0]
-                assert ":2,S" in args[0]
+                assert ":2," in args[0]
                 assert args[1] == "w"
                 hdl = o()
                 hdl.write.assert_called_once()
@@ -3126,7 +3126,7 @@ def test_send_forward_original_html(setup):
     args = dbw.add.call_args.args
     assert "kukulkan" in args[0]
     assert "folder/" in args[0]
-    assert ":2,S" in args[0]
+    assert ":2," in args[0]
     dbw.messages.assert_called_once_with("id:oldFoo", exclude_tags=[], sort=ANY)
     dbw.atomic.assert_called_once()
     dbw.close.assert_called_once()
@@ -3220,7 +3220,7 @@ def test_send_sign_self(setup):
                 args = o.call_args.args
                 assert "kukulkan" in args[0]
                 assert "folder/" in args[0]
-                assert ":2,S" in args[0]
+                assert ":2," in args[0]
                 assert args[1] == "w"
 
                 email_msg = email.message_from_string(text)
@@ -3249,7 +3249,7 @@ def test_send_sign_self(setup):
     args = dbw.add.call_args.args
     assert "kukulkan" in args[0]
     assert "folder/" in args[0]
-    assert ":2,S" in args[0]
+    assert ":2," in args[0]
     dbw.atomic.assert_called_once()
     dbw.close.assert_called_once()
 
@@ -3345,7 +3345,7 @@ def test_send_sign_base64_transfer(setup):
             args = o.call_args.args
             assert "kukulkan" in args[0]
             assert "folder/" in args[0]
-            assert ":2,S" in args[0]
+            assert ":2," in args[0]
             assert args[1] == "w"
             hdl = o()
             hdl.write.assert_called_once()
@@ -3365,7 +3365,7 @@ def test_send_sign_base64_transfer(setup):
     args = dbw.add.call_args.args
     assert "kukulkan" in args[0]
     assert "folder/" in args[0]
-    assert ":2,S" in args[0]
+    assert ":2," in args[0]
     dbw.atomic.assert_called_once()
     dbw.close.assert_called_once()
 
@@ -3464,7 +3464,7 @@ def test_send_sign_attachment(setup):
             args = o.call_args.args
             assert "kukulkan" in args[0]
             assert "folder/" in args[0]
-            assert ":2,S" in args[0]
+            assert ":2," in args[0]
             assert args[1] == "w"
             hdl = o()
             hdl.write.assert_called_once()
@@ -3484,7 +3484,7 @@ def test_send_sign_attachment(setup):
     args = dbw.add.call_args.args
     assert "kukulkan" in args[0]
     assert "folder/" in args[0]
-    assert ":2,S" in args[0]
+    assert ":2," in args[0]
     dbw.atomic.assert_called_once()
     dbw.close.assert_called_once()
 
@@ -3616,7 +3616,7 @@ def test_send_sign_reply_cal(setup):
                 args = o.call_args.args
                 assert "kukulkan" in args[0]
                 assert "folder/" in args[0]
-                assert ":2,S" in args[0]
+                assert ":2," in args[0]
                 assert args[1] == "w"
                 hdl = o()
                 hdl.write.assert_called_once()
@@ -3648,7 +3648,7 @@ def test_send_sign_reply_cal(setup):
     args = dbw.add.call_args.args
     assert "kukulkan" in args[0]
     assert "folder/" in args[0]
-    assert ":2,S" in args[0]
+    assert ":2," in args[0]
     dbw.messages.assert_called_once_with("id:oldFoo", exclude_tags=[], sort=ANY)
     dbw.atomic.assert_called_once()
     dbw.close.assert_called_once()
