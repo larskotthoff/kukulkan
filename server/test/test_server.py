@@ -2468,6 +2468,7 @@ def test_send_reply(setup):
     mq = lambda: None
     mq.tags = lambda: None
     mq.tags.add = MagicMock()
+    mq.tags.to_maildir_flags = MagicMock()
     mq.header = MagicMock()
     mq.header.side_effect = ["oldFoo", None]
 
@@ -2542,6 +2543,7 @@ def test_send_reply(setup):
 
     db.find.assert_called_once_with("oldFoo")
     mq.tags.add.assert_called_once_with("replied")
+    mq.tags.to_maildir_flags.assert_called_once()
     assert mq.header.mock_calls == [
         call('Message-ID'),
         call('References')
@@ -2576,6 +2578,7 @@ def test_send_reply_more_refs(setup):
     mq = lambda: None
     mq.tags = lambda: None
     mq.tags.add = MagicMock()
+    mq.tags.to_maildir_flags = MagicMock()
     mq.header = MagicMock()
     mq.header.side_effect = ["oldFoo", "<olderFoo>"]
 
@@ -2650,6 +2653,7 @@ def test_send_reply_more_refs(setup):
 
     db.find.assert_called_once_with("oldFoo")
     mq.tags.add.assert_called_once_with("replied")
+    mq.tags.to_maildir_flags.assert_called_once()
     assert mq.header.mock_calls == [
         call('Message-ID'),
         call('References')
@@ -2684,6 +2688,7 @@ def test_send_reply_cal(setup):
     mq = lambda: None
     mq.tags = lambda: None
     mq.tags.add = MagicMock()
+    mq.tags.to_maildir_flags = MagicMock()
     mq.header = MagicMock()
     mq.header.side_effect = ["oldFoo", None]
 
@@ -2787,6 +2792,7 @@ def test_send_reply_cal(setup):
         call('oldFoo')
     ]
     mq.tags.add.assert_called_once_with("replied")
+    mq.tags.to_maildir_flags.assert_called_once()
     assert mq.header.mock_calls == [
         call('Message-ID'),
         call('References')
@@ -2821,6 +2827,7 @@ def test_send_forward(setup):
     mq = lambda: None
     mq.tags = lambda: None
     mq.tags.add = MagicMock()
+    mq.tags.to_maildir_flags = MagicMock()
 
     db.config = {}
     db.find = MagicMock(return_value=mq)
@@ -2898,6 +2905,7 @@ def test_send_forward(setup):
 
     db.find.assert_called_once_with("oldFoo")
     mq.tags.add.assert_called_once_with("passed")
+    mq.tags.to_maildir_flags.assert_called_once()
 
     nmdb.assert_called_once()
 
@@ -2928,6 +2936,7 @@ def test_send_forward_text_attachment(setup):
     mq = lambda: None
     mq.tags = lambda: None
     mq.tags.add = MagicMock()
+    mq.tags.to_maildir_flags = MagicMock()
 
     db.config = {}
     db.find = MagicMock(return_value=mq)
@@ -3007,6 +3016,7 @@ def test_send_forward_text_attachment(setup):
 
     db.find.assert_called_once_with("oldFoo")
     mq.tags.add.assert_called_once_with("passed")
+    mq.tags.to_maildir_flags.assert_called_once()
 
     nmdb.assert_called_once()
 
@@ -3037,6 +3047,7 @@ def test_send_forward_original_html(setup):
     mq = lambda: None
     mq.tags = lambda: None
     mq.tags.add = MagicMock()
+    mq.tags.to_maildir_flags = MagicMock()
     mq.path = "test/mails/multipart-html-text.eml"
 
     db.config = {}
@@ -3123,6 +3134,7 @@ def test_send_forward_original_html(setup):
 
     db.find.assert_called_once_with("oldFoo")
     mq.tags.add.assert_called_once_with("passed")
+    mq.tags.to_maildir_flags.assert_called_once()
 
     nmdb.assert_called_once()
 
@@ -3510,6 +3522,7 @@ def test_send_sign_reply_cal(setup):
     mq = lambda: None
     mq.tags = lambda: None
     mq.tags.add = MagicMock()
+    mq.tags.to_maildir_flags = MagicMock()
     mq.header = MagicMock()
     mq.header.side_effect = ["oldFoo", None]
 
@@ -3641,6 +3654,7 @@ def test_send_sign_reply_cal(setup):
         call('oldFoo')
     ]
     mq.tags.add.assert_called_once_with("replied")
+    mq.tags.to_maildir_flags.assert_called_once()
     assert mq.header.mock_calls == [
         call('Message-ID'),
         call('References')

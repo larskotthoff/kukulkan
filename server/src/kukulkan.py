@@ -705,6 +705,7 @@ def create_app() -> Flask:
                                 for ref_msg in ref_msgs:
                                     # pylint: disable=possibly-used-before-assignment
                                     ref_msg.tags.add(reftag) # type: ignore[union-attr]
+                                    ref_msg.tags.to_maildir_flags()
 
                             (notmuch_msg, _) = db_write.add(fname)
                             tags = notmuch_msg.tags
