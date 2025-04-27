@@ -121,6 +121,7 @@ test("formatFSz", () => {
 
 test("splitAddressHeader", () => {
   expect(utils.splitAddressHeader(null)).toStrictEqual(["@", "(no author)", "(none)"]);
+  expect(utils.splitAddressHeader("foobar.com")).toStrictEqual(["foobar.com", "foobar.com", "foobar.com"]);
   expect(utils.splitAddressHeader("foo@bar.com")).toStrictEqual(["foo@bar.com", "foo@bar.com", "foo@bar.com"]);
   expect(utils.splitAddressHeader("<foo@bar.com>")).toStrictEqual(["foo@bar.com", "foo@bar.com", "foo@bar.com"]);
   expect(utils.splitAddressHeader("<FOO@bar.com>")).toStrictEqual(["foo@bar.com", "FOO@bar.com", "FOO@bar.com"]);

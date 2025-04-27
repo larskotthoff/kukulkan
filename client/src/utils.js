@@ -99,7 +99,8 @@ export function formatFSz(size) {
 export function splitAddressHeader(header) {
   let res = ["@", "(no author)", "(none)"];
   if(header) {
-    let key = header.match(/([^ <>]+@[^ >]+)/)[0],
+    let matches = header.match(/([^ <>]+@[^ >]+)/),
+        key = matches ? matches[0] : header,
         pts = header.split(' ');
     if(pts.length > 1) {
       let long = pts.slice(0, -1).join(" ").replace(/^"|^'|^,|"$|'$|,$/gm, ''),
