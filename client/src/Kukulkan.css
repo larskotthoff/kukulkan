@@ -404,6 +404,8 @@ button > span {
     @media (max-width: 499px) {
         width: 100%;
     }
+    height: calc(100vh - 8px);
+    overflow-y: auto;
 }
 
 .hide-if-narrow {
@@ -413,11 +415,10 @@ button > span {
 }
 
 .calendar {
-    align-items: end;
     text-align: end;
     white-space: nowrap;
 
-    height: 99vh;
+    height: calc(100vh - 8px);
     @media (max-width: 499px) {
         display: none;
     }
