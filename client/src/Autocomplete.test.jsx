@@ -19,6 +19,13 @@ test("sets text", () => {
   expect(container.querySelector("input").value).toEqual("foo");
 });
 
+test("allows to specify type", () => {
+  let { container } = render(() => <Autocomplete type="email" text={() => "foo"}/>);
+  expect(container.querySelector("input").type).toEqual("email");
+  container = render(() => <ChipComplete type="email" text={() => "foo"}/>).container;
+  expect(container.querySelector("input").type).toEqual("email");
+});
+
 test("shows completions", async () => {
   const [testText, setTestText] = createSignal("");
   const { container } = render(() => <Autocomplete text={testText} setText={setTestText} getOptions={() => ["foo", "foobar"]}/>);

@@ -29,6 +29,7 @@ function Templates(props) {
 function AddrComplete(props) {
   return (
     <ChipComplete
+      type="email"
       chips={props.message[props.addrAttr]}
       keys={props.message[props.addrAttr].map((addr) => {
         return splitAddressHeader(addr)[0];
