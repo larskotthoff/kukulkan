@@ -365,9 +365,10 @@ export function Threads(props) {
           }}
           handleKey={(ev) => {
             if(ev.code === 'Enter' || ev.key === 'Enter') {
-              setShowTagEditingBar(false);
-              makeTagEdits(editingTags());
               ev.stopPropagation();
+              makeTagEdits(editingTags());
+              setShowTagEditingBar(false);
+              setEditingTags("");
             }
           }}
         />

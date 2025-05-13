@@ -171,32 +171,6 @@ test("ChipComplete works with enter", async () => {
   expect(add).toBe("foobar");
 });
 
-test("ChipComplete works with double space", async () => {
-  let chips = ["foo", "test"],
-      add = "", remove = "";
-  const { container } = render(() =>
-    <ChipComplete chips={chips} getOptions={() => ["foobar"]}
-      addChip={(t) => add = t} removeChip={(t) => remove = t}/>);
-
-  expect(screen.getByText("foo")).toBeInTheDocument();
-  expect(screen.getByText("test")).toBeInTheDocument();
-
-  expect(remove).toBe("");
-  await userEvent.click(screen.getByText("foo"));
-  expect(remove).toBe("foo");
-
-  const input = container.querySelector("input");
-  await userEvent.type(input, "f");
-  expect(input.value).toEqual("f");
-  const completions = document.querySelector(".autocomplete-popup").children;
-  expect(completions[0]).toHaveTextContent('foobar');
-
-  expect(add).toBe("");
-  await userEvent.type(input, "{arrowdown}");
-  await userEvent.type(input, "{enter}  ");
-  expect(add).toBe("foobar");
-});
-
 test("TagComplete works", async () => {
   let tags = ["foo", "test"],
       add = "", remove = "";

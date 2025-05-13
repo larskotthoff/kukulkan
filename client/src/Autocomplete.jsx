@@ -140,6 +140,7 @@ export function Autocomplete(props) {
           if(typeof onInput === 'function') onInput(ev);
         }}
         onKeyDown={handleKeydown}
+        enterkeyhint="go"
         autoComplete="off"
         autoCapitalize="off"
       />
@@ -182,14 +183,6 @@ export function ChipComplete(props) {
           const tmp = props.chips.slice(),
                 chip = tmp.pop();
           props.removeChip(chip);
-        }
-      }}
-      onInput={(ev) => {
-        // chrome on android doesn't set key codes in events, so we have to
-        // handle the double space to complete this way
-        if(ev.target.value.endsWith("  ")) {
-          props.addChip(toAdd().trim());
-          setToAdd(null);
         }
       }}
       {...props}>
