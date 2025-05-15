@@ -135,6 +135,8 @@ test("splitAddressHeader", () => {
   expect(utils.splitAddressHeader("\"Bar, Foo\" <foo@bar.com>")).toStrictEqual(["foo@bar.com", "Bar, Foo", "Foo"]);
 
   expect(utils.splitAddressHeader("Many long names <foo@bar.com>")).toStrictEqual(["foo@bar.com", "Many long names", "Many"]);
+
+  expect(utils.splitAddressHeader("foo@bar.com (Foo Bar)")).toStrictEqual(["foo@bar.com", "Foo Bar", "Foo"]);
 });
 
 test("delayedDebouncedFetch", async () => {

@@ -103,7 +103,8 @@ export function splitAddressHeader(header) {
         key = matches ? matches[0] : header,
         pts = header.split(' ');
     if(pts.length > 1) {
-      let long = pts.slice(0, -1).join(" ").replace(/^"|^'|^,|"$|'$|,$/gm, ''),
+      let namParts = pts.filter(p => !p.match(/@/)),
+          long = namParts.join(" ").replace(/^"|^'|^,|^\(|"$|'$|,$|\)$/gm, ''),
           short = long,
           npts = long.split(' ');
       if(npts.length > 1) {
