@@ -65,7 +65,7 @@ export function Thread(props) {
     depth++;
   }
 
-  if(getSetting("showNestedThread")) {
+  if(getSetting("showNestedThread") && window.screen.width >= 900) {
     let [ft, activeIdx] = filterThread(null, data.thread);
     setFilteredThread(ft);
     setActiveMessage(activeIdx);

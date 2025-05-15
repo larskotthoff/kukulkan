@@ -61,6 +61,8 @@ beforeEach(() => {
   vi.spyOn(window, "open").mockImplementation(() => {});
   global.fetch = vi.fn();
   window.HTMLElement.prototype.scrollIntoView = function() {};
+  Object.defineProperty(window.screen, 'width', { value: 1024, writable: true });
+  Object.defineProperty(window.screen, 'height', { value: 1024, writable: true });
 });
 
 afterEach(() => {
@@ -672,6 +674,42 @@ test("flat view can be set to be default", async () => {
   expect(navs[0].classList).toContain("active-thread");
   expect(navs[1].classList).toContain("active-thread");
   expect(navs[2].classList).toContain("active-thread");
+});
+
+test("flat view is default for narrow screen", async () => {
+  window.screen.width = 600;
+  vi.stubGlobal('location', {
+    ...window.location,
+    search: '?id=foo'
+  });
+  vi.stubGlobal("data", {"thread": complexThread});
+  const { container } = render(() => <Thread/>);
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("Test3.")).toBeInTheDocument();
+  });
+
+  // collapsed email
+  expect(screen.getByText("foo bar <foo@bar.com>")).toBeInTheDocument();
+  expect(screen.getByText("foo.txt")).toBeInTheDocument();
+  expect(screen.getByText("Test mail")).toBeInTheDocument();
+
+  // other collapsed email
+  expect(screen.getByText("foo2 bar <foo@bar.com>")).toBeInTheDocument();
+  expect(screen.getByText("Test mail2")).toBeInTheDocument();
+
+  // expanded email
+  expect(screen.getByText("foo3 bar <foo@bar.com>")).toBeInTheDocument();
+  expect(screen.getByText("bar3 foo3 <bar@foo.com>")).toBeInTheDocument();
+  expect(screen.getByText("test3@test3.com")).toBeInTheDocument();
+  expect(screen.getByText("Test mail3")).toBeInTheDocument();
+  expect(screen.getByText("foo3")).toBeInTheDocument();
+  expect(screen.getByText("bar3")).toBeInTheDocument();
+  expect(screen.getByText("test3")).toBeInTheDocument();
+
+  const nav = container.querySelector(".threadnav-container");
+  // https://stackoverflow.com/questions/19669786/check-if-element-is-visible-in-dom
+  expect(nav.offsetParent).toBe(null);
 });
 
 test("works correctly when msg references are messed up", async () => {

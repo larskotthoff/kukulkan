@@ -112,6 +112,9 @@ button > span {
 
 .message-container {
     margin-bottom: 50px;
+    @media (max-width: 899px) {
+        margin-left: 5px;
+    }
 }
 
 .message-action-icons {
@@ -269,7 +272,12 @@ button > span {
 .message {
     background-color: var(--secondary-background);
     padding: 8px;
-    width: min(80em, 80vw);
+    @media (max-width: 899px) {
+        width: calc(100vw - 2em - 30px);
+    }
+    @media (min-width: 900px) {
+        width: min(80em, 80vw);
+    }
 }
 
 .message.deleted {
@@ -475,15 +483,20 @@ button > span {
 }
 
 .threadnav-container {
-    height: 100vh;
-    overflow: auto;
-    direction: rtl;
+    @media (min-width: 900px) {
+        height: 100vh;
+        overflow: auto;
+        direction: rtl;
 
-    position: fixed;
-    top: 1em;
-    left: .5em;
-    padding-left: .5em;
+        position: fixed;
+        top: 1em;
+        left: .5em;
+        padding-left: .5em;
 
+    }
+    @media (max-width: 899px) {
+        display: none;
+    }
     @media (max-width: 83em) {
         max-width: 3.5em;
     }
