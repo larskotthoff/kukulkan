@@ -261,6 +261,7 @@ button > span {
 .alert {
     padding: .5em;
     display: flex;
+    background-color: var(--primary-background);
 }
 
 .alert > span {
@@ -619,5 +620,4 @@ h1, h2, h3, h4, h5, h6 {
 */
 #root, #__next {
   isolation: isolate;
-  overflow-x: auto;
 }

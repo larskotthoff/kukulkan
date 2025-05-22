@@ -335,7 +335,7 @@ export function Write(props) {
   return (
     <>
       <Show when={statusMsg()}>
-        <Alert class="centered fit-content margin-bottom" severity={statusMsg().startsWith("Error") ? "error" : "success"}>{statusMsg()}</Alert>
+        <Alert class="centered fit-content sticky margin-bottom" severity={statusMsg().startsWith("Error") ? "error" : "success"}>{statusMsg()}</Alert>
       </Show>
       <Show when={data.compose}>
         <Templates templates={data.compose.templates} setTemplate={setUseTemplate}/>
