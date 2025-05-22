@@ -1578,7 +1578,6 @@ def test_message_signed_invalid(setup):
     db.find.assert_called_once_with("foo")
 
 
-@pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="Fails on Github.")
 def test_message_signed_pgp(setup):
     app, db = setup
 
