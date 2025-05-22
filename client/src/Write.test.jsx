@@ -1186,6 +1186,7 @@ test("error when mail cannot be sent but no error when successful after", async 
     }));
 
   expect(screen.getByText("Error sending message: foo")).toBeInTheDocument();
+  expect(screen.getByTitle("Send")).not.toBeDisabled();
 
   await userEvent.click(screen.getByText("Send"));
   eventSourceInstance.simulateMessage({send_status: 0, send_output: ""});
@@ -1199,6 +1200,7 @@ test("error when mail cannot be sent but no error when successful after", async 
 
   expect(screen.queryByText("Error sending message: foo")).not.toBeInTheDocument();
   expect(screen.getByText("Message sent.")).toBeInTheDocument();
+  expect(screen.getByTitle("Send")).toBeDisabled();
 });
 
 test("external editing", async () => {

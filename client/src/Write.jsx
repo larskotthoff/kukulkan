@@ -262,6 +262,7 @@ export function Write(props) {
             .map(k => localStorage.removeItem(k));
         } else {
           setStatusMsg(`Error sending message: ${data.send_output}`);
+          document.getElementById("send").disabled = false;
         }
         eventSource.close();
       }
@@ -308,8 +309,6 @@ export function Write(props) {
       })
       .catch((error) => {
         setStatusMsg(`Error: ${JSON.stringify(error)}`);
-      })
-      .finally(() => {
         document.getElementById("send").disabled = false;
       });
   }
