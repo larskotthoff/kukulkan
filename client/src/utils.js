@@ -100,7 +100,7 @@ export function splitAddressHeader(header) {
   let res = ["@", "(no author)", "(none)"];
   if(header) {
     let matches = header.match(/<([^ <>]+@[^ >]+)>/);
-    if(!matches) matches = header.match(/([^ <>]+@[^ >]+)/);
+    if(!matches) matches = header.match(/([^ <>"']+@[^ >"']+)/);
     const key = matches ? matches[1] : header,
         pts = header.split(' ');
     if(pts.length > 1) {
@@ -114,6 +114,7 @@ export function splitAddressHeader(header) {
         } else {
           short = npts[0];
         }
+        short = short.replace(/^"|^'|^,|"$|'$|,$/gm, '');
       }
       res = [key.toLowerCase(), long, short];
     } else {
