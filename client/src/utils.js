@@ -99,12 +99,13 @@ export function formatFSz(size) {
 export function splitAddressHeader(header) {
   let res = ["@", "(no author)", "(none)"];
   if(header) {
-    let matches = header.match(/([^ <>]+@[^ >]+)/),
-        key = matches ? matches[0] : header,
+    let matches = header.match(/<([^ <>]+@[^ >]+)>/);
+    if(!matches) matches = header.match(/([^ <>]+@[^ >]+)/);
+    const key = matches ? matches[1] : header,
         pts = header.split(' ');
     if(pts.length > 1) {
-      let namParts = pts.filter(p => !p.match(/@/)),
-          long = namParts.join(" ").replace(/^"|^'|^,|^\(|"$|'$|,$|\)$/gm, ''),
+      let namParts = pts.filter(p => !p.match(/</));
+      let long = namParts.join(" ").replace(/^"|^'|^,|"$|'$|,$/gm, ''),
           short = long,
           npts = long.split(' ');
       if(npts.length > 1) {
