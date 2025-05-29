@@ -1726,7 +1726,7 @@ def test_message_html_simple(setup):
     with app.test_client() as test_client:
         response = test_client.get('/api/message_html/foo')
         assert response.status_code == 200
-        assert response.data == b'<div>\n  <body>\n    \n  </body><p>\n  hunter2\n</p></div>'
+        assert response.data == b'<div>\n  <body>\n    \n  </body>\n  hunter2\n</div>'
 
     db.find.assert_called_once_with("foo")
 
