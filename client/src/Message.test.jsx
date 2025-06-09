@@ -140,6 +140,15 @@ test("renders message text with <>", () => {
   expect(screen.getByText("Test <test>")).toBeInTheDocument();
 });
 
+test("renders message without date", () => {
+  const msg1 = structuredClone(msg);
+  msg1.date = null;
+
+  render(() => <Message msg={msg1} active={true}/>);
+  expect(screen.getByText("(no date)")).toBeInTheDocument();
+  expect(screen.getByText("Test mail")).toBeInTheDocument();
+});
+
 test("renders message signature", () => {
   msg.signature = { valid: true, message: "" };
   let { container } = render(() => <Message msg={msg} active={true}/>);

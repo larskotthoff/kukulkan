@@ -69,6 +69,7 @@ function linkify(text) {
 }
 
 function formatDateTZ(date) {
+  if(!date) return "(no date)";
   let ret = date;
   if((new Date()).getTimezoneOffset() !== (date.substring(date.length - 5, date.length - 4) === "+" ? -1 : 1) * (parseInt(date.substring(date.length - 4, date.length - 2), 10) * 60 + parseInt(date.substring(date.length - 2), 10)))
     ret += ` (${(new Date(date)).toLocaleString()})`;
