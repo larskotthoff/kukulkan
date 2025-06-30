@@ -1064,6 +1064,45 @@ test("data assembled correctly for sending reply", async () => {
   expect(screen.getByText("Message sent.")).toBeInTheDocument();
 });
 
+test("data assembled correctly for sending reply w/ empty subject", async () => {
+  vi.stubGlobal('location', {
+    ...window.location,
+    search: '?id=foo&action=reply&mode=all'
+  });
+  const msg1 = structuredClone(msg);
+  msg1.subject = null;
+  vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": [], "baseMessage": msg1});
+  const { getByTestId } = render(() => <Write/>);
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("Send")).toBeInTheDocument();
+  });
+  global.fetch.mockResolvedValue({ ok: true, json: () => [] });
+
+  const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
+      json: () => Promise.resolve({send_id: 0})
+    });
+  let eventSourceInstance;
+  vi.spyOn(global, 'EventSource').mockImplementation((url) => {
+      eventSourceInstance = new MockEventSource(url);
+      return eventSourceInstance;
+  });
+  await userEvent.click(screen.getByText("Send"));
+  eventSourceInstance.simulateMessage({send_status: 0, send_output: ""});
+
+  expect(fetchSpy).toHaveBeenCalledTimes(1);
+  expect(fetchSpy).toHaveBeenCalledWith("http://localhost:5000/api/send",
+    expect.objectContaining({
+      method: 'POST',
+      body: expect.any(FormData),
+    }));
+  const options = fetchSpy.mock.calls[0][1];
+  expect(options.body.get("subject")).toBe("Re: ");
+  expect(options.body.get("body")).toBe("\n\n\nOn Thu, 01 Jan 1970 00:00:00 -0000, bar foo <bar@foo.com> wrote:\n> Test mail");
+
+  expect(screen.getByText("Message sent.")).toBeInTheDocument();
+});
+
 test("data assembled correctly when retrieving from localStorage w/o editing", async () => {
   localStorage.setItem("draft-compose-to", "to@test.com\notherto@test.com");
   localStorage.getItem("draft-compose-to");
