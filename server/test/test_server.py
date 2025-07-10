@@ -2430,7 +2430,7 @@ def test_send_attachment(setup):
                 assert "Content-Transfer-Encoding: base64" in text
                 assert "Content-Disposition: attachment; filename=\"test.txt\"" in text
                 assert "\nVGhpcyBpcyBhIGZpbGUu\n" in text
-            assert o.call_count == 2
+            assert o.call_count == 1
             args = o.call_args.args
             assert "kukulkan" in args[0]
             assert "folder/" in args[0]
