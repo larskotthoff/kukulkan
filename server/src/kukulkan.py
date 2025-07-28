@@ -245,16 +245,16 @@ def create_app() -> Flask:
         elif path == "message":
             attach_num_str = request.args.get("attachNum")
             attach_num = int(attach_num_str) if attach_num_str else -1
+            msg = request.args.get("id") or ""
+            msg_str = base64.b64encode(msg.encode("utf8")).decode("utf8")
             if attach_num != -1:
-                globs["message"] = attachment_message(
-                    request.args.get("id") or "", attach_num
-                )
+                globs["message"] = attachment_message(msg, attach_num)
             else:
-                globs["message"] = message(request.args.get("id") or "")
+                globs["message"] = message(msg)
         elif path == "write":
             wid = request.args.get("id")
             if wid:
-                globs["baseMessage"] = message(wid)
+                globs["baseMessage"] = message(base64.b64encode(wid.encode("utf8")).decode("utf8"))
         return render_template("index.html", data=globs)
 
     @app.after_request
