@@ -461,7 +461,7 @@ def create_app() -> Flask:
         any_changed = False
         try:
             for nid in nids.split(' '):
-                nid_str = base64.b64encode(nid.encode("utf8"))
+                nid_str = base64.b64encode(nid.encode("utf8")).decode("utf8")
                 for tag in tags.split(' '):
                     if tag[0] == '-':
                         res = change_tag("remove", typ, nid_str, tag[1:], dbw, False)
