@@ -482,7 +482,8 @@ def create_app() -> Flask:
         # pylint: disable=no-member
         id_type = 'id' if typ == "message" else typ
         tag_prefix = 'not ' if op == "add" else ''
-        query = f"{id_type}:{base64.b64decode(nid).decode("utf8")} and {tag_prefix}tag:{tag}"
+        nid_str = base64.b64decode(nid).decode("utf8")
+        query = f"{id_type}:{nid_str} and {tag_prefix}tag:{tag}"
         should_close = True
         if dbw is None:
             dbw = notmuch2.Database(mode=notmuch2.Database.MODE.READ_WRITE)
