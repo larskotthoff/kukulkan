@@ -366,7 +366,7 @@ def create_app() -> Flask:
     @app.route("/api/attachment/<string:message_id>/<int:num>")
     @app.route("/api/attachment/<string:message_id>/<int:num>/<int:scale>")
     def attachment(message_id: str, num: int, scale: int = 0) -> Any:
-        msg = get_message(message_id)
+        msg = get_message(base64.b64decode(message_id).decode("utf8"))
         d = message_attachment(msg, num)
         if not d:
             abort(404)
@@ -388,7 +388,7 @@ def create_app() -> Flask:
 
     @app.route("/api/attachment_message/<string:message_id>/<int:num>")
     def attachment_message(message_id: str, num: int) -> Any:
-        msg = get_message(message_id)
+        msg = get_message(base64.b64decode(message_id).decode("utf8"))
         d = message_attachment(msg, num)
         if not d:
             abort(404)
@@ -396,26 +396,26 @@ def create_app() -> Flask:
 
     @app.route("/api/message/<string:message_id>")
     def message(message_id: str) -> Dict[str, Any]:
-        msg = get_message(message_id)
+        msg = get_message(base64.b64decode(message_id).decode("utf8"))
         return message_to_json(msg, True)
 
     @app.route("/api/message_html/<string:message_id>")
     def message_html(message_id: str) -> str:
-        msg = get_message(message_id)
+        msg = get_message(base64.b64decode(message_id).decode("utf8"))
         email_msg = email_from_notmuch(msg)
         html, _ = get_nested_body(email_msg, True)
         return html
 
     @app.route("/api/raw_message/<string:message_id>")
     def raw_message(message_id: str) -> str:
-        msg = get_message(message_id)
+        msg = get_message(base64.b64decode(message_id).decode("utf8"))
         with open(msg.path, "r", encoding="utf8") as f:
             content = f.read()
         return content
 
     @app.route("/api/auth_message/<string:message_id>")
     def auth_message(message_id: str) -> Dict[str, Any]:
-        msg = get_message(message_id)
+        msg = get_message(base64.b64decode(message_id).decode("utf8"))
         # https://npm.io/package/mailauth
         return json.loads(os.popen(f"mailauth {msg.path}").read())['arc']['authResults']
 
@@ -454,17 +454,19 @@ def create_app() -> Flask:
             dbw.close()
         return gtag
 
-    @app.route("/api/tag_batch/<string:typ>/<string:nids>/<string:tags>")
-    def change_tags(typ: str, nids: str, tags: str) -> str:
+    @app.route("/api/tag_batch/<string:typ>/<string:nids_str>/<string:tags>")
+    def change_tags(typ: str, nids_str: str, tags: str) -> str:
+        nids = base64.b64decode(nids_str).decode("utf8")
         dbw = notmuch2.Database(mode=notmuch2.Database.MODE.READ_WRITE)
         any_changed = False
         try:
             for nid in nids.split(' '):
+                nid_str = base64.b64encode(nid.encode("utf8"))
                 for tag in tags.split(' '):
                     if tag[0] == '-':
-                        res = change_tag("remove", typ, nid, tag[1:], dbw, False)
+                        res = change_tag("remove", typ, nid_str, tag[1:], dbw, False)
                     else:
-                        res = change_tag("add", typ, nid, tag, dbw, False)
+                        res = change_tag("add", typ, nid_str, tag, dbw, False)
                     if res != "":
                         any_changed = True
         finally:
@@ -480,7 +482,7 @@ def create_app() -> Flask:
         # pylint: disable=no-member
         id_type = 'id' if typ == "message" else typ
         tag_prefix = 'not ' if op == "add" else ''
-        query = f"{id_type}:{nid} and {tag_prefix}tag:{tag}"
+        query = f"{id_type}:{base64.b64decode(nid).decode("utf8")} and {tag_prefix}tag:{tag}"
         should_close = True
         if dbw is None:
             dbw = notmuch2.Database(mode=notmuch2.Database.MODE.READ_WRITE)

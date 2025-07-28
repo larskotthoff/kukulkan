@@ -76,7 +76,7 @@ export function Threads(props) {
   async function makeTagEdits(edits) {
     let affectedThreads = getAffectedThreads();
     if(affectedThreads.length === 0) return;
-    const url = apiURL(`api/tag_batch/thread/${encodeURIComponent(affectedThreads.join(' '))}/${encodeURIComponent(edits)}`);
+    const url = apiURL(`api/tag_batch/thread/${btoa(affectedThreads.join(' '))}/${encodeURIComponent(edits)}`);
 
     props.sp?.(0);
     const response = await fetch(url);
@@ -277,7 +277,7 @@ export function Threads(props) {
     });
 
     async function ungroup(gt) {
-      const url = apiURL(`api/tag_batch/thread/${encodeURIComponent(groupMap.get(gt).join(' '))}/-${encodeURIComponent(gt)}`),
+      const url = apiURL(`api/tag_batch/thread/${btoa(groupMap.get(gt).join(' '))}/-${encodeURIComponent(gt)}`),
             response = await fetch(url);
       if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
       groupMap.get(gt).forEach(at => {

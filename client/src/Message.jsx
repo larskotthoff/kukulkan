@@ -99,7 +99,7 @@ function fwdUrl(id) {
 }
 
 function secUrl(id) {
-  return apiURL(`api/auth_message/${encodeURIComponent(id)}`);
+  return apiURL(`api/auth_message/${btoa(id)}`);
 }
 
 function calUrl(id, action, index) {
@@ -130,11 +130,11 @@ function calendarAction(msg, attachment, index) {
 
 function handleAttachment(msg, attachment, index, summary) {
   if(attachment.content_type.includes("image")) {
-    return (<a href={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}`)} target={getSetting("openInTab")} rel="noreferrer">
-        <img src={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}/1`)} alt={attachment.filename}/>
+    return (<a href={apiURL(`api/attachment/${btoa(msg.notmuch_id)}/${index}`)} target={getSetting("openInTab")} rel="noreferrer">
+        <img src={apiURL(`api/attachment/${btoa(msg.notmuch_id)}/${index}/1`)} alt={attachment.filename}/>
       </a>);
   } else if(attachment.content_type.includes("calendar") && attachment.preview !== null && summary === false) {
-    return (<div><a href={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}`)} target={getSetting("openInTab")} rel="noreferrer">
+    return (<div><a href={apiURL(`api/attachment/${btoa(msg.notmuch_id)}/${index}`)} target={getSetting("openInTab")} rel="noreferrer">
         <Icon icon={AttachFile}/>{attachment.filename}
         {" (" + formatFSz(attachment.content_size) + ", " + attachment.content_type + ")"}
       </a>
@@ -161,7 +161,7 @@ function handleAttachment(msg, attachment, index, summary) {
       {summary ? "" : " (" + formatFSz(attachment.content_size) + ", " + attachment.content_type + ")"}
       </a>);
   } else {
-    return (<a href={apiURL(`api/attachment/${encodeURIComponent(msg.notmuch_id)}/${index}`)} target={getSetting("openInTab")} rel="noreferrer"><Icon icon={AttachFile}/>{attachment.filename}
+    return (<a href={apiURL(`api/attachment/${btoa(msg.notmuch_id)}/${index}`)} target={getSetting("openInTab")} rel="noreferrer"><Icon icon={AttachFile}/>{attachment.filename}
       {summary ? "" : " (" + formatFSz(attachment.content_size) + ", " + attachment.content_type + ")"}
       </a>);
   }
@@ -204,7 +204,7 @@ export function Message(props) {
 
   async function changeTags(tagChanges) {
     props.sp?.(0);
-    const response = await fetch(apiURL(`api/tag_batch/message/${encodeURIComponent(msg.notmuch_id)}/${encodeURIComponent(tagChanges)}`));
+    const response = await fetch(apiURL(`api/tag_batch/message/${btoa(msg.notmuch_id)}/${encodeURIComponent(tagChanges)}`));
     props.sp?.(1);
     if(!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
     tagChanges.split(' ').forEach((edit) => {
@@ -280,7 +280,7 @@ export function Message(props) {
 
   mkShortcut([["w"]],
     // eslint-disable-next-line solid/reactivity
-    () => { if(props.active) window.open(apiURL(`api/raw_message/${encodeURIComponent(msg.notmuch_id)}`), getSetting("openInTab")); }
+    () => { if(props.active) window.open(apiURL(`api/raw_message/${btoa(msg.notmuch_id)}`), getSetting("openInTab")); }
   );
 
   mkShortcut([["t"]],
@@ -394,7 +394,7 @@ export function Message(props) {
                 if(showHtml() && htmlContent() === undefined) {
                   setHtmlContent("loading...");
                   props.sp?.(0);
-                  const response = await fetch(apiURL(`api/message_html/${encodeURIComponent(msg.notmuch_id)}`));
+                  const response = await fetch(apiURL(`api/message_html/${btoa(msg.notmuch_id)}`));
                   props.sp?.(1);
                   if(!response.ok) {
                     setHtmlContent(`Error retrieving HTML content (${response.status}): ${response.statusText}`);
