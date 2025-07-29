@@ -420,7 +420,7 @@ test("addresses editable and complete", async () => {
     expect(screen.getByText("foo@bar.com")).toBeInTheDocument();
   });
   expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/foo",
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/?query=foo",
     expect.objectContaining({
       signal: expect.any(AbortSignal),
     }));
@@ -435,7 +435,7 @@ test("addresses editable and complete", async () => {
     expect(screen.getByText("bar@foo.com")).toBeInTheDocument();
   });
   expect(global.fetch).toHaveBeenCalledTimes(2);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/bar",
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/?query=bar",
     expect.objectContaining({
       signal: expect.any(AbortSignal),
     }));
@@ -449,7 +449,7 @@ test("addresses editable and complete", async () => {
   await vi.waitFor(() => {
     expect(global.fetch).toHaveBeenCalledTimes(3);
   });
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/aaa%40bar.com",
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/?query=aaa%40bar.com",
     expect.objectContaining({
       signal: expect.any(AbortSignal),
     }));
@@ -545,21 +545,21 @@ test("localStorage stores for new email", async () => {
 
   await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}otherto@test.com{enter}");
   await vi.waitFor(() => {
-    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/otherto%40test.com",
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/?query=otherto%40test.com",
       expect.objectContaining({
         signal: expect.any(AbortSignal),
       }));
   });
   await userEvent.type(getByTestId("cc").querySelector("input"), "cc@test.com{enter}");
   await vi.waitFor(() => {
-    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/cc%40test.com",
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/?query=cc%40test.com",
       expect.objectContaining({
         signal: expect.any(AbortSignal),
       }));
   });
   await userEvent.type(getByTestId("bcc").querySelector("input"), "bcc@test.com{enter}");
   await vi.waitFor(() => {
-    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/bcc%40test.com",
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/?query=bcc%40test.com",
       expect.objectContaining({
         signal: expect.any(AbortSignal),
       }));
@@ -593,7 +593,7 @@ test("localStorage removes empty items", async () => {
 
   await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}otherto@test.com{enter}");
   await vi.waitFor(() => {
-    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/otherto%40test.com",
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/?query=otherto%40test.com",
       expect.objectContaining({
         signal: expect.any(AbortSignal),
       }));
@@ -630,21 +630,21 @@ test("localStorage stores for reply", async () => {
 
   await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}otherto@test.com{enter}");
   await vi.waitFor(() => {
-    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/otherto%40test.com",
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/?query=otherto%40test.com",
       expect.objectContaining({
         signal: expect.any(AbortSignal),
       }));
   });
   await userEvent.type(getByTestId("cc").querySelector("input"), "cc@test.com{enter}");
   await vi.waitFor(() => {
-    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/cc%40test.com",
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/?query=cc%40test.com",
       expect.objectContaining({
         signal: expect.any(AbortSignal),
       }));
   });
   await userEvent.type(getByTestId("bcc").querySelector("input"), "bcc@test.com{enter}");
   await vi.waitFor(() => {
-    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/bcc%40test.com",
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/?query=bcc%40test.com",
       expect.objectContaining({
         signal: expect.any(AbortSignal),
       }));
@@ -673,21 +673,21 @@ test("localStorage deletes upon successful send", async () => {
 
   await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}otherto@test.com{enter}");
   await vi.waitFor(() => {
-    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/otherto%40test.com",
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/?query=otherto%40test.com",
       expect.objectContaining({
         signal: expect.any(AbortSignal),
       }));
   });
   await userEvent.type(getByTestId("cc").querySelector("input"), "cc@test.com{enter}");
   await vi.waitFor(() => {
-    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/cc%40test.com",
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/?query=cc%40test.com",
       expect.objectContaining({
         signal: expect.any(AbortSignal),
       }));
   });
   await userEvent.type(getByTestId("bcc").querySelector("input"), "bcc@test.com{enter}");
   await vi.waitFor(() => {
-    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/bcc%40test.com",
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/?query=bcc%40test.com",
       expect.objectContaining({
         signal: expect.any(AbortSignal),
       }));
@@ -739,21 +739,21 @@ test("localStorage deleted with shortcut d", async () => {
 
   await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}otherto@test.com{enter}");
   await vi.waitFor(() => {
-    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/otherto%40test.com",
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/?query=otherto%40test.com",
       expect.objectContaining({
         signal: expect.any(AbortSignal),
       }));
   });
   await userEvent.type(getByTestId("cc").querySelector("input"), "cc@test.com{enter}");
   await vi.waitFor(() => {
-    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/cc%40test.com",
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/?query=cc%40test.com",
       expect.objectContaining({
         signal: expect.any(AbortSignal),
       }));
   });
   await userEvent.type(getByTestId("bcc").querySelector("input"), "bcc@test.com{enter}");
   await vi.waitFor(() => {
-    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/bcc%40test.com",
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/?query=bcc%40test.com",
       expect.objectContaining({
         signal: expect.any(AbortSignal),
       }));
@@ -820,21 +820,21 @@ test("data assembled correctly for sending new email", async () => {
 
   await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}otherto@test.com{enter}");
   await vi.waitFor(() => {
-    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/otherto%40test.com",
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/?query=otherto%40test.com",
       expect.objectContaining({
         signal: expect.any(AbortSignal),
       }));
   });
   await userEvent.type(getByTestId("cc").querySelector("input"), "cc@test.com{enter}");
   await vi.waitFor(() => {
-    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/cc%40test.com",
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/?query=cc%40test.com",
       expect.objectContaining({
         signal: expect.any(AbortSignal),
       }));
   });
   await userEvent.type(getByTestId("bcc").querySelector("input"), "bcc@test.com{enter}");
   await vi.waitFor(() => {
-    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/bcc%40test.com",
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/?query=bcc%40test.com",
       expect.objectContaining({
         signal: expect.any(AbortSignal),
       }));
@@ -893,21 +893,21 @@ test("data assembled correctly for sending new email w/ template", async () => {
 
   await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}otherto@test.com{enter}");
   await vi.waitFor(() => {
-    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/otherto%40test.com",
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/?query=otherto%40test.com",
       expect.objectContaining({
         signal: expect.any(AbortSignal),
       }));
   });
   await userEvent.type(getByTestId("cc").querySelector("input"), "cc@test.com{enter}");
   await vi.waitFor(() => {
-    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/cc%40test.com",
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/?query=cc%40test.com",
       expect.objectContaining({
         signal: expect.any(AbortSignal),
       }));
   });
   await userEvent.type(getByTestId("bcc").querySelector("input"), "bcc@test.com{enter}");
   await vi.waitFor(() => {
-    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/bcc%40test.com",
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/?query=bcc%40test.com",
       expect.objectContaining({
         signal: expect.any(AbortSignal),
       }));
@@ -1009,21 +1009,21 @@ test("data assembled correctly for sending reply", async () => {
 
   await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}otherto@test.com{enter}");
   await vi.waitFor(() => {
-    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/otherto%40test.com",
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/?query=otherto%40test.com",
       expect.objectContaining({
         signal: expect.any(AbortSignal),
       }));
   });
   await userEvent.type(getByTestId("cc").querySelector("input"), "cc@test.com{enter}");
   await vi.waitFor(() => {
-    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/cc%40test.com",
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/?query=cc%40test.com",
       expect.objectContaining({
         signal: expect.any(AbortSignal),
       }));
   });
   await userEvent.type(getByTestId("bcc").querySelector("input"), "bcc@test.com{enter}");
   await vi.waitFor(() => {
-    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/bcc%40test.com",
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/?query=bcc%40test.com",
       expect.objectContaining({
         signal: expect.any(AbortSignal),
       }));
@@ -1072,7 +1072,7 @@ test("data assembled correctly for sending reply w/ empty subject", async () => 
   const msg1 = structuredClone(msg);
   msg1.subject = null;
   vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": [], "baseMessage": msg1});
-  const { getByTestId } = render(() => <Write/>);
+  render(() => <Write/>);
 
   await vi.waitFor(() => {
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -1159,7 +1159,7 @@ test("error when mail cannot be sent", async () => {
 
   await userEvent.type(getByTestId("to").querySelector("input"), "otherto@test.com{enter}");
   await vi.waitFor(() => {
-    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/otherto%40test.com",
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/?query=otherto%40test.com",
       expect.objectContaining({
         signal: expect.any(AbortSignal),
       }));
@@ -1198,7 +1198,7 @@ test("error when mail cannot be sent but no error when successful after", async 
 
   await userEvent.type(getByTestId("to").querySelector("input"), "otherto@test.com{enter}");
   await vi.waitFor(() => {
-    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/otherto%40test.com",
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/?query=otherto%40test.com",
       expect.objectContaining({
         signal: expect.any(AbortSignal),
       }));
@@ -1272,7 +1272,7 @@ test("external editing", async () => {
   // required fields
   await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}");
   await vi.waitFor(() => {
-    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/to%40test.com",
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/?query=to%40test.com",
       expect.objectContaining({
         signal: expect.any(AbortSignal),
       }));
@@ -1385,7 +1385,7 @@ test("shortcuts disabled while editing externally", async () => {
   // required fields
   await userEvent.type(getByTestId("to").querySelector("input"), "to@test.com{enter}");
   await vi.waitFor(() => {
-    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/to%40test.com",
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/address/?query=to%40test.com",
       expect.objectContaining({
         signal: expect.any(AbortSignal),
       }));

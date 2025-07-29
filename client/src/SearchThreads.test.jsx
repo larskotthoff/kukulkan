@@ -73,7 +73,7 @@ test("shows adress completions and allows to select", async () => {
     expect(screen.getByText("from:tester@test.com")).toBeInTheDocument();
   }, { timeout: 1200 });
   expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/email/test",
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/email/?query=test",
     expect.objectContaining({
       signal: expect.any(AbortSignal),
     }));
@@ -97,7 +97,7 @@ test("shows combined completions and allows to select", async () => {
     expect(screen.getByText("tag:foo and from:tester@test.com")).toBeInTheDocument();
   }, { timeout: 1200 });
   expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/email/test",
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/email/?query=test",
     expect.objectContaining({
       signal: expect.any(AbortSignal),
     }));

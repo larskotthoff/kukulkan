@@ -293,7 +293,7 @@ test("TagComplete completes group tags", async () => {
     expect(screen.getByText("foo bar")).toBeInTheDocument();
   });
   expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/group_complete/",
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/group_complete/?query=",
     expect.objectContaining({
       signal: expect.any(AbortSignal),
     }));
@@ -324,7 +324,7 @@ test("TagComplete completes group tags with subject", async () => {
     expect(screen.getByText("foo bar")).toBeInTheDocument();
   });
   expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/group_complete/aaa",
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/group_complete/?query=aaa",
     expect.objectContaining({
       signal: expect.any(AbortSignal),
     }));

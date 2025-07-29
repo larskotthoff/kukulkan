@@ -88,7 +88,7 @@ def test_query(setup):
     db.count_messages = MagicMock(return_value=3)
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/query/foo')
+        response = test_client.get('/api/query/?query=foo')
         assert response.status_code == 200
         thrds = json.loads(response.data.decode())
         assert thrds[0]["authors"] == ["bar foo <bar@foo.com>", "foo bar <foo@bar.com>"]
@@ -126,7 +126,7 @@ def test_query_empty(setup):
     db.count_messages = MagicMock(return_value=1)
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/query/foo')
+        response = test_client.get('/api/query/?query=foo')
         assert response.status_code == 200
         thrds = json.loads(response.data.decode())
         assert thrds[0]["authors"] == [None]
@@ -152,7 +152,7 @@ def test_query_none(setup):
     db.messages = MagicMock(return_value=iter([]))
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/query/foo')
+        response = test_client.get('/api/query/?query=foo')
         assert response.status_code == 200
         assert b'[]\n' == response.data
 
@@ -167,7 +167,7 @@ def test_query_escaped_quotes(setup):
     db.messages = MagicMock(return_value=iter([]))
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/query/"foo bar"')
+        response = test_client.get('/api/query/?query="foo bar"')
         assert response.status_code == 200
         assert b'[]\n' == response.data
 
@@ -182,7 +182,7 @@ def test_query_exclude_tags(setup):
     db.messages = MagicMock(return_value=iter([]))
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/query/foo')
+        response = test_client.get('/api/query/?query=foo')
         assert response.status_code == 200
         assert b'[]\n' == response.data
 
@@ -221,7 +221,7 @@ def test_query_group(setup):
     db.count_messages = MagicMock(return_value=1)
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/query/foo')
+        response = test_client.get('/api/query/?query=foo')
         assert response.status_code == 200
         thrds = json.loads(response.data.decode())
         assert len(thrds) == 2
@@ -303,7 +303,7 @@ def test_query_group_multiple_in_thread(setup):
     db.count_messages = MagicMock(return_value=1)
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/query/foo')
+        response = test_client.get('/api/query/?query=foo')
         assert response.status_code == 200
         thrds = json.loads(response.data.decode())
         assert len(thrds) == 2
@@ -380,7 +380,7 @@ def test_query_group_multiple_threads(setup):
     db.count_messages = MagicMock(return_value=1)
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/query/foo')
+        response = test_client.get('/api/query/?query=foo')
         assert response.status_code == 200
         thrds = json.loads(response.data.decode())
         assert len(thrds) == 1
@@ -429,7 +429,7 @@ def test_complete_address(setup):
     db.messages = MagicMock(return_value=iter([mf]))
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/address/foo')
+        response = test_client.get('/api/address/?query=foo')
         assert response.status_code == 200
         addrs = json.loads(response.data.decode())
         assert len(addrs) == 2
@@ -453,7 +453,7 @@ def test_complete_email(setup):
     db.messages = MagicMock(return_value=iter([mf]))
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/email/foo')
+        response = test_client.get('/api/email/?query=foo')
         assert response.status_code == 200
         addrs = json.loads(response.data.decode())
         assert len(addrs) == 2
@@ -525,7 +525,7 @@ def test_complete_groups_subject(setup):
     db.messages = MagicMock(return_value=iter([mf1, mf2, mf3]))
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/group_complete/subj')
+        response = test_client.get('/api/group_complete/?query=subj')
         assert response.status_code == 200
         grps = json.loads(response.data.decode())
         assert len(grps) == 2
@@ -549,7 +549,7 @@ def test_get_message_none(setup):
     db.find.side_effect = LookupError("foo")
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/message/foo')
+        response = test_client.get('/api/message/?message=foo')
         assert response.status_code == 404
     db.find.assert_called_once_with("foo")
 
@@ -565,7 +565,7 @@ def test_raw_message(setup):
 
     with patch("builtins.open", mock_open(read_data="This is a test.")) as o:
         with app.test_client() as test_client:
-            response = test_client.get('/api/raw_message/foo')
+            response = test_client.get('/api/message_raw/?message=foo')
             assert response.status_code == 200
             assert b'This is a test.' == response.data
         o.assert_called_once_with("foofile", "r", encoding="utf8")
@@ -588,7 +588,7 @@ def test_tag_add_message(setup):
 
     with patch("notmuch2.Database", return_value=dbw) as nmdb:
         with app.test_client() as test_client:
-            response = test_client.get('/api/tag/add/message/foo/bar')
+            response = test_client.get('/api/tag/?op=add&type=message&id=foo&tag=bar')
             assert response.status_code == 200
             assert b'bar' == response.data
         nmdb.assert_called_once()
@@ -616,7 +616,7 @@ def test_tag_add_thread(setup):
 
     with patch("notmuch2.Database", return_value=dbw) as nmdb:
         with app.test_client() as test_client:
-            response = test_client.get('/api/tag/add/thread/foo/bar')
+            response = test_client.get('/api/tag/?op=add&type=thread&id=foo&tag=bar')
             assert response.status_code == 200
             assert b'bar' == response.data
         nmdb.assert_called_once()
@@ -645,7 +645,7 @@ def test_tag_remove_message(setup):
 
     with patch("notmuch2.Database", return_value=dbw) as nmdb:
         with app.test_client() as test_client:
-            response = test_client.get('/api/tag/remove/message/foo/bar')
+            response = test_client.get('/api/tag/?op=remove&type=message&id=foo&tag=bar')
             assert response.status_code == 200
             assert b'bar' == response.data
         nmdb.assert_called_once()
@@ -674,7 +674,7 @@ def test_tag_remove_thread(setup):
 
     with patch("notmuch2.Database", return_value=dbw) as nmdb:
         with app.test_client() as test_client:
-            response = test_client.get('/api/tag/remove/thread/foo/bar')
+            response = test_client.get('/api/tag/?op=remove&type=thread&id=foo&tag=bar')
             assert response.status_code == 200
             assert b'bar' == response.data
         nmdb.assert_called_once()
@@ -705,7 +705,7 @@ def test_tags_change_message_batch(setup):
 
     with patch("notmuch2.Database", return_value=dbw) as nmdb:
         with app.test_client() as test_client:
-            response = test_client.get('/api/tag_batch/message/foo1 foo2/bar1 -bar2')
+            response = test_client.get('/api/tag_batch/?type=message&ids=foo1%20foo2&tags=bar1%20-bar2')
             assert response.status_code == 200
             assert b'foo1 foo2/bar1 -bar2' == response.data
         assert nmdb.call_count == 1
@@ -713,6 +713,49 @@ def test_tags_change_message_batch(setup):
     assert dbw.messages.mock_calls == [
         call('id:foo1 and not tag:bar1', exclude_tags=[], sort=ANY),
         call('id:foo1 and tag:bar2', exclude_tags=[], sort=ANY),
+        call('id:foo2 and not tag:bar1', exclude_tags=[], sort=ANY),
+        call('id:foo2 and tag:bar2', exclude_tags=[], sort=ANY)
+    ]
+    assert dbw.close.call_count == 1
+
+    assert mf.tags.add.mock_calls == [
+        call('bar1'),
+        call('bar1')
+    ]
+    assert mf.tags.discard.mock_calls == [
+        call('bar2'),
+        call('bar2')
+    ]
+    assert mf.tags.to_maildir_flags.call_count == 4
+    assert mf.frozen.call_count == 4
+
+
+def test_tags_change_message_batch_slash(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.frozen = MagicMock()
+    mf.tags = lambda: None
+    mf.tags.add = MagicMock()
+    mf.tags.discard = MagicMock()
+    mf.tags.to_maildir_flags = MagicMock()
+
+    dbw = lambda: None
+    dbw.close = MagicMock()
+    dbw.messages = MagicMock()
+    dbw.messages.side_effect = [iter([mf]), iter([mf]), iter([mf]), iter([mf])]
+    dbw.config = {}
+
+    with patch("notmuch2.Database", return_value=dbw) as nmdb:
+        with app.test_client() as test_client:
+            response = test_client.get('/api/tag_batch/?type=message&ids=fo%2Fo1%20foo2&tags=bar1%20-bar2')
+            assert response.status_code == 200
+            assert b'fo/o1 foo2/bar1 -bar2' == response.data
+        assert nmdb.call_count == 1
+
+    assert dbw.messages.mock_calls == [
+        call('id:fo/o1 and not tag:bar1', exclude_tags=[], sort=ANY),
+        call('id:fo/o1 and tag:bar2', exclude_tags=[], sort=ANY),
         call('id:foo2 and not tag:bar1', exclude_tags=[], sort=ANY),
         call('id:foo2 and tag:bar2', exclude_tags=[], sort=ANY)
     ]
@@ -748,7 +791,7 @@ def test_tags_add_thread_batch(setup):
 
     with patch("notmuch2.Database", return_value=dbw) as nmdb:
         with app.test_client() as test_client:
-            response = test_client.get('/api/tag_batch/thread/foo1 foo2/bar1 -bar2')
+            response = test_client.get('/api/tag_batch/?type=thread&ids=foo1%20foo2&tags=bar1%20-bar2')
             assert response.status_code == 200
             assert b'foo1 foo2/bar1 -bar2' == response.data
         assert nmdb.call_count == 1
@@ -794,7 +837,7 @@ def test_group_new_initial(setup):
 
     with patch("notmuch2.Database", return_value=dbw) as nmdb:
         with app.test_client() as test_client:
-            response = test_client.get('/api/group/foo1')
+            response = test_client.get('/api/group/?threads=foo1')
             assert response.status_code == 200
             assert b'grp:0' == response.data
         assert nmdb.call_count == 1
@@ -836,7 +879,7 @@ def test_group_new_subsequent(setup):
 
     with patch("notmuch2.Database", return_value=dbw) as nmdb:
         with app.test_client() as test_client:
-            response = test_client.get('/api/group/foo1')
+            response = test_client.get('/api/group/?threads=foo1')
             assert response.status_code == 200
             assert b'grp:11' == response.data
         assert nmdb.call_count == 1
@@ -883,7 +926,7 @@ def test_group_existing(setup):
 
     with patch("notmuch2.Database", return_value=dbw) as nmdb:
         with app.test_client() as test_client:
-            response = test_client.get('/api/group/foo1')
+            response = test_client.get('/api/group/?threads=foo1')
             assert response.status_code == 200
             assert b'grp:ae' == response.data
         assert nmdb.call_count == 1
@@ -918,7 +961,7 @@ def test_attachment_no_attachment(setup):
     db.find = MagicMock(return_value=mf)
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/attachment/foo/0')
+        response = test_client.get('/api/attachment/?message=foo&num=0')
         assert response.status_code == 404
 
     db.find.assert_called_once_with("foo")
@@ -934,7 +977,7 @@ def test_attachment_invalid_index(setup):
     db.find = MagicMock(return_value=mf)
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/attachment/foo/1')
+        response = test_client.get('/api/attachment/?message=foo&num=1')
         assert response.status_code == 404
 
     db.find.assert_called_once_with("foo")
@@ -950,7 +993,7 @@ def test_attachment_single(setup):
     db.find = MagicMock(return_value=mf)
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/attachment/foo/0')
+        response = test_client.get('/api/attachment/?message=foo&num=0')
         assert response.status_code == 200
         assert 5368 == len(response.data)
         assert type(response.data) is bytes
@@ -971,21 +1014,21 @@ def test_attachment_multiple(setup):
     db.find.side_effect = [mf, mf, mf]
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/attachment/foo/0')
+        response = test_client.get('/api/attachment/?message=foo&num=0')
         assert response.status_code == 200
         assert 445 == len(response.data)
         assert type(response.data) is bytes
         assert "text/plain" == response.mimetype
         assert "inline; filename=text.txt" == response.headers['Content-Disposition']
 
-        response = test_client.get('/api/attachment/foo/1')
+        response = test_client.get('/api/attachment/?message=foo&num=1')
         assert response.status_code == 200
         assert 7392 == len(response.data)
         assert type(response.data) is bytes
         assert "application/pdf" == response.mimetype
         assert "inline; filename=document.pdf" == response.headers['Content-Disposition']
 
-        response = test_client.get('/api/attachment/foo/2')
+        response = test_client.get('/api/attachment/?message=foo&num=2')
         assert response.status_code == 200
         assert 2391 == len(response.data)
         assert type(response.data) is bytes
@@ -1009,7 +1052,7 @@ def test_attachment_image_resize(setup):
     db.find = MagicMock(return_value=mf)
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/attachment/foo/0/1')
+        response = test_client.get('/api/attachment/?message=foo&num=0&scale=1')
         assert response.status_code == 200
         assert 25053 == len(response.data)
         assert type(response.data) is bytes
@@ -1031,7 +1074,7 @@ def test_attachment_image_no_resize(setup):
     db.find = MagicMock(return_value=mf)
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/attachment/foo/0/0')
+        response = test_client.get('/api/attachment/?message=foo&num=0&scale=0')
         assert response.status_code == 200
         assert 94590 == len(response.data)
         assert type(response.data) is bytes
@@ -1056,7 +1099,7 @@ def test_message_simple(setup):
     db.find = MagicMock(return_value=mf)
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/message/foo')
+        response = test_client.get('/api/message/?message=foo')
         assert response.status_code == 200
         msg = json.loads(response.data.decode())
         assert msg["from"] == "foo@bar"
@@ -1096,7 +1139,7 @@ def test_message_simple_deleted(setup):
     db.find = MagicMock(return_value=mf)
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/message/foo')
+        response = test_client.get('/api/message/?message=foo')
         assert response.status_code == 200
         msg = json.loads(response.data.decode())
         assert msg["from"] == "foo@bar"
@@ -1136,7 +1179,7 @@ def test_message_forwarded(setup):
     db.find = MagicMock(return_value=mf)
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/message/foo')
+        response = test_client.get('/api/message/?message=foo')
         assert response.status_code == 200
         msg = json.loads(response.data.decode())
         assert msg["forwarded_to"] == "something@other.org"
@@ -1166,7 +1209,7 @@ def test_message_attachments(setup):
     db.find = MagicMock(return_value=mf)
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/message/foo')
+        response = test_client.get('/api/message/?message=foo')
         assert response.status_code == 200
         msg = json.loads(response.data.decode())
         assert msg["attachments"] == [{'content': None, 'content_size': 445, 'content_type': 'text/plain', 'filename': 'text.txt', 'preview': None},
@@ -1192,7 +1235,7 @@ def test_message_attachment_calendar_preview(setup):
     app.config.custom["accounts"] = [{"email": "unittest@tine20.org"}]
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/message/foo')
+        response = test_client.get('/api/message/?message=foo')
         assert response.status_code == 200
         msg = json.loads(response.data.decode())
         assert msg["attachments"][0]['content_type'] == 'text/calendar'
@@ -1228,7 +1271,7 @@ def test_message_attachment_calendar_preview_broken(setup):
     app.config.custom["accounts"] = [{"email": "unittest@tine20.org"}]
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/message/foo')
+        response = test_client.get('/api/message/?message=foo')
         assert response.status_code == 200
         msg = json.loads(response.data.decode())
         assert msg["attachments"][0]['content_type'] == 'text/calendar'
@@ -1264,7 +1307,7 @@ def test_message_attachment_calendar_preview_tz(setup):
     app.config.custom["accounts"] = [{"email": "unittest@tine20.org"}]
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/message/foo')
+        response = test_client.get('/api/message/?message=foo')
         assert response.status_code == 200
         msg = json.loads(response.data.decode())
         assert msg["attachments"][0]['content_type'] == 'text/calendar'
@@ -1300,7 +1343,7 @@ def test_message_attachment_calendar_preview_no_attendees(setup):
     app.config.custom["accounts"] = [{"email": "unittest@tine20.org"}]
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/message/foo')
+        response = test_client.get('/api/message/?message=foo')
         assert response.status_code == 200
         msg = json.loads(response.data.decode())
         assert msg["attachments"][0]['content_type'] == 'text/calendar'
@@ -1336,7 +1379,7 @@ def test_message_attachment_calendar_preview_no_people(setup):
     app.config.custom["accounts"] = [{"email": "unittest@tine20.org"}]
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/message/foo')
+        response = test_client.get('/api/message/?message=foo')
         assert response.status_code == 200
         msg = json.loads(response.data.decode())
         assert msg["attachments"][0]['content_type'] == 'text/calendar'
@@ -1372,7 +1415,7 @@ def test_message_attachment_calendar_preview_no_time(setup):
     app.config.custom["accounts"] = [{"email": "unittest@tine20.org"}]
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/message/foo')
+        response = test_client.get('/api/message/?message=foo')
         assert response.status_code == 200
         msg = json.loads(response.data.decode())
         assert msg["attachments"][0]['content_type'] == 'text/calendar'
@@ -1405,7 +1448,7 @@ def test_message_attachment_calendar_preview_recur(setup):
     app.config.custom["accounts"] = [{"email": "unittest@tine20.org"}]
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/message/foo')
+        response = test_client.get('/api/message/?message=foo')
         assert response.status_code == 200
         msg = json.loads(response.data.decode())
         assert msg["attachments"][0]['content_type'] == 'text/calendar'
@@ -1441,7 +1484,7 @@ def test_message_attachment_calendar_preview_request_accepted(setup):
     app.config.custom["accounts"] = [{"email": "unittest@tine20.org"}]
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/message/foo')
+        response = test_client.get('/api/message/?message=foo')
         assert response.status_code == 200
         msg = json.loads(response.data.decode())
         assert msg["attachments"][0]['content_type'] == 'text/calendar'
@@ -1477,7 +1520,7 @@ def test_message_attachment_calendar_preview_reply_accepted(setup):
     app.config.custom["accounts"] = [{"email": "unittest@tine20.org"}]
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/message/foo')
+        response = test_client.get('/api/message/?message=foo')
         assert response.status_code == 200
         msg = json.loads(response.data.decode())
         assert msg["attachments"][0]['content_type'] == 'text/calendar'
@@ -1514,7 +1557,7 @@ def test_message_signed_self(setup):
     app.config.custom["accounts"] = []
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/message/foo')
+        response = test_client.get('/api/message/?message=foo')
         assert response.status_code == 200
         msg = json.loads(response.data.decode())
         assert "Bob, we need to cancel this contract." in msg["body"]["text/plain"]
@@ -1541,7 +1584,7 @@ def test_message_signed_expired(setup):
     app.config.custom["accounts"] = []
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/message/foo')
+        response = test_client.get('/api/message/?message=foo')
         assert response.status_code == 200
         msg = json.loads(response.data.decode())
         assert "Invio messaggio SMIME (signed and clear text)" in msg["body"]["text/plain"]
@@ -1568,7 +1611,7 @@ def test_message_signed_invalid(setup):
     app.config.custom["accounts"] = []
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/message/foo')
+        response = test_client.get('/api/message/?message=foo')
         assert response.status_code == 200
         msg = json.loads(response.data.decode())
         assert "Bob, we need to cancel this contract." in msg["body"]["text/plain"]
@@ -1594,7 +1637,7 @@ def test_message_signed_pgp(setup):
     app.config.custom["accounts"] = []
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/message/foo')
+        response = test_client.get('/api/message/?message=foo')
         assert response.status_code == 200
         msg = json.loads(response.data.decode())
         assert "Actually, the text seems to say the contrary" in msg["body"]["text/plain"]
@@ -1618,7 +1661,7 @@ def test_message_html_only(setup):
     db.find = MagicMock(return_value=mf)
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/message/foo')
+        response = test_client.get('/api/message/?message=foo')
         assert response.status_code == 200
         msg = json.loads(response.data.decode())
         assert "hunter2" == msg["body"]["text/plain"]
@@ -1641,7 +1684,7 @@ def test_message_html_broken(setup):
     db.find = MagicMock(return_value=mf)
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/message/foo')
+        response = test_client.get('/api/message/?message=foo')
         assert response.status_code == 200
         msg = json.loads(response.data.decode())
         assert "hunter2" == msg["body"]["text/plain"]
@@ -1668,7 +1711,7 @@ def test_message_filter_text(setup):
     app.config.custom["filter"]["content"]["text/plain"] = ["notmuch_message_get_flags", "somefunc"]
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/message/foo')
+        response = test_client.get('/api/message/?message=foo')
         assert response.status_code == 200
         msg = json.loads(response.data.decode())
         assert "somefunc" in msg["body"]["text/plain"]
@@ -1688,7 +1731,7 @@ def test_message_attachment_mail(setup):
     db.find = MagicMock(return_value=mf)
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/attachment_message/foo/0')
+        response = test_client.get('/api/message_attachment/?message=foo&num=0')
         assert response.status_code == 200
         msg = json.loads(response.data.decode())
         assert msg["from"] == "POSTBAN͟K͟ <gxnwgddl@carcarry.de>"
@@ -1725,7 +1768,7 @@ def test_message_html_simple(setup):
     db.find = MagicMock(return_value=mf)
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/message_html/foo')
+        response = test_client.get('/api/message_html/?message=foo')
         assert response.status_code == 200
         assert response.data == b'<div>\n  <body>\n    \n  </body>\n  hunter2\n</div>'
 
@@ -1742,7 +1785,7 @@ def test_message_html_none(setup):
     db.find = MagicMock(return_value=mf)
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/message_html/foo')
+        response = test_client.get('/api/message_html/?message=foo')
         assert response.status_code == 200
         assert response.data == b''
 
@@ -1759,7 +1802,7 @@ def test_message_html_link_scrubbing(setup):
     db.find = MagicMock(return_value=mf)
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/message_html/foo')
+        response = test_client.get('/api/message_html/?message=foo')
         assert response.status_code == 200
         assert "https://example.com" in str(response.data)
         assert "https://tracking.com" not in str(response.data)
@@ -1782,7 +1825,7 @@ def test_message_html_filter_html(setup):
     app.config.custom["filter"]["content"]["text/html"] = ['<input value="a>swordfish">', "meat"]
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/message_html/foo')
+        response = test_client.get('/api/message_html/?message=foo')
         assert response.status_code == 200
         assert "meat" in str(response.data)
         assert "swordfish" not in str(response.data)
@@ -1803,7 +1846,7 @@ def test_thread(setup):
     db.messages = MagicMock(return_value=iter([mf]))
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/thread/foo')
+        response = test_client.get('/api/thread/?thread=foo')
         assert response.status_code == 200
         msgs = json.loads(response.data.decode())
         assert len(msgs) == 1
@@ -1846,7 +1889,7 @@ def test_thread_deleted(setup):
     db.messages = MagicMock(return_value=iter([mf]))
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/thread/foo')
+        response = test_client.get('/api/thread/?thread=foo')
         assert response.status_code == 200
         msgs = json.loads(response.data.decode())
         assert len(msgs) == 1
@@ -1883,7 +1926,7 @@ def test_thread_none(setup):
     db.messages = MagicMock(return_value=iter([]))
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/thread/foo')
+        response = test_client.get('/api/thread/?thread=foo')
         assert response.status_code == 200
         thread = json.loads(response.data.decode())
         assert len(thread) == 0

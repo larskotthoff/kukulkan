@@ -53,7 +53,7 @@ export function SearchThreads(props) {
           } else if(pts.length > 0 &&
                       (pts[pts.length - 1].endsWith("from") || pts[pts.length - 1].endsWith("to")) &&
                       last.length > 2) {
-            const opts = await delayedDebouncedFetch(apiURL(`api/email/${encodeURIComponent(last)}`), 1000, props.sp);
+            const opts = await delayedDebouncedFetch(apiURL(`api/email/?query=${encodeURIComponent(last)}`), 1000, props.sp);
             return opts.map((t) => [...pts, t].join(':'));
           } else {
             return opts.filter((t) => t.includes(text));

@@ -202,7 +202,7 @@ export async function getTagOptions(text, sp, returnGrpOpts = true) {
     const parsed = chrono.parseDate(text.split(':')[1])?.toISOString().split('T')[0];
     if(parsed) opts.unshift(`due:${parsed}`);
   } else if(text.startsWith("grp:") && returnGrpOpts) {
-    opts = await delayedDebouncedFetch(apiURL(`api/group_complete/${encodeURIComponent(text.split(':')[1])}`), 200, sp);
+    opts = await delayedDebouncedFetch(apiURL(`api/group_complete/?query=${encodeURIComponent(text.split(':')[1])}`), 200, sp);
   }
   return opts;
 }

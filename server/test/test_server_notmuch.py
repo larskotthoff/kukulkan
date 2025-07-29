@@ -59,7 +59,7 @@ def setup_deleted():
 def test_query(setup):
     app = setup
     with app.test_client() as test_client:
-        response = test_client.get('/api/query/to:notmuch')
+        response = test_client.get('/api/query/?query=to:notmuch')
         assert response.status_code == 200
         thrds = json.loads(response.data.decode())
         assert len(thrds) == 2
@@ -81,7 +81,7 @@ def test_query(setup):
 def test_query_deleted(setup_deleted):
     app = setup_deleted
     with app.test_client() as test_client:
-        response = test_client.get('/api/query/to:notmuch')
+        response = test_client.get('/api/query/?query=to:notmuch')
         assert response.status_code == 200
         thrds = json.loads(response.data.decode())
         assert len(thrds) == 1
@@ -92,7 +92,7 @@ def test_query_deleted(setup_deleted):
         assert thrds[0]["tags"] == ["inbox", "unread"]
         assert thrds[0]["total_messages"] == 1
 
-        response = test_client.get('/api/query/to:notmuch and tag:deleted')
+        response = test_client.get('/api/query/?query=to:notmuch%20and%20tag:deleted')
         assert response.status_code == 200
         thrds = json.loads(response.data.decode())
         assert len(thrds) == 1
@@ -106,7 +106,7 @@ def test_query_deleted(setup_deleted):
 def test_address(setup):
     app = setup
     with app.test_client() as test_client:
-        response = test_client.get('/api/address/antoine')
+        response = test_client.get('/api/address/?query=antoine')
         assert response.status_code == 200
         addrs = json.loads(response.data.decode())
         assert len(addrs) == 1
@@ -116,7 +116,7 @@ def test_address(setup):
 def test_email(setup):
     app = setup
     with app.test_client() as test_client:
-        response = test_client.get('/api/email/antoine')
+        response = test_client.get('/api/email/?query=antoine')
         assert response.status_code == 200
         addrs = json.loads(response.data.decode())
         assert len(addrs) == 1
@@ -126,11 +126,11 @@ def test_email(setup):
 def test_thread(setup):
     app = setup
     with app.test_client() as test_client:
-        response = test_client.get('/api/query/to:notmuch')
+        response = test_client.get('/api/query/?query=to:notmuch')
         assert response.status_code == 200
         thrds = json.loads(response.data.decode())
         assert len(thrds) > 0
-        response = test_client.get(f'/api/thread/{thrds[0]["thread_id"]}')
+        response = test_client.get(f'/api/thread/?thread={thrds[0]["thread_id"]}')
         assert response.status_code == 200
         msgs = json.loads(response.data.decode())
         assert len(msgs) == 1
@@ -155,7 +155,7 @@ def test_thread(setup):
 def test_attachment(setup):
     app = setup
     with app.test_client() as test_client:
-        response = test_client.get('/api/attachment/20111101080303.30A10409E@asxas.net/0')
+        response = test_client.get('/api/attachment/?message=20111101080303.30A10409E@asxas.net&num=0')
         assert response.status_code == 200
         att = response.data
         assert len(att) == 940
@@ -165,7 +165,7 @@ def test_attachment(setup):
 def test_message(setup):
     app = setup
     with app.test_client() as test_client:
-        response = test_client.get('/api/message/874llc2bkp.fsf@curie.anarc.at')
+        response = test_client.get('/api/message/?message=874llc2bkp.fsf@curie.anarc.at')
         assert response.status_code == 200
         msg = json.loads(response.data.decode())
         assert msg['bcc'] == []
@@ -189,7 +189,7 @@ def test_message(setup):
 def test_message_nested(setup):
     app = setup
     with app.test_client() as test_client:
-        response = test_client.get('/api/attachment_message/1530ae05-33a7-fa40-9473-ca625a14385a@posteo.de/0')
+        response = test_client.get('/api/message_attachment/?message=1530ae05-33a7-fa40-9473-ca625a14385a@posteo.de&num=0')
         assert response.status_code == 200
         msg = json.loads(response.data.decode())
         assert msg['bcc'] == []
@@ -213,7 +213,7 @@ def test_message_nested(setup):
 def test_message_html(setup):
     app = setup
     with app.test_client() as test_client:
-        response = test_client.get('/api/message_html/CAKaJnP3B_VbHo0zbpKWxNjgojeXanBipF=gq6PrA-Lv7qR7a9w@mail.gmail.com')
+        response = test_client.get('/api/message_html/?message=CAKaJnP3B_VbHo0zbpKWxNjgojeXanBipF=gq6PrA-Lv7qR7a9w@mail.gmail.com')
         assert response.status_code == 200
         html = response.data.decode()
         assert html == '<div dir="ltr">credit card: 123456098712<div>passport\xa0number: 780381-23345</div><div>address: 10 Downing Street\xa0SW1A 2AA.</div></div>\n'
@@ -222,7 +222,7 @@ def test_message_html(setup):
 def test_message_raw(setup):
     app = setup
     with app.test_client() as test_client:
-        response = test_client.get('/api/raw_message/874llc2bkp.fsf@curie.anarc.at')
+        response = test_client.get('/api/message_raw/?message=874llc2bkp.fsf@curie.anarc.at')
         assert response.status_code == 200
         with open("test/mails/attachment.eml", "r", encoding="utf8") as f:
             assert f.read() == response.data.decode()
@@ -232,13 +232,13 @@ def test_change_tag_message_no_match(setup):
     app = setup
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/tag/remove/message/llc2bkp.fsf@curie.anarc.at/unread')
+        response = test_client.get('/api/tag/?op=remove&type=message&id=llc2bkp.fsf@curie.anarc.at&tag=unread')
         assert response.status_code == 404
-        response = test_client.get('/api/tag/remove/message/874llc2bkp.fsf@curie.anarc.at/blurg')
+        response = test_client.get('/api/tag/?op=remove&type=message&id=874llc2bkp.fsf@curie.anarc.at&tag=blurg')
         assert response.status_code == 404
-        response = test_client.get('/api/tag_batch/message/874llc2bkp.fsf@curie.anarc.at/-blurg -blarge')
+        response = test_client.get('/api/tag_batch/?type=message&ids=874llc2bkp.fsf@curie.anarc.at&tags=-blurg%20-blarge')
         assert response.status_code == 404
-        response = test_client.get('/api/tag_batch/message/874llc2bkp.fsf@curie.anarc.at/-blurg -unread')
+        response = test_client.get('/api/tag_batch/?type=message&ids=874llc2bkp.fsf@curie.anarc.at&tags=-blurg%20-unread')
         assert response.status_code == 200
 
 
@@ -251,14 +251,14 @@ def test_change_tag_message_fail(setup):
     db.close()
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/tag/remove/message/874llc2bkp.fsf@curie.anarc.at/unread')
+        response = test_client.get('/api/tag/?op=remove&type=message&id=874llc2bkp.fsf@curie.anarc.at&tag=unread')
         assert response.status_code == 200
         db = notmuch2.Database()
         iter = db.messages(q)
         assert list(next(iter).tags) == ["attachment", "inbox"]
         db.close()
 
-        response = test_client.get('/api/tag/add/message/874llc2bkp.fsf@curie.anarc.at/foobar')
+        response = test_client.get('/api/tag/?op=add&type=message&id=874llc2bkp.fsf@curie.anarc.at&tag=foobar')
         assert response.status_code == 200
         db = notmuch2.Database()
         iter = db.messages(q)
@@ -275,14 +275,14 @@ def test_change_tag_message(setup):
     db.close()
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/tag/remove/message/874llc2bkp.fsf@curie.anarc.at/unread')
+        response = test_client.get('/api/tag/?op=remove&type=message&id=874llc2bkp.fsf@curie.anarc.at&tag=unread')
         assert response.status_code == 200
         db = notmuch2.Database()
         iter = db.messages(q)
         assert list(next(iter).tags) == ["attachment", "inbox"]
         db.close()
 
-        response = test_client.get('/api/tag/add/message/874llc2bkp.fsf@curie.anarc.at/foobar')
+        response = test_client.get('/api/tag/?op=add&type=message&id=874llc2bkp.fsf@curie.anarc.at&tag=foobar')
         assert response.status_code == 200
         db = notmuch2.Database()
         iter = db.messages(q)
@@ -300,14 +300,14 @@ def test_change_tag_message_deleted(setup_deleted):
     db.close()
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/tag/remove/message/874llc2bkp.fsf@curie.anarc.at/unread')
+        response = test_client.get('/api/tag/?op=remove&type=message&id=874llc2bkp.fsf@curie.anarc.at&tag=unread')
         assert response.status_code == 200
         db = notmuch2.Database()
         iter = db.messages(q)
         assert list(next(iter).tags) == ["attachment", "deleted", "inbox"]
         db.close()
 
-        response = test_client.get('/api/tag/add/message/874llc2bkp.fsf@curie.anarc.at/foobar')
+        response = test_client.get('/api/tag/?op=add&type=message&id=874llc2bkp.fsf@curie.anarc.at&tag=foobar')
         assert response.status_code == 200
         db = notmuch2.Database()
         iter = db.messages(q)
@@ -324,7 +324,7 @@ def test_change_tag_message_batch(setup):
     db.close()
 
     with app.test_client() as test_client:
-        response = test_client.get('/api/tag_batch/message/874llc2bkp.fsf@curie.anarc.at/-unread foobar')
+        response = test_client.get('/api/tag_batch/?type=message&ids=874llc2bkp.fsf@curie.anarc.at&tags=-unread%20foobar')
         assert response.status_code == 200
         db = notmuch2.Database()
         iter = db.messages(q)
@@ -342,13 +342,13 @@ def test_change_tag_thread_no_match(setup):
     db.close()
 
     with app.test_client() as test_client:
-        response = test_client.get(f'/api/tag/remove/thread/lksdfhlkh/unread')
+        response = test_client.get(f'/api/tag/?op=remove&type=thread&id=lksdfhlkh&tag=unread')
         assert response.status_code == 404
-        response = test_client.get(f'/api/tag/remove/thread/{id}/blurg')
+        response = test_client.get(f'/api/tag/?op=remove&type=thread&id={id}&tag=blurg')
         assert response.status_code == 404
-        response = test_client.get(f'/api/tag_batch/thread/{id}/-blurg -blarg')
+        response = test_client.get(f'/api/tag_batch/?type=thread&ids={id}&tags=-blurg%20-blarg')
         assert response.status_code == 404
-        response = test_client.get(f'/api/tag_batch/thread/{id}/-blurg -unread')
+        response = test_client.get(f'/api/tag_batch/?type=thread&ids={id}&tags=-blurg%20-unread')
         assert response.status_code == 200
 
 
@@ -362,14 +362,14 @@ def test_change_tag_thread(setup):
     db.close()
 
     with app.test_client() as test_client:
-        response = test_client.get(f'/api/tag/remove/thread/{id}/unread')
+        response = test_client.get(f'/api/tag/?op=remove&type=thread&id={id}&tag=unread')
         assert response.status_code == 200
         db = notmuch2.Database()
         threads = list(db.threads(q))
         assert list(threads[0].tags) == ["inbox"]
         db.close()
 
-        response = test_client.get(f'/api/tag/add/thread/{id}/foobar')
+        response = test_client.get(f'/api/tag/?op=add&type=thread&id={id}&tag=foobar')
         assert response.status_code == 200
         db = notmuch2.Database()
         threads = list(db.threads(q))
@@ -387,7 +387,7 @@ def test_change_tag_thread_batch(setup):
     db.close()
 
     with app.test_client() as test_client:
-        response = test_client.get(f'/api/tag_batch/thread/{id}/-unread foobar')
+        response = test_client.get(f'/api/tag_batch/?type=thread&ids={id}&tags=-unread%20foobar')
         assert response.status_code == 200
         db = notmuch2.Database()
         threads = list(db.threads(q))

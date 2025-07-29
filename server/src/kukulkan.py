@@ -139,8 +139,10 @@ def get_query(query_string: str, sort: Any = notmuch2.Database.SORT.NEWEST_FIRST
     return db.messages(query_string, exclude_tags=excluded, sort=sort)
 
 
-def get_message(message_id: str) -> notmuch2.Message:
+def get_message(message_id: str | None) -> notmuch2.Message:
     """Get a single message."""
+    if str is None:
+        abort(404)
     try:
         msg = get_db().find(message_id)
     except LookupError:
@@ -169,9 +171,11 @@ def get_globals() -> Dict[str, Any]:
     return {"accounts": accts, "allTags": tags, "compose": cmp}
 
 
-def email_address_complete(query_string: str) -> Dict[str, str]:
+def email_address_complete(query_string: str | None) -> Dict[str, str]:
     """Returns list of email addresses from messages that match the
     query_string."""
+    if query_string is None:
+        return {}
     qs = query_string.casefold()
     addrs: Dict[str, str] = {}
     i = 0
@@ -228,8 +232,7 @@ def create_app() -> Flask:
     @app.route("/", methods=['GET', 'POST'])
     def send_index() -> Any:
         globs = get_globals()
-        if(query_string := request.args.get("query")):
-            globs["threads"] = query(query_string)
+        globs["threads"] = query()
         return render_template("index.html", data=globs)
 
     @app.route("/<path:path>", methods=['GET', 'POST'])
@@ -241,20 +244,15 @@ def create_app() -> Flask:
         if path == "todo":
             globs["threads"] = query("tag:todo")
         elif path == "thread":
-            globs["thread"] = thread(request.args.get("id") or "")
+            globs["thread"] = thread()
         elif path == "message":
-            attach_num_str = request.args.get("attachNum")
-            attach_num = int(attach_num_str) if attach_num_str else -1
-            if attach_num != -1:
-                globs["message"] = attachment_message(
-                    request.args.get("id") or "", attach_num
-                )
+            if request.args.get("attachNum") is None:
+                globs["message"] = message()
             else:
-                globs["message"] = message(request.args.get("id") or "")
+                globs["message"] = attachment_message()
         elif path == "write":
-            wid = request.args.get("id")
-            if wid:
-                globs["baseMessage"] = message(wid)
+            if request.args.get("message") is not None:
+                globs["baseMessage"] = message()
         return render_template("index.html", data=globs)
 
     @app.after_request
@@ -280,9 +278,13 @@ def create_app() -> Flask:
             response.headers["X-Frame-Options"] = "SAMEORIGIN"
         return response
 
-    @app.route("/api/query/<string:query_string>")
-    def query(query_string: str) -> List[Dict[str, Any]]:
-        def get_threads(q: str) -> Dict[str, Any]:
+    @app.route("/api/query/")
+    def query(query_string: Optional[str] = None) -> List[Dict[str, Any]]:
+        if query_string is None:
+            query_string = request.args.get("query")
+        def get_threads(q: str | None) -> Dict[str, Any]:
+            if q is None:
+                return {}
             msgs = get_query('thread:"{' + q.replace('"', '""') + '}"')
             # using dicts here to get everything in the order in which it occured
             threads = {}
@@ -305,15 +307,15 @@ def create_app() -> Flask:
         # second pass to create nested group structure
         nested_threads = {}
         seen_groups = []
-        for t in threads:
-            grps = [ tg for tg in threads[t]["tags"].keys() if tg.startswith('grp:') ]
+        for t, thr in threads.items():
+            grps = [ tg for tg in thr["tags"].keys() if tg.startswith('grp:') ]
             if len(grps) > 0:
                 if grps[0] in seen_groups:
                     continue
                 seen_groups.append(grps[0])
                 nested_threads[t] = get_threads(f'tag:{grps[0]}')
             else:
-                nested_threads[t] = threads[t]
+                nested_threads[t] = thr
 
         db = get_db()
         def get_threads_ret(threads: Dict[str, Any]):
@@ -331,19 +333,21 @@ def create_app() -> Flask:
         return get_threads_ret(nested_threads)
 
 
-    @app.route("/api/address/<string:query_string>")
-    def complete_address(query_string: str) -> List[str]:
+    @app.route("/api/address/")
+    def complete_address() -> List[str]:
+        query_string = request.args.get("query")
         return list(email_address_complete(query_string).values())
 
-    @app.route("/api/email/<string:query_string>")
-    def complete_email(query_string: str) -> List[str]:
+    @app.route("/api/email/")
+    def complete_email() -> List[str]:
+        query_string = request.args.get("query")
         return list(email_address_complete(query_string).keys())
 
     @app.route("/api/group_complete/")
-    @app.route("/api/group_complete/<string:sq>")
-    def complete_group(sq: str = "") -> Dict[Any, str | None]:
+    def complete_group() -> Dict[Any, str | None]:
+        sq = request.args.get("query")
         grps = {}
-        if len(sq) == 0:
+        if sq is None:
             msgs = get_query("tag:/grp:.*/")
         else:
             msgs = get_query(f'tag:/grp:.*/ and subject:"{sq}"')
@@ -356,16 +360,19 @@ def create_app() -> Flask:
                 break
         return dict((v, k) for k, v in grps.items())
 
-    @app.route("/api/thread/<string:thread_id>")
-    def thread(thread_id: str) -> Any:
+    @app.route("/api/thread/")
+    def thread() -> Any:
+        thread_id = request.args.get("thread")
         msgs = get_query(f'thread:{thread_id}',
                          sort=notmuch2.Database.SORT.OLDEST_FIRST,
                          exclude=False)
         return [message_to_json(m) for m in msgs] # type: ignore[arg-type]
 
-    @app.route("/api/attachment/<string:message_id>/<int:num>")
-    @app.route("/api/attachment/<string:message_id>/<int:num>/<int:scale>")
-    def attachment(message_id: str, num: int, scale: int = 0) -> Any:
+    @app.route("/api/attachment/")
+    def attachment() -> Any:
+        message_id = request.args.get("message")
+        num = int(request.args.get("num") or -1)
+        scale = int(request.args.get("scale") or 1)
         msg = get_message(message_id)
         d = message_attachment(msg, num)
         if not d:
@@ -386,41 +393,50 @@ def create_app() -> Flask:
         return send_file(f, mimetype=d["content_type"], as_attachment=False,
                          download_name=d["filename"].replace('\n', ''))
 
-    @app.route("/api/attachment_message/<string:message_id>/<int:num>")
-    def attachment_message(message_id: str, num: int) -> Any:
+    @app.route("/api/message_attachment/")
+    def attachment_message() -> Any:
+        message_id = request.args.get("message")
+        num = int(request.args.get("num") or -1)
         msg = get_message(message_id)
         d = message_attachment(msg, num)
         if not d:
             abort(404)
         return eml_to_json(bytes(d["content"]))
 
-    @app.route("/api/message/<string:message_id>")
-    def message(message_id: str) -> Dict[str, Any]:
+    @app.route("/api/message/")
+    def message() -> Dict[str, Any]:
+        message_id = request.args.get("message")
         msg = get_message(message_id)
         return message_to_json(msg, True)
 
-    @app.route("/api/message_html/<string:message_id>")
-    def message_html(message_id: str) -> str:
+    @app.route("/api/message_html/")
+    def message_html() -> str:
+        message_id = request.args.get("message")
         msg = get_message(message_id)
         email_msg = email_from_notmuch(msg)
         html, _ = get_nested_body(email_msg, True)
         return html
 
-    @app.route("/api/raw_message/<string:message_id>")
-    def raw_message(message_id: str) -> str:
+    @app.route("/api/message_raw/")
+    def raw_message() -> str:
+        message_id = request.args.get("message")
         msg = get_message(message_id)
         with open(msg.path, "r", encoding="utf8") as f:
             content = f.read()
         return content
 
-    @app.route("/api/auth_message/<string:message_id>")
-    def auth_message(message_id: str) -> Dict[str, Any]:
+    @app.route("/api/message_auth/")
+    def auth_message() -> Dict[str, Any]:
+        message_id = request.args.get("message")
         msg = get_message(message_id)
         # https://npm.io/package/mailauth
         return json.loads(os.popen(f"mailauth {msg.path}").read())['arc']['authResults']
 
-    @app.route("/api/group/<string:tids>")
-    def group(tids: str) -> str:
+    @app.route("/api/group/")
+    def group() -> str:
+        tids = request.args.get("threads")
+        if tids is None:
+            abort(404)
         db = get_db()
         def get_gtag():
             for tid in tids.split(' '):
@@ -454,17 +470,24 @@ def create_app() -> Flask:
             dbw.close()
         return gtag
 
-    @app.route("/api/tag_batch/<string:typ>/<string:nids>/<string:tags>")
-    def change_tags(typ: str, nids: str, tags: str) -> str:
+    @app.route("/api/tag_batch/")
+    def change_tags() -> str:
+        typ = request.args.get("type")
+        nids = request.args.get("ids")
+        if nids is None:
+            abort(404)
+        tags = request.args.get("tags")
+        if tags is None:
+            abort(404)
         dbw = notmuch2.Database(mode=notmuch2.Database.MODE.READ_WRITE)
         any_changed = False
         try:
             for nid in nids.split(' '):
                 for tag in tags.split(' '):
                     if tag[0] == '-':
-                        res = change_tag("remove", typ, nid, tag[1:], dbw, False)
+                        res = change_tag_int("remove", typ, nid, tag[1:], dbw, False)
                     else:
-                        res = change_tag("add", typ, nid, tag, dbw, False)
+                        res = change_tag_int("add", typ, nid, tag, dbw, False)
                     if res != "":
                         any_changed = True
         finally:
@@ -473,10 +496,17 @@ def create_app() -> Flask:
             abort(404)
         return f"{escape(nids)}/{escape(tags)}"
 
-    @app.route("/api/tag/<string:op>/<string:typ>/<string:nid>/<string:tag>")
-    def change_tag(op: str, typ: str, nid: str, tag: str, dbw:
-                   Optional[notmuch2.Database] = None, fail: Optional[bool] =
-                   True) -> str:
+    @app.route("/api/tag/")
+    def change_tag() -> str:
+        return change_tag_int(request.args.get("op"), request.args.get("type"),
+                              request.args.get("id"), request.args.get("tag"))
+
+    def change_tag_int(op: str | None, typ: str | None, nid: str | None,
+                       tag: str | None, dbw: Optional[notmuch2.Database] = None,
+                       fail: Optional[bool] = True) -> str:
+        if str is None or typ is None or nid is None or tag is None:
+            abort(404)
+
         # pylint: disable=no-member
         id_type = 'id' if typ == "message" else typ
         tag_prefix = 'not ' if op == "add" else ''

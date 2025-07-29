@@ -201,12 +201,12 @@ test("opens thread on enter and click", async () => {
 
   await userEvent.type(document.body, "{enter}");
   expect(window.open).toHaveBeenCalledTimes(1);
-  expect(window.open).toHaveBeenCalledWith('/thread?id=foo', '_self');
+  expect(window.open).toHaveBeenCalledWith('/thread?thread=foo', '_self');
 
   await userEvent.click(container.querySelector(".thread"));
   expect(window.open).toHaveBeenCalledTimes(2);
-  expect(window.open).toHaveBeenCalledWith('/thread?id=foo', '_self');
-  expect(window.open).toHaveBeenCalledWith('/thread?id=foo', '_self');
+  expect(window.open).toHaveBeenCalledWith('/thread?thread=foo', '_self');
+  expect(window.open).toHaveBeenCalledWith('/thread?thread=foo', '_self');
 });
 
 test("opens thread on enter and click in same tab with config", async () => {
@@ -227,12 +227,12 @@ test("opens thread on enter and click in same tab with config", async () => {
 
   await userEvent.type(document.body, "{enter}");
   expect(window.open).toHaveBeenCalledTimes(1);
-  expect(window.open).toHaveBeenCalledWith('/thread?id=foo', '_self');
+  expect(window.open).toHaveBeenCalledWith('/thread?thread=foo', '_self');
 
   await userEvent.click(container.querySelector(".thread"));
   expect(window.open).toHaveBeenCalledTimes(2);
-  expect(window.open).toHaveBeenCalledWith('/thread?id=foo', '_self');
-  expect(window.open).toHaveBeenCalledWith('/thread?id=foo', '_self');
+  expect(window.open).toHaveBeenCalledWith('/thread?thread=foo', '_self');
+  expect(window.open).toHaveBeenCalledWith('/thread?thread=foo', '_self');
 });
 
 test("navigation and selection shortcuts work", async () => {
@@ -279,7 +279,7 @@ test("navigation and selection shortcuts work", async () => {
   await userEvent.type(document.body, "{end}");
   await userEvent.type(document.body, "{enter}");
   expect(window.open).toHaveBeenCalledTimes(1);
-  expect(window.open).toHaveBeenCalledWith('/thread?id=bar', '_self');
+  expect(window.open).toHaveBeenCalledWith('/thread?thread=bar', '_self');
 });
 
 test("thread groups can be expanded and collapsed", async () => {
@@ -403,7 +403,7 @@ test("delete thread works", async () => {
 
   await userEvent.type(document.body, "{delete}");
   expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/thread/foo/deleted%20-unread");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/?type=thread&ids=foo&tags=deleted%20-unread");
   expect(screen.queryByText("unread")).not.toBeInTheDocument();
   expect(screen.getByText("deleted")).toBeInTheDocument();
 });
@@ -425,7 +425,7 @@ test("delete thread group works", async () => {
 
   await userEvent.type(document.body, "{delete}");
   expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/thread/foo%20bar/deleted%20-unread");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/?type=thread&ids=foo%20bar&tags=deleted%20-unread");
   expect(screen.getAllByText("deleted").length).toBe(2);
 });
 
@@ -447,7 +447,7 @@ test("delete expanded thread group works", async () => {
   await userEvent.type(document.body, "l");
   await userEvent.type(document.body, "{delete}");
   expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/thread/foo/deleted%20-unread");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/?type=thread&ids=foo&tags=deleted%20-unread");
   expect(screen.getByText("deleted")).toBeInTheDocument();
 });
 
@@ -470,7 +470,7 @@ test("mark thread done works", async () => {
 
   await userEvent.type(document.body, "d");
   expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/thread/foo/-todo%20-due%3A1970-01-01");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/?type=thread&ids=foo&tags=-todo%20-due%3A1970-01-01");
   expect(screen.queryByText("todo")).not.toBeInTheDocument();
   expect(screen.queryByText("due:1970-01-01")).not.toBeInTheDocument();
 });
@@ -495,7 +495,7 @@ test("mark thread group done works", async () => {
 
   await userEvent.type(document.body, "d");
   expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/thread/foo%20bar/-todo%20-due%3A1970-01-01");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/?type=thread&ids=foo%20bar&tags=-todo%20-due%3A1970-01-01");
   expect(screen.queryByText("todo")).not.toBeInTheDocument();
   expect(screen.queryByText("due:1970-01-01")).not.toBeInTheDocument();
 });
@@ -518,7 +518,7 @@ test("tag edits work", async () => {
   await userEvent.type(document.querySelector("#edit-tag-box > input"), "-test foobar{enter}{enter}");
 
   expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/thread/foo/-test%20foobar");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/?type=thread&ids=foo&tags=-test%20foobar");
   expect(screen.queryByText("test")).not.toBeInTheDocument();
   expect(screen.getByText("foobar")).toBeInTheDocument();
 
@@ -567,7 +567,7 @@ test("tag edits with multiple selection work", async () => {
   await userEvent.type(document.querySelector("#edit-tag-box > input"), "-test1 foobar{enter}{enter}");
 
   expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/thread/foo%20bar/-test1%20foobar");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/?type=thread&ids=foo%20bar&tags=-test1%20foobar");
   expect(screen.queryByText("test1")).not.toBeInTheDocument();
   expect(screen.queryByText("test2")).toBeInTheDocument();
   expect(screen.queryAllByText("foobar").length).toBe(2);
@@ -602,7 +602,7 @@ test("tag edits with multiple selection and thread groups work", async () => {
   await userEvent.type(document.querySelector("#edit-tag-box > input"), "-test2 foobar{enter}{enter}");
 
   expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/thread/foo1%20foo2%20bar/-test2%20foobar");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/?type=thread&ids=foo1%20foo2%20bar&tags=-test2%20foobar");
   expect(screen.queryByText("test2")).not.toBeInTheDocument();
   expect(screen.queryAllByText("foobar").length).toBe(3);
 
@@ -666,7 +666,7 @@ test("threads action icons work", async () => {
   await userEvent.type(document.querySelector("#edit-tag-box > input"), "-test1 foobar{enter}{enter}");
 
   expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/thread/foo%20bar/-test1%20foobar");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/?type=thread&ids=foo%20bar&tags=-test1%20foobar");
   expect(screen.queryByText("test1")).not.toBeInTheDocument();
   expect(screen.queryByText("test2")).toBeInTheDocument();
   expect(screen.queryAllByText("foobar").length).toBe(2);
@@ -682,7 +682,7 @@ test("threads action icons work", async () => {
 
   await userEvent.click(container.querySelector("#done"));
   expect(global.fetch).toHaveBeenCalledTimes(2);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/thread/foo%20bar/-todo");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/?type=thread&ids=foo%20bar&tags=-todo");
   expect(container.querySelectorAll(".thread.selected").length).toBe(0);
 
   // delete
@@ -694,7 +694,7 @@ test("threads action icons work", async () => {
 
   await userEvent.click(container.querySelector("#delete"));
   expect(global.fetch).toHaveBeenCalledTimes(3);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/thread/foo%20bar/deleted%20-unread");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/?type=thread&ids=foo%20bar&tags=deleted%20-unread");
   expect(screen.queryAllByText("deleted").length).toBe(2);
   expect(container.querySelectorAll(".thread.selected").length).toBe(0);
 
@@ -708,7 +708,7 @@ test("threads action icons work", async () => {
   global.fetch.mockResolvedValue({ ok: true, text: () => "grp:0" });
   await userEvent.click(container.querySelector("#group"));
   expect(global.fetch).toHaveBeenCalledTimes(4);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/group/foo%20bar");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/group/?threads=foo%20bar");
   expect(screen.queryAllByText("grp:0").length).toBe(2);
 
   expect(container.querySelectorAll(".thread.selected").length).toBe(0);
@@ -789,7 +789,7 @@ test("shows todo due dates correctly after marking done", async () => {
 
   await userEvent.type(document.body, "d");
   expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining("http://localhost:5000/api/tag_batch/thread/foo/-todo%20-due%3A"));
+  expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining("http://localhost:5000/api/tag_batch/?type=thread&ids=foo&tags=-todo%20-due%3A"));
 
   expect(container.querySelectorAll(".thread").length).toBe(3);
   expect(container.querySelectorAll(".thread")[0].querySelector("div").innerHTML).toBe("4年");
@@ -824,7 +824,7 @@ test("group threads -- new group", async () => {
   global.fetch.mockResolvedValue({ ok: true, text: () => "grp:0" });
   await userEvent.type(document.body, "g");
   expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/group/foo1%20foo2");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/group/?threads=foo1%20foo2");
   expect(screen.getAllByText("grp:0").length).toBe(2);
 
   expect(container.querySelectorAll(".thread.selected").length).toBe(0);
@@ -857,7 +857,7 @@ test("group threads -- add to group", async () => {
   global.fetch.mockResolvedValue({ ok: true, text: () => "grp:0" });
   await userEvent.type(document.body, "g");
   expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/group/foo1%20foo2");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/group/?threads=foo1%20foo2");
   expect(screen.getAllByText("grp:0").length).toBe(2);
 
   expect(container.querySelectorAll(".thread.selected").length).toBe(0);
@@ -890,7 +890,7 @@ test("group threads -- ungroup", async () => {
 
   await userEvent.type(document.body, "g");
   expect(global.fetch).toHaveBeenCalledTimes(1);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/thread/foo1%20foo2/-grp%3A0");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/?type=thread&ids=foo1%20foo2&tags=-grp%3A0");
   expect(screen.queryAllByText("grp:0").length).toBe(0);
 
   expect(container.querySelectorAll(".thread.selected").length).toBe(0);
@@ -927,9 +927,9 @@ test("group threads -- ungroup then new group", async () => {
   global.fetch.mockResolvedValue({ ok: true, text: () => "grp:2" });
   await userEvent.type(document.body, "g");
   expect(global.fetch).toHaveBeenCalledTimes(3);
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/thread/foo1/-grp%3A0");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/thread/foo2/-grp%3A1");
-  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/group/foo1%20foo2%20foo3");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/?type=thread&ids=foo1&tags=-grp%3A0");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/?type=thread&ids=foo2&tags=-grp%3A1");
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/group/?threads=foo1%20foo2%20foo3");
   expect(screen.queryByText("grp:0")).not.toBeInTheDocument();
   expect(screen.queryByText("grp:1")).not.toBeInTheDocument();
   expect(screen.getAllByText("grp:2").length).toBe(3);

@@ -48,7 +48,7 @@ function AddrComplete(props) {
       // eslint-disable-next-line solid/reactivity
       getOptions={async (text) => {
         if(text.length > 2) {
-          return delayedDebouncedFetch(apiURL(`api/address/${encodeURIComponent(text)}`), 200, props.sp);
+          return delayedDebouncedFetch(apiURL(`api/address/?query=${encodeURIComponent(text)}`), 200, props.sp);
         }
         return [];
       }}
