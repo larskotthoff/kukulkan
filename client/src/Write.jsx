@@ -103,7 +103,7 @@ function makeToCc(msg, action, mode) {
 export function Write(props) {
   const searchParams = window.location.search,
         urlSearchParams = new URLSearchParams(searchParams),
-        baseMessageId = urlSearchParams.get("id"),
+        baseMessageId = urlSearchParams.get("message"),
         action = urlSearchParams.get("action") || "compose",
         mode = urlSearchParams.get("mode"),
         [useTemplate, setUseTemplate] = createSignal(null),

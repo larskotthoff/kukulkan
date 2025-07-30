@@ -141,7 +141,7 @@ def get_query(query_string: str, sort: Any = notmuch2.Database.SORT.NEWEST_FIRST
 
 def get_message(message_id: str | None) -> notmuch2.Message:
     """Get a single message."""
-    if str is None:
+    if message_id is None:
         abort(404)
     try:
         msg = get_db().find(message_id)

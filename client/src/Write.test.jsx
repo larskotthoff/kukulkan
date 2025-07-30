@@ -93,7 +93,7 @@ test("selects default account and lists others", async () => {
 test("base message reply all", async () => {
   vi.stubGlobal('location', {
     ...window.location,
-    search: '?id=foo&action=reply&mode=all'
+    search: '?message=foo&action=reply&mode=all'
   });
   vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": [], "baseMessage": msg});
   const { getByTestId } = render(() => <Write/>);
@@ -115,7 +115,7 @@ test("base message reply all", async () => {
 test("base message reply all duplicate addresses", async () => {
   vi.stubGlobal('location', {
     ...window.location,
-    search: '?id=foo&action=reply&mode=all'
+    search: '?message=foo&action=reply&mode=all'
   });
   const msg1 = structuredClone(msg);
   msg1.to = ["bar foo <bar@foo.com>"];
@@ -133,7 +133,7 @@ test("base message reply all duplicate addresses", async () => {
 test("base message reply empty subject", async () => {
   vi.stubGlobal('location', {
     ...window.location,
-    search: '?id=foo&action=reply&mode=all'
+    search: '?message=foo&action=reply&mode=all'
   });
   const msg1 = structuredClone(msg);
   msg1.subject = "";
@@ -150,7 +150,7 @@ test("base message reply empty subject", async () => {
 test("base message reply one", async () => {
   vi.stubGlobal('location', {
     ...window.location,
-    search: '?id=foo&action=reply&mode=one'
+    search: '?message=foo&action=reply&mode=one'
   });
   vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": [], "baseMessage": msg});
   const { getByTestId } = render(() => <Write/>);
@@ -172,7 +172,7 @@ test("base message reply one", async () => {
 test("base message from default if unclear", async () => {
   vi.stubGlobal('location', {
     ...window.location,
-    search: '?id=foo&action=reply&mode=all'
+    search: '?message=foo&action=reply&mode=all'
   });
   const msg1 = structuredClone(msg);
   msg1.to = ["something@test.com"];
@@ -188,7 +188,7 @@ test("base message from default if unclear", async () => {
 test("reply includes only main part of base message quoted", async () => {
   vi.stubGlobal('location', {
     ...window.location,
-    search: '?id=foo&action=reply&mode=all'
+    search: '?message=foo&action=reply&mode=all'
   });
   const msg1 = structuredClone(msg);
   msg1.body["text/plain"] = "Thanks.\n\nOn bla, blurg wrote:\n> foo\n> bar.";
@@ -204,7 +204,7 @@ test("reply includes only main part of base message quoted", async () => {
 test("reply includes entire base message quoted when setting changed", async () => {
   vi.stubGlobal('location', {
     ...window.location,
-    search: '?id=foo&action=reply&mode=all'
+    search: '?message=foo&action=reply&mode=all'
   });
   const msg1 = structuredClone(msg);
   msg1.body["text/plain"] = "Thanks.\n\nOn bla, blurg wrote:\n> foo\n> bar.";
@@ -221,7 +221,7 @@ test("reply includes entire base message quoted when setting changed", async () 
 test("base message forward", async () => {
   vi.stubGlobal('location', {
     ...window.location,
-    search: '?id=foo&action=forward'
+    search: '?message=foo&action=forward'
   });
   vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": [], "baseMessage": msg});
   const { getByTestId } = render(() => <Write/>);
@@ -244,7 +244,7 @@ test("base message forward", async () => {
 test("forward includes entire message even if abbreviated reply", async () => {
   vi.stubGlobal('location', {
     ...window.location,
-    search: '?id=foo&action=forward'
+    search: '?message=foo&action=forward'
   });
   const msg1 = structuredClone(msg);
   msg1.body["text/plain"] = "Thanks.\n\nOn bla, blurg wrote:\n> foo\n> bar.";
@@ -261,7 +261,7 @@ test("forward includes entire message even if abbreviated reply", async () => {
 test("base message reply filters admin tags", async () => {
   vi.stubGlobal('location', {
     ...window.location,
-    search: '?id=foo&action=reply&mode=all'
+    search: '?message=foo&action=reply&mode=all'
   });
   const msg1 = structuredClone(msg);
   msg1.tags.push("signed");
@@ -307,7 +307,7 @@ test("template set", async () => {
 test("template set with base message", async () => {
   vi.stubGlobal('location', {
     ...window.location,
-    search: '?id=foo&action=reply&mode=all'
+    search: '?message=foo&action=reply&mode=all'
   });
   const cmp = {"templates": [{"shortcut": "1", "description": "foo", "template": "bar"},
                      {"shortcut": "2", "description": "foobar", "template": "blurg"}]};
@@ -459,7 +459,7 @@ test("addresses editable and complete", async () => {
 test("tags editable and complete", async () => {
   vi.stubGlobal('location', {
     ...window.location,
-    search: '?id=foo&action=reply&mode=all'
+    search: '?message=foo&action=reply&mode=all'
   });
   vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": [], "baseMessage": msg});
   const { getByTestId } = render(() => <Write/>);
@@ -504,7 +504,7 @@ test("tags editable and complete", async () => {
 test("files attachable and editable", async () => {
   vi.stubGlobal('location', {
     ...window.location,
-    search: '?id=foo&action=forward'
+    search: '?message=foo&action=forward'
   });
   const msg1 = structuredClone(msg);
   msg1.attachments = [{"filename": "foofile"}, {"filename": "barfile"}];
@@ -618,7 +618,7 @@ test("localStorage removes empty items", async () => {
 test("localStorage stores for reply", async () => {
   vi.stubGlobal('location', {
     ...window.location,
-    search: '?id=foo&action=reply&mode=all'
+    search: '?message=foo&action=reply&mode=all'
   });
   vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": [], "baseMessage": msg});
   const { getByTestId } = render(() => <Write/>);
@@ -952,7 +952,7 @@ test("data assembled correctly for sending new email w/ template", async () => {
 test("data assembled correctly for sending reply w/o editing", async () => {
   vi.stubGlobal('location', {
     ...window.location,
-    search: '?id=foo&action=reply&mode=all'
+    search: '?message=foo&action=reply&mode=all'
   });
   vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": [], "baseMessage": msg});
   render(() => <Write/>);
@@ -997,7 +997,7 @@ test("data assembled correctly for sending reply w/o editing", async () => {
 test("data assembled correctly for sending reply", async () => {
   vi.stubGlobal('location', {
     ...window.location,
-    search: '?id=foo&action=reply&mode=all'
+    search: '?message=foo&action=reply&mode=all'
   });
   vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": [], "baseMessage": msg});
   const { getByTestId } = render(() => <Write/>);
@@ -1067,7 +1067,7 @@ test("data assembled correctly for sending reply", async () => {
 test("data assembled correctly for sending reply w/ empty subject", async () => {
   vi.stubGlobal('location', {
     ...window.location,
-    search: '?id=foo&action=reply&mode=all'
+    search: '?message=foo&action=reply&mode=all'
   });
   const msg1 = structuredClone(msg);
   msg1.subject = null;
