@@ -153,7 +153,8 @@ def get_message(message_id: str | None) -> notmuch2.Message:
 # pylint: disable=unused-argument
 def close_db(e: Optional[Any] = None) -> None:
     """Close the Database. Called after every request."""
-    g.db.close()
+    if "db" in g and g.db is not None:
+        g.db.close()
 
 
 def get_globals() -> Dict[str, Any]:
