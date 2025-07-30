@@ -36,6 +36,7 @@ test("filterAdminTags", () => {
   expect(utils.filterAdminTags(["foo", "bar", "replied", "sent", "signed", "passed", "attachment"]))
     .toStrictEqual(["foo", "bar"]);
   expect(utils.filterAdminTags(undefined)).toStrictEqual(undefined);
+  expect(utils.filterAdminTags(null)).toStrictEqual(null);
 });
 
 test("filterSubjectColor", () => {
