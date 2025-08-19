@@ -173,7 +173,7 @@ test("first calendar date is today or earliest overdue", () => {
 
 test("last calendar date is last due", () => {
   vi.useFakeTimers();
-  vi.setSystemTime(new Date(2024, 6, 1));
+  vi.setSystemTime(new Date(2024, 6, 10));
 
   const now = new Date(),
         thr1 = structuredClone(threads[0]),
@@ -181,13 +181,15 @@ test("last calendar date is last due", () => {
         tags = structuredClone(threads[0].tags);
 
   thr1.tags = tags.concat("due:" + (new Date(now.getTime() + 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
-  thr2.tags = tags.concat("due:" + (new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
+  thr2.tags = tags.concat("due:" + (new Date(now.getTime() + 29 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
   thr2.thread_id = 1;
   render(() => <TodoThreads ThreadGroup={ThreadGroup} threads={() => [thr1, thr2]} activeThread={() => 1} selectedThreads={() => []}
     setActiveThread={() => 0} setQuery={() => []}/>);
-  expect(screen.getByTestId("Mon Jul 01 2024")).toBeInTheDocument();
+  expect(screen.getByTestId("Wed Jul 10 2024")).toBeInTheDocument();
   expect(screen.getByTestId("Wed Jul 31 2024")).toBeInTheDocument();
-  expect(screen.queryByTestId("Thu Aug 01 2024")).not.toBeInTheDocument();
+  expect(screen.queryByTestId("Thu Aug 01 2024")).toBeInTheDocument();
+  expect(screen.queryByTestId("Thu Aug 08 2024")).toBeInTheDocument();
+  expect(screen.queryByTestId("Fri Aug 09 2024")).not.toBeInTheDocument();
 
   vi.useRealTimers();
 });

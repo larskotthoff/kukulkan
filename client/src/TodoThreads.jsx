@@ -63,6 +63,11 @@ export function TodoThreads(props) {
     while(currentDate <= endDate) {
       dates.push(new Date(currentDate));
       currentDate[`set${interval}`](currentDate[`get${interval}`]() + 1);
+      // if we're past the end date, but less than the length of an interval,
+        // include the date
+      if(currentDate > endDate && currentDate - endDate < currentDate - dates.at(-1)) {
+        dates.push(new Date(currentDate));
+      }
     }
 
     return dates;
@@ -140,12 +145,12 @@ export function TodoThreads(props) {
               <div class="horizontal-stack">
                 <div class="sticky" style={{ 'width': "3em" }}>{year.getFullYear()}</div>
                 <div>
-                  <For each={getIntervalBetweenDates(yi() === 0 ? year : startOfYear(year), Math.min(endOfYear(year), latest()), "Month")}>
+                  <For each={getIntervalBetweenDates(yi() === 0 ? year : startOfYear(year), new Date(Math.min(endOfYear(year), latest())), "Month")}>
                     {(month, mi) =>
                       <div class="horizontal-stack">
                         <div class="sticky" style={{ 'width': "2em" }}>{month.toLocaleString('default', { month: 'short' })}</div>
                         <div>
-                          <For each={getIntervalBetweenDates(mi() === 0 ? month : startOfMonth(month), Math.min(endOfMonth(month), latest()), "Date")}>
+                          <For each={getIntervalBetweenDates(mi() === 0 ? month : startOfMonth(month), new Date(Math.min(endOfMonth(month), latest())), "Date")}>
                             {(day) =>
                               <div class="horizontal-stack">
                                 <div data-testid={day.toDateString()} classList={{
