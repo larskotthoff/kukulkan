@@ -373,7 +373,7 @@ def create_app() -> Flask:
     def attachment() -> Any:
         message_id = request.args.get("message")
         num = int(request.args.get("num") or -1)
-        scale = int(request.args.get("scale") or 1)
+        scale = int(request.args.get("scale") or 0)
         msg = get_message(message_id)
         d = message_attachment(msg, num)
         if not d:

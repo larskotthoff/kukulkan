@@ -1064,6 +1064,28 @@ def test_attachment_image_resize(setup):
     db.find.assert_called_once_with("foo")
 
 
+def test_attachment_image_no_resize_default(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.path = "test/mails/attachment-image.eml"
+
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
+
+    with app.test_client() as test_client:
+        response = test_client.get('/api/attachment/?message=foo&num=0')
+        assert response.status_code == 200
+        assert 94590 == len(response.data)
+        assert type(response.data) is bytes
+        assert "image/png" == response.mimetype
+        assert "inline; filename=filename.png" == response.headers['Content-Disposition']
+        img = Image.open(io.BytesIO(response.data))
+        assert (1584, 1274) == img.size
+
+    db.find.assert_called_once_with("foo")
+
+
 def test_attachment_image_no_resize(setup):
     app, db = setup
 
