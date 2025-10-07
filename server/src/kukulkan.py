@@ -29,6 +29,8 @@ from flask_compress import Compress
 from markupsafe import escape
 from werkzeug.utils import safe_join
 
+from urllib.parse import unquote
+
 import icalendar
 from dateutil.rrule import rrulestr
 from recurrent.event_parser import RecurringEvent
@@ -68,6 +70,8 @@ cleaner = Cleaner(javascript=True,
 send_queue: queue.Queue = queue.Queue()
 
 policy = email.policy.default.clone(utf8=True)
+
+safelinks_regex = r'https?://[a-z0-9]+\.safelinks\.protection\.outlook\.com/\?url=([^&\s"]+)&[^"\s>)]+'
 
 # claude helped with this
 def feed_input(
@@ -846,6 +850,14 @@ def get_nested_body(email_msg: email.message.Message, html: bool = False) -> Tup
             pass
         except Exception as e:
             current_app.logger.error(f"Exception when replacing text content: {str(e)}")
+
+    try:
+        if current_app.config.custom["filter"]["remove-safelinks"] == "true": # type: ignore[attr-defined]
+            content = re.sub(safelinks_regex, lambda x: unquote(x.group(1)), content)
+    except KeyError:
+        pass
+    except Exception as e:
+        current_app.logger.error(f"Exception when removing safelinks: {str(e)}")
 
     return content, has_html
 
