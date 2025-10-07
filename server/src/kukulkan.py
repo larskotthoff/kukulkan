@@ -852,7 +852,7 @@ def get_nested_body(email_msg: email.message.Message, html: bool = False) -> Tup
             current_app.logger.error(f"Exception when replacing text content: {str(e)}")
 
     try:
-        if current_app.config.custom["filter"]["remove-safelinks"] == "true":
+        if current_app.config.custom["filter"]["remove-safelinks"] == "true": # type: ignore[attr-defined]
             content = re.sub(safelinks_regex, lambda x: unquote(x.group(1)), content)
     except KeyError:
         pass
