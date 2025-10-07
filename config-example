@@ -28,6 +28,7 @@
     "ca-bundle": "/etc/ca-certificates/extracted/email-ca-bundle.pem",
 
     "filter": {
+        "remove-safelinks": "true",
         "content": {
             "text/html": [ "<p>spam banner to be removed</p>", "" ],
             "text/plain": [ "Some warning that message was from external source.", "" ]

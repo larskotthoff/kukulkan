@@ -1716,6 +1716,32 @@ def test_message_html_broken(setup):
     db.find.assert_called_once_with("foo")
 
 
+def test_message_filter_safelinks(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.path = "test/mails/simple-safelinks.eml"
+    mf.messageid = "foo"
+    mf.tags = ["foo", "bar"]
+    mf.header = MagicMock(return_value="  foo\tbar  ")
+
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
+
+    app.config.custom["filter"] = {}
+    app.config.custom["filter"]["remove-safelinks"] = "true"
+
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message/?message=foo')
+        assert response.status_code == 200
+        msg = json.loads(response.data.decode())
+        assert "http://www.foo.com" in msg["body"]["text/plain"]
+        assert "safelinks" not in msg["body"]["text/plain"]
+
+    assert mf.header.call_count == 11
+    db.find.assert_called_once_with("foo")
+
+
 def test_message_filter_text(setup):
     app, db = setup
 

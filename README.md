@@ -114,6 +114,8 @@ in the array is what to replace it with (leave empty to remove matches).
     "allow-cross-origin-write": "true",
 
     "filter": {
+        # extract actual URLs from safelinks of the form https://foo.safelinks.protection.outlook.com/?url=...
+        "remove-safelinks": "true",
         "content": {
             # regular expressions are supported here
             "text/html": [ "<p>spam banner to be removed</p>", "" ],
