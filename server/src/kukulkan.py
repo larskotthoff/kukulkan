@@ -71,7 +71,7 @@ send_queue: queue.Queue = queue.Queue()
 
 policy = email.policy.default.clone(utf8=True)
 
-safelinks_regex = r'https?://[a-z0-9]+\.safelinks\.protection\.outlook\.com/\?url=([^&\s"]+)&[^"\s>)]+'
+safelinks_regex = r'https?://[a-z0-9]+\.safelinks\.protection\.outlook\.com/[^?]*\?url=([^&\s"]+)&[^"\s>)]+'
 
 # claude helped with this
 def feed_input(
