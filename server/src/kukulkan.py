@@ -23,13 +23,13 @@ import email.mime.multipart
 import email.mime.text
 import email.policy
 
+from urllib.parse import unquote
+
 import notmuch2
 from flask import Flask, Response, abort, current_app, g, render_template, request, send_file, send_from_directory
 from flask_compress import Compress
 from markupsafe import escape
 from werkzeug.utils import safe_join
-
-from urllib.parse import unquote
 
 import icalendar
 from dateutil.rrule import rrulestr
@@ -71,7 +71,7 @@ send_queue: queue.Queue = queue.Queue()
 
 policy = email.policy.default.clone(utf8=True)
 
-safelinks_regex = r'https?://[a-z0-9]+\.safelinks\.protection\.outlook\.com/[^?]*\?url=([^&\s"]+)&[^"\s>)]+'
+SAFELINKS_REGEX = r'https?://[a-z0-9]+\.safelinks\.protection\.outlook\.com/[^?]*\?url=([^&\s"]+)&[^"\s>)]+'
 
 # claude helped with this
 def feed_input(
@@ -853,7 +853,7 @@ def get_nested_body(email_msg: email.message.Message, html: bool = False) -> Tup
 
     try:
         if current_app.config.custom["filter"]["remove-safelinks"] == "true": # type: ignore[attr-defined]
-            content = re.sub(safelinks_regex, lambda x: unquote(x.group(1)), content)
+            content = re.sub(SAFELINKS_REGEX, lambda x: unquote(x.group(1)), content)
     except KeyError:
         pass
     except Exception as e:
@@ -922,6 +922,8 @@ def get_attachments(email_msg: email.message.Message, content: bool = False) -> 
                         except KeyError:
                             pass
 
+                        dtstart = None
+                        dtend = None
                         try:
                             def get_timestamp(dt: datetime.date) -> int:
                                 if isinstance(dt, datetime.datetime):
@@ -935,7 +937,7 @@ def get_attachments(email_msg: email.message.Message, content: bool = False) -> 
 
                             # this assumes that start and end are the same timezone
                             timezone = str(component.get("dtstart").dt.tzinfo)
-                        except AttributeError:  # only date, no time
+                        except AttributeError:  # stuff missing
                             pass
                         try:
                             rrule = component.get("rrule").to_ical().decode("utf8")

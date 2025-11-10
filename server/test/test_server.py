@@ -1455,6 +1455,39 @@ def test_message_attachment_calendar_preview_no_time(setup):
     db.find.assert_called_once_with("foo")
 
 
+def test_message_attachment_calendar_preview_no_startend(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.path = "test/mails/calendar-nostartend.eml"
+    mf.messageid = "foo"
+    mf.tags = ["foo", "bar"]
+    mf.header = MagicMock(return_value="  foo\tbar  ")
+
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
+
+    app.config.custom["accounts"] = [{"email": "unittest@tine20.org"}]
+
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message/?message=foo')
+        assert response.status_code == 200
+        msg = json.loads(response.data.decode())
+        assert msg["attachments"][0]['content_type'] == 'text/calendar'
+        assert msg["attachments"][0]['filename'] == 'unnamed attachment'
+        assert msg["attachments"][0]['preview']['method'] == "REQUEST"
+        assert msg["attachments"][0]['preview']['status'] == None
+        assert msg["attachments"][0]['preview']['summary'] == "testevent"
+        assert msg["attachments"][0]['preview']['location'] == "kskdcsd"
+        assert msg["attachments"][0]['preview']['dtstart'] == None
+        assert msg["attachments"][0]['preview']['dtend'] == None
+        assert msg["attachments"][0]['preview']['start'] == None
+        assert msg["attachments"][0]['preview']['end'] == None
+
+    assert mf.header.call_count == 11
+    db.find.assert_called_once_with("foo")
+
+
 def test_message_attachment_calendar_preview_recur(setup):
     app, db = setup
 
