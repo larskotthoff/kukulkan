@@ -169,7 +169,23 @@ test("base message reply one", async () => {
   expect(document.title).toBe("Compose: Re: Test.");
 });
 
-test("base message from default if unclear", async () => {
+test("correct account selected with case differences", async () => {
+  vi.stubGlobal('location', {
+    ...window.location,
+    search: '?message=foo&action=reply&mode=all'
+  });
+  const msg1 = structuredClone(msg);
+  msg1.to = ["FOO@BAR.COM"];
+  vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": [], "baseMessage": msg1});
+  const { getByTestId } = render(() => <Write/>);
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("Send")).toBeInTheDocument();
+  });
+  expect(getByTestId("from").value).toBe("foo");
+});
+
+test("default account when to unclear", async () => {
   vi.stubGlobal('location', {
     ...window.location,
     search: '?message=foo&action=reply&mode=all'

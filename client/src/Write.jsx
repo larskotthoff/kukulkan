@@ -77,7 +77,7 @@ function makeToCc(msg, action, mode) {
           return a.length > 0 && !tmpTo.includes(a) && data.accounts.reduce((cum, acct) => {
             if(cum === false) return false;
 
-            if(a.includes(acct.email)) {
+            if(a.toLowerCase().includes(acct.email)) {
               return false;
             }
             return true;
@@ -90,7 +90,7 @@ function makeToCc(msg, action, mode) {
       return a.length > 0 && data.accounts.reduce((cum, acct) => {
         if(cum === false) return false;
 
-        if(a.includes(acct.email)) {
+        if(a.toLowerCase().includes(acct.email)) {
           return false;
         }
         return true;
@@ -143,21 +143,21 @@ export function Write(props) {
     }
 
     if(!localStorage.getItem(`draft-${draftKey}-from`)) {
-      let acct = data.accounts?.find(a => data.baseMessage.to.some(t => t.includes(a.email)));
+      let acct = data.accounts?.find(a => data.baseMessage.to.some(t => t.toLowerCase().includes(a.email)));
       if(!acct) {
-        acct = data.accounts?.find(a => data.baseMessage.from.includes(a.email));
+        acct = data.accounts?.find(a => data.baseMessage.from.toLowerCase().includes(a.email));
       }
       if(!acct && data.baseMessage.cc) {
-        acct = data.accounts?.find(a => data.baseMessage.cc.some(c => c.includes(a.email)));
+        acct = data.accounts?.find(a => data.baseMessage.cc.some(c => c.toLowerCase().includes(a.email)));
       }
       if(!acct && data.baseMessage.bcc) {
-        acct = data.accounts?.find(a => data.baseMessage.bcc.some(b => b.includes(a.email)));
+        acct = data.accounts?.find(a => data.baseMessage.bcc.some(b => b.toLowerCase().includes(a.email)));
       }
       if(!acct && data.baseMessage.delivered_to) {
-        acct = data.accounts?.find(a => data.baseMessage.delivered_to.includes(a.email));
+        acct = data.accounts?.find(a => data.baseMessage.delivered_to.toLowerCase().includes(a.email));
       }
       if(!acct && data.baseMessage.forwarded_to) {
-        acct = data.accounts?.find(a => data.baseMessage.forwarded_to.includes(a.email));
+        acct = data.accounts?.find(a => data.baseMessage.forwarded_to.toLowerCase().includes(a.email));
       }
       from = acct?.id;
     }
