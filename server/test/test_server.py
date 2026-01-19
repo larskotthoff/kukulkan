@@ -1703,6 +1703,33 @@ def test_message_signed_pgp(setup):
     db.find.assert_called_once_with("foo")
 
 
+@pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="Fails on Github.")
+def test_message_signed_pgp_no_from(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.path = "test/mails/signed-pgp.eml"
+    mf.messageid = "foo"
+    mf.tags = ["foo", "bar"]
+    mf.header = MagicMock(return_value="")
+
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
+
+    app.config.custom["accounts"] = []
+
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message/?message=foo')
+        assert response.status_code == 200
+        msg = json.loads(response.data.decode())
+        assert "Actually, the text seems to say the contrary" in msg["body"]["text/plain"]
+
+        assert msg["signature"] == {'valid': False, 'message': "No from address!"}
+
+    assert mf.header.call_count == 11
+    db.find.assert_called_once_with("foo")
+
+
 def test_message_html_only(setup):
     app, db = setup
 

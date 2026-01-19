@@ -1180,6 +1180,7 @@ def message_to_json(msg: notmuch2.Message, get_deleted_body: bool = False) -> Di
                     sig = bytes(part.get_payload()[1]) # type: ignore[arg-type, index]
                     gpg = GPG()
                     public_keys = gpg.list_keys()
+                    addr = None
                     try:
                         if from_addr is not None:
                             [_, address] = from_addr.split('<')
@@ -1189,34 +1190,37 @@ def message_to_json(msg: notmuch2.Message, get_deleted_body: bool = False) -> Di
                     except ValueError:
                         pass
 
-                    found = False
-                    for pkey in public_keys:
-                        for uid in pkey.get('uids'):
-                            if addr in uid:
-                                found = True
-                    if not found and 'gpg-keyserver' in current_app.config.custom: # type: ignore[attr-defined]
-                        current_app.logger.info(f"Key for {addr} not found, attempting to download...")
-                        # TODO: handle case where server is unreachable
-                        keys = gpg.search_keys(addr, current_app.config.custom['gpg-keyserver']) # type: ignore[attr-defined]
-                        if len(keys) > 0:
-                            for key in keys:
-                                current_app.logger.info(f"Getting key {key.get('keyid')}")
-                                gpg.recv_keys(current_app.config.custom['gpg-keyserver'], key.get('keyid')) # type: ignore[attr-defined]
-                    osfile, path = mkstemp()
-                    try:
-                        with os.fdopen(osfile, 'wb') as fd:
-                            fd.write(sig)
-                            fd.close()
-                            verified = gpg.verify_data(path, signed_content) # type: ignore[attr-defined]
-                            if verified.valid:
-                                signature = {"valid": True}
-                            else:
-                                signature = {"valid": False, "message": f"{verified.status}, {verified.problems[0]['status']}"}
-                    except Exception as e:
-                        current_app.logger.error(f"Exception in gpg_verify: {str(e)}")
-                        signature = {"valid": False, "message": "An internal error has occurred."}
-                    finally:
-                        os.unlink(path)
+                    if addr is None:
+                        signature = {"valid": False, "message": "No from address!"}
+                    else:
+                        found = False
+                        for pkey in public_keys:
+                            for uid in pkey.get('uids'):
+                                if addr in uid:
+                                    found = True
+                        if not found and 'gpg-keyserver' in current_app.config.custom: # type: ignore[attr-defined]
+                            current_app.logger.info(f"Key for {addr} not found, attempting to download...")
+                            # TODO: handle case where server is unreachable
+                            keys = gpg.search_keys(addr, current_app.config.custom['gpg-keyserver']) # type: ignore[attr-defined]
+                            if len(keys) > 0:
+                                for key in keys:
+                                    current_app.logger.info(f"Getting key {key.get('keyid')}")
+                                    gpg.recv_keys(current_app.config.custom['gpg-keyserver'], key.get('keyid')) # type: ignore[attr-defined]
+                        osfile, path = mkstemp()
+                        try:
+                            with os.fdopen(osfile, 'wb') as fd:
+                                fd.write(sig)
+                                fd.close()
+                                verified = gpg.verify_data(path, signed_content) # type: ignore[attr-defined]
+                                if verified.valid:
+                                    signature = {"valid": True}
+                                else:
+                                    signature = {"valid": False, "message": f"{verified.status}, {verified.problems[0]['status']}"}
+                        except Exception as e:
+                            current_app.logger.error(f"Exception in gpg_verify: {str(e)}")
+                            signature = {"valid": False, "message": "An internal error has occurred."}
+                        finally:
+                            os.unlink(path)
 
     res = {
         "from": from_addr,
