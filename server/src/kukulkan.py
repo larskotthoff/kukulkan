@@ -794,24 +794,38 @@ def strip_tags(soup: BeautifulSoup) -> None:
 def get_inline_images(email_msg: email.message.Message) -> Dict[str, Tuple[str, bytes]]:
     """Extracts inline images with Content-ID from email message.
     
-    Returns a dictionary mapping Content-ID to (content_type, data) tuples.
+    Returns a dictionary mapping Content-ID (with angle brackets stripped) to 
+    (content_type, data) tuples. Only extracts parts that:
+    - Have a Content-ID header (Content-Id or Content-ID)
+    - Have Content-Disposition set to "inline" OR no Content-Disposition header
+      (as per RFC 2183, inline is the default when not specified)
+    - Can be successfully decoded
+    
+    Args:
+        email_msg: The email message to extract inline images from
+        
+    Returns:
+        Dictionary mapping Content-ID strings to (content_type, binary_data) tuples
     """
     inline_images = {}
     for part in email_msg.walk():
         if part.get_content_maintype() == "multipart":
             continue
         content_id = part.get("Content-Id") or part.get("Content-ID")
-        if content_id and part.get_content_disposition() == "inline":
-            # Remove angle brackets if present
-            cid = content_id.strip('<>')
-            content_type = part.get_content_type()
-            try:
-                # Get the binary content
-                data = part.get_payload(decode=True)
-                if data:
-                    inline_images[cid] = (content_type, data)
-            except Exception:
-                pass
+        if content_id:
+            disposition = part.get_content_disposition()
+            # Include parts with inline disposition or no disposition (default is inline per RFC 2183)
+            if disposition == "inline" or disposition is None:
+                # Remove angle brackets if present
+                cid = content_id.strip('<>')
+                content_type = part.get_content_type()
+                try:
+                    # Get the binary content
+                    data = part.get_payload(decode=True)
+                    if data:
+                        inline_images[cid] = (content_type, data)
+                except Exception:
+                    pass
     return inline_images
 
 
@@ -884,11 +898,11 @@ def get_nested_body(email_msg: email.message.Message, html: bool = False) -> Tup
         current_app.logger.error(f"Exception when removing safelinks: {str(e)}")
 
     # Replace cid: references with data URIs for inline images
-    if html is True and content:
+    if html is True and content and "cid:" in content.lower():
         try:
             inline_images = get_inline_images(email_msg)
             if inline_images:
-                # Replace cid: references in src attributes
+                # Replace cid: references in src attributes (with optional whitespace around =)
                 def replace_cid(match):
                     cid = match.group(1)
                     if cid in inline_images:
@@ -897,7 +911,7 @@ def get_nested_body(email_msg: email.message.Message, html: bool = False) -> Tup
                         return f'src="data:{content_type};base64,{data_base64}"'
                     return match.group(0)  # Return original if CID not found
                 
-                content = re.sub(r'src=["\']cid:([^"\']+)["\']', replace_cid, content, flags=re.IGNORECASE)
+                content = re.sub(r'src\s*=\s*["\']cid:([^"\']+)["\']', replace_cid, content, flags=re.IGNORECASE)
         except Exception as e:
             current_app.logger.error(f"Exception when replacing CID references: {str(e)}")
 

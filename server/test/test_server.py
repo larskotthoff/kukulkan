@@ -1145,8 +1145,10 @@ def test_cid_image_rendering(setup):
         assert response.status_code == 200
         html_content = response.data.decode()
         
-        # Check that cid: reference is replaced with data URI
-        assert 'cid:' not in html_content.lower(), "CID reference should be replaced"
+        # Check that cid: reference in src attribute is replaced with data URI
+        import re
+        cid_in_src = re.findall(r'src\s*=\s*["\']cid:', html_content, re.IGNORECASE)
+        assert len(cid_in_src) == 0, f"CID reference in src should be replaced, found: {cid_in_src}"
         assert 'data:image/png;base64,' in html_content, "Should contain base64 data URI"
         assert 'iVBORw0KGgo' in html_content, "Should contain PNG image data (PNG magic bytes in base64)"
 
@@ -1174,6 +1176,68 @@ def test_cid_image_in_message_body(setup):
         # Check that the message indicates HTML is present
         has_html = msg["body"]["text/html"]
         assert has_html is True, "Should indicate HTML body is present"
+
+    db.find.assert_called_once_with("foo")
+
+
+def test_cid_edge_cases(setup):
+    """Test CID replacement handles edge cases correctly."""
+    app, db = setup
+
+    mf = lambda: None
+    mf.path = "test/mails/cid-edge-cases.eml"
+    mf.messageid = "foo"
+    mf.tags = ["foo"]
+    mf.header = MagicMock(return_value="test@example.com")
+
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
+
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message_html/?message=foo')
+        assert response.status_code == 200
+        html_content = response.data.decode()
+        
+        import re
+        
+        # Both images with valid CIDs should be replaced (including one with spaces around =)
+        data_uris = re.findall(r'data:image/gif;base64,', html_content)
+        assert len(data_uris) == 2, f"Should have 2 replaced images, found {len(data_uris)}"
+        
+        # Missing CID should remain as original
+        missing_cid = re.findall(r'src\s*=\s*["\']cid:missing@test["\']', html_content, re.IGNORECASE)
+        assert len(missing_cid) == 1, "Missing CID reference should be preserved"
+        
+        # Text containing "cid:" outside of src should be preserved
+        assert 'Text containing "cid:"' in html_content or "Text containing &quot;cid:&quot;" in html_content, \
+            "Text with cid: outside src attribute should be preserved"
+
+    db.find.assert_called_once_with("foo")
+
+
+def test_cid_no_disposition_header(setup):
+    """Test that images with Content-ID but no Content-Disposition are also extracted."""
+    app, db = setup
+
+    mf = lambda: None
+    mf.path = "test/mails/cid-edge-cases.eml"
+    mf.messageid = "foo"
+    mf.tags = ["foo"]
+    mf.header = MagicMock(return_value="test@example.com")
+
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
+
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message_html/?message=foo')
+        assert response.status_code == 200
+        html_content = response.data.decode()
+        
+        # image2@test has no Content-Disposition header, should still be replaced
+        # Both images should be converted to data URIs
+        import re
+        data_uris = re.findall(r'data:image/gif;base64,', html_content)
+        assert len(data_uris) == 2, "Image without Content-Disposition should also be replaced"
 
     db.find.assert_called_once_with("foo")
 
