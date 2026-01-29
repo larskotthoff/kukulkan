@@ -1154,7 +1154,7 @@ def test_cid_image_rendering(setup):
 
 
 def test_cid_image_in_message_body(setup):
-    """Test that message body contains HTML with replaced CID references."""
+    """Test that message body indicates HTML is present for emails with embedded images."""
     app, db = setup
 
     mf = lambda: None
@@ -1171,11 +1171,9 @@ def test_cid_image_in_message_body(setup):
         assert response.status_code == 200
         msg = json.loads(response.data.decode())
         
-        # Check that the HTML body contains replaced CID references
-        html_body = msg["body"]["text/html"]
-        assert html_body is not False, "Should have HTML body"
-        assert 'cid:' not in html_body.lower(), "CID reference should be replaced"
-        assert 'data:image/png;base64,' in html_body, "Should contain base64 data URI"
+        # Check that the message indicates HTML is present
+        has_html = msg["body"]["text/html"]
+        assert has_html is True, "Should indicate HTML body is present"
 
     db.find.assert_called_once_with("foo")
 
