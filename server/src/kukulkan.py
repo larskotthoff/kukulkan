@@ -791,6 +791,30 @@ def strip_tags(soup: BeautifulSoup) -> None:
     soup.smooth()
 
 
+def get_inline_images(email_msg: email.message.Message) -> Dict[str, Tuple[str, bytes]]:
+    """Extracts inline images with Content-ID from email message.
+    
+    Returns a dictionary mapping Content-ID to (content_type, data) tuples.
+    """
+    inline_images = {}
+    for part in email_msg.walk():
+        if part.get_content_maintype() == "multipart":
+            continue
+        content_id = part.get("Content-Id") or part.get("Content-ID")
+        if content_id and part.get_content_disposition() == "inline":
+            # Remove angle brackets if present
+            cid = content_id.strip('<>')
+            content_type = part.get_content_type()
+            try:
+                # Get the binary content
+                data = part.get_payload(decode=True)
+                if data:
+                    inline_images[cid] = (content_type, data)
+            except Exception:
+                pass
+    return inline_images
+
+
 def get_nested_body(email_msg: email.message.Message, html: bool = False) -> Tuple[str, bool]:
     """Gets all, potentially MIME-nested bodies."""
     has_html = False
@@ -858,6 +882,24 @@ def get_nested_body(email_msg: email.message.Message, html: bool = False) -> Tup
         pass
     except Exception as e:
         current_app.logger.error(f"Exception when removing safelinks: {str(e)}")
+
+    # Replace cid: references with data URIs for inline images
+    if html is True and content:
+        try:
+            inline_images = get_inline_images(email_msg)
+            if inline_images:
+                # Replace cid: references in src attributes
+                def replace_cid(match):
+                    cid = match.group(1)
+                    if cid in inline_images:
+                        content_type, data = inline_images[cid]
+                        data_base64 = base64.b64encode(data).decode('ascii')
+                        return f'src="data:{content_type};base64,{data_base64}"'
+                    return match.group(0)  # Return original if CID not found
+                
+                content = re.sub(r'src=["\']cid:([^"\']+)["\']', replace_cid, content, flags=re.IGNORECASE)
+        except Exception as e:
+            current_app.logger.error(f"Exception when replacing CID references: {str(e)}")
 
     return content, has_html
 

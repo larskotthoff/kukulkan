@@ -32,6 +32,25 @@ def test_email_addresses_header():
     assert "Föö Bär <foo@bar.com>" == k.email_addresses_header("Föö Bär <foo@bar.com>")
 
 
+def test_get_inline_images():
+    """Test extraction of inline images from email with Content-ID."""
+    with open("test/mails/attachment-image.eml", "rb") as f:
+        email_msg = email.message_from_binary_file(f, policy=k.policy)
+    
+    inline_images = k.get_inline_images(email_msg)
+    
+    # Check that the inline image was extracted
+    assert len(inline_images) == 1
+    assert "DB294AA3-160F-4825-923A-B16C8B674543@home" in inline_images
+    
+    content_type, data = inline_images["DB294AA3-160F-4825-923A-B16C8B674543@home"]
+    assert content_type == "image/png"
+    assert isinstance(data, bytes)
+    assert len(data) > 0
+    # PNG files start with these magic bytes
+    assert data[:8] == b'\x89PNG\r\n\x1a\n'
+
+
 @pytest.fixture
 def setup():
     flask_app = k.create_app()
@@ -1104,6 +1123,59 @@ def test_attachment_image_no_resize(setup):
         assert "inline; filename=filename.png" == response.headers['Content-Disposition']
         img = Image.open(io.BytesIO(response.data))
         assert (1584, 1274) == img.size
+
+    db.find.assert_called_once_with("foo")
+
+
+def test_cid_image_rendering(setup):
+    """Test that embedded images with src=cid:... are replaced with data URIs."""
+    app, db = setup
+
+    mf = lambda: None
+    mf.path = "test/mails/attachment-image.eml"
+    mf.messageid = "foo"
+    mf.tags = ["foo"]
+    mf.header = MagicMock(return_value="test@example.com")
+
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
+
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message_html/?message=foo')
+        assert response.status_code == 200
+        html_content = response.data.decode()
+        
+        # Check that cid: reference is replaced with data URI
+        assert 'cid:' not in html_content.lower(), "CID reference should be replaced"
+        assert 'data:image/png;base64,' in html_content, "Should contain base64 data URI"
+        assert 'iVBORw0KGgo' in html_content, "Should contain PNG image data (PNG magic bytes in base64)"
+
+    db.find.assert_called_once_with("foo")
+
+
+def test_cid_image_in_message_body(setup):
+    """Test that message body contains HTML with replaced CID references."""
+    app, db = setup
+
+    mf = lambda: None
+    mf.path = "test/mails/attachment-image.eml"
+    mf.messageid = "foo"
+    mf.tags = ["foo"]
+    mf.header = MagicMock(return_value="test@example.com")
+
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
+
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message/?message=foo')
+        assert response.status_code == 200
+        msg = json.loads(response.data.decode())
+        
+        # Check that the HTML body contains replaced CID references
+        html_body = msg["body"]["text/html"]
+        assert html_body is not False, "Should have HTML body"
+        assert 'cid:' not in html_body.lower(), "CID reference should be replaced"
+        assert 'data:image/png;base64,' in html_body, "Should contain base64 data URI"
 
     db.find.assert_called_once_with("foo")
 
