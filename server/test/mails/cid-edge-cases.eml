@@ -1,0 +1,32 @@
+From: Test <test@example.com>
+To: Recipient <recipient@example.com>
+Subject: Test Edge Cases
+Content-Type: multipart/related; boundary="boundary123"
+MIME-Version: 1.0
+
+--boundary123
+Content-Type: text/html; charset=utf-8
+
+<html>
+<body>
+<p>Image with spaces in src: <img src = "cid:image1@test"></p>
+<p>Image with normal src: <img src="cid:image2@test"></p>
+<p>Missing CID reference: <img src="cid:missing@test"></p>
+<p>Text containing "cid:" but not in src attribute</p>
+</body>
+</html>
+
+--boundary123
+Content-Type: image/gif
+Content-ID: <image1@test>
+Content-Disposition: inline
+
+R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7
+
+--boundary123
+Content-Type: image/gif
+Content-ID: <image2@test>
+
+R0lGODlhAQABAIAAAP///////yH5BAEAAAAALAAAAAABAAEAAAIBRAA7
+
+--boundary123--

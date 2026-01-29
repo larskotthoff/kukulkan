@@ -4,6 +4,7 @@ import io
 import os
 import email
 import time
+import re
 from unittest.mock import MagicMock, mock_open, patch, call, ANY
 
 import notmuch2
@@ -30,6 +31,28 @@ def test_email_addresses_header():
     assert "\"Bar, Foo\" <foo@bar.com>" == k.email_addresses_header("\"Bar, Foo\" <foo@bar.com>")
     assert "Foo Bar <foo@bar.com>" == k.email_addresses_header("\"Foo Bar\" <foo@bar.com>")
     assert "Föö Bär <foo@bar.com>" == k.email_addresses_header("Föö Bär <foo@bar.com>")
+
+
+# Copilot
+def test_get_inline_content():
+    with open("test/mails/cid-edge-cases.eml", "rb") as f:
+        email_msg = email.message_from_binary_file(f, policy=k.policy)
+
+    inline_images = k.get_inline_content(email_msg)
+
+    assert len(inline_images) == 2
+    assert "image1@test" in inline_images
+    assert "image2@test" in inline_images
+
+    content_type, data = inline_images["image1@test"]
+    assert content_type == "image/gif"
+    assert isinstance(data, bytes)
+    assert data == b'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7\n'
+
+    content_type, data = inline_images["image2@test"]
+    assert content_type == "image/gif"
+    assert isinstance(data, bytes)
+    assert data == b'R0lGODlhAQABAIAAAP///////yH5BAEAAAAALAAAAAABAAEAAAIBRAA7\n'
 
 
 @pytest.fixture
@@ -1941,6 +1964,61 @@ def test_message_html_filter_html(setup):
     db.find.assert_called_once_with("foo")
 
 
+# Copilot
+def test_cid_image_rendering(setup):
+    """Test that embedded images with src=cid:... are replaced with data URIs."""
+    app, db = setup
+
+    mf = lambda: None
+    mf.path = "test/mails/attachment-image.eml"
+    db.find = MagicMock(return_value=mf)
+
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message_html/?message=foo')
+        assert response.status_code == 200
+        html_content = response.data.decode()
+
+        # Check that cid: reference in src attribute is replaced with data URI
+        cid_in_src = re.findall(r'src\s*=\s*["\']cid:', html_content, re.IGNORECASE)
+        assert len(cid_in_src) == 0, f"CID reference in src should be replaced, found: {cid_in_src}"
+        assert 'data:image/png;base64,' in html_content, "Should contain base64 data URI"
+        assert 'iVBORw0KGgo' in html_content, "Should contain PNG image data (PNG magic bytes in base64)"
+
+    db.find.assert_called_once_with("foo")
+
+
+# Copilot
+def test_cid_edge_cases(setup):
+    """Test CID replacement handles edge cases correctly."""
+    app, db = setup
+
+    mf = lambda: None
+    mf.path = "test/mails/cid-edge-cases.eml"
+    db.find = MagicMock(return_value=mf)
+
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message_html/?message=foo')
+        assert response.status_code == 200
+        html_content = response.data.decode()
+
+        # Both images with valid CIDs should be replaced (including one with spaces around =)
+        data_uris = re.findall(r'data:image/gif;base64,', html_content)
+        assert len(data_uris) == 2, f"Should have 2 replaced images, found {len(data_uris)}"
+
+        assert "image1@test" not in html_content
+        assert "image2@test" not in html_content
+
+        # Missing CID should remain as original
+        missing_cid = re.findall(r'src\s*=\s*["\']cid:missing@test["\']', html_content, re.IGNORECASE)
+        assert len(missing_cid) == 1, "Missing CID reference should be preserved"
+
+        # Text containing "cid:" outside of src should be preserved
+        assert 'Text containing "cid:"' in html_content or "Text containing &quot;cid:&quot;" in html_content, \
+            "Text with cid: outside src attribute should be preserved"
+
+    db.find.assert_called_once_with("foo")
+
+
 def test_thread(setup):
     app, db = setup
 
@@ -2581,10 +2659,8 @@ def test_send_attachment(setup):
                 assert "Content-Transfer-Encoding: base64" in text
                 assert "Content-Disposition: attachment; filename=\"test.txt\"" in text
                 assert "\nVGhpcyBpcyBhIGZpbGUu\n" in text
-            if IN_GITHUB_ACTIONS:
-                assert o.call_count == 2
-            else:
-                assert o.call_count == 1
+
+            assert o.call_count == 2
             args = o.call_args.args
             assert "kukulkan" in args[0]
             assert "folder/" in args[0]
