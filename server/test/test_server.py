@@ -1155,9 +1155,49 @@ def test_message_simple(setup):
         assert msg["subject"] == "foo@bar"
         assert msg["message_id"] == "foo@bar"
         assert msg["in_reply_to"] == "foo@bar"
-        assert msg["reply_to"] == "foo@bar"
+        assert msg["reply_to"] == ["foo@bar"]
         assert msg["delivered_to"] == "foo@bar"
         assert msg["forwarded_to"] == "foo@bar"
+
+        assert "With the new notmuch_message_get_flags() function" in msg["body"]["text/plain"]
+        assert msg["body"]["text/html"] == False
+
+        assert msg["notmuch_id"] == "foo"
+        assert msg["tags"] == ["foo", "bar"]
+        assert msg["attachments"] == []
+        assert msg["signature"] is None
+
+    assert mf.header.call_count == 11
+    db.find.assert_called_once_with("foo")
+
+
+def test_message_simple_multiple_reply_to(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.path = "test/mails/simple.eml"
+    mf.messageid = "foo"
+    mf.tags = ["foo", "bar"]
+    mf.header = MagicMock(return_value="foo@bar, bar@foo")
+
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
+
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message/?message=foo')
+        assert response.status_code == 200
+        msg = json.loads(response.data.decode())
+        assert msg["from"] == "foo@bar, bar@foo"
+        assert msg["to"] == ["foo@bar", "bar@foo"]
+        assert msg["cc"] == ["foo@bar", "bar@foo"]
+        assert msg["bcc"] == ["foo@bar", "bar@foo"]
+        assert msg["date"] == "foo@bar, bar@foo"
+        assert msg["subject"] == "foo@bar, bar@foo"
+        assert msg["message_id"] == "foo@bar, bar@foo"
+        assert msg["in_reply_to"] == "foo@bar, bar@foo"
+        assert msg["reply_to"] == ["foo@bar", "bar@foo"]
+        assert msg["delivered_to"] == "foo@bar, bar@foo"
+        assert msg["forwarded_to"] == "foo@bar, bar@foo"
 
         assert "With the new notmuch_message_get_flags() function" in msg["body"]["text/plain"]
         assert msg["body"]["text/html"] == False
@@ -1195,7 +1235,7 @@ def test_message_simple_deleted(setup):
         assert msg["subject"] == "foo@bar"
         assert msg["message_id"] == "foo@bar"
         assert msg["in_reply_to"] == "foo@bar"
-        assert msg["reply_to"] == "foo@bar"
+        assert msg["reply_to"] == ["foo@bar"]
         assert msg["delivered_to"] == "foo@bar"
         assert msg["forwarded_to"] == "foo@bar"
 
@@ -1873,7 +1913,7 @@ def test_message_attachment_mail(setup):
         assert msg["subject"] == "BsetSign App : Y7P32-HTXU2-FRDG7"
         assert msg["message_id"] == "<1M3lHZ-1jyAPt0pTn-000u1I@mrelayeu.kundenserver.de>"
         assert msg["in_reply_to"] == None
-        assert msg["reply_to"] == None
+        assert msg["reply_to"] == []
         assert msg["delivered_to"] == "arne.keller@posteo.de"
         assert msg["forwarded_to"] == None
 
@@ -2045,7 +2085,7 @@ def test_thread(setup):
         assert msg["subject"] == "foo@bar"
         assert msg["message_id"] == "foo@bar"
         assert msg["in_reply_to"] == "foo@bar"
-        assert msg["reply_to"] == "foo@bar"
+        assert msg["reply_to"] == ["foo@bar"]
         assert msg["delivered_to"] == "foo@bar"
         assert msg["forwarded_to"] == "foo@bar"
 
@@ -2088,7 +2128,7 @@ def test_thread_deleted(setup):
         assert msg["subject"] == "foo@bar"
         assert msg["message_id"] == "foo@bar"
         assert msg["in_reply_to"] == "foo@bar"
-        assert msg["reply_to"] == "foo@bar"
+        assert msg["reply_to"] == ["foo@bar"]
         assert msg["delivered_to"] == "foo@bar"
         assert msg["forwarded_to"] == "foo@bar"
 

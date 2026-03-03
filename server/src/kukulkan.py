@@ -1189,7 +1189,7 @@ def eml_to_json(message_bytes: bytes) -> Dict[str, Any]:
         "subject": email_msg["subject"].strip().replace('\t', ' ') if "subject" in email_msg else "",
         "message_id": email_msg["Message-ID"].strip() if "Message-ID" in email_msg else "",
         "in_reply_to": email_msg["In-Reply-To"].strip() if "In-Reply-To" in email_msg else None,
-        "reply_to": email_msg["Reply-To"].strip() if "Reply-To" in email_msg else None,
+        "reply_to": split_email_addresses(email_msg["Reply-To"]) if "Reply-To" in email_msg else [],
         "forwarded_to": email_msg["X-Forwarded-To"].strip() if "X-Forwarded-To" in email_msg else None,
         "delivered_to": email_msg["Delivered-To"].strip() if "Delivered-To" in email_msg else None,
         "body": {
@@ -1286,7 +1286,7 @@ def message_to_json(msg: notmuch2.Message, get_deleted_body: bool = False) -> Di
         "subject": get_header(msg, "subject"),
         "message_id": get_header(msg, "Message-ID"),
         "in_reply_to": get_header(msg, "In-Reply-To"),
-        "reply_to": get_header(msg, "Reply-To"),
+        "reply_to": split_email_addresses(hdr) if (hdr := get_header(msg, "Reply-To")) else [],
         "forwarded_to": get_header(msg, "X-Forwarded-To"),
         "delivered_to": get_header(msg, "Delivered-To"),
         "body": {

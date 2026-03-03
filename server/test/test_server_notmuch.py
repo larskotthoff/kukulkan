@@ -143,7 +143,7 @@ def test_thread(setup):
         assert msgs[0]['in_reply_to'] == '<87a7v42bv9.fsf@curie.anarc.at>'
         assert msgs[0]['message_id'] == '874llc2bkp.fsf@curie.anarc.at'
         assert msgs[0]['notmuch_id'] == '874llc2bkp.fsf@curie.anarc.at'
-        assert msgs[0]['reply_to'] == None
+        assert msgs[0]['reply_to'] == []
         assert msgs[0]['signature'] == None
         assert msgs[0]['subject'] == 'Re: bug: "no top level messages" crash on Zen email loops'
         assert msgs[0]['tags'] == ['attachment', 'inbox', 'unread']
@@ -177,7 +177,7 @@ def test_message(setup):
         assert msg['in_reply_to'] == '<87a7v42bv9.fsf@curie.anarc.at>'
         assert msg['message_id'] == '874llc2bkp.fsf@curie.anarc.at'
         assert msg['notmuch_id'] == '874llc2bkp.fsf@curie.anarc.at'
-        assert msg['reply_to'] == None
+        assert msg['reply_to'] == []
         assert msg['signature'] == None
         assert msg['subject'] == 'Re: bug: "no top level messages" crash on Zen email loops'
         assert msg['tags'] == ['attachment', 'inbox', 'unread']
@@ -201,7 +201,7 @@ def test_message_nested(setup):
         assert msg['in_reply_to'] == None
         assert msg['message_id'] == '<1M3lHZ-1jyAPt0pTn-000u1I@mrelayeu.kundenserver.de>'
         assert msg['notmuch_id'] == None
-        assert msg['reply_to'] == None
+        assert msg['reply_to'] == []
         assert msg['signature'] == None
         assert msg['subject'] == 'BsetSign App : Y7P32-HTXU2-FRDG7'
         assert msg['tags'] == []

@@ -325,7 +325,7 @@ export function Message(props) {
       <Show when={props.active}>
         <div>
           <Show when={msg.from}><HeaderLine left="From:" right={formatAddrs(msg.from)}/></Show>
-          <Show when={msg.reply_to}><HeaderLine left="Reply-To:" right={formatAddrs(msg.reply_to)}/></Show>
+          <Show when={msg.reply_to && msg.reply_to.length > 0}><HeaderLine left="Reply-To:" right={formatAddrs(msg.reply_to)}/></Show>
           <Show when={msg.to && msg.to.length > 0}><HeaderLine left="To:" right={formatAddrs(msg.to)}/></Show>
           <Show when={msg.forwarded_to}><HeaderLine left="Forwarded-To:" right={formatAddrs(msg.forwarded_to)}/></Show>
           <Show when={msg.cc && msg.cc.length > 0}><HeaderLine left="CC:" right={formatAddrs(msg.cc)}/></Show>

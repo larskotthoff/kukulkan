@@ -122,7 +122,7 @@ test("renders message components", () => {
 
 test("renders additional message components", () => {
   const msg1 = structuredClone(msg);
-  msg1.reply_to = "Reply@to";
+  msg1.reply_to = ["Reply@to"];
   msg1.forwarded_to = "Forwarded@to";
   msg1.bcc = ["BCC@BCC"];
 

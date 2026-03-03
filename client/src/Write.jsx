@@ -64,7 +64,7 @@ function makeToCc(msg, action, mode) {
   let tmpTo = [], tmpCc = [];
   if(action === "reply" || action.startsWith("reply-cal-")) {
     if(msg.reply_to) {
-      tmpTo = [ msg.reply_to ];
+      tmpTo = msg.reply_to;
     } else {
       tmpTo = [ msg.from ];
     }
