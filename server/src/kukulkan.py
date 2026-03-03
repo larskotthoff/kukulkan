@@ -69,7 +69,7 @@ cleaner = Cleaner(javascript=True,
 
 send_queue: queue.Queue = queue.Queue()
 
-policy = email.policy.default.clone(utf8=True)
+policy = email.policy.default.clone(utf8=True, max_line_length=None)
 
 SAFELINKS_REGEX = r'https?://[a-z0-9]+\.safelinks\.protection\.outlook\.com/[^?]*\?url=([^&\s"]+)&[^"\s>)]+'
 
