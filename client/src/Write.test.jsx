@@ -112,6 +112,31 @@ test("base message reply all", async () => {
   expect(document.title).toBe("Compose: Re: Test.");
 });
 
+test("base message reply all multiple to", async () => {
+  vi.stubGlobal('location', {
+    ...window.location,
+    search: '?message=foo&action=reply&mode=all'
+  });
+  const msg1 = structuredClone(msg);
+  msg1.to = ["foo bar <foo@bar.com>", "somebody@foo.com"];
+  vi.stubGlobal("data", {"accounts": accts, "allTags": tags, "compose": [], "baseMessage": msg1});
+  const { getByTestId } = render(() => <Write/>);
+
+  await vi.waitFor(() => {
+    expect(screen.getByText("Send")).toBeInTheDocument();
+  });
+  expect(screen.getByText("foo bar <foo@bar.com>")).toBeInTheDocument();
+  expect(screen.getByText("bar foo <bar@foo.com>")).toBeInTheDocument();
+  expect(screen.getByText("somebody@foo.com")).toBeInTheDocument();
+  expect(screen.getByText("test@test.com")).toBeInTheDocument();
+  expect(getByTestId("subject").value).toBe("Re: Test.");
+  expect(screen.getByText("foo")).toBeInTheDocument();
+  expect(screen.getByText("bar")).toBeInTheDocument();
+  expect(screen.getByText("test")).toBeInTheDocument();
+  expect(getByTestId("body").value).toBe(`\n\n\nOn ${msg.date}, ${msg.from} wrote:\n> Test mail`);
+  expect(document.title).toBe("Compose: Re: Test.");
+});
+
 test("base message reply all duplicate addresses", async () => {
   vi.stubGlobal('location', {
     ...window.location,
