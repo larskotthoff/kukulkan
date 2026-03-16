@@ -31,9 +31,9 @@ jobs:
         VENV_SITE=$($GITHUB_WORKSPACE/.venv/bin/python3 -c "import site; print(site.getsitepackages()[0])")
         cp -r /usr/lib/python3/dist-packages/notmuch2 "$VENV_SITE/"
         find /usr/lib/python3/dist-packages -name '_notmuch2*.so' -exec cp {} "$VENV_SITE/" \;
-        $GITHUB_WORKSPACE/.venv/bin/python3 -c "import notmuch2"
         $GITHUB_WORKSPACE/.venv/bin/pip install --upgrade pip
-        $GITHUB_WORKSPACE/.venv/bin/pip install flake8 pytest mypy
+        $GITHUB_WORKSPACE/.venv/bin/pip install flake8 pytest mypy cffi
+        $GITHUB_WORKSPACE/.venv/bin/python3 -c "import notmuch2"
         $GITHUB_WORKSPACE/.venv/bin/pip install -r requirements.txt
     - name: Lint with flake8
       run: |
