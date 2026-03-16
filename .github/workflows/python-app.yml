@@ -26,8 +26,12 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get install -y notmuch libnotmuch-dev python3-notmuch2 python3-pip python3-venv
-        python3 -m venv --system-site-packages $GITHUB_WORKSPACE/.venv
+        python3 -m venv $GITHUB_WORKSPACE/.venv
         echo "$GITHUB_WORKSPACE/.venv/bin" >> $GITHUB_PATH
+        VENV_SITE=$($GITHUB_WORKSPACE/.venv/bin/python3 -c "import site; print(site.getsitepackages()[0])")
+        cp -r /usr/lib/python3/dist-packages/notmuch2 "$VENV_SITE/"
+        find /usr/lib/python3/dist-packages -name '_notmuch2*.so' -exec cp {} "$VENV_SITE/" \;
+        $GITHUB_WORKSPACE/.venv/bin/python3 -c "import notmuch2"
         $GITHUB_WORKSPACE/.venv/bin/pip install --upgrade pip
         $GITHUB_WORKSPACE/.venv/bin/pip install flake8 pytest mypy
         $GITHUB_WORKSPACE/.venv/bin/pip install -r requirements.txt
