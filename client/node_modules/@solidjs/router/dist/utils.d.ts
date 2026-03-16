@@ -1,0 +1,12 @@
+import type { MatchFilters, PathMatch, RouteDescription, SearchParams, SetSearchParams } from "./types.ts";
+export declare const mockBase = "http://sr";
+export declare function normalizePath(path: string, omitSlash?: boolean): string;
+export declare function resolvePath(base: string, path: string, from?: string): string | undefined;
+export declare function invariant<T>(value: T | null | undefined, message: string): T;
+export declare function joinPaths(from: string, to: string): string;
+export declare function extractSearchParams(url: URL): SearchParams;
+export declare function createMatcher<S extends string>(path: S, partial?: boolean, matchFilters?: MatchFilters<S>): (location: string) => PathMatch | null;
+export declare function scoreRoute(route: RouteDescription): number;
+export declare function createMemoObject<T extends Record<string | symbol, unknown>>(fn: () => T): T;
+export declare function mergeSearchString(search: string, params: SetSearchParams): string;
+export declare function expandOptionals(pattern: string): string[];

@@ -1,0 +1,83 @@
+{
+  "name": "@solidjs/testing-library",
+  "version": "0.8.10",
+  "description": "Simple and complete Solid testing utilities that encourage good testing practices.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "import": "./dist/index.js",
+    "require": "./dist/index.cjs"
+  },
+  "license": "MIT",
+  "author": "Ryan Carniato",
+  "maintainers": [
+    "Alex Lohr"
+  ],
+  "homepage": "https://github.com/solidjs/solid-testing-library#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/solidjs/solid-testing-library"
+  },
+  "bugs": {
+    "url": "https://github.com/solidjs/solid-testing-library/issues"
+  },
+  "engines": {
+    "node": ">= 14"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "testing",
+    "solid-js",
+    "ui",
+    "dom",
+    "jsdom",
+    "unit",
+    "integration",
+    "functional",
+    "end-to-end",
+    "e2e"
+  ],
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "prepublishOnly": "npm run build",
+    "build": "tsup src/index.ts --format esm,cjs --dts --clean; node -e 'require(`node:fs/promises`).copyFile(`dist/index.d.ts`, `dist/index.d.cts`)'",
+    "typecheck": "tsc --noEmit; tsc --noEmit --project src/__tests__/tsconfig.json",
+    "test": "vitest",
+    "test:watch": "npm test --watch",
+    "test:coverage": "npm test -- --coverage",
+    "setup": "npm install && npm run validate",
+    "prettier": "prettier -w src/**/* ./*.json ./vitest.config.js",
+    "validate": "npm run typecheck && npm run test:coverage && npm run build"
+  },
+  "dependencies": {
+    "@testing-library/dom": "^10.4.0"
+  },
+  "devDependencies": {
+    "@solidjs/router": "^0.14.5",
+    "@testing-library/jest-dom": "^6.5.0",
+    "@testing-library/user-event": "^14.5.2",
+    "@vitest/coverage-v8": "2.0.4",
+    "jsdom": "^25.0.1",
+    "prettier": "^3.3.3",
+    "solid-js": "^1.9.1",
+    "tsup": "8.3.0",
+    "typescript": "^5.6.2",
+    "vite-plugin-solid": "^2.10.2",
+    "vitest": "2.0.4"
+  },
+  "peerDependencies": {
+    "@solidjs/router": ">=0.9.0",
+    "solid-js": ">=1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@solidjs/router": {
+      "optional": true
+    }
+  }
+}

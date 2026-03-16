@@ -1,0 +1,56 @@
+{
+  "name": "@solid-devtools/shared",
+  "version": "0.19.1",
+  "license": "MIT",
+  "author": "Damian Tarnawski <gthetarnav@gmail.com>",
+  "contributors": [],
+  "homepage": "https://github.com/thetarnav/solid-devtools/tree/main/packages/shared#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thetarnav/solid-devtools.git"
+  },
+  "bugs": {
+    "url": "https://github.com/thetarnav/solid-devtools/issues"
+  },
+  "keywords": [
+    "solid",
+    "devtools"
+  ],
+  "private": false,
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": {
+        "@solid-devtools/source": "./src/index.ts",
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./*": {
+      "import": {
+        "@solid-devtools/source": "./src/*.ts",
+        "types": "./dist/*.d.ts",
+        "default": "./dist/*.js"
+      }
+    }
+  },
+  "peerDependencies": {
+    "solid-js": "^1.9.0"
+  },
+  "dependencies": {
+    "@nothing-but/utils": "~0.17.0",
+    "@solid-primitives/event-listener": "^2.4.0",
+    "@solid-primitives/media": "^2.3.0",
+    "@solid-primitives/refs": "^1.1.0",
+    "@solid-primitives/rootless": "^1.5.0",
+    "@solid-primitives/scheduled": "^1.5.0",
+    "@solid-primitives/static-store": "^0.1.0",
+    "@solid-primitives/styles": "^0.1.0",
+    "@solid-primitives/utils": "^6.3.0"
+  },
+  "scripts": {}
+}

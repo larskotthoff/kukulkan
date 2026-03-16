@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { cleanup, render, screen } from "@solidjs/testing-library";
 import { userEvent } from "@testing-library/user-event";
+import { ErrorBoundary } from "solid-js";
 
 import { Threads, ThreadGroup } from "./Threads.jsx";
 import { SearchThreads } from "./SearchThreads.jsx";
@@ -938,6 +939,14 @@ test("group threads -- ungroup then new group", async () => {
 
   expect(screen.queryByText("2 thread groups.")).not.toBeInTheDocument();
   expect(screen.getByText("1 thread group.")).toBeInTheDocument();
+});
+
+test("shows error message from backend when data.error is set", async () => {
+  vi.stubGlobal("data", {"allTags": tags, "threads": [], "error": "bad query syntax"});
+  render(() => <ErrorBoundary fallback={(error) => <div>Error: {error.message}</div>}><Threads Threads={SearchThreads}/></ErrorBoundary>);
+  await vi.waitFor(() => {
+    expect(screen.getByText("Error: bad query syntax")).toBeInTheDocument();
+  });
 });
 
 // vim: tabstop=2 shiftwidth=2 expandtab

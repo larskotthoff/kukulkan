@@ -237,7 +237,12 @@ def create_app() -> Flask:
     @app.route("/", methods=['GET', 'POST'])
     def send_index() -> Any:
         globs = get_globals()
-        globs["threads"] = query()
+        result = query()
+        if isinstance(result, tuple):
+            globs["threads"] = []
+            globs["error"] = result[0]["error"]
+        else:
+            globs["threads"] = result
         return render_template("index.html", data=globs)
 
     @app.route("/<path:path>", methods=['GET', 'POST'])
@@ -247,7 +252,12 @@ def create_app() -> Flask:
             return send_from_directory(app.static_folder or "/", path)
         globs = get_globals()
         if path == "todo":
-            globs["threads"] = query("tag:todo")
+            result = query("tag:todo")
+            if isinstance(result, tuple):
+                globs["threads"] = []
+                globs["error"] = result[0]["error"]
+            else:
+                globs["threads"] = result
         elif path == "thread":
             globs["thread"] = thread()
         elif path == "message":
