@@ -308,7 +308,10 @@ def create_app() -> Flask:
                     threads[msg.threadid]["tags"][tag] = 1
             return threads
 
-        threads = get_threads(query_string)
+        try:
+            threads = get_threads(query_string)
+        except notmuch2.NotmuchError as e:
+            return {"error": str(e)}, 400
         # second pass to create nested group structure
         nested_threads = {}
         seen_groups = []
