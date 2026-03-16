@@ -19,8 +19,6 @@ from typing import Any, Dict, List, Optional, Tuple, Generator
 
 import email
 import email.headerregistry
-import email.mime.multipart
-import email.mime.text
 import email.policy
 
 from urllib.parse import unquote
@@ -637,13 +635,8 @@ def create_app() -> Flask:
                         rcal.add_component(event)
                         msg.add_attachment(rcal.to_ical().decode("utf8"),
                                            subtype=typ[1],
+                                           params={"method": "REPLY"},
                                            filename=att["filename"])
-                        msg.attach(
-                            email.mime.text.MIMEText(
-                                rcal.to_ical().decode("utf8"),  # type: ignore[arg-type]
-                                "calendar;method=REPLY",
-                            )
-                        )
 
         for att_file in request.files:
             content = request.files[att_file].read()
@@ -667,7 +660,7 @@ def create_app() -> Flask:
             ).sign(
                 Encoding.SMIME, [pkcs7.PKCS7Options.DetachedSignature]
             )
-            msg = email.message_from_bytes(out)  # type: ignore[assignment]
+            msg = email.message_from_bytes(out, policy=policy)  # type: ignore[assignment]
 
         msg['Subject'] = request.values['subject']
         msg['From'] = f'{account["name"]} <{account["email"]}>'
@@ -1321,7 +1314,7 @@ def message_attachment(message: notmuch2.Message, num: int = -1) -> Optional[Dic
     return attachments[num]
 
 
-def email_from_notmuch(message: notmuch2.Message) -> email.message.Message:
+def email_from_notmuch(message: notmuch2.Message) -> email.message.EmailMessage:
     """Returns the email message corresponding to a `notmuch2Message` instance."""
     with open(message.path, "rb") as f:
         email_msg = email.message_from_binary_file(f, policy=policy)  # type: ignore[arg-type]

@@ -1,0 +1,3 @@
+server/src/__pycache__
+server/test/__pycache__
+*.pyc
