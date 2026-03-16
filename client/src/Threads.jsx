@@ -46,6 +46,7 @@ export function ThreadGroup(props) {
 }
 
 export function Threads(props) {
+  if(data.error) throw new Error(data.error);
   const [query, setQuery] = createSignal(),
         [selectedThreads, setSelectedThreads] = createSignal([]),
         [editingTags, setEditingTags] = createSignal(null),

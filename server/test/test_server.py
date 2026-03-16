@@ -226,6 +226,38 @@ def test_query_malformed(setup):
         assert data["error"] == "bad query syntax"
 
 
+def test_index_malformed_query(setup):
+    app, db = setup
+
+    db.config = {}
+    db.tags = []
+    db.messages = MagicMock(side_effect=notmuch2.NotmuchError(message="bad query syntax"))
+
+    with patch('src.kukulkan.render_template') as mock_render:
+        mock_render.return_value = ''
+        with app.test_client() as test_client:
+            test_client.get('/?query=date:bad..')
+        args, kwargs = mock_render.call_args
+        assert kwargs['data']['threads'] == []
+        assert kwargs['data']['error'] == "bad query syntax"
+
+
+def test_todo_malformed_query(setup):
+    app, db = setup
+
+    db.config = {}
+    db.tags = []
+    db.messages = MagicMock(side_effect=notmuch2.NotmuchError(message="bad query syntax"))
+
+    with patch('src.kukulkan.render_template') as mock_render:
+        mock_render.return_value = ''
+        with app.test_client() as test_client:
+            test_client.get('/todo')
+        args, kwargs = mock_render.call_args
+        assert kwargs['data']['threads'] == []
+        assert kwargs['data']['error'] == "bad query syntax"
+
+
 def test_query_group(setup):
     app, db = setup
 
