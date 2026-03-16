@@ -23,14 +23,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Set up Python
-      uses: actions/setup-python@v3
     - name: Install dependencies
       run: |
-        sudo apt-get install -y notmuch libnotmuch-dev
-        python -m pip install --upgrade pip
-        pip install flake8 pytest mypy
-        pip install -r requirements.txt
+        sudo apt-get install -y notmuch libnotmuch-dev python3-notmuch2 python3-pip python3-venv
+        python3 -m venv --system-site-packages .venv
+        echo "$GITHUB_WORKSPACE/server/.venv/bin" >> $GITHUB_PATH
+        .venv/bin/pip install --upgrade pip
+        .venv/bin/pip install flake8 pytest mypy
+        .venv/bin/pip install -r requirements.txt
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
