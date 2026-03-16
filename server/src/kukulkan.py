@@ -283,7 +283,7 @@ def create_app() -> Flask:
         return response
 
     @app.route("/api/query/")
-    def query(query_string: Optional[str] = None) -> List[Dict[str, Any]]:
+    def query(query_string: Optional[str] = None) -> List[Dict[str, Any]] | Tuple[Dict[str, str], int]:
         if query_string is None:
             query_string = request.args.get("query")
 
