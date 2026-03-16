@@ -32,7 +32,7 @@ jobs:
         sudo apt-get install -y notmuch libnotmuch-dev python3-notmuch2
         python -m pip install --upgrade pip
         pip install flake8 pytest mypy
-        pip install -r requirements.txt
+        pip install $(grep -v notmuch requirements.txt)
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
