@@ -283,7 +283,7 @@ def create_app() -> Flask:
         return response
 
     @app.route("/api/query/")
-    def query(query_string: Optional[str] = None) -> List[Dict[str, Any]]:
+    def query(query_string: Optional[str] = None) -> List[Dict[str, Any]] | Tuple[Dict[str, str], int]:
         if query_string is None:
             query_string = request.args.get("query")
 
@@ -308,7 +308,10 @@ def create_app() -> Flask:
                     threads[msg.threadid]["tags"][tag] = 1
             return threads
 
-        threads = get_threads(query_string)
+        try:
+            threads = get_threads(query_string)
+        except notmuch2.NotmuchError as e:
+            return {"error": str(e)}, 400
         # second pass to create nested group structure
         nested_threads = {}
         seen_groups = []

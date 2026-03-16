@@ -213,6 +213,19 @@ def test_query_exclude_tags(setup):
                                         sort=notmuch2.Database.SORT.NEWEST_FIRST)
 
 
+def test_query_malformed(setup):
+    app, db = setup
+
+    db.config = {}
+    db.messages = MagicMock(side_effect=notmuch2.NotmuchError(message="bad query syntax"))
+
+    with app.test_client() as test_client:
+        response = test_client.get('/api/query/?query=date:bad..')
+        assert response.status_code == 400
+        data = json.loads(response.data.decode())
+        assert data["error"] == "bad query syntax"
+
+
 def test_query_group(setup):
     app, db = setup
 

@@ -103,6 +103,16 @@ def test_query_deleted(setup_deleted):
         assert thrds[0]["tags"] == ["attachment", "deleted", "inbox", "unread"]
         assert thrds[0]["total_messages"] == 1
 
+def test_query_malformed(setup):
+    app = setup
+    with app.test_client() as test_client:
+        response = test_client.get('/api/query/?query=date:bad..')
+        assert response.status_code == 400
+        data = json.loads(response.data.decode())
+        assert "error" in data
+        assert len(data["error"]) > 0
+
+
 def test_address(setup):
     app = setup
     with app.test_client() as test_client:
