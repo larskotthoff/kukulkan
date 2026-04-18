@@ -64,7 +64,7 @@ test("fetches and renders message", async () => {
 test("fetches and renders attached message", async () => {
   vi.stubGlobal('location', {
     ...window.location,
-    search: '?id=foo&attachNum=0'
+    search: '?message=foo&num=0'
   });
   render(() => <FetchedMessage/>);
 
@@ -202,7 +202,7 @@ test("renders message attachments", () => {
   // nested message
   msg.attachments = [ { content_type: "message/rfc822", content_size: 100, filename: "bar.txt" } ];
   container = render(() => <Message msg={msg} active={true}/>).container;
-  expect(container.querySelector("a[href='/message?id=fo%40o&attachNum=0']")).not.toBe(null);
+  expect(container.querySelector("a[href='/message?message=fo%40o&num=0']")).not.toBe(null);
   expect(screen.getByText("bar.txt (100 Bi, message/rfc822)")).toBeInTheDocument();
   cleanup();
 

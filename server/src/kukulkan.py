@@ -256,7 +256,7 @@ def create_app() -> Flask:
         elif path == "thread":
             globs["thread"] = thread()
         elif path == "message":
-            if request.args.get("attachNum") is None:
+            if request.args.get("num") is None:
                 globs["message"] = message()
             else:
                 globs["message"] = attachment_message()

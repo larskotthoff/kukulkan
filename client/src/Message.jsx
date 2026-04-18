@@ -157,7 +157,7 @@ function handleAttachment(msg, attachment, index, summary) {
       { calendarAction(msg, attachment, index) }
       </div>);
   } else if(attachment.content_type.includes("message/rfc822")) {
-    return (<a href={`/message?id=${encodeURIComponent(msg.notmuch_id)}&attachNum=${index}`} target={getSetting("openInTab")} rel="noreferrer"><Icon icon={AttachFile}/>{attachment.filename}
+    return (<a href={`/message?message=${encodeURIComponent(msg.notmuch_id)}&num=${index}`} target={getSetting("openInTab")} rel="noreferrer"><Icon icon={AttachFile}/>{attachment.filename}
       {summary ? "" : " (" + formatFSz(attachment.content_size) + ", " + attachment.content_type + ")"}
       </a>);
   } else {
