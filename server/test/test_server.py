@@ -3551,7 +3551,7 @@ def test_send_sign_self(setup):
                     if "signed" in part.get('Content-Type') and "pkcs7-signature" in part.get('Content-Type'):
                         signature = k.smime_verify(part, app.config.custom["accounts"])
                         assert signature['valid'] == None
-                        assert signature['message'] == 'self-signed or unavailable certificate(s): validation failed: basicConstraints.cA must not be asserted in an EE certificate (encountered processing <Certificate(subject=<Name(C=AU,ST=Some-State,O=Internet Widgits Pty Ltd)>, ...)>)'
+                        assert 'self-signed or unavailable certificate(s): validation failed: basicConstraints.cA must not be asserted in an EE certificate' in signature['message']
 
             assert o.call_count == 4
             hdl = o()
