@@ -773,7 +773,7 @@ test("localStorage deletes upon successful send", async () => {
 
   global.fetch.mockResolvedValue({ ok: true, json: () => Promise.resolve({send_id: 0}) });
   let eventSourceInstance;
-  vi.spyOn(global, 'EventSource').mockImplementation((url) => {
+  vi.spyOn(global, 'EventSource').mockImplementation(function(url) {
       eventSourceInstance = new MockEventSource(url);
       return eventSourceInstance;
   });
@@ -917,8 +917,9 @@ test("data assembled correctly for sending new email", async () => {
   const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
       json: () => Promise.resolve({send_id: 0})
     });
+  fetchSpy.mockClear();
   let eventSourceInstance;
-  vi.spyOn(global, 'EventSource').mockImplementation((url) => {
+  vi.spyOn(global, 'EventSource').mockImplementation(function(url) {
       eventSourceInstance = new MockEventSource(url);
       return eventSourceInstance;
   });
@@ -988,8 +989,9 @@ test("data assembled correctly for sending new email w/ template", async () => {
   const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
       json: () => Promise.resolve({send_id: 0})
     });
+  fetchSpy.mockClear();
   let eventSourceInstance;
-  vi.spyOn(global, 'EventSource').mockImplementation((url) => {
+  vi.spyOn(global, 'EventSource').mockImplementation(function(url) {
       eventSourceInstance = new MockEventSource(url);
       return eventSourceInstance;
   });
@@ -1033,8 +1035,9 @@ test("data assembled correctly for sending reply w/o editing", async () => {
   const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
       json: () => Promise.resolve({send_id: 0})
     });
+  fetchSpy.mockClear();
   let eventSourceInstance;
-  vi.spyOn(global, 'EventSource').mockImplementation((url) => {
+  vi.spyOn(global, 'EventSource').mockImplementation(function(url) {
       eventSourceInstance = new MockEventSource(url);
       return eventSourceInstance;
   });
@@ -1103,8 +1106,9 @@ test("data assembled correctly for sending reply", async () => {
   const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
       json: () => Promise.resolve({send_id: 0})
     });
+  fetchSpy.mockClear();
   let eventSourceInstance;
-  vi.spyOn(global, 'EventSource').mockImplementation((url) => {
+  vi.spyOn(global, 'EventSource').mockImplementation(function(url) {
       eventSourceInstance = new MockEventSource(url);
       return eventSourceInstance;
   });
@@ -1149,8 +1153,9 @@ test("data assembled correctly for sending reply w/ empty subject", async () => 
   const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
       json: () => Promise.resolve({send_id: 0})
     });
+  fetchSpy.mockClear();
   let eventSourceInstance;
-  vi.spyOn(global, 'EventSource').mockImplementation((url) => {
+  vi.spyOn(global, 'EventSource').mockImplementation(function(url) {
       eventSourceInstance = new MockEventSource(url);
       return eventSourceInstance;
   });
@@ -1186,8 +1191,9 @@ test("data assembled correctly when retrieving from localStorage w/o editing", a
   const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
       json: () => Promise.resolve({send_id: 0})
     });
+  fetchSpy.mockClear();
   let eventSourceInstance;
-  vi.spyOn(global, 'EventSource').mockImplementation((url) => {
+  vi.spyOn(global, 'EventSource').mockImplementation(function(url) {
       eventSourceInstance = new MockEventSource(url);
       return eventSourceInstance;
   });
@@ -1237,8 +1243,9 @@ test("error when mail cannot be sent", async () => {
   const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
       json: () => Promise.resolve({send_id: 0})
     });
+  fetchSpy.mockClear();
   let eventSourceInstance;
-  vi.spyOn(global, 'EventSource').mockImplementation((url) => {
+  vi.spyOn(global, 'EventSource').mockImplementation(function(url) {
       eventSourceInstance = new MockEventSource(url);
       return eventSourceInstance;
   });
@@ -1276,8 +1283,9 @@ test("error when mail cannot be sent but no error when successful after", async 
   const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
       json: () => Promise.resolve({send_id: 0})
     });
+  fetchSpy.mockClear();
   let eventSourceInstance;
-  vi.spyOn(global, 'EventSource').mockImplementation((url) => {
+  vi.spyOn(global, 'EventSource').mockImplementation(function(url) {
       eventSourceInstance = new MockEventSource(url);
       return eventSourceInstance;
   });
@@ -1350,8 +1358,9 @@ test("external editing", async () => {
   const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
       json: () => Promise.resolve({send_id: 0})
     });
+  fetchSpy.mockClear();
   let eventSourceInstance;
-  vi.spyOn(global, 'EventSource').mockImplementation((url) => {
+  vi.spyOn(global, 'EventSource').mockImplementation(function(url) {
       eventSourceInstance = new MockEventSource(url);
       return eventSourceInstance;
   });
@@ -1481,6 +1490,7 @@ test("shortcuts disabled while editing externally", async () => {
   expect(getByTestId("body").value).toBe("[Editing externally...]");
 
   const fetchSpy = vi.spyOn(global, 'fetch');
+  fetchSpy.mockClear();
   await userEvent.type(document.body, "1");
   expect(getByTestId("body").value).toBe("[Editing externally...]");
   await userEvent.type(document.body, "y");
