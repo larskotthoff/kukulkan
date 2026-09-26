@@ -244,7 +244,7 @@ export function Threads(props) {
   }
 
   // eslint-disable-next-line solid/reactivity
-  mkShortcut([["Delete"]], deleteActive, true);
+  mkShortcut([["Delete"], ["Backspace"]], deleteActive, true);
 
   function doneActive() {
     let edits = "-todo",

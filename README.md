@@ -208,7 +208,7 @@ Shortcuts:
 - Space/swipe right until list appears: mark currently active thread; icons will
   appear to tag/group/mark done/delete the marked threads
 - t: open tagging box for active/marked threads
-- Delete/swipe left until trash appears: tag active/marked threads with "deleted"; remove "unread" tag
+- Delete/Backspace/swipe left until trash appears: tag active/marked threads with "deleted"; remove "unread" tag
 - g: group active/marked threads as follows:
     - no threads have any group tags: create a new group
     - some threads have all the same group tag, others do not have any group
@@ -253,7 +253,7 @@ Shortcuts:
 - Space/swipe right until list appears: mark currently active thread; icons will
   appear to tag/group/mark done/delete the marked threads
 - t: open tagging box for active/marked threads
-- Delete: tag active/marked threads with "deleted"; remove "unread" tag
+- Delete/Backspace: tag active/marked threads with "deleted"; remove "unread" tag
 - d/swipe left until check mark appears: mark thread done -- remove "todo" and any "due:*" tags
 - g: group active/marked threads as follows:
     - no threads have any group tags: create a new group
@@ -309,7 +309,7 @@ For the active message:
 - c: toggle between displaying plain text and HTML content
 - e: toggle expanded/abbreviated quoted text in plain text view
 - u: apply tag "unread"
-- Delete: apply tag "deleted", remove tag "unread"
+- Delete/Backspace: apply tag "deleted", remove tag "unread"
 - p: open print view of message
 - s: open security view of message (checks DMARC etc, requires [mailauth](https://github.com/postalsys/mailauth))
 - w: open raw message (unparsed text of the message file)

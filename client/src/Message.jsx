@@ -300,7 +300,7 @@ export function Message(props) {
     true
   );
 
-  mkShortcut([["Delete"]],
+  mkShortcut([["Delete"], ["Backspace"]],
     // eslint-disable-next-line solid/reactivity
     () => { if(props.active) document.querySelector("a[id='delete']")?.click(); },
     true

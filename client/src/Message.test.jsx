@@ -343,6 +343,20 @@ test("delete shortcut works", async () => {
   expect(screen.getByText("deleted")).toBeInTheDocument();
 });
 
+test("other delete shortcut works", async () => {
+  msg.tags = ["foo", "unread"];
+  render(() => <Message msg={msg} active={true}/>);
+  expect(screen.getByText("foo")).toBeInTheDocument();
+  expect(screen.getByText("unread")).toBeInTheDocument();
+
+  global.fetch.mockResolvedValue({ ok: true });
+  await userEvent.type(document.body, "{backspace}");
+  expect(global.fetch).toHaveBeenCalledTimes(1);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/?type=message&ids=fo%40o&tags=-unread%20deleted");
+  expect(screen.queryByText("unread")).not.toBeInTheDocument();
+  expect(screen.getByText("deleted")).toBeInTheDocument();
+});
+
 test("click expands and collapses quoted text", async () => {
   msg.body = {
     "text/html": true,

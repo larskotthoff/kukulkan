@@ -409,6 +409,27 @@ test("delete thread works", async () => {
   expect(screen.getByText("deleted")).toBeInTheDocument();
 });
 
+test("other delete thread works", async () => {
+  vi.stubGlobal('location', {
+    ...window.location,
+    search: '?query=foo'
+  });
+  global.fetch.mockResolvedValue({ ok: true, json: () => [] });
+  vi.stubGlobal("data", {"allTags": tags, "threads": [
+    {thread_id: "foo", authors: ["te@t"], subject: "foobar", tags: ["unread"], total_messages: 1, newest_date: 1000, oldest_date: 100}
+  ]});
+  render(() => <Threads Threads={SearchThreads}/>);
+  await vi.waitFor(() => {
+    expect(screen.getByText("1 thread group.")).toBeInTheDocument();
+  });
+
+  await userEvent.type(document.body, "{backspace}");
+  expect(global.fetch).toHaveBeenCalledTimes(1);
+  expect(global.fetch).toHaveBeenCalledWith("http://localhost:5000/api/tag_batch/?type=thread&ids=foo&tags=deleted%20-unread");
+  expect(screen.queryByText("unread")).not.toBeInTheDocument();
+  expect(screen.getByText("deleted")).toBeInTheDocument();
+});
+
 test("delete thread group works", async () => {
   vi.stubGlobal('location', {
     ...window.location,
