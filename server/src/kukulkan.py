@@ -835,17 +835,17 @@ def get_inline_content(email_msg: email.message.Message) -> Dict[str, Tuple[str,
 
 
 # Claude
-def get_text_content(part: email.message.Message, fallbacks: Tuple[str] = ("utf-8", "cp1252")) -> str:
+def get_text_content(part: email.message.Message, fallbacks: Tuple[str, str] = ("utf-8", "cp1252")) -> str:
     try:
-        return part.get_content()
+        return part.get_content()  # type: ignore[attr-defined]
     except LookupError:  # unknown charset, e.g. unknown-8bit
-        raw = part.get_payload(decode=True) or b""
+        raw = part.get_payload(decode=True) or b""  # type: ignore[union-attr]
         for enc in fallbacks:
             try:
-                return raw.decode(enc)
+                return raw.decode(enc)  # type: ignore[union-attr]
             except UnicodeDecodeError:
                 continue
-        return raw.decode("latin-1")  # can't fail; every byte maps to something
+        return raw.decode("latin-1")  # type: ignore[union-attr]
 
 
 def get_nested_body(email_msg: email.message.Message, html: bool = False) -> Tuple[str, bool]:
@@ -966,7 +966,7 @@ def get_attachments(email_msg: email.message.Message, content: bool = False) -> 
             try:
                 ctnt = get_text_content(part)
             except KeyError:
-                ctnt = part.get_payload(decode=True)  # type: ignore[attr-defined]
+                ctnt = part.get_payload(decode=True)  # type: ignore[assignment]
             preview = None
             if part.get_content_type() == "text/calendar" or part.get_content_type() == "text/x-vcalendar":
                 # create "preview"
