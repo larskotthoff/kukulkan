@@ -15,6 +15,7 @@ import src.kukulkan as k
 
 IN_GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"
 
+
 def test_split_email_addresses():
     assert ["foo@bar.com"] == k.split_email_addresses("foo@bar.com")
     assert ["foo@bar.com", "bar@foo.com"] == k.split_email_addresses("foo@bar.com, bar@foo.com")
@@ -490,7 +491,7 @@ def test_complete_address(setup):
 
     mf.header.assert_has_calls([call("from"), call("to"), call("cc"), call("bcc")])
     db.messages.assert_called_once_with("from:foo or to:foo", exclude_tags=[],
-                                       sort=notmuch2.Database.SORT.NEWEST_FIRST)
+                                        sort=notmuch2.Database.SORT.NEWEST_FIRST)
 
 
 def test_complete_email(setup):
@@ -514,7 +515,7 @@ def test_complete_email(setup):
 
     mf.header.assert_has_calls([call("from"), call("to"), call("cc"), call("bcc")])
     db.messages.assert_called_once_with("from:foo or to:foo", exclude_tags=[],
-                                       sort=notmuch2.Database.SORT.NEWEST_FIRST)
+                                        sort=notmuch2.Database.SORT.NEWEST_FIRST)
 
 
 def test_complete_groups(setup):
@@ -552,7 +553,7 @@ def test_complete_groups(setup):
     mf2.header.assert_called_once_with("subject")
     mf3.header.assert_called_once_with("subject")
     db.messages.assert_called_once_with("tag:/grp:.*/", exclude_tags=[],
-                                       sort=notmuch2.Database.SORT.NEWEST_FIRST)
+                                        sort=notmuch2.Database.SORT.NEWEST_FIRST)
 
 
 def test_complete_groups_subject(setup):
@@ -589,8 +590,9 @@ def test_complete_groups_subject(setup):
     mf1.header.assert_called_once_with("subject")
     mf2.header.assert_called_once_with("subject")
     mf3.header.assert_called_once_with("subject")
-    db.messages.assert_called_once_with('tag:/grp:.*/ and subject:"subj"', exclude_tags=[],
-                                       sort=notmuch2.Database.SORT.NEWEST_FIRST)
+    db.messages.assert_called_once_with('tag:/grp:.*/ and subject:"subj"',
+                                        exclude_tags=[],
+                                        sort=notmuch2.Database.SORT.NEWEST_FIRST)
 
 
 def test_get_message_none(setup):
