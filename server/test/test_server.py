@@ -1200,6 +1200,46 @@ def test_message_simple(setup):
     db.find.assert_called_once_with("foo")
 
 
+def test_message_simple_encoding(setup):
+    app, db = setup
+
+    mf = lambda: None
+    mf.path = "test/mails/simple-encoding-broken.eml"
+    mf.messageid = "foo"
+    mf.tags = ["foo", "bar"]
+    mf.header = MagicMock(return_value="  foo@bar  ")
+
+    db.config = {}
+    db.find = MagicMock(return_value=mf)
+
+    with app.test_client() as test_client:
+        response = test_client.get('/api/message/?message=foo')
+        assert response.status_code == 200
+        msg = json.loads(response.data.decode())
+        assert msg["from"] == "foo@bar"
+        assert msg["to"] == ["foo@bar"]
+        assert msg["cc"] == ["foo@bar"]
+        assert msg["bcc"] == ["foo@bar"]
+        assert msg["date"] == "foo@bar"
+        assert msg["subject"] == "foo@bar"
+        assert msg["message_id"] == "foo@bar"
+        assert msg["in_reply_to"] == "foo@bar"
+        assert msg["reply_to"] == ["foo@bar"]
+        assert msg["delivered_to"] == "foo@bar"
+        assert msg["forwarded_to"] == "foo@bar"
+
+        assert "With the new notmuch_message_get_flags() function" in msg["body"]["text/plain"]
+        assert msg["body"]["text/html"] == False
+
+        assert msg["notmuch_id"] == "foo"
+        assert msg["tags"] == ["foo", "bar"]
+        assert msg["attachments"] == []
+        assert msg["signature"] is None
+
+    assert mf.header.call_count == 11
+    db.find.assert_called_once_with("foo")
+
+
 def test_message_simple_multiple_reply_to(setup):
     app, db = setup
 
@@ -2729,7 +2769,7 @@ def test_send_attachment(setup):
                 assert "Content-Disposition: attachment; filename=\"test.txt\"" in text
                 assert "\nVGhpcyBpcyBhIGZpbGUu\n" in text
 
-            assert o.call_count == 2
+            assert o.call_count == 1
             args = o.call_args.args
             assert "kukulkan" in args[0]
             assert "folder/" in args[0]
