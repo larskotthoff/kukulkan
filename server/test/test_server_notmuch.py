@@ -10,6 +10,7 @@ import src.kukulkan as k
 
 IN_GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"
 
+
 @pytest.fixture
 def setup():
     wd = os.getcwd()
@@ -102,6 +103,7 @@ def test_query_deleted(setup_deleted):
         assert thrds[0]["subject"] == 'Re: bug: "no top level messages" crash on Zen email loops'
         assert thrds[0]["tags"] == ["attachment", "deleted", "inbox", "unread"]
         assert thrds[0]["total_messages"] == 1
+
 
 def test_query_malformed(setup):
     app = setup
@@ -352,7 +354,7 @@ def test_change_tag_thread_no_match(setup):
     db.close()
 
     with app.test_client() as test_client:
-        response = test_client.get(f'/api/tag/?op=remove&type=thread&id=lksdfhlkh&tag=unread')
+        response = test_client.get('/api/tag/?op=remove&type=thread&id=lksdfhlkh&tag=unread')
         assert response.status_code == 404
         response = test_client.get(f'/api/tag/?op=remove&type=thread&id={id}&tag=blurg')
         assert response.status_code == 404

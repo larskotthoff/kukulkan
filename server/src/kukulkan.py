@@ -605,7 +605,7 @@ def create_app() -> Flask:
                         email_msg = email_from_notmuch(ref_msg)
                         for part in email_msg.walk():
                             if part.get_content_type() == "text/html":
-                                html = part.get_content()  # type: ignore[attr-defined]
+                                html = get_text_content(part)
                                 msg.add_attachment(html, subtype="html")
 
         if request.values['action'].startswith("reply-cal-"):
@@ -834,17 +834,31 @@ def get_inline_content(email_msg: email.message.Message) -> Dict[str, Tuple[str,
     return inline_content
 
 
+# Claude
+def get_text_content(part: email.message.Message, fallbacks: Tuple[str, str] = ("utf-8", "cp1252")) -> str:
+    try:
+        return part.get_content()  # type: ignore[attr-defined]
+    except LookupError:  # unknown charset, e.g. unknown-8bit
+        raw = part.get_payload(decode=True) or b""  # type: ignore[union-attr]
+        for enc in fallbacks:
+            try:
+                return raw.decode(enc)  # type: ignore[union-attr]
+            except UnicodeDecodeError:
+                continue
+        return raw.decode("latin-1")  # type: ignore[union-attr]
+
+
 def get_nested_body(email_msg: email.message.Message, html: bool = False) -> Tuple[str, bool]:
     """Gets all, potentially MIME-nested bodies."""
     has_html = False
     content = ""
     for part in email_msg.walk():
         if part.get_content_type() == "text/plain" and html is False:
-            content += part.get_content()  # type: ignore[attr-defined]
+            content += get_text_content(part)
         elif part.get_content_type() == "text/html":
             has_html = True
             if html is True:
-                content += part.get_content()  # type: ignore[attr-defined]
+                content += get_text_content(part)
         elif part.get_content_type() == "application/pkcs7-mime":
             # https://stackoverflow.com/questions/58427642/how-to-extract-data-from-application-pkcs7-mime-using-the-email-module-in-pyth
             content_info = cms.ContentInfo.load(part.get_payload(decode=True))
@@ -950,9 +964,9 @@ def get_attachments(email_msg: email.message.Message, content: bool = False) -> 
             continue
         if (part.get_content_disposition() in ["attachment", "inline"] or part.get_content_type() == "text/calendar") and not (part.get_content_disposition() == "inline" and part.get_content_type() == "text/plain"):
             try:
-                ctnt = part.get_content()  # type: ignore[attr-defined]
+                ctnt = get_text_content(part)
             except KeyError:
-                ctnt = part.get_payload(decode=True)  # type: ignore[attr-defined]
+                ctnt = part.get_payload(decode=True)  # type: ignore[assignment]
             preview = None
             if part.get_content_type() == "text/calendar" or part.get_content_type() == "text/x-vcalendar":
                 # create "preview"
