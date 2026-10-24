@@ -835,7 +835,7 @@ def get_inline_content(email_msg: email.message.Message) -> Dict[str, Tuple[str,
 
 
 # Claude
-def get_text_content(part, fallbacks=("utf-8", "cp1252")):
+def get_text_content(part: email.message.Message, fallbacks: Tuple[str] = ("utf-8", "cp1252")) -> str:
     try:
         return part.get_content()
     except LookupError:  # unknown charset, e.g. unknown-8bit
